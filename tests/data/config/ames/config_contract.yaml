@@ -1,0 +1,25 @@
+config_meta:
+  create: '2019-06-09 20:02:52.255715'
+  modify: '2019-06-09 20:23:59.302322'
+  release: 1.09.037
+  uid: 1560106972256
+contract:
+  ames:
+    augmented:
+      overview:
+        notes:
+          '2019-06-09T20:23:58.915411': Ames housing data to predict sales prices
+            and practice feature engineering, RFs, and gradient boosting
+        source:
+          '2019-06-09T20:23:59.302276': 'Kaggle: https://www.kaggle.com/c/house-prices-advanced-regression-techniques'
+    cleaners: {}
+    source:
+      handler: PandasHandler
+      kwargs:
+        encoding: latin1
+        sep: ','
+      location: /Users/doatridge/code/projects/prod/discovery-transitioning-ds/tests/discovery/work/data/0_raw
+      module: ds_discovery.handlers.pandas_handlers
+      resource: ames_housing.csv
+      type: csv
+    version: v0.00

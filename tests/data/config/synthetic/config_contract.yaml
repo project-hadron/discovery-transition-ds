@@ -1,0 +1,79 @@
+config_meta:
+  create: '2019-06-02 16:37:54.888681'
+  modify: '2019-06-02 18:17:57.453881'
+  release: 1.08.067
+  uid: 1559489874889
+contract:
+  synthetic:
+    cleaners:
+      '0':
+        auto_clean_header:
+          rename:
+            start: start_date
+          replace_spaces: _
+        auto_remove_columns:
+          null_min: 0.99
+          nulls_list:
+          - ''
+          predominant_max: 0.9
+        auto_to_category:
+          null_max: 0.7
+          unique_max: 20
+        to_bool_type:
+          bool_map:
+            1: true
+          drop: false
+          headers: online
+        to_category_type:
+          drop: false
+          headers:
+          - gender
+          - profession
+        to_date_type:
+          as_num: false
+          day_first: false
+          drop: false
+          headers: start_date
+          year_first: false
+        to_int_type:
+          dtype:
+          - float
+          errors: coerce
+          exclude: false
+          fillna: .nan
+          precision: 3
+        to_str_type:
+          dtype:
+          - object
+          exclude: false
+          nulls_list:
+          - ''
+          - nan
+    info:
+      'attr: null':
+        '2019-06-02T18:17:52.783974': Here for demo of removal of nulls
+      'attr: start':
+        '2019-06-02T18:17:52.803373': changing this to start_date so it being a date
+          is obvious
+      'attr: weight_cat':
+        '2019-06-02T18:17:52.788719': Demonstration of removal of columns with predominant
+          values
+        '2019-06-02T18:17:52.798259': the value 'A' is over 95% predominant
+      notes:
+        '2019-06-02T18:17:51.877971': The file is a synthetic customer data file created
+          for this demonstration
+      source:
+        '2019-06-02T18:17:52.392811': This was generated using the Discovery Behavioral
+          Synthetic Data Generator
+        '2019-06-02T18:17:52.395723': The script to rerun the data generation can
+          be found in the synthetic scripts folder
+    source:
+      handler: PandasHandler
+      kwargs:
+        encoding: latin1
+        sep: ','
+      location: /Users/doatridge/code/projects/prod/discovery-transitioning-ds/tests/discovery/work/data/0_raw
+      module: ds_discovery.handlers.pandas_handlers
+      resource: synthetic.csv
+      type: csv
+    version: v0.00
