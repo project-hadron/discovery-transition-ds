@@ -33,11 +33,11 @@ def find_version(*file_paths):
 
 
 setup(
-    name='discovery-transitioning-ds',
+    name='discovery-transition-ds',
     version=find_version('ds_discovery', '__init__.py'),
     description='Advanced data cleaning, data wrangling and feature extraction tools for ML engineers',
     long_description=read('README.rst'),
-    url='http://github.com/gigas64/discovery-transitioning-ds',
+    url='http://github.com/gigas64/discovery-transition-ds',
     author='Gigas64',
     author_email='gigas64@opengrass.net',
     classifiers=[

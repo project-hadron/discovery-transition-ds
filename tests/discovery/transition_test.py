@@ -172,7 +172,7 @@ class TransitionTest(unittest.TestCase):
         self.assertTrue(name in dpm.contract_name)
         control = {'TestContract': {'cleaners': {},'snapshot': {},
                   'connectors': {'pm_data_testcontract': {'handler': 'PandasPersistHandler',
-                                                      'location': '/Users/doatridge/code/projects/prod/discovery-transitioning-ds/tests/discovery/work/config/TestContract',
+                                                      'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/TestContract',
                                                       'modified': 0,
                                                       'module_name': 'ds_discovery.handlers.pandas_handlers',
                                                       'resource': 'config_data_TestContract.yaml',
@@ -207,7 +207,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
         control = {'cleaners': {}, 'snapshot': {}, 'connectors':
                    {'pm_data_control': {'handler': 'PandasPersistHandler',
-                                 'location': '/Users/doatridge/code/projects/prod/discovery-transitioning-ds/tests/discovery/work/config/control',
+                                 'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/control',
                                  'modified': 0,
                                  'module_name': 'ds_discovery.handlers.pandas_handlers',
                                  'resource': 'config_data_control.yaml',

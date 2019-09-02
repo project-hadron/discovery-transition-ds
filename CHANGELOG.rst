@@ -5,7 +5,7 @@ Changelog
 2.03 - `master`_
 ~~~~~~~~~~~~~~~~
 
-* change of name from ``discovery-transitioning-utils`` to ``discovery-transitioning-ds``
+* change of name from ``discovery-transitioning-utils`` to ``discovery-transition-ds``
   to represent this is a transitioning project for Data Scientists
 
 .. note:: The changelog is not fully described. See git comments
@@ -22,4 +22,4 @@ Changelog
 * Initial release.
 
 
-.. _`master`: https://github.com/gigas64/discovery-transitioning-ds
+.. _`master`: https://github.com/gigas64/discovery-transition-ds

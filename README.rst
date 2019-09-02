@@ -37,13 +37,13 @@ The best way to install this package is directly from the Python Package Index r
 
 .. code-block:: bash
 
-    $ pip install discovery-transitioning-ds
+    $ pip install discovery-transition-ds
 
 if you want to upgrade your current version then using pip
 
 .. code-block:: bash
 
-    $ pip install --upgrade discovery-transitioning-ds
+    $ pip install --upgrade discovery-transition-ds
 
 Overview
 ========
@@ -331,29 +331,29 @@ Python version
 --------------
 
 Python 2.6 and 2.7 are not supported. Although Python 3.5 is supported, it is recommended to install
-``discovery-transitioning-ds`` against the latest Python 3.7.x whenever possible.
+``discovery-transition-ds`` against the latest Python 3.7.x whenever possible.
 Python 3 is the default for Homebrew installations starting with version 0.9.4.
 
 GitHub Project
 --------------
-Discovery-Transitioning-Utils: `<https://github.com/Gigas64/discovery-transitioning-ds>`_.
+Discovery-Transitioning-Utils: `<https://github.com/Gigas64/discovery-transition-ds>`_.
 
 Change log
 ----------
 
-See `CHANGELOG <https://github.com/doatridge-cs/discovery-transitioning-ds/blob/master/CHANGELOG.rst>`_.
+See `CHANGELOG <https://github.com/doatridge-cs/discovery-transition-ds/blob/master/CHANGELOG.rst>`_.
 
 
 Licence
 -------
 
-BSD-3-Clause: `LICENSE <https://github.com/doatridge-cs/discovery-transitioning-ds/blob/master/LICENSE.txt>`_.
+BSD-3-Clause: `LICENSE <https://github.com/doatridge-cs/discovery-transition-ds/blob/master/LICENSE.txt>`_.
 
 
 Authors
 -------
 
-`Gigas64`_  (`@gigas64`_) created discovery-transitioning-ds.
+`Gigas64`_  (`@gigas64`_) created discovery-transition-ds.
 
 
 .. _pip: https://pip.pypa.io/en/stable/installing/
@@ -365,12 +365,12 @@ Authors
 .. |pypi| image:: https://img.shields.io/pypi/pyversions/Django.svg
     :alt: PyPI - Python Version
 
-.. |rdt| image:: https://readthedocs.org/projects/discovery-transitioning-ds/badge/?version=latest
-    :target: http://discovery-transitioning-ds.readthedocs.io/en/latest/?badge=latest
+.. |rdt| image:: https://readthedocs.org/projects/discovery-transition-ds/badge/?version=latest
+    :target: http://discovery-transition-ds.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
 .. |license| image:: https://img.shields.io/pypi/l/Django.svg
-    :target: https://github.com/Gigas64/discovery-transitioning-ds/blob/master/LICENSE.txt
+    :target: https://github.com/Gigas64/discovery-transition-ds/blob/master/LICENSE.txt
     :alt: PyPI - License
 
 .. |wheel| image:: https://img.shields.io/pypi/wheel/Django.svg
