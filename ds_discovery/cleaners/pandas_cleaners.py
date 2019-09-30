@@ -644,7 +644,7 @@ class PandasCleaners(AbstractCleaners):
         for c in obj_cols:
             df[c] = df[c].astype(str)
             if nulls_list is not None:
-                df[c] = df[c].replace(nulls_list, np.nan)
+                df[c] = df[c].replace(nulls_lamist, np.nan)
 
         if inplace:
             return PandasCleaners._build_section('to_str_type', headers=headers, drop=drop, dtype=dtype,
