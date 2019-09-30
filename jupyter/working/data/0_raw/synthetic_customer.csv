@@ -1,1001 +1,1001 @@
-surname,forename,gender,id,balance,age,start,profession,online,single num,weight_num,null,single cat,weight_cat
-Bridgett,Jonathan ,M,CU_1781760,170.88,,06-16-18,Account Coordinator,0,1.0,1,,,A
-Formato,Misha ,F,CU_2451457,157.64,64.08,06-21-18,Software Engineer IV,0,1.0,1,,A,A
-Freligh,Bessie,F,CU_7180291,146.9,,08-07-18,Quality Control Specialist,0,1.0,1,,A,A
-Wasilewski,Tanya ,F,CU_9283591,186.82,,12-20-18,Research Assistant III,1,1.0,1,,,A
-Hovermale,Hillary,F,CU_8466441,131.6,69.864,06-19-18,Research Assistant III,0,1.0,1,,A,A
-Sietsema,Charley ,M,CU_3416081,380.95,73.761,11-05-18,Dental Hygienist,0,1.0,1,,,A
-Galinski,Danilo,M,CU_1927187,245.07,55.154,12-26-18,Research Assistant III,0,1.0,1,,A,A
-Wiggin,Merrill,M,CU_7239700,136.14,37.173,02-27-18,Technical Writer,0,1.0,1,,A,A
-Mesch,Charles ,M,CU_5394454,365.89,38.34,01-27-18,Software Engineer IV,0,1.0,1,,A,A
-Goetz,Jace ,M,CU_7364631,168.17,,08-26-18,Account Coordinator,0,,1,,A,A
-Guilfoil,Douglas ,M,CU_3059736,281.94,58.822,11-27-18,Data Coordiator,0,1.0,1,,A,A
-Sveum,Peggy ,F,CU_9357341,131.56,40.185,04-07-18,Safety Technician III,1,1.0,1,,,A
-Orewiler,Alfredo,M,CU_8300573,205.67,39.174,06-23-18,Dental Hygienist,0,1.0,1,,,A
-Kurtis,Lacy,F,CU_3299360,484.01,54.813,12-03-18,Software Engineer IV,0,1.0,2,,A,C
-Laizure,Armando,M,CU_5394465,449.28,26.265,10-02-18,Software Engineer IV,0,,1,,A,A
-Budworth,Mara,F,CU_8841252,64.51,26.242,05-03-18,Quality Control Specialist,1,1.0,1,,A,A
-Zurowski,Cherry,F,CU_7561255,218.9,41.614,11-09-18,Software Engineer IV,1,1.0,1,,A,A
-Meskill,Elton,M,CU_2095146,137.58,64.725,10-28-18,Structural Engineer,1,1.0,1,,A,A
-Wysocki,Bobby ,M,CU_5689388,134.56,41.05,06-28-18,Research Assistant II,0,1.0,1,,A,A
-Saas,Mel,M,CU_2048045,102.0,29.055,08-31-18,Cost Accountant,1,1.0,1,,A,A
-Trichell,Janelle,F,CU_3858476,95.49,44.983,03-12-18,Technical Writer,0,1.0,1,,,A
-Livesay,Lee ,M,CU_6606892,168.05,61.73,07-31-18,Dental Hygienist,0,1.0,1,,,A
-Cuneio,Luciano,M,CU_5761072,146.63,30.037,07-24-18,,0,1.0,1,,A,A
-Prost,Vonda,F,CU_7372852,144.98,49.889,05-14-18,Technical Writer,1,1.0,1,,,A
-Olofson,Ria ,F,CU_1783863,146.92,42.757,06-22-18,Accountant I,1,1.0,1,,A,B
-Krupicka,Hal,M,CU_5199927,216.98,42.836,09-10-18,Research Assistant II,0,1.0,1,,,A
-Beukema,Melisa,F,CU_2814014,116.47,55.539,03-24-18,Research Assistant II,0,1.0,1,,A,A
-Kujawski,Carl,M,CU_2371648,140.91,58.596,06-12-18,Quality Control Specialist,0,1.0,1,,A,A
-Wettach,Kaye,F,CU_9539650,139.57,52.221,12-30-18,Food Chemist,0,1.0,1,,A,A
-Sprinkles,Rick,M,CU_3594307,171.13,31.904,03-23-18,Quality Control Specialist,0,1.0,1,,,A
-Priode,Jamal ,M,CU_3776579,103.16,43.997,08-29-18,Research Assistant II,0,,1,,A,A
-Pembrook,Porfirio,M,CU_9893957,117.48,44.875,01-14-18,Dental Hygienist,0,1.0,1,,,A
-Hendsbee,Rhianna ,F,CU_2021446,131.66,31.238,08-31-18,Technical Writer,0,1.0,1,,A,A
-Hilger,Richard,M,CU_4137031,211.23,,06-13-18,Quality Control Specialist,0,,1,,,A
-Beitel,Araceli,F,CU_9914441,206.61,39.908,04-04-18,Research Assistant II,0,1.0,1,,,A
-Koehn,Raja ,M,CU_1661001,196.22,36.52,06-14-18,Food Chemist,1,,1,,A,A
-Carlucci,Brett,M,CU_8587337,173.72,,03-04-18,Structural Engineer,0,1.0,1,,A,A
-Demarais,Norris,M,CU_7366732,99.4,20.39,05-19-18,Accountant I,0,1.0,1,,A,A
-Ansbro,Keith,M,CU_3366989,176.18,58.123,02-19-18,Quality Control Specialist,0,1.0,1,,,A
-Dedeke,Irving,M,CU_6885457,149.32,35.743,04-24-18,Account Coordinator,0,1.0,1,,,A
-Flieller,Lori,F,CU_8941650,144.01,49.25,09-20-18,Software Engineer IV,1,,1,,A,A
-Whyel,Teigan ,F,CU_2527315,172.05,55.947,05-26-18,Research Assistant II,1,1.0,1,,A,A
-Equihua,Amy,F,CU_2943060,144.27,,05-09-18,Quality Control Specialist,0,1.0,1,,,A
-Craig,Dolly ,F,CU_9646164,201.13,54.519,09-15-18,Research Assistant III,0,1.0,1,,,A
-Topliss,Adriana ,F,CU_2768979,132.1,,07-10-18,Data Coordiator,0,1.0,1,,,A
-Nabozny,Yash ,M,CU_7061596,66.86,32.037,09-23-18,,1,1.0,1,,,A
-Moccio,Janet ,F,CU_9320543,31.47,41.69,08-31-18,,0,1.0,1,,,A
-Adel,Zoha ,F,CU_6365281,89.84,,09-16-18,Software Engineer IV,0,,1,,A,A
-Jee,Rocco,M,CU_9515106,56.56,51.686,06-08-18,Dental Hygienist,1,1.0,1,,,A
-Falgoust,Lenora,F,CU_5394531,136.56,,02-26-18,Cost Accountant,0,1.0,1,,,A
-Dk,Rae,F,CU_5605482,201.95,,07-27-18,Research Assistant III,0,1.0,1,,A,A
-Hogeland,Camille,F,CU_5535852,431.87,21.356,12-20-18,Research Assistant II,0,,1,,,A
-Conde,Karen,F,CU_8200301,135.37,51.621,05-26-18,Software Engineer IV,1,1.0,1,,,A
-Thach,Faizan ,M,CU_8261750,135.43,54.364,10-22-18,Structural Engineer,1,1.0,1,,A,A
-Altadonna,Stella ,F,CU_8097911,119.64,41.522,11-16-18,Structural Engineer,0,1.0,1,,A,A
-Bretthauer,Callan ,M,CU_3096696,54.71,49.413,08-19-18,Software Engineer IV,0,1.0,1,,A,A
-Gatesman,Denny,M,CU_7719037,164.58,72.442,02-20-18,Research Assistant II,0,,1,,A,A
-Bynun,Mildred,F,CU_1056894,123.74,56.749,02-18-18,,0,1.0,1,,,A
-Redlin,Anna ,F,CU_8493184,125.31,25.862,04-17-18,Software Engineer IV,0,1.0,1,,,A
-Perryman,Darell,M,CU_3348609,166.82,26.41,03-12-18,Dental Hygienist,0,1.0,1,,,A
-Alcott,Lukas ,M,CU_1171585,144.29,31.917,05-10-18,Software Engineer IV,0,1.0,1,,A,A
-Rosenfeld,Frederick,M,CU_5814407,159.48,34.868,10-12-18,Quality Control Specialist,0,1.0,1,,,A
-Staber,Kodi ,M,CU_8816776,159.47,59.245,08-05-18,Research Assistant II,0,1.0,1,,,A
-Ruballos,Dilan ,M,CU_6090888,50.74,32.287,06-21-18,Research Assistant II,1,1.0,1,,,A
-Allton,Darrel,M,CU_6942858,273.27,64.868,10-01-18,,0,1.0,1,,A,A
-Bongard,Henri ,M,CU_3788941,156.1,74.837,09-05-18,Account Coordinator,1,1.0,1,,A,A
-Chalkley,Keiran ,M,CU_3451027,213.65,21.853,04-13-18,Account Coordinator,0,1.0,1,,A,A
-Krupansky,Ricardo ,M,CU_1450132,170.39,,04-29-18,Food Chemist,0,1.0,1,,,A
-Kizzee,Joseph,M,CU_3657877,278.46,,06-13-18,Dental Hygienist,0,,1,,A,A
-Hauth,Archibald ,M,CU_7440541,343.18,,10-30-18,Safety Technician III,0,1.0,1,,,A
-Ohanian,Francisca,F,CU_1790111,154.75,59.65,11-09-18,Research Assistant II,1,1.0,1,,A,A
-Abud,Eliana ,F,CU_7698593,136.76,76.578,03-07-18,Research Assistant II,0,1.0,1,,A,A
-Halfhill,Lenard,M,CU_1061026,145.16,58.038,01-18-18,,0,1.0,1,,A,A
-Klaameyer,Abi ,F,CU_9619618,158.85,56.208,07-10-18,Research Assistant III,0,1.0,1,,A,A
-Lassere,Oakley ,M,CU_4219041,170.77,,08-11-18,Quality Control Specialist,0,1.0,1,,A,A
-Metro,Kayla,F,CU_1685668,207.88,55.505,12-11-18,Dental Hygienist,0,1.0,1,,A,A
-Sukhram,Jamar,M,CU_1513638,171.16,50.824,06-29-18,Dental Hygienist,0,1.0,1,,A,A
-Gille,Summer,F,CU_1933479,124.06,,04-15-18,Safety Technician III,0,,1,,A,A
-Lippoldt,Geoffrey,M,CU_9701545,149.61,35.84,06-20-18,Research Assistant II,1,1.0,1,,,A
-Nyhan,Fatimah ,F,CU_4952235,117.85,59.738,09-28-18,Editor,0,1.0,1,,A,A
-Lidstrom,Safiyyah ,F,CU_2232492,149.68,44.528,01-10-18,,0,,1,,A,A
-Hrbek,Adan,M,CU_2142383,142.55,36.276,11-28-18,Software Engineer IV,0,1.0,1,,A,A
-Colomba,Antoine,M,CU_5720239,122.01,71.344,05-05-18,Cost Accountant,1,1.0,1,,A,A
-Palardy,Yolanda,F,CU_4694193,136.0,55.227,10-13-18,Software Engineer IV,0,,1,,A,A
-Mcdonal,Osvaldo,M,CU_7831733,283.38,,08-15-18,Research Assistant II,1,1.0,1,,A,A
-Rozenberg,Taha ,M,CU_9142453,159.51,57.7,04-27-18,Research Assistant II,0,,1,,A,A
-Lanahan,Mona,F,CU_2234553,128.14,68.393,02-06-18,,1,1.0,1,,A,A
-Drow,Winfred,M,CU_3735738,108.78,35.987,08-22-18,Research Assistant II,0,1.0,1,,A,A
-Prieur,Leon ,M,CU_1296570,186.35,67.488,11-20-18,Research Assistant II,0,1.0,1,,,A
-Induddi,Saul ,M,CU_8298684,184.68,58.579,01-15-18,Software Engineer IV,0,1.0,1,,A,A
-Velarde,Mario,M,CU_8992958,117.48,37.617,07-16-18,Quality Control Specialist,0,,1,,A,A
-Diak,Drew ,M,CU_9652419,73.51,39.429,12-10-18,Software Engineer IV,0,1.0,1,,,A
-Careaga,Jamaal,M,CU_9517251,176.24,55.608,08-06-18,Software Engineer IV,0,1.0,1,,A,A
-Weinand,Sachin ,M,CU_3860677,137.86,59.092,09-28-18,Food Chemist,0,1.0,1,,,A
-Borson,Esme ,F,CU_8419526,484.66,33.795,04-15-18,Structural Engineer,0,1.0,1,,A,A
-Wortinger,Daria ,F,CU_6109383,67.99,62.515,04-30-18,Software Engineer IV,0,1.0,1,,,A
-Pacewicz,Royal,M,CU_5853380,172.54,52.72,04-16-18,,0,1.0,1,,A,A
-Elison,Casper ,M,CU_2932933,171.46,43.9,02-10-18,Account Coordinator,1,1.0,1,,,A
-Egbe,Millie ,F,CU_4638922,84.22,56.941,01-29-18,Technical Writer,0,,1,,,A
-Schiff,Earnest,M,CU_7366858,496.91,53.547,06-25-18,Accountant I,0,1.0,1,,,A
-Gildon,Winnie,F,CU_4425929,123.76,,12-09-18,Accountant I,0,1.0,1,,A,A
-Reuteler,Ida,F,CU_7852232,107.7,56.924,01-09-18,Quality Control Specialist,1,1.0,1,,,A
-Perugini,Zayaan ,M,CU_1605839,210.06,,04-21-18,Software Engineer IV,0,1.0,1,,A,A
-Solis,Gustavo,M,CU_3494098,232.4,33.935,06-23-18,Food Chemist,0,1.0,1,,A,A
-Zmek,Gerry,M,CU_8009940,167.47,50.393,08-28-18,Software Engineer IV,0,1.0,1,,A,A
-Cantave,Malakai ,M,CU_5023957,203.32,21.261,12-01-18,Structural Engineer,0,1.0,1,,A,A
-Majano,Gregory,M,CU_3354843,138.42,56.02,06-01-18,Quality Control Specialist,0,1.0,1,,A,A
-Cinquanti,Miriam ,F,CU_3279072,61.04,58.82,08-16-18,Dental Hygienist,0,1.0,1,,A,A
-Ocheltree,Stanley,M,CU_7100643,124.18,57.249,04-18-18,Dental Hygienist,0,1.0,1,,A,A
-Feeback,Chance,M,CU_9783525,137.73,39.062,01-31-18,Software Engineer IV,0,1.0,1,,A,A
-Warn,Brent,M,CU_7764198,188.52,,04-09-18,,0,,1,,,A
-Brittsan,Connie,F,CU_4919527,159.98,47.993,11-12-18,,0,1.0,1,,A,A
-Canas,Bernie,M,CU_3279081,141.84,59.351,04-11-18,Software Engineer IV,0,1.0,1,,A,A
-Heisinger,Jeffery,M,CU_2746607,172.69,39.365,12-09-18,Editor,0,1.0,1,,A,A
-Jozwiak,Kenny,M,CU_3375343,49.36,,11-08-18,,0,1.0,1,,,A
-Schaefer,Callie,F,CU_9672945,92.84,39.821,11-10-18,Data Coordiator,0,1.0,1,,,A
-Teddick,Kayne ,M,CU_6539505,155.83,,10-19-18,Structural Engineer,0,1.0,1,,,A
-Occhipinti,Zackary ,M,CU_9138415,138.29,40.386,05-23-18,Dental Hygienist,0,1.0,1,,A,A
-Langel,Patrick,M,CU_9595123,173.76,33.962,02-15-18,,0,,1,,A,A
-Ramone,James,F,CU_7256312,167.09,,12-10-18,Software Engineer IV,1,1.0,1,,A,A
-Piacente,Alessandro ,M,CU_2642169,129.97,54.064,06-27-18,Software Engineer IV,1,1.0,1,,,A
-Pritchard,Abdirahman ,M,CU_3834106,174.59,68.508,07-01-18,Food Chemist,0,1.0,1,,,A
-Shand,Ralph,M,CU_5622011,148.73,64.076,02-20-18,Software Engineer IV,1,1.0,1,,,A
-Conaughty,Raya ,F,CU_8411388,129.2,48.951,10-09-18,Quality Control Specialist,0,1.0,1,,A,A
-Mclucas,Oscar,M,CU_8091901,130.88,45.598,07-19-18,,0,1.0,1,,A,A
-Christophel,Phil,M,CU_5351678,235.48,53.556,06-04-18,Software Engineer IV,0,1.0,1,,A,A
-Saxe,Kasey,F,CU_8896768,489.19,34.27,05-22-18,Software Engineer IV,0,,1,,,A
-Hanemann,Avneet ,F,CU_5900545,133.24,61.856,03-04-18,,1,1.0,1,,,A
-Shanholtzer,Vance,M,CU_8397063,162.82,55.979,04-13-18,Software Engineer IV,0,1.0,1,,,A
-Podolsky,Quentin,M,CU_8102159,158.78,67.135,03-19-18,Research Assistant II,1,1.0,1,,A,A
-Duker,Hung,M,CU_7827728,135.94,54.892,07-18-18,Research Assistant II,0,1.0,1,,A,A
-Eliseo,Jim,M,CU_5951764,133.75,31.322,07-14-18,Research Assistant II,0,1.0,1,,A,A
-Dorn,Antonio,M,CU_4100373,222.37,25.49,04-16-18,Research Assistant III,0,1.0,1,,A,A
-Loeckle,Jayne,F,CU_4606230,169.36,52.704,01-07-18,Structural Engineer,0,1.0,1,,A,A
-Riddell,Dora ,F,CU_8462618,158.16,,02-14-18,,0,1.0,1,,A,A
-Buterbaugh,Mikhail ,M,CU_1063195,121.57,62.032,07-05-18,Data Coordiator,0,1.0,1,,,A
-Mcbay,Aydin ,M,CU_1726749,173.8,20.764,11-05-18,Editor,0,1.0,1,,,A
-Kelder,Latoya,F,CU_9875741,158.21,,09-04-18,Software Engineer IV,0,1.0,1,,,A
-Speight,Mable,F,CU_1485088,152.67,51.376,12-07-18,Quality Control Specialist,0,,1,,A,A
-Pippins,Bobbie,F,CU_4393249,371.98,52.009,03-19-18,Software Engineer IV,1,1.0,1,,,A
-Gave,Howard,M,CU_8372513,120.9,67.506,12-01-18,Research Assistant III,1,1.0,1,,,A
-Stinton,Guadalupe,M,CU_9249059,144.77,26.74,10-08-18,Editor,0,1.0,1,,,A
-Galey,Ella-May ,F,CU_9869605,526.41,28.734,04-19-18,Software Engineer IV,0,1.0,1,,,A
-Strevell,Stella,F,CU_3461415,136.24,54.247,12-25-18,Research Assistant II,0,,1,,A,A
-Orison,Sameer ,M,CU_6312234,179.74,47.633,11-21-18,Quality Control Specialist,0,1.0,1,,,A
-Gooslin,Amelia,F,CU_1880366,52.59,31.425,12-09-18,Editor,0,1.0,1,,,A
-Laska,Zack ,M,CU_8640817,141.59,55.946,06-30-18,Software Engineer IV,0,1.0,1,,A,A
-Allbee,Ashley ,M,CU_3907890,268.99,49.748,10-19-18,Software Engineer IV,0,1.0,1,,A,A
-Straws,Isobella ,F,CU_6306101,32.98,31.348,11-17-18,Research Assistant III,0,1.0,1,,A,A
-Camarena,Gilbert ,M,CU_8550712,599.99,26.473,04-13-18,Software Engineer IV,0,1.0,1,,A,A
-Joerg,Herminia,F,CU_4829497,128.74,,11-22-18,Dental Hygienist,1,,1,,,A
-Enslen,Christa,F,CU_9492793,158.9,42.813,04-16-18,Accountant I,0,1.0,1,,,A
-Philps,Jean,M,CU_5493050,148.26,28.146,03-21-18,,1,1.0,1,,A,A
-Ayars,Kasper ,M,CU_1341758,125.55,49.857,10-12-18,Research Assistant II,1,1.0,1,,A,A
-Guzewicz,Charlie ,F,CU_6897982,114.39,36.524,10-25-18,Research Assistant II,0,,1,,A,A
-Vanderau,Wm,M,CU_2974016,694.87,53.364,02-03-18,Software Engineer IV,1,1.0,1,,,A
-Deemer,Odis,M,CU_6406464,424.05,53.023,10-04-18,Software Engineer IV,0,,1,,A,A
-Cheshire,Bodhi ,M,CU_4577603,151.79,25.913,03-15-18,,0,1.0,1,,,A
-Shough,Cameron ,M,CU_5103945,202.05,,04-29-18,Research Assistant II,0,1.0,1,,A,A
-Greil,Otto ,M,CU_6463818,61.94,37.966,05-13-18,,0,,1,,A,A
-Marmas,Jerrold,M,CU_7055694,155.71,,11-06-18,Food Chemist,0,1.0,1,,A,A
-Srsic,Paulina ,F,CU_5220687,98.74,52.995,03-25-18,Accountant I,0,1.0,1,,A,A
-Sherrill,Denis ,M,CU_3199317,141.98,60.803,08-03-18,Dental Hygienist,0,1.0,1,,A,A
-Miano,Leena ,F,CU_9509206,127.46,56.41,12-09-18,Editor,0,1.0,1,,A,A
-Tijing,Andre,M,CU_5912919,858.95,62.093,07-19-18,Quality Control Specialist,1,,1,,A,A
-Dieringer,Joanne,F,CU_9099608,138.71,39.903,07-26-18,Dental Hygienist,0,,1,,A,A
-Niland,Felix,M,CU_9912662,133.77,61.116,04-03-18,Research Assistant III,0,1.0,1,,,A
-Shifflet,Victor,M,CU_3295574,50.26,33.3,05-30-18,Quality Control Specialist,0,1.0,1,,A,A
-Brege,Bella-Rose ,F,CU_5945696,95.08,47.428,03-19-18,,0,1.0,1,,A,A
-Converse,Neil,M,CU_7530851,171.72,,10-13-18,Accountant I,0,,1,,A,A
-Hissam,Perry,M,CU_1180004,139.26,60.969,03-08-18,Research Assistant II,1,1.0,1,,,A
-Zwolak,Louie,M,CU_9242983,104.88,,11-24-18,,1,1.0,1,,A,A
-Cloutman,Tai ,M,CU_1796456,92.74,57.378,07-08-18,Software Engineer IV,0,1.0,1,,,A
-Deschner,Thaddeus,M,CU_3631469,150.48,30.066,10-22-18,,0,1.0,1,,A,A
-Raymond,Kourtney ,F,CU_1481069,155.12,28.051,09-06-18,Research Assistant II,1,1.0,1,,A,A
-Presnell,Jessica,F,CU_4094319,170.63,49.913,06-19-18,Research Assistant II,0,1.0,1,,A,A
-Wied,Will,M,CU_1149296,125.41,,03-14-18,Dental Hygienist,1,1.0,1,,A,A
-Vandiver,Pauline ,F,CU_6082926,48.1,49.637,11-10-18,Dental Hygienist,0,1.0,1,,,A
-Belich,Norma,F,CU_8608115,173.33,63.404,01-27-18,Research Assistant II,1,1.0,1,,A,A
-Gabard,Eldridge,M,CU_8751478,169.04,38.208,09-17-18,Software Engineer IV,0,1.0,1,,A,A
-Zacharewicz,Keven,M,CU_3273079,171.8,,06-05-18,Editor,0,1.0,1,,,A
-Suggitt,Hilton,M,CU_9666938,145.68,55.934,10-02-18,Web Developer II,1,1.0,1,,A,A
-Ziech,Maddison ,F,CU_9697658,128.0,39.17,04-13-18,Software Engineer IV,0,1.0,1,,A,A
-Fann,Raymon,M,CU_5165434,226.53,47.218,04-25-18,Technical Writer,0,,1,,A,A
-Repasky,Kim ,F,CU_4977030,151.55,,05-22-18,Research Assistant II,0,1.0,1,,,A
-Gural,Jane ,F,CU_5992841,158.66,,03-14-18,Software Engineer IV,0,1.0,1,,,A
-Janczewski,Zeeshan ,M,CU_5388684,127.7,,10-03-18,Software Engineer IV,0,1.0,1,,A,A
-Okey,Jada ,F,CU_2507149,777.67,,05-07-18,Research Assistant II,0,,1,,A,A
-Mcdanel,Jago ,M,CU_3436942,167.25,39.116,05-17-18,Software Engineer IV,0,1.0,1,,,A
-Scalice,Melvin,M,CU_8133006,162.7,,11-19-18,Accountant I,0,,1,,A,A
-Rodwell,Arthur,M,CU_7625108,949.37,42.437,04-16-18,Software Engineer IV,0,1.0,1,,A,A
-Hammarlund,Liana ,F,CU_6715797,147.78,22.096,04-28-18,Research Assistant II,1,1.0,1,,A,A
-Asam,Blair,M,CU_9750933,149.53,,06-10-18,Cost Accountant,0,1.0,1,,,A
-Arkins,Flora,F,CU_9621911,124.21,26.736,05-01-18,Research Assistant II,0,,1,,A,A
-Lapsley,Kellie,F,CU_5632408,107.76,,12-05-18,Quality Control Specialist,1,1.0,1,,A,A
-Presiado,Eiliyah ,F,CU_7373210,657.22,59.301,06-20-18,Research Assistant II,0,1.0,1,,A,A
-Templeton,Kristina ,F,CU_6619549,194.94,,10-11-18,Dental Hygienist,0,1.0,1,,,A
-Penix,Dorian,M,CU_4800926,75.18,52.801,11-09-18,Dental Hygienist,1,1.0,1,,,A
-Corvin,Simeon ,M,CU_9445791,117.7,,12-10-18,Research Assistant II,0,1.0,1,,,A
-Camden,Wayne,M,CU_7647647,158.78,37.485,02-13-18,Research Assistant II,0,1.0,1,,,A
-Brier,Janice ,F,CU_2038177,727.37,61.553,09-30-18,Software Engineer IV,0,,1,,,A
-Brewer,Stefan ,M,CU_9992610,177.89,,01-02-18,Quality Control Specialist,0,1.0,1,,,A
-Fadley,Sidney ,M,CU_1030566,91.16,70.094,01-01-18,Research Assistant III,1,,1,,A,A
-Leanos,Wesley ,M,CU_7457192,154.55,44.699,11-22-18,Dental Hygienist,0,1.0,1,,,A
-Sanabria,Juan ,M,CU_3506607,180.38,57.237,06-02-18,Dental Hygienist,0,1.0,1,,A,A
-Wittkop,Jeri,F,CU_3756466,162.55,39.498,11-13-18,Research Assistant II,0,1.0,1,,,C
-Haut,Salvador,M,CU_1169842,174.52,50.075,04-12-18,Data Coordiator,0,1.0,1,,A,A
-Schonhardt,David ,M,CU_2316726,143.06,36.942,12-11-18,Software Engineer IV,0,1.0,1,,,A
-Navin,Maisie ,F,CU_1171898,183.42,36.78,03-04-18,Cost Accountant,0,1.0,1,,,A
-Dicarlo,Christine ,F,CU_6545853,132.35,42.203,02-23-18,Accountant I,0,1.0,1,,,A
-Croney,Kerri,F,CU_5556676,387.66,56.747,05-21-18,,0,1.0,1,,,A
-Auxilien,Colin,M,CU_5470662,118.07,,06-23-18,Technical Writer,0,1.0,1,,,A
-Alf,Andrew ,M,CU_5454279,127.89,36.76,11-14-18,Quality Control Specialist,0,1.0,1,,,A
-Weske,Heather ,F,CU_5679560,94.01,39.406,06-01-18,Quality Control Specialist,1,1.0,1,,A,A
-Blankley,Katerina ,F,CU_8219081,484.58,42.191,03-05-18,Software Engineer IV,0,,1,,A,A
-Baugus,Yuvraj ,M,CU_8126921,123.41,32.971,01-07-18,Research Assistant II,1,,1,,,A
-Kiraly,Barry,M,CU_2009546,63.82,62.539,10-13-18,Dental Hygienist,0,,1,,A,A
-Dukart,Sonja,F,CU_2132430,160.57,70.84,08-09-18,Research Assistant III,0,1.0,1,,A,A
-Ianni,Lenny ,M,CU_1204692,269.73,56.386,01-22-18,Research Assistant II,0,1.0,1,,,A
-Munzell,Marta,F,CU_3727828,176.34,58.858,12-23-18,Software Engineer IV,0,1.0,1,,,A
-Steinruck,Quinn ,F,CU_6998484,51.04,54.752,11-26-18,,0,,1,,A,A
-Anos,Deena,F,CU_5802455,165.67,37.611,10-23-18,Dental Hygienist,1,1.0,1,,,A
-Boatner,Timothy ,M,CU_6250968,133.58,29.93,01-01-18,Quality Control Specialist,0,1.0,1,,,A
-Tole,Maura,F,CU_2576857,136.28,,02-20-18,Editor,0,1.0,1,,,A
-Lorraine,Reggie ,M,CU_1049051,314.95,55.633,04-14-18,Research Assistant II,0,,1,,,A
-Lebeouf,June,F,CU_8712669,335.83,34.368,11-02-18,Research Assistant II,0,1.0,1,,A,A
-Marcussen,Thelma,F,CU_8456669,339.07,58.825,12-11-18,Quality Control Specialist,0,1.0,1,,,A
-Mirbaha,Nestor,M,CU_9329119,174.86,52.103,10-26-18,Software Engineer IV,0,1.0,1,,A,A
-Begeman,Issa ,M,CU_9769440,145.62,,09-28-18,Research Assistant II,0,,1,,A,A
-Hoage,Patrice,F,CU_7434719,155.21,,12-18-18,Research Assistant III,0,1.0,1,,A,A
-Balmer,Avis,F,CU_2408930,124.02,50.528,07-16-18,Software Engineer IV,0,1.0,1,,,A
-Fette,Ema ,F,CU_3617257,279.78,,01-13-18,Research Assistant II,0,1.0,1,,A,A
-Laut,Lucinda ,F,CU_5122539,190.4,53.391,05-26-18,Food Chemist,0,1.0,1,,,A
-Karasek,Antony,M,CU_3901939,169.7,56.987,03-17-18,Account Coordinator,0,1.0,1,,A,A
-Rise,Johnnie,M,CU_8727028,139.34,56.05,09-12-18,,1,,1,,A,A
-Glovier,Heath ,M,CU_7748085,94.26,50.759,07-26-18,Research Assistant II,0,,1,,A,A
-Droz,Augusta,F,CU_4538871,177.96,,10-19-18,Software Engineer IV,0,1.0,1,,,A
-Moorefield,Cristobal,M,CU_1978872,73.23,57.888,06-18-18,Software Engineer IV,0,1.0,1,,,A
-Deuink,Evie-May ,F,CU_4282874,146.96,51.637,12-28-18,Research Assistant II,0,1.0,1,,,A
-Gilbride,Elliott,M,CU_6187520,151.46,57.352,03-13-18,Dental Hygienist,0,1.0,1,,A,A
-Klukken,Roxie ,F,CU_8215043,98.2,52.515,08-29-18,Research Assistant III,0,1.0,1,,,A
-Huggler,Ronald,M,CU_9386500,244.07,54.496,02-18-18,,0,1.0,1,,A,A
-Roa,Eisa ,M,CU_1788422,540.14,,12-11-18,Cost Accountant,1,1.0,1,,A,A
-Hollyfield,Tilly ,F,CU_8495623,136.79,56.307,08-09-18,,0,1.0,1,,,A
-Ballester,Tomas ,M,CU_3090958,128.0,55.159,12-11-18,Cost Accountant,0,,1,,,A
-Left,Maciej ,M,CU_2365966,170.62,34.895,12-01-18,Research Assistant II,0,1.0,1,,,A
-Casino,Malachi ,M,CU_7244304,132.98,46.872,11-11-18,Dental Hygienist,0,1.0,1,,A,A
-Pro,Fabian ,M,CU_1352207,171.93,39.608,03-29-18,Accountant I,0,1.0,1,,A,A
-Benvenuti,Bartlomiej ,M,CU_3830290,157.09,45.183,06-07-18,,0,1.0,1,,,A
-Axel,Edmund ,M,CU_2660882,129.6,36.579,06-08-18,,0,1.0,1,,A,A
-Novitsky,Jenson ,M,CU_7445017,215.53,40.512,06-11-18,Accountant I,0,,1,,A,A
-Court,Benjamin,M,CU_2929180,153.05,29.398,03-17-18,Research Assistant II,0,1.0,1,,,A
-Milley,Samual,M,CU_7821853,255.88,58.229,05-06-18,Software Engineer IV,1,1.0,1,,,A
-Spitzer,Antony ,M,CU_9536030,167.9,61.001,04-22-18,Software Engineer IV,0,1.0,1,,A,A
-Anness,Musa ,M,CU_4964893,126.7,63.096,02-19-18,Food Chemist,0,1.0,1,,,A
-Lamens,Philip ,M,CU_4502046,198.17,37.142,07-03-18,Accountant I,1,,1,,,A
-Kaigle,Sung,M,CU_4119069,373.44,38.394,09-10-18,Dental Hygienist,0,1.0,1,,A,A
-Wulffraat,Carter ,M,CU_6298146,227.72,40.744,07-07-18,Software Engineer IV,0,1.0,1,,A,A
-Schultz,Rohan ,M,CU_3359263,126.82,,10-06-18,Accountant I,0,1.0,1,,A,A
-Cullip,Willy,M,CU_8407588,179.45,,10-18-18,Dental Hygienist,1,1.0,1,,A,A
-Greising,Theron,M,CU_4037157,139.64,33.149,01-14-18,Research Assistant III,0,1.0,1,,,A
-Siedlik,Mauricio,M,CU_9128478,161.55,41.399,01-19-18,Cost Accountant,0,1.0,1,,A,A
-Setting,Avery,M,CU_7361069,129.97,27.572,12-08-18,Accountant I,0,1.0,1,,A,A
-Gros,Alice,F,CU_1341998,136.41,38.457,11-20-18,Quality Control Specialist,0,,1,,,A
-Betschart,Danielle ,F,CU_8745518,200.82,59.628,08-03-18,Software Engineer IV,0,,1,,A,A
-Tappan,Jodie ,F,CU_7551537,153.75,,02-22-18,Accountant I,0,1.0,1,,,A
-Burrow,Emmanuel,M,CU_5487154,98.13,27.873,08-31-18,Technical Writer,0,1.0,1,,A,A
-Kess,Penelope ,F,CU_9914933,145.39,52.036,03-20-18,Research Assistant II,0,1.0,1,,A,A
-Cuffee,Jonas ,M,CU_8747573,116.22,46.365,08-06-18,Accountant I,0,1.0,1,,A,A
-Bowlby,Orson ,M,CU_8534588,131.84,69.642,02-16-18,Accountant I,0,1.0,1,,,A
-Barefoot,Marian,F,CU_5761598,132.2,54.196,06-07-18,Quality Control Specialist,0,1.0,1,,A,A
-Zavala,Thomas,M,CU_7135806,152.37,56.407,01-15-18,Research Assistant III,1,,1,,A,A
-Muir,Kevin,M,CU_2202178,136.5,56.097,03-09-18,Research Assistant III,0,1.0,1,,A,A
-Ruddle,Maryanne,F,CU_7301700,200.99,64.112,12-28-18,Research Assistant II,0,1.0,1,,A,A
-Wisse,Bertram,M,CU_9298504,523.62,41.63,02-03-18,,0,1.0,1,,,A
-Layva,Jai ,M,CU_7031370,238.53,43.162,07-19-18,Software Engineer IV,0,,1,,,A
-Surowka,Esther ,F,CU_8260171,186.62,,03-11-18,Research Assistant II,0,1.0,1,,A,A
-Isip,Kadie ,F,CU_3013196,121.14,41.186,03-23-18,Software Engineer IV,1,1.0,1,,A,A
-Endlich,Regan ,M,CU_1233485,142.37,50.364,04-06-18,Software Engineer IV,0,1.0,1,,,A
-Fantauzzi,Steven,M,CU_1991247,198.36,,03-06-18,Research Assistant III,0,,1,,,A
-Kneser,Alyssa ,F,CU_5472848,107.51,57.832,03-25-18,,0,1.0,1,,,A
-Legrotte,Mayson ,M,CU_3142225,91.04,50.281,08-14-18,Data Coordiator,0,1.0,1,,A,A
-Boscarino,Sumaiya ,F,CU_6693456,335.06,35.117,12-15-18,Dental Hygienist,1,,1,,A,A
-Hafner,Valentina ,F,CU_8591957,98.09,,05-02-18,Dental Hygienist,0,1.0,1,,,A
-Ysbrand,Ward,M,CU_4512343,245.61,38.623,02-27-18,Research Assistant III,0,1.0,1,,,A
-Tudor,Carson,M,CU_5605975,128.73,47.839,10-22-18,Software Engineer IV,0,1.0,1,,A,A
-Burchess,Katie,F,CU_1524314,123.92,57.208,05-17-18,Web Developer II,0,,1,,A,A
-Demasi,Earlene,F,CU_4317787,131.13,50.811,01-02-18,Research Assistant II,0,1.0,2,,A,C
-Ybarro,Miya ,F,CU_4844124,61.17,,09-01-18,Software Engineer IV,0,1.0,1,,A,A
-Brundrett,Felicity ,F,CU_1747549,149.71,60.884,09-14-18,Food Chemist,0,,1,,,A
-Yahl,Ike,M,CU_3369563,171.45,35.376,06-18-18,Quality Control Specialist,0,1.0,1,,A,A
-Eppich,Spencer ,M,CU_9267808,140.36,29.449,12-16-18,Research Assistant II,0,,1,,,A
-Morfin,Sulayman ,M,CU_8708711,165.18,,10-29-18,Software Engineer IV,0,1.0,1,,A,A
-Chmelik,Silvia,F,CU_1139305,178.09,,02-20-18,Dental Hygienist,0,,1,,A,A
-Boocock,Mia,F,CU_5130857,101.72,60.427,01-08-18,Software Engineer IV,0,1.0,1,,A,A
-Wiant,Samson ,M,CU_8643177,180.83,,03-09-18,Research Assistant II,0,1.0,1,,A,A
-Toaston,Ottilie ,F,CU_6212204,183.23,59.525,05-02-18,Food Chemist,0,1.0,1,,A,A
-Kovarovic,Ariel,M,CU_6498929,131.37,56.702,03-20-18,Structural Engineer,1,1.0,1,,A,A
-Newlan,Damian ,M,CU_9241201,152.49,55.094,09-10-18,Research Assistant II,0,1.0,1,,A,A
-Vitelli,Finn ,M,CU_5479027,216.95,43.343,05-10-18,Research Assistant III,0,1.0,1,,,A
-Cilley,Ferdinand,M,CU_9138804,158.57,30.344,01-05-18,Research Assistant II,0,1.0,1,,,A
-Syzdek,Victor ,M,CU_7072373,143.72,,11-11-18,Research Assistant II,0,1.0,1,,A,A
-Bucchin,Richie,M,CU_9263734,177.83,58.988,03-16-18,Software Engineer IV,0,1.0,1,,,A
-Speicher,Hari ,M,CU_7330422,99.72,27.867,11-21-18,Technical Writer,0,1.0,1,,A,A
-Fasone,Magdalena ,F,CU_6779513,95.62,43.699,10-16-18,Software Engineer IV,0,1.0,1,,,A
-Eichstedt,Simran ,F,CU_4600441,136.55,28.621,04-05-18,Safety Technician III,0,1.0,1,,,A
-Holyfield,Mckenzie ,M,CU_3664507,156.32,61.75,05-08-18,Research Assistant III,1,1.0,1,,A,A
-Dimalanta,Daphne,F,CU_1315457,166.44,38.085,12-30-18,Technical Writer,0,1.0,1,,,A
-Halbrook,Karl,M,CU_6912643,131.87,56.158,06-27-18,Dental Hygienist,0,1.0,1,,A,A
-Filiault,Krisha ,F,CU_9497221,162.32,39.564,05-09-18,,0,1.0,1,,A,A
-Russomano,Anniyah ,F,CU_9818762,160.28,58.619,07-29-18,Research Assistant II,0,1.0,1,,A,A
-Bowels,Cohen ,M,CU_8899210,127.69,35.24,06-26-18,Account Coordinator,0,1.0,1,,A,A
-Almarez,Lucius,M,CU_7361165,130.25,47.31,05-23-18,,0,,1,,,A
-Lanclos,Darcie ,F,CU_2933390,171.47,,01-25-18,Software Engineer IV,0,1.0,1,,,A
-Sturm,Penny ,F,CU_9747087,141.13,62.952,11-07-18,Quality Control Specialist,0,1.0,1,,,A
-Ehle,Anish ,M,CU_9798289,119.9,44.258,10-24-18,Accountant I,0,1.0,1,,,A
-Teare,Ty ,M,CU_8759954,128.94,38.435,06-29-18,Software Engineer IV,0,,1,,,A
-Alexader,Polly,F,CU_9415316,257.49,21.659,03-17-18,Safety Technician III,0,1.0,1,,A,A
-Capulong,Lorcan ,M,CU_6158997,173.0,,09-12-18,Software Engineer IV,0,1.0,1,,A,A
-Maslakowski,Samuel,M,CU_5821079,387.52,20.035,11-18-18,Software Engineer IV,0,1.0,1,,A,A
-Mcdonell,German,M,CU_6929049,38.79,,04-20-18,Research Assistant II,0,1.0,1,,,A
-Gogel,Nikhil ,M,CU_4543129,149.24,63.728,04-09-18,Research Assistant II,0,,1,,A,A
-Theobald,Laurel,F,CU_2288284,124.6,,07-12-18,,0,,1,,A,A
-Gundrum,Aled ,M,CU_9648799,164.16,29.225,11-27-18,Research Assistant II,0,1.0,1,,,A
-Kirtley,Israel ,M,CU_1694367,99.22,34.459,11-13-18,Data Coordiator,1,1.0,1,,A,A
-Curran,Szymon ,M,CU_8970915,259.44,43.028,12-26-18,Software Engineer IV,0,1.0,1,,A,A
-Isenhart,Bryan ,M,CU_3232421,191.03,59.646,08-14-18,,0,,1,,,A
-Membreno,Hipolito,M,CU_8010405,202.96,,03-08-18,,0,1.0,1,,,A
-Syon,Andre ,M,CU_5348006,193.38,43.027,09-12-18,Research Assistant II,1,1.0,1,,A,A
-Prazeres,Micah ,M,CU_6023850,143.85,,01-04-18,Safety Technician III,0,,1,,,A
-Vesper,Emma ,F,CU_3021483,117.04,,10-06-18,Dental Hygienist,0,1.0,1,,A,A
-Kuzel,Mariya ,F,CU_4862635,546.82,42.388,07-10-18,Software Engineer IV,1,1.0,1,,,A
-Smallman,Alicja ,F,CU_2646700,204.0,59.854,06-25-18,Research Assistant III,0,,1,,A,A
-Briseno,Leonie ,F,CU_4297390,136.03,59.514,08-05-18,Quality Control Specialist,0,1.0,1,,,A
-Magpusao,Eduardo,M,CU_9208495,282.4,52.942,12-27-18,Research Assistant II,0,1.0,1,,A,A
-Vahle,Long,M,CU_4016816,99.74,35.646,01-10-18,Software Engineer IV,0,1.0,1,,,A
-Raitz,Jean,F,CU_9042609,143.84,24.465,08-01-18,,0,1.0,1,,A,A
-Wolcott,Bethan ,F,CU_9734834,98.15,,08-17-18,Research Assistant II,0,,1,,A,A
-Marlene,Hadi ,M,CU_5888688,57.81,57.801,08-13-18,Research Assistant II,0,1.0,1,,,A
-Siverson,Vince,M,CU_8729271,59.69,58.405,08-10-18,Software Engineer IV,0,1.0,1,,A,A
-Pauker,Mohammad ,M,CU_2470585,219.98,62.944,09-03-18,Software Engineer IV,0,1.0,1,,A,A
-Dunkentell,Kyla ,F,CU_3111610,132.95,67.874,04-09-18,Food Chemist,0,,1,,,A
-Albrekht,Fredric,M,CU_1508029,222.07,25.776,11-20-18,Dental Hygienist,1,1.0,1,,,A
-Nerenberg,Grady,M,CU_2929344,152.62,34.797,05-19-18,Technical Writer,0,1.0,1,,,A
-Lenius,Kaylan ,M,CU_6972097,255.86,35.714,12-30-18,,0,1.0,1,,,A
-Hibbard,Blake,M,CU_9065157,230.28,42.85,01-20-18,Research Assistant II,0,,1,,A,A
-Kaesemeyer,Brigitte,F,CU_9628360,369.26,32.895,02-07-18,Accountant I,0,1.0,1,,A,A
-Calame,Luqman ,M,CU_4524744,326.63,58.706,10-02-18,Research Assistant II,0,1.0,1,,,A
-Abatiell,Jaclyn,F,CU_2595532,35.9,,07-24-18,,0,,1,,A,A
-Iarossi,Rajan ,M,CU_2327248,168.02,39.615,01-10-18,Dental Hygienist,0,1.0,1,,,A
-Hausler,Hank,M,CU_7402193,143.49,43.929,07-06-18,Research Assistant II,1,1.0,1,,A,A
-Gwathney,Kajus ,M,CU_5708498,146.95,,05-25-18,Cost Accountant,1,,1,,A,A
-Venghaus,Gino,M,CU_8071889,121.22,28.067,06-18-18,Software Engineer IV,0,1.0,1,,A,A
-Laprete,Rocky ,M,CU_8184530,312.58,26.239,01-14-18,Software Engineer IV,1,1.0,1,,,A
-Younkers,Marshall,M,CU_8334039,154.65,30.805,12-21-18,Research Assistant III,0,1.0,1,,A,A
-Centini,Huxley ,M,CU_8850136,532.12,61.139,04-08-18,Software Engineer IV,0,,1,,,A
-Gummer,Stanton,M,CU_3836633,141.08,68.596,08-29-18,Software Engineer IV,0,1.0,1,,A,A
-Loghry,Evelyn ,F,CU_1491672,215.4,66.143,12-28-18,Software Engineer IV,0,1.0,1,,,A
-Lezak,Bentley ,M,CU_2687704,287.17,42.312,08-22-18,Safety Technician III,0,,1,,A,A
-Kai,Kyle,M,CU_4555484,146.66,48.483,07-25-18,Software Engineer IV,0,,1,,A,A
-Jurgenson,Callie ,F,CU_4133595,870.58,59.193,10-14-18,Dental Hygienist,1,1.0,1,,A,A
-Humason,Joel ,M,CU_3093209,104.78,,07-29-18,Research Assistant III,0,1.0,1,,A,A
-Strausbaugh,Gay,F,CU_8168159,270.88,27.622,12-29-18,,1,1.0,1,,A,A
-Lulewicz,Kaitlin ,F,CU_7785185,115.49,44.293,09-26-18,Software Engineer IV,0,,1,,A,A
-Tweedy,Kenton,M,CU_5542626,155.23,33.675,10-31-18,Quality Control Specialist,1,1.0,1,,,A
-Kirt,Jeanette,F,CU_3726056,101.72,31.567,05-16-18,Technical Writer,0,,1,,A,A
-Sheets,Humaira ,F,CU_8323816,237.31,61.95,07-03-18,Accountant I,0,1.0,1,,A,A
-Masteller,Gale,M,CU_3861227,66.61,,02-09-18,Technical Writer,0,1.0,1,,,A
-Roemmich,Anisa ,F,CU_8299246,162.44,68.556,03-10-18,Cost Accountant,0,1.0,1,,A,A
-Brion,Michel,M,CU_1379055,141.01,58.289,12-03-18,Research Assistant II,0,,1,,A,A
-Tolson,Kamila ,F,CU_9491184,126.94,55.902,04-07-18,Technical Writer,0,1.0,1,,A,A
-Sensabaugh,Richie ,M,CU_8788720,130.54,33.081,04-26-18,Software Engineer IV,0,,1,,A,A
-Kozubal,Daniela ,F,CU_1532657,184.46,39.952,07-08-18,Software Engineer IV,0,1.0,1,,,A
-Darrisaw,Jody,F,CU_6099706,307.56,80.778,09-29-18,,0,1.0,1,,,A
-Paraz,Douglass,M,CU_7887611,166.46,60.978,07-16-18,Structural Engineer,0,1.0,1,,A,A
-Seider,Orlando,M,CU_3523322,242.72,48.178,06-21-18,Software Engineer IV,1,1.0,1,,A,A
-Afshari,Yasin ,M,CU_2153213,101.61,39.298,05-03-18,Web Developer II,0,1.0,1,,,A
-Mendel,Jia ,M,CU_6374143,134.1,35.18,07-25-18,Software Engineer IV,0,,1,,,A
-Seate,Gladys ,F,CU_1405696,149.45,31.578,03-18-18,Software Engineer IV,0,1.0,1,,A,A
-Wiechert,Jae,M,CU_9775873,178.07,30.931,09-21-18,Software Engineer IV,0,1.0,1,,A,A
-Viramontes,Lacy,M,CU_5194500,318.46,41.913,05-07-18,Data Coordiator,0,1.0,1,,,A
-Laford,Elle ,F,CU_2239240,321.72,49.111,11-30-18,,1,,1,,,A
-Dellon,Rubie ,F,CU_2130697,231.5,46.64,12-16-18,Food Chemist,0,1.0,1,,,A
-Maratos,Danny ,M,CU_3484428,221.23,56.079,05-29-18,Research Assistant III,1,,1,,,A
-Giancaspro,Byron,M,CU_7928588,721.25,57.287,07-29-18,Research Assistant II,0,1.0,1,,,A
-Suszynski,Ayaan ,M,CU_4504334,235.25,47.967,10-23-18,,0,1.0,1,,,A
-Argrow,Vanessa ,F,CU_2517775,296.5,44.245,11-20-18,Research Assistant III,0,1.0,1,,A,A
-Robyn,Geraldo,M,CU_9790224,106.59,37.459,05-28-18,Food Chemist,1,1.0,1,,A,A
-Ailey,Everette,M,CU_9569041,118.43,55.205,11-10-18,Structural Engineer,0,1.0,1,,,A
-Fairbrother,Augustine,M,CU_3648276,134.4,,02-27-18,Software Engineer IV,0,1.0,1,,,A
-Cholakyan,Forrest,M,CU_2329365,95.3,45.515,05-16-18,Research Assistant II,1,,1,,,A
-Lazarine,Tania,F,CU_4750102,149.85,39.388,09-28-18,Structural Engineer,0,1.0,1,,A,A
-Koegler,Evelina ,F,CU_3218201,326.24,48.053,01-10-18,Accountant I,0,1.0,1,,A,A
-Agrios,Shea ,M,CU_1260316,139.02,41.683,01-25-18,Web Developer II,0,,1,,,A
-Maquis,Aden ,M,CU_7652131,185.66,46.996,02-11-18,,0,1.0,1,,A,A
-Dircks,Sky ,F,CU_9601828,192.97,65.46,07-11-18,Research Assistant II,0,1.0,1,,A,A
-Lawlis,Chanel ,F,CU_3896105,127.24,45.64,09-07-18,Software Engineer IV,0,1.0,1,,,A
-Beaudette,Zachariah ,M,CU_2622253,449.18,45.333,04-16-18,Dental Hygienist,0,1.0,1,,A,A
-Madi,Aoife ,F,CU_6988591,109.58,55.749,06-09-18,Quality Control Specialist,0,,1,,,A
-Alcala,Muhammed ,M,CU_3695408,175.69,38.155,08-31-18,Research Assistant II,0,,1,,A,A
-Pancholi,Yunus ,M,CU_4731701,150.29,43.086,06-03-18,Quality Control Specialist,0,,1,,A,A
-Widby,Xander ,M,CU_4250423,145.47,55.499,07-18-18,,0,,1,,,A
-Delaluz,Dick,M,CU_1960761,158.34,26.966,03-28-18,Dental Hygienist,0,1.0,1,,,A
-Rabideau,Dominique,F,CU_5985082,116.22,56.86,08-20-18,Quality Control Specialist,0,,1,,A,A
-Fahs,Hussein ,M,CU_1620793,127.5,45.029,03-17-18,Research Assistant II,0,1.0,1,,A,A
-Esselman,Hasan ,M,CU_4119356,120.82,38.486,12-28-18,Research Assistant II,0,1.0,1,,,A
-Premeaux,Kristina,F,CU_9976636,165.42,55.878,07-30-18,Web Developer II,1,,1,,A,A
-Nicolaides,Constance,F,CU_3988285,130.71,55.289,07-02-18,Research Assistant II,1,1.0,1,,,A
-Pulcher,Garry,M,CU_2931513,180.15,28.55,06-22-18,Web Developer II,0,1.0,1,,,A
-Matalavage,Isreal,M,CU_2442053,134.32,,01-04-18,Technical Writer,1,1.0,1,,A,A
-Ascheman,Kaycee ,F,CU_5569350,190.77,,03-09-18,Research Assistant III,0,1.0,1,,,A
-Trousdale,Yusef ,M,CU_1919813,333.42,63.699,12-27-18,Account Coordinator,0,1.0,1,,,A
-Falknor,Corrine,F,CU_3488584,431.24,22.243,04-10-18,Research Assistant II,0,1.0,1,,,A
-Dufford,Jorge,M,CU_6116172,147.18,55.1,04-02-18,Food Chemist,0,1.0,1,,,A
-Suthoff,Marva,F,CU_1932110,198.36,36.642,08-10-18,Software Engineer IV,0,1.0,1,,A,A
-Hija,Amanda,F,CU_9780050,128.05,48.432,05-22-18,Software Engineer IV,0,1.0,1,,A,A
-Alley,Summer-Rose ,F,CU_1258326,132.42,60.633,11-02-18,,1,1.0,1,,A,A
-Verbeke,Ezequiel,M,CU_5036887,129.32,50.442,02-19-18,Software Engineer IV,0,1.0,1,,A,A
-Sandeen,Todd,M,CU_5270360,108.07,60.391,05-11-18,Research Assistant II,1,1.0,1,,,A
-Monaldi,Sullivan ,M,CU_6736729,196.28,69.225,02-26-18,,0,1.0,1,,A,A
-Naill,Hiram,M,CU_5256026,134.05,56.926,05-12-18,Research Assistant III,0,1.0,1,,,A
-Deaguiar,Morris,M,CU_7781211,94.91,57.281,06-24-18,Software Engineer IV,0,,1,,,A
-Teets,Sherrie,F,CU_5051228,140.77,31.347,03-29-18,Software Engineer IV,1,1.0,1,,,A
-Stukowski,Brooklyn ,M,CU_3545952,162.34,29.569,07-06-18,Dental Hygienist,1,1.0,1,,A,A
-Lazier,Kimberley ,F,CU_8252258,161.5,28.989,12-26-18,Research Assistant III,0,1.0,1,,A,A
-Esten,Meghan,F,CU_2927458,199.69,43.663,01-26-18,Technical Writer,1,1.0,1,,A,A
-Lorsung,Emily-Rose ,F,CU_6638439,152.02,51.519,04-06-18,Software Engineer IV,0,,1,,,A
-Posso,Mabel,F,CU_2802544,37.73,48.923,10-06-18,Dental Hygienist,0,1.0,1,,,A
-Piccoli,Bo ,F,CU_8285041,125.2,44.874,10-21-18,Software Engineer IV,1,1.0,1,,,A
-Ryneer,Pablo ,M,CU_9315187,175.53,46.754,10-23-18,Software Engineer IV,0,1.0,1,,A,A
-Ludemann,Wilfred ,M,CU_1379187,154.9,61.815,12-20-18,Editor,1,1.0,1,,A,A
-Stiefel,Lawrence ,M,CU_3672949,140.08,,11-12-18,Research Assistant II,1,1.0,1,,A,A
-Keeman,Ridwan ,M,CU_8024952,132.64,20.372,06-30-18,Software Engineer IV,0,1.0,1,,A,A
-Linkowski,Khadija ,F,CU_4907896,220.18,55.595,09-24-18,,0,1.0,1,,A,A
-Sutch,Teddy ,M,CU_6941564,81.35,35.13,02-15-18,Data Coordiator,1,1.0,1,,A,A
-Zimmermann,Hibah ,F,CU_3906429,131.7,57.038,02-25-18,Research Assistant II,0,1.0,1,,,A
-Buczak,Harleen ,F,CU_1616764,163.67,22.18,10-15-18,,0,1.0,1,,A,A
-Sesko,Nana ,M,CU_2667392,127.98,43.543,01-15-18,Dental Hygienist,0,1.0,1,,,A
-Daryanl,Kaya ,M,CU_3324801,420.83,41.151,02-20-18,Software Engineer IV,0,,1,,,A
-Fullilove,Kaidan ,M,CU_8496002,98.67,40.221,12-26-18,Quality Control Specialist,0,1.0,1,,A,A
-Artley,Son,M,CU_7150465,165.79,47.881,02-03-18,Software Engineer IV,0,1.0,1,,A,A
-Dorge,Hania ,F,CU_4168579,135.0,51.451,11-09-18,Research Assistant III,0,1.0,1,,A,A
-Unzicker,Laverne,M,CU_1069958,440.21,56.763,03-19-18,Research Assistant II,1,1.0,1,,,A
-Mccarvill,Cade ,M,CU_7103368,258.95,,03-28-18,Software Engineer IV,0,1.0,1,,A,A
-Therien,Evangeline,F,CU_4463498,192.88,59.869,11-28-18,Software Engineer IV,0,1.0,1,,A,A
-Morison,Noor ,F,CU_6867851,137.31,31.326,06-13-18,Research Assistant III,0,1.0,1,,,A
-Bonavia,Refugio,M,CU_3478414,145.93,35.47,03-15-18,Software Engineer IV,0,1.0,1,,A,A
-Hommel,Jenna,F,CU_5038992,471.2,25.402,04-09-18,Safety Technician III,0,1.0,1,,A,A
-Passalacqua,Gideon ,M,CU_4238227,102.58,56.897,12-20-18,Software Engineer IV,1,1.0,1,,A,A
-Halima,Fahad ,M,CU_3752853,192.11,30.394,07-13-18,Technical Writer,0,1.0,1,,,A
-Ferard,Mai,F,CU_5637014,163.6,36.173,09-18-18,Software Engineer IV,0,1.0,1,,,A
-Gehrke,Solomon,M,CU_5634967,339.28,63.938,07-03-18,Dental Hygienist,0,1.0,1,,,A
-Boggan,Sami ,M,CU_9911189,129.04,37.409,09-24-18,Software Engineer IV,0,1.0,1,,A,A
-Crowden,Frankie,F,CU_6800282,310.82,56.623,12-23-18,Dental Hygienist,1,1.0,1,,A,A
-Lemaster,Findlay ,M,CU_7293850,172.96,50.381,02-01-18,Editor,0,1.0,1,,,A
-Ekis,Carmelo,M,CU_3216284,133.92,37.832,08-20-18,Software Engineer IV,0,1.0,1,,,A
-Shattuck,Lyra ,F,CU_1313695,138.62,53.078,04-05-18,Research Assistant II,1,1.0,1,,,A
-Higa,Cliff,M,CU_3031975,115.0,62.812,04-12-18,Accountant I,0,1.0,1,,A,B
-Tasso,Hugh ,M,CU_9302951,41.74,,11-03-18,,1,1.0,1,,,A
-Keeler,Ahmed,M,CU_4361129,138.77,58.073,09-16-18,Software Engineer IV,0,1.0,1,,A,A
-Chhor,Margie,F,CU_5770153,226.44,20.647,11-16-18,Dental Hygienist,0,1.0,1,,A,A
-Cota,Mikel,M,CU_8807340,207.46,,05-04-18,Safety Technician III,1,,1,,,A
-Arollo,Rodrick,M,CU_7426996,109.65,60.573,05-29-18,Safety Technician III,1,1.0,1,,,A
-Charbonnel,Lucca ,M,CU_7801784,499.89,53.683,09-16-18,Research Assistant II,0,1.0,1,,A,A
-Stacks,Ericka,F,CU_9427896,296.15,36.332,06-26-18,Software Engineer IV,0,1.0,1,,,A
-Haaz,Opal,F,CU_2911162,136.51,25.929,06-16-18,Software Engineer IV,0,,1,,,A
-Nasser,Lewis,M,CU_2595771,164.11,,03-28-18,Software Engineer IV,1,,1,,A,A
-Reshid,Lolita,F,CU_1317820,175.33,38.106,09-04-18,Software Engineer IV,1,1.0,1,,A,A
-Fregia,Viktoria ,F,CU_5030849,144.11,58.145,02-24-18,,0,1.0,1,,A,A
-Silvernale,Jed,M,CU_4987841,66.42,,09-20-18,Software Engineer IV,0,1.0,1,,A,A
-Areola,Tanya,F,CU_9812929,169.71,38.473,01-23-18,Software Engineer IV,0,1.0,1,,A,A
-Sevcik,Colby,M,CU_4051911,96.48,42.062,08-16-18,Accountant I,0,1.0,1,,A,A
-Witucki,Aleksander ,M,CU_4496328,101.31,35.431,11-05-18,Accountant I,0,,1,,,A
-Steinmeiz,Ervin,M,CU_4891597,155.81,38.339,08-05-18,Software Engineer IV,1,,1,,A,A
-Seale,Paula,F,CU_3138509,124.11,46.627,01-19-18,Dental Hygienist,0,,1,,A,A
-Carrelli,Yasmine ,F,CU_9759697,234.66,28.789,03-20-18,Research Assistant III,1,,1,,A,A
-Couvertier,Daisy-May ,F,CU_5534677,119.49,54.485,12-18-18,,0,1.0,1,,,A
-Mendiaz,Claude,M,CU_3277782,141.13,39.324,01-05-18,Quality Control Specialist,0,1.0,1,,A,A
-Hunsinger,Salman ,M,CU_6929370,335.54,25.913,10-17-18,Software Engineer IV,0,,1,,,A
-Greenwald,Kareem ,M,CU_1809371,142.57,29.746,12-12-18,Accountant I,0,1.0,1,,,A
-Sturms,Lucian ,M,CU_3376092,138.11,,12-28-18,Software Engineer IV,0,1.0,1,,,A
-Anello,Ollie,F,CU_1094623,156.41,25.15,03-22-18,Editor,1,,1,,,A
-Stoute,Leonard ,M,CU_9737185,153.79,64.259,11-24-18,Accountant I,0,,1,,A,A
-Vietzke,Hattie,F,CU_6190049,143.59,55.634,10-14-18,Dental Hygienist,0,1.0,1,,,A
-Dicker,Ayva ,F,CU_1164258,229.19,35.268,01-17-18,Software Engineer IV,0,1.0,1,,,A
-Glosson,Jill,F,CU_7357417,57.29,64.445,09-16-18,Web Developer II,0,1.0,1,,,A
-Lepage,Raymond ,M,CU_4764651,221.44,39.566,01-10-18,Structural Engineer,0,1.0,1,,A,A
-Frisco,Alonso,M,CU_7803886,119.32,49.322,08-19-18,Quality Control Specialist,1,,1,,,A
-Snare,Anita ,F,CU_6814703,88.44,41.2,08-04-18,Quality Control Specialist,0,1.0,1,,A,A
-Przybylski,Marc,M,CU_8236016,127.71,60.683,06-14-18,Editor,0,1.0,1,,,A
-Deoliveira,Kody ,M,CU_9997300,188.89,59.436,12-23-18,Software Engineer IV,1,1.0,1,,A,A
-Okoli,Deborah ,F,CU_2163700,226.14,,06-09-18,Safety Technician III,1,1.0,1,,,A
-Soros,Liz,F,CU_5583862,175.16,31.32,10-02-18,Software Engineer IV,0,1.0,1,,A,A
-Ferrett,Max,M,CU_1113079,159.26,27.544,05-26-18,Structural Engineer,0,1.0,1,,,A
-Ruszala,Lydia ,F,CU_3951608,129.59,21.587,06-10-18,Software Engineer IV,0,,1,,,A
-Kusterer,Sherman,M,CU_8252409,152.17,70.884,02-26-18,Quality Control Specialist,0,1.0,2,,A,C
-Iron,Austin,M,CU_7013369,162.78,,09-13-18,Safety Technician III,0,1.0,1,,A,A
-Deatherage,Dale,M,CU_7246838,145.48,34.39,02-27-18,Software Engineer IV,0,1.0,1,,,A
-Mcmiller,Nikodem ,M,CU_5022708,164.1,50.18,09-22-18,Dental Hygienist,0,1.0,1,,A,A
-Collova,Bobbi,F,CU_9552901,107.84,,12-01-18,Dental Hygienist,0,1.0,1,,A,A
-Lehoullier,Edgardo,M,CU_7494661,175.15,62.22,09-25-18,,1,1.0,1,,A,A
-Barriga,Lorena,F,CU_2958346,150.2,33.942,02-02-18,Research Assistant III,1,,1,,,A
-Schluneger,Shaan ,M,CU_8682511,153.03,65.99,07-01-18,Research Assistant III,1,1.0,1,,,A
-Ocon,Vihaan ,M,CU_9405456,393.71,55.229,02-08-18,,0,1.0,1,,,A
-Bridger,Aryan ,M,CU_4271119,129.61,55.73,09-05-18,Research Assistant III,0,1.0,1,,,A
-Magat,Dougie ,M,CU_7255058,166.94,46.146,03-20-18,Software Engineer IV,0,1.0,1,,,A
-Sticht,Angeline,F,CU_2876436,159.14,59.725,11-09-18,Dental Hygienist,0,,1,,A,A
-Teal,Talia ,F,CU_1360919,147.38,53.772,01-24-18,Research Assistant II,0,1.0,1,,A,A
-Steffee,Trey,M,CU_4004887,151.16,59.783,09-01-18,Software Engineer IV,0,1.0,1,,A,A
-Mandiola,Kerry,F,CU_6579227,112.74,33.431,12-24-18,Dental Hygienist,0,1.0,1,,,A
-Kayastha,Gregory ,M,CU_6568988,117.55,,07-12-18,Software Engineer IV,0,1.0,1,,,A
-Berta,Elissa ,F,CU_9905180,96.88,53.757,02-07-18,Software Engineer IV,1,,2,,,C
-Plante,Ellena ,F,CU_8569884,131.24,59.279,05-22-18,Software Engineer IV,0,1.0,1,,A,A
-Rothenbach,Chester ,M,CU_9165855,134.89,35.228,01-14-18,Data Coordiator,0,1.0,1,,A,A
-Moone,Moshe ,M,CU_8283169,312.25,37.668,11-24-18,Quality Control Specialist,0,1.0,1,,A,A
-Shelnutt,Amira ,F,CU_1272867,158.93,43.1,05-04-18,Software Engineer IV,0,1.0,1,,,A
-Muthig,Paige ,F,CU_3560483,127.28,53.108,04-18-18,Research Assistant II,1,1.0,1,,A,A
-Nipps,Eryn ,F,CU_3259427,123.83,56.084,09-17-18,,0,1.0,1,,A,A
-Contois,Mark ,M,CU_7564326,658.74,62.782,10-14-18,Account Coordinator,0,,1,,A,A
-Kleinknecht,Vanessa,F,CU_8999975,244.72,,05-02-18,Research Assistant II,1,1.0,1,,A,A
-Divenere,Tonia,F,CU_1514536,228.97,52.044,09-14-18,Research Assistant II,0,,1,,A,A
-Blaida,Colton,M,CU_6433832,180.51,,10-21-18,,0,1.0,1,,A,A
-Mogus,Saif ,M,CU_1102890,206.34,63.42,05-20-18,Software Engineer IV,0,1.0,1,,A,A
-Norland,Rahma ,F,CU_5018668,187.5,61.38,06-01-18,,0,,1,,A,A
-Askwith,Rolando,M,CU_6235184,413.45,,04-08-18,Accountant I,0,1.0,1,,,A
-Lancon,Syeda ,F,CU_1238067,575.76,55.148,09-22-18,Food Chemist,0,1.0,1,,,A
-Ulsamer,Sean,M,CU_1543221,43.78,35.682,01-27-18,Structural Engineer,1,1.0,1,,A,A
-Odonald,Rayford,M,CU_6939702,126.08,51.209,07-05-18,Research Assistant III,0,1.0,1,,A,A
-Eyster,Mindy,F,CU_7148597,128.38,53.111,09-28-18,Research Assistant II,0,1.0,1,,,A
-Orszulak,Jennie,F,CU_7871544,193.51,37.447,02-02-18,Research Assistant III,0,1.0,1,,A,A
-Weaver,Eileen,F,CU_6138937,147.71,48.259,11-12-18,Software Engineer IV,0,1.0,1,,A,A
-Saefong,Jackson,M,CU_1614906,201.52,26.903,06-13-18,Research Assistant II,0,1.0,1,,,A
-Paneque,Keaton ,M,CU_2479168,123.3,64.729,11-09-18,Account Coordinator,0,1.0,1,,A,A
-Poggio,Margaret,F,CU_5342273,105.64,34.709,08-09-18,Cost Accountant,0,1.0,1,,A,A
-Aluarez,Kyan ,M,CU_8191043,319.57,64.955,04-21-18,Research Assistant III,0,1.0,1,,A,A
-Wiener,Cornell,M,CU_7144517,188.82,43.452,09-23-18,Software Engineer IV,0,1.0,1,,,A
-Boniface,Maude,F,CU_5164102,436.09,38.114,04-30-18,Account Coordinator,1,1.0,1,,,A
-Nopachai,Rhiannon ,F,CU_7375943,187.67,20.676,01-03-18,Software Engineer IV,1,1.0,1,,A,A
-Coggeshall,April,F,CU_9825352,149.73,53.795,10-12-18,Dental Hygienist,0,,1,,,A
-Gudino,Rueben ,M,CU_8084554,146.36,55.273,04-04-18,Research Assistant III,1,1.0,1,,A,A
-Moor,Kaden ,M,CU_7277644,103.35,37.116,03-05-18,Software Engineer IV,0,1.0,1,,A,A
-Kray,August,M,CU_7058509,173.91,60.206,06-07-18,Research Assistant II,0,1.0,1,,A,A
-Siegal,Dana,F,CU_7263309,175.7,49.505,04-29-18,Software Engineer IV,0,,1,,A,A
-Bardach,Christy,F,CU_6581325,148.23,39.589,03-10-18,Data Coordiator,0,1.0,1,,,A
-Mcinvale,Amparo,F,CU_9798734,204.35,68.604,01-28-18,Structural Engineer,0,1.0,1,,A,A
-Dembroski,Gloria,F,CU_8846414,188.95,,02-05-18,Quality Control Specialist,1,1.0,1,,A,A
-Segraves,Roxie,F,CU_1270867,194.81,44.365,05-20-18,Cost Accountant,0,1.0,1,,A,A
-Szymczyk,Ahmed ,M,CU_6829139,118.19,48.818,06-01-18,Account Coordinator,0,1.0,1,,A,A
-Caborn,Titus,M,CU_6349909,162.51,54.959,11-27-18,Structural Engineer,0,1.0,1,,,A
-Ringley,Hyman,M,CU_1172567,118.96,67.8,08-09-18,Research Assistant III,1,1.0,1,,,A
-Tagliavia,Rory,M,CU_5696601,102.96,79.621,08-06-18,,0,1.0,1,,A,A
-Swailes,Jia ,F,CU_2976860,114.4,76.03,11-21-18,Safety Technician III,1,1.0,1,,,A
-Shivy,Jimmy,M,CU_1889378,160.87,31.391,08-28-18,Technical Writer,0,1.0,1,,A,A
-Lindert,Deacon ,M,CU_6190179,139.55,26.917,05-17-18,,0,1.0,1,,,A
-Ciotti,Wesley,M,CU_4205674,154.03,55.654,06-29-18,Quality Control Specialist,0,1.0,1,,,A
-Babineaux,Erasmo,M,CU_5006446,315.52,65.065,06-15-18,Software Engineer IV,0,1.0,1,,,A
-Leedy,Deloris,F,CU_9962606,130.27,58.407,09-11-18,Research Assistant II,0,1.0,1,,A,A
-Alipio,Lonny,M,CU_9829488,128.7,68.027,11-07-18,Software Engineer IV,0,1.0,1,,A,A
-Eggenberg,Haaris ,M,CU_5409912,162.36,44.919,02-15-18,Software Engineer IV,0,1.0,1,,,A
-Paparo,Jared ,M,CU_5530744,289.01,43.068,10-27-18,,0,1.0,1,,,A
-Huschle,Tamra,F,CU_7228538,157.43,33.806,12-14-18,Account Coordinator,0,1.0,1,,,A
-Cicciarelli,Allan,M,CU_2149499,206.01,44.596,10-17-18,Software Engineer IV,1,1.0,1,,A,A
-Minassian,Rudy,M,CU_2638972,191.45,49.125,03-16-18,Software Engineer IV,0,1.0,1,,,A
-Dora,Dewi ,M,CU_8905853,236.59,,02-04-18,Research Assistant II,0,1.0,1,,A,A
-Turro,Maggie,F,CU_9084029,288.6,62.387,01-29-18,Software Engineer IV,0,,1,,A,A
-Melgaard,Cody,M,CU_2731135,259.24,,09-11-18,Software Engineer IV,0,1.0,1,,A,A
-Colombe,Lucas,M,CU_1426560,119.77,33.107,11-26-18,Editor,0,,1,,A,A
-Shotton,Corine,F,CU_9817217,157.9,46.72,02-01-18,Research Assistant II,0,1.0,1,,,A
-Kaperonis,Ebony,F,CU_9493636,188.72,59.722,11-11-18,Research Assistant II,0,1.0,1,,A,A
-Shimizu,Louie ,M,CU_6474888,133.86,36.027,12-30-18,,1,1.0,1,,,A
-Fuglsang,Nikola ,F,CU_7675017,183.07,59.175,10-16-18,Research Assistant II,1,1.0,1,,A,A
-Booten,Klara ,F,CU_3411081,264.0,27.941,06-02-18,Research Assistant II,0,1.0,1,,,A
-Degroat,Mercedes,F,CU_3366027,223.49,,07-08-18,Structural Engineer,1,1.0,1,,A,A
-Karlsson,Lilia,F,CU_1111179,326.03,35.136,03-14-18,Research Assistant III,0,1.0,1,,,A
-Markway,Abbas ,M,CU_5069966,95.9,,12-28-18,Technical Writer,0,,1,,A,A
-Zaniboni,Shah ,M,CU_6915215,190.29,,03-25-18,Software Engineer IV,0,1.0,1,,,A
-Desalvatore,Samantha,F,CU_2989200,91.61,,11-22-18,Dental Hygienist,0,1.0,1,,A,A
-Vitiello,Chadwick,M,CU_5289104,142.32,22.258,06-06-18,Food Chemist,0,,1,,A,A
-Forson,Clement,M,CU_2512015,118.03,44.481,05-10-18,Research Assistant II,0,,1,,A,A
-Pasquarella,Donn,M,CU_8529049,167.38,,05-27-18,Software Engineer IV,0,1.0,1,,A,A
-Barbaglia,Marion,F,CU_4873372,234.31,,05-25-18,Software Engineer IV,0,,1,,,A
-Ingegneri,Catherine,F,CU_9575581,169.86,36.178,05-01-18,Software Engineer IV,0,1.0,1,,A,A
-Giambattista,Clair,M,CU_8174750,158.51,38.01,09-15-18,Account Coordinator,0,1.0,1,,,A
-Urdiano,Austin ,M,CU_4463774,182.47,37.235,06-24-18,Web Developer II,0,1.0,1,,A,A
-Amara,Savannah,F,CU_4158624,223.73,29.771,12-04-18,Software Engineer IV,1,,1,,,A
-Wolanski,Debra,F,CU_6741155,162.92,35.007,11-01-18,Research Assistant II,0,,1,,,A
-Glaviano,Carly,F,CU_2487461,289.28,54.583,05-25-18,Data Coordiator,0,1.0,1,,A,A
-Klemetson,Dawson ,M,CU_2731176,173.57,,03-12-18,Dental Hygienist,0,1.0,1,,,A
-Edith,Tymon ,M,CU_7034027,169.99,76.488,07-19-18,Software Engineer IV,0,1.0,1,,A,A
-Wintle,Bruce ,M,CU_1703084,273.33,35.793,01-24-18,Account Coordinator,1,1.0,1,,A,A
-Encinas,Bo,M,CU_8309933,129.02,75.769,06-30-18,Dental Hygienist,0,,1,,A,A
-Gamarra,Lou,M,CU_8762540,158.54,42.37,02-19-18,Software Engineer IV,0,,1,,A,A
-Shoulder,Isabell ,F,CU_9729200,141.91,58.096,09-13-18,Quality Control Specialist,0,1.0,1,,A,A
-Traub,Kelley,M,CU_3812531,130.58,36.32,09-12-18,Research Assistant II,0,1.0,1,,,A
-Brandl,Charlotte,F,CU_1512629,108.56,52.57,05-14-18,Software Engineer IV,0,,1,,A,A
-Brummell,Zainab ,F,CU_1895609,132.7,57.43,03-06-18,Research Assistant III,0,1.0,1,,A,A
-Zola,Bettye,F,CU_2612411,178.7,52.356,01-17-18,Research Assistant II,0,1.0,1,,,A
-Benach,Damon,M,CU_7120059,183.84,56.812,05-16-18,Safety Technician III,1,1.0,1,,A,A
-Caroline,Rita,F,CU_9206974,128.79,57.487,06-06-18,,0,,1,,,A
-Duncombe,Kobie ,M,CU_7939263,155.08,21.755,12-17-18,Technical Writer,0,1.0,1,,,A
-Morring,Karol ,M,CU_4773056,93.84,66.142,11-15-18,Quality Control Specialist,0,1.0,1,,A,A
-Pomo,Tiago ,M,CU_5602497,157.46,56.065,08-31-18,Data Coordiator,0,,1,,,A
-Angland,Marnie ,F,CU_9618626,238.48,25.37,12-11-18,Software Engineer IV,1,,1,,A,A
-Madrigal,Raymundo,M,CU_3816646,123.44,,04-04-18,Software Engineer IV,0,1.0,1,,A,A
-Hardaker,Joey ,M,CU_2598087,60.92,61.543,01-24-18,Software Engineer IV,0,1.0,1,,,A
-Kalla,Jonathan,M,CU_9405641,126.88,,08-02-18,Research Assistant II,0,1.0,1,,A,A
-Muzii,Codie ,M,CU_9655502,142.28,57.634,07-15-18,Safety Technician III,0,1.0,1,,A,A
-Morrisey,Newton,M,CU_7621838,118.11,,09-18-18,Cost Accountant,1,1.0,1,,,A
-Mulrooney,Leo ,M,CU_8189136,193.78,,06-21-18,Software Engineer IV,1,1.0,1,,A,A
-Rougier,Roberta,F,CU_4412627,144.32,53.195,07-13-18,Research Assistant II,1,1.0,1,,A,A
-Bogosh,Owais ,M,CU_5010646,147.34,66.892,02-03-18,Research Assistant II,0,1.0,1,,A,A
-Steighner,Caelan ,M,CU_6778071,176.43,52.009,12-14-18,Software Engineer IV,0,,1,,,A
-Garmon,Barrett,M,CU_8815836,369.24,23.521,05-06-18,Software Engineer IV,1,1.0,1,,A,A
-Tackitt,Hamza ,M,CU_7656669,221.56,42.536,10-02-18,,1,,1,,A,A
-Apuzzo,Roy,M,CU_9389278,138.89,55.677,02-17-18,Dental Hygienist,0,1.0,1,,A,A
-Holahan,Scott,M,CU_4662495,166.83,58.86,02-27-18,Software Engineer IV,0,1.0,1,,,A
-Pasey,Florence ,F,CU_1688798,187.38,28.498,07-19-18,Quality Control Specialist,0,,1,,A,A
-Lamborn,Leigh,F,CU_5567710,142.97,55.554,02-14-18,Research Assistant II,0,1.0,1,,A,A
-Vilkoski,Francisco,M,CU_3806434,238.37,50.709,10-05-18,Software Engineer IV,0,1.0,1,,A,A
-Olsby,Burt,M,CU_1342693,172.44,32.915,09-15-18,Editor,0,1.0,1,,,A
-Schwark,Chase ,M,CU_4211942,129.39,57.358,09-04-18,Quality Control Specialist,0,1.0,1,,,A
-Guziczek,Karim ,M,CU_1705190,148.57,58.391,05-22-18,Research Assistant III,0,1.0,1,,A,A
-Renigar,Deniz ,M,CU_5338341,236.53,53.889,06-28-18,Structural Engineer,0,1.0,1,,A,A
-Elko,Piper ,F,CU_5829865,157.83,50.582,03-13-18,Research Assistant II,1,1.0,1,,A,A
-Chesnut,Melissa,F,CU_7402732,138.36,42.385,03-04-18,Software Engineer IV,0,1.0,1,,A,A
-Penister,Gabija ,F,CU_4861167,110.01,50.709,05-12-18,Software Engineer IV,0,,1,,A,A
-Momsen,Hollie ,F,CU_7292144,116.31,56.925,08-13-18,Editor,0,1.0,1,,,A
-Darosa,Riley-James ,M,CU_5119216,60.1,42.528,01-03-18,Software Engineer IV,0,1.0,1,,,A
-Froning,Ralphie ,M,CU_4484339,123.72,39.077,05-06-18,Research Assistant II,0,,1,,,A
-Goodenough,Mohamad ,M,CU_6368504,171.39,59.904,10-10-18,Quality Control Specialist,0,1.0,1,,,A
-Ortis,Percy,M,CU_4113657,162.14,73.915,10-28-18,Quality Control Specialist,0,1.0,1,,A,A
-Panther,Jaeden ,M,CU_4300026,212.56,,12-27-18,Accountant I,0,1.0,1,,A,A
-Rosebrough,Adolph,M,CU_4058364,154.16,59.435,03-08-18,Research Assistant II,0,1.0,1,,A,A
-Steiskal,Kaiden ,M,CU_1424637,323.73,60.518,03-12-18,Research Assistant III,0,1.0,1,,A,A
-Urizar,Gonzalo,M,CU_1711361,142.6,,12-09-18,Cost Accountant,0,1.0,1,,A,A
-Rattigan,Samir ,M,CU_9880834,31.47,27.184,09-12-18,Dental Hygienist,0,1.0,1,,A,A
-Bedaw,Elin ,F,CU_6468865,404.0,55.539,01-14-18,Dental Hygienist,0,1.0,1,,A,A
-Abood,Finnlay ,M,CU_2008325,177.63,45.566,08-29-18,Software Engineer IV,0,1.0,1,,A,A
-Tarski,Rylie ,M,CU_9194759,188.41,63.474,10-21-18,,0,1.0,1,,,A
-Iller,Philip,M,CU_7120139,189.62,31.982,05-20-18,Safety Technician III,0,1.0,1,,,A
-Alison,Calvin,M,CU_1699090,144.37,58.271,07-14-18,Research Assistant II,0,1.0,1,,A,A
-Orandello,Tracey,M,CU_1395987,96.43,56.552,10-03-18,Software Engineer IV,0,1.0,1,,A,A
-Sachetti,Aimee ,F,CU_4900117,109.95,38.084,09-29-18,,0,1.0,1,,A,A
-Gianotti,Mujtaba ,M,CU_5301530,319.84,31.552,11-08-18,Software Engineer IV,0,,1,,A,A
-Arwood,Marissa,F,CU_4625692,134.71,25.327,09-11-18,Accountant I,0,,2,,A,C
-Lepo,Emerson,M,CU_6137117,132.32,52.42,04-23-18,Accountant I,0,1.0,1,,A,A
-Molenda,Byron ,M,CU_4549920,413.6,,07-11-18,Data Coordiator,0,1.0,1,,A,A
-Goodyear,Beatriz ,F,CU_3335456,135.2,,08-04-18,Research Assistant II,0,1.0,1,,,A
-Jiron,Haseeb ,M,CU_2610467,207.35,62.451,04-13-18,Research Assistant II,0,1.0,1,,A,A
-Banvelos,Tyrone,M,CU_7210276,154.46,,04-29-18,,0,,1,,A,A
-Zahler,Tommy,M,CU_8770851,173.07,39.596,06-02-18,Research Assistant II,0,1.0,1,,A,A
-Larkins,Sahib ,M,CU_6485285,175.97,58.572,10-27-18,Research Assistant II,0,1.0,1,,,A
-Crelia,Aubrey,M,CU_7050535,290.73,32.828,04-25-18,Editor,1,1.0,1,,,A
-Coffinberger,Charles,M,CU_9852201,35.47,58.628,03-04-18,Dental Hygienist,0,1.0,1,,A,A
-Gianni,Jaxon ,M,CU_6567210,269.48,35.165,08-30-18,Research Assistant II,0,1.0,1,,A,A
-Adamitis,Patti,F,CU_9964845,108.63,51.657,09-19-18,Quality Control Specialist,0,1.0,1,,A,A
-Latsko,Korey ,M,CU_4928816,217.01,37.679,02-26-18,Software Engineer IV,0,1.0,1,,,A
-Loschiavo,Freda,F,CU_4658480,199.06,51.03,04-08-18,Dental Hygienist,0,1.0,1,,A,A
-Dyches,Randolph,M,CU_8774962,122.25,41.287,08-29-18,,0,1.0,1,,A,A
-Selissen,Glen,M,CU_5315890,119.5,35.731,02-12-18,Research Assistant III,0,1.0,1,,A,A
-Collea,Von,M,CU_7660848,342.54,34.542,04-29-18,Software Engineer IV,0,1.0,1,,A,A
-Walleck,David,M,CU_3984694,248.82,,06-04-18,Food Chemist,0,1.0,1,,A,A
-Paywa,Sue,F,CU_9246012,175.43,59.459,06-05-18,,0,1.0,1,,,A
-Griesbaum,Isiah,M,CU_7529789,121.86,57.933,06-29-18,Dental Hygienist,0,1.0,1,,A,A
-Swiller,Mariana,F,CU_1252670,171.88,31.479,10-21-18,Software Engineer IV,0,1.0,1,,,A
-Gallina,Emilie ,F,CU_6698302,124.41,31.114,02-12-18,Technical Writer,0,1.0,1,,A,A
-Fortes,Patricia ,F,CU_8375617,92.14,22.783,05-26-18,Editor,0,1.0,1,,,A
-Bartlett,Willie,M,CU_5000514,200.19,42.058,03-25-18,Research Assistant II,0,1.0,1,,,A
-Stoneberger,Fernando,M,CU_2450755,241.46,46.584,11-17-18,Dental Hygienist,0,1.0,1,,,A
-Inoa,Tod,M,CU_1795396,94.71,35.112,04-12-18,,1,,1,,A,A
-Delcastillo,Hassan,M,CU_9450825,185.79,56.267,08-09-18,Dental Hygienist,1,1.0,1,,A,A
-Harger,Ella-Rose ,F,CU_9002320,184.72,,03-02-18,Food Chemist,1,1.0,1,,,A
-Velazguez,Mackenzie ,M,CU_7300434,196.24,27.543,02-19-18,,0,1.0,1,,A,A
-Pehler,Zaara ,F,CU_5240149,142.72,50.756,03-15-18,Safety Technician III,1,,1,,A,A
-Faiola,Kenzie ,M,CU_2837846,159.74,50.814,01-18-18,Software Engineer IV,0,1.0,1,,,A
-Goldsby,Erich,M,CU_8748377,196.62,45.541,03-11-18,Software Engineer IV,0,1.0,1,,A,A
-Dowery,Issac,M,CU_2229594,168.32,63.29,08-30-18,,0,,1,,A,A
-Compston,Luna ,F,CU_9897307,183.15,40.541,11-11-18,Software Engineer IV,1,1.0,1,,A,A
-Fiers,Skyla ,F,CU_9852251,242.27,75.973,02-28-18,Account Coordinator,0,,1,,,A
-Lawyer,Macauley ,M,CU_7239007,133.24,35.987,03-11-18,Account Coordinator,1,1.0,1,,A,A
-Niehaus,Chad ,M,CU_8584544,160.62,62.145,08-26-18,Research Assistant II,0,1.0,1,,A,A
-Brackney,Kirsty ,F,CU_9694560,152.11,73.237,05-22-18,Research Assistant II,1,1.0,1,,A,B
-Belland,Jacob ,M,CU_4334946,145.63,71.504,04-17-18,,0,1.0,1,,A,A
-Burian,Brooke,F,CU_5563747,215.6,51.065,01-22-18,Research Assistant II,0,1.0,1,,A,A
-Brosnahan,Sol,M,CU_7927136,255.91,40.34,06-28-18,Research Assistant III,0,,1,,,A
-Czapski,Barney ,M,CU_6882661,185.85,50.172,08-02-18,Account Coordinator,0,1.0,1,,,A
-Brunderman,Benita,F,CU_9796965,143.23,29.153,11-29-18,Quality Control Specialist,0,1.0,1,,,A
-Grunder,Claudio,M,CU_3310951,91.81,60.699,08-25-18,Software Engineer IV,0,1.0,1,,A,A
-Luben,Lilly ,F,CU_2125160,156.05,54.475,06-28-18,Quality Control Specialist,0,,1,,A,A
-Scafuri,Lou,F,CU_4488551,291.29,57.611,06-22-18,Web Developer II,1,1.0,1,,A,A
-Weikle,Khushi ,F,CU_9229680,119.6,,02-02-18,Research Assistant III,0,1.0,1,,,A
-Mecias,Conner ,M,CU_6483320,211.94,57.979,05-30-18,Data Coordiator,0,,1,,A,A
-Golackson,Ishaan ,M,CU_6391162,296.35,,09-09-18,Data Coordiator,0,1.0,1,,A,A
-Schute,Jimmie,F,CU_5373307,729.63,36.203,10-06-18,Web Developer II,1,1.0,1,,A,A
-Krzewinski,Chelsea,F,CU_5053821,131.5,59.452,03-07-18,Quality Control Specialist,0,,1,,A,A
-Quist,Monte,M,CU_2592130,213.45,57.26,04-07-18,,1,1.0,1,,A,A
-Lockard,Aliza ,F,CU_1850756,203.08,56.858,08-22-18,Software Engineer IV,1,1.0,1,,A,A
-Gawrys,Benedict ,M,CU_8281484,199.28,,08-04-18,Safety Technician III,0,1.0,1,,A,A
-Slingerland,Kamal ,M,CU_8682893,94.45,,04-03-18,Research Assistant II,1,1.0,1,,A,A
-Baiotto,Clemente,M,CU_6032783,117.47,29.404,06-16-18,Software Engineer IV,0,1.0,1,,,A
-Marshbanks,Abdul,M,CU_3974544,135.38,59.547,09-21-18,Software Engineer IV,0,1.0,1,,,A
-Coldiron,Macy ,F,CU_5240208,106.8,55.043,02-20-18,Software Engineer IV,0,1.0,1,,A,A
-Enos,Terra,F,CU_2293145,150.48,57.201,12-20-18,Web Developer II,0,1.0,1,,A,A
-Donnelson,Felton,M,CU_6471068,147.41,,08-06-18,Software Engineer IV,0,1.0,1,,A,A
-Ouren,Antonia ,F,CU_9944479,146.67,53.025,08-09-18,Research Assistant II,0,1.0,1,,,A
-Omullan,Nola,F,CU_7671201,187.03,,09-02-18,Safety Technician III,0,1.0,1,,,A
-Noone,Leanne ,F,CU_6821282,191.99,47.232,12-14-18,Account Coordinator,1,1.0,1,,,A
-Eske,Omer,M,CU_3866019,124.55,53.896,02-01-18,Technical Writer,0,,1,,A,A
-Abkemeier,Mario ,M,CU_6045092,378.08,,05-02-18,Technical Writer,0,1.0,1,,A,A
-Ponce,Ronnie ,M,CU_6006185,170.23,,12-16-18,Quality Control Specialist,1,1.0,1,,,A
-Faby,Stefan,M,CU_7058858,138.65,39.065,12-07-18,Research Assistant III,0,1.0,1,,,A
-Greenway,Prince,M,CU_1762733,146.03,32.189,09-19-18,Research Assistant II,0,,1,,,A
-Dorcelus,Lauren,F,CU_1424814,104.42,39.546,04-19-18,Software Engineer IV,0,1.0,1,,,A
-Mumaw,Eva ,F,CU_8676782,345.31,55.114,09-29-18,Research Assistant II,0,1.0,1,,A,A
-Bierut,Irene,F,CU_6241710,121.82,59.903,12-14-18,Software Engineer IV,1,,1,,,A
-Barasch,Fred,M,CU_3296689,257.58,59.051,02-21-18,Research Assistant II,0,,1,,A,A
-Din,Sydney,M,CU_2858418,227.7,62.637,05-01-18,Account Coordinator,0,1.0,1,,A,A
-Casimiro,Edith,F,CU_4570547,165.25,,02-09-18,Software Engineer IV,0,,1,,A,A
-Drewing,Kaine ,M,CU_4689331,125.91,23.007,02-11-18,Research Assistant II,0,1.0,1,,,A
-Modlin,Gwendolyn,F,CU_3143088,126.61,,11-26-18,Quality Control Specialist,1,1.0,1,,A,A
-Emo,Maxim ,M,CU_4308409,117.83,28.757,02-01-18,Research Assistant II,0,1.0,1,,A,A
-Knolton,Christopher ,M,CU_5275068,124.41,56.252,06-22-18,Dental Hygienist,1,1.0,1,,A,A
-Rusnak,Craig ,M,CU_9805246,133.12,59.377,10-28-18,Research Assistant II,0,,1,,,A
-Fromberg,Jerome,M,CU_7089600,142.86,28.884,10-05-18,Software Engineer IV,0,1.0,1,,A,A
-Marold,Helena ,F,CU_4574657,166.27,,08-04-18,Research Assistant III,0,1.0,2,,,C
-Debacker,Eliza ,F,CU_9797060,479.55,,04-17-18,Account Coordinator,0,,1,,A,A
-Sier,Kendall,M,CU_6163909,124.46,27.895,11-13-18,Software Engineer IV,0,1.0,1,,,A
-Pacchiana,Santiago,M,CU_2817485,332.99,39.961,08-24-18,Software Engineer IV,0,1.0,1,,A,A
-Dowda,Izaak ,M,CU_3085773,117.91,61.927,08-08-18,Dental Hygienist,0,1.0,1,,,A
-Ploskunak,Andres,M,CU_3624402,30.46,57.327,04-02-18,Software Engineer IV,1,,1,,A,A
-Winberg,Jasmin ,F,CU_3864018,175.72,59.347,01-22-18,Web Developer II,0,1.0,1,,,A
-Ambler,Stacey ,F,CU_1986005,155.54,52.883,07-16-18,Research Assistant III,0,1.0,1,,,A
-Soukup,Finnian ,M,CU_7267799,202.75,31.583,06-28-18,Safety Technician III,1,1.0,1,,A,A
-Sumbry,Lesley,M,CU_7867864,162.0,30.567,02-12-18,Research Assistant II,0,1.0,1,,,A
-Allateef,Monica ,F,CU_1459671,315.04,22.704,08-10-18,Software Engineer IV,1,1.0,1,,,A
-Bagnoli,Borys ,M,CU_5801431,123.95,29.252,03-22-18,Research Assistant II,0,1.0,1,,,A
-Duropan,Milo,M,CU_3395037,390.85,27.679,06-29-18,Quality Control Specialist,0,,1,,A,A
-Jarrette,Tami,F,CU_6006243,163.88,64.841,02-21-18,Dental Hygienist,0,1.0,1,,A,A
-Obryan,Artur ,M,CU_4324836,159.3,34.408,09-03-18,Research Assistant II,1,1.0,1,,A,A
-Holleyman,Colby ,M,CU_8844773,274.13,28.611,07-09-18,Data Coordiator,0,1.0,1,,A,A
-Stupar,Chasity,F,CU_3569123,87.39,47.33,07-03-18,Data Coordiator,0,1.0,1,,,A
-Willert,Nannie,F,CU_2196970,141.4,30.15,03-14-18,Data Coordiator,0,1.0,1,,,A
-Sutkus,Ashleigh ,F,CU_5094891,131.9,71.807,04-25-18,Software Engineer IV,0,1.0,1,,,A
-Ikard,Ivan,M,CU_5924333,96.1,28.577,08-29-18,,0,1.0,1,,A,A
-Kenmore,John ,M,CU_7079407,124.03,31.732,01-15-18,Research Assistant II,0,,1,,A,A
-Luepke,Fraser ,M,CU_8089072,218.98,56.419,09-20-18,Structural Engineer,0,1.0,1,,A,A
-Zimerman,Tom,M,CU_6798835,547.8,69.612,06-08-18,,0,1.0,1,,,A
-Netz,Dong,M,CU_7247349,214.52,62.058,11-08-18,Dental Hygienist,0,,1,,,A
-Konig,Angelo ,M,CU_3880437,249.41,37.189,10-15-18,Software Engineer IV,0,,1,,,A
-Mccrady,Finley ,M,CU_9819638,306.87,52.642,06-29-18,Research Assistant II,0,1.0,1,,,A
-Chisem,Aurora,F,CU_8246777,154.06,57.928,09-27-18,,0,1.0,1,,,A
-Congdon,Scottie,M,CU_4118010,176.89,59.521,08-04-18,Software Engineer IV,0,1.0,1,,A,A
-Wohner,Palmer,M,CU_8121851,151.78,,08-12-18,Software Engineer IV,1,1.0,1,,,A
-Fenske,Jack,M,CU_4929022,194.98,,06-22-18,Structural Engineer,1,1.0,1,,A,A
-Maricle,Lewie ,M,CU_4636161,355.07,50.362,07-26-18,Quality Control Specialist,0,1.0,1,,A,A
-Basgall,Sapphire ,F,CU_1474052,268.82,56.036,03-24-18,Research Assistant II,0,,1,,A,A
-Hoth,Jensen ,M,CU_4754948,136.67,52.634,11-30-18,Software Engineer IV,0,1.0,1,,,A
-Lovera,Homer,M,CU_1906182,32.01,68.972,10-08-18,Food Chemist,0,,1,,A,A
-Traphagen,Rene,F,CU_8629782,622.16,36.634,02-18-18,Quality Control Specialist,0,1.0,1,,,A
-Sides,Nihal ,M,CU_6608410,127.54,39.269,11-24-18,Dental Hygienist,0,,1,,,A
-Winkey,Alden,M,CU_9256478,183.33,53.782,04-10-18,Software Engineer IV,0,1.0,1,,A,A
-Coonley,Jeanie,F,CU_2672158,332.94,73.4,03-01-18,Software Engineer IV,0,1.0,1,,A,A
-Mandril,Tonya,F,CU_8396320,72.37,,08-14-18,Dental Hygienist,0,,1,,,A
-Songy,Dudley,M,CU_3079713,151.1,55.391,05-25-18,,0,1.0,1,,,A
-Perot,Ava-Mae ,F,CU_6557220,166.29,50.559,11-04-18,Dental Hygienist,0,1.0,1,,A,A
-Burnison,Quinton,M,CU_9596453,166.1,33.508,12-25-18,,0,,1,,,A
-Garnes,Yaqub ,M,CU_3184164,150.99,53.049,02-13-18,Safety Technician III,0,1.0,1,,,A
-Junick,Eliot ,M,CU_7210538,121.1,47.098,06-07-18,Software Engineer IV,1,1.0,2,,,C
-Hemmen,Everett,M,CU_7366186,169.64,40.586,11-02-18,Quality Control Specialist,0,1.0,1,,,A
-Bendolph,Seth ,M,CU_6305324,138.55,46.778,01-19-18,Research Assistant III,0,1.0,1,,A,A
-Russell,Susanna,F,CU_2829866,117.78,48.612,12-11-18,Data Coordiator,0,,1,,A,A
-Wetklow,Lara ,F,CU_5719598,159.77,26.739,07-20-18,Dental Hygienist,0,,1,,A,A
-Septelka,Kaydee ,F,CU_4216367,215.64,,08-15-18,,0,1.0,1,,A,A
-Garfinkel,Jarvis,M,CU_8142383,157.09,45.314,11-23-18,Web Developer II,1,1.0,1,,A,A
-Freas,Frederic ,M,CU_3835441,153.14,43.924,05-01-18,Software Engineer IV,0,1.0,1,,,A
-Limas,Honey ,F,CU_7130676,151.01,36.509,07-16-18,Data Coordiator,1,1.0,1,,,A
-Zerbel,Tiffany,F,CU_1019445,161.24,46.569,08-28-18,Research Assistant II,0,1.0,1,,A,A
-Bloomingdale,Marquis,M,CU_6475317,134.02,55.821,10-06-18,Research Assistant III,0,,1,,A,A
-Farrington,Devon ,F,CU_8316471,127.97,58.523,06-30-18,Cost Accountant,0,1.0,1,,A,A
-Loepp,Darci ,F,CU_3847734,165.62,,05-30-18,Software Engineer IV,0,1.0,1,,A,A
-Wiltshire,Jeanne,F,CU_3626553,199.73,54.863,02-28-18,Dental Hygienist,0,1.0,1,,A,A
-Pena,Augustus,M,CU_9201210,116.37,57.081,01-28-18,Safety Technician III,0,1.0,1,,A,B
-Varone,Anaiya ,F,CU_1023547,160.77,57.255,01-06-18,Accountant I,0,1.0,1,,,A
-Bookman,Uzair ,M,CU_4922940,141.73,53.647,08-13-18,Software Engineer IV,0,1.0,1,,,A
-Mwakitwile,Enya ,F,CU_5000764,140.33,55.631,10-09-18,Accountant I,0,,1,,A,A
-Shellhammer,Lottie ,F,CU_5213758,369.87,,05-16-18,Research Assistant III,1,,1,,,A
-Mondry,Luther,M,CU_4972095,277.51,62.135,12-24-18,Research Assistant II,0,1.0,1,,A,A
-Lunden,Ruby-Leigh ,F,CU_7583297,223.12,59.75,04-26-18,Dental Hygienist,0,1.0,1,,A,A
-Piersol,Deon,M,CU_1285698,173.49,56.864,02-22-18,,0,1.0,1,,,A
-Destine,Lacey-May ,F,CU_1193541,294.04,55.723,11-27-18,Cost Accountant,0,1.0,1,,A,A
-Molyneaux,Santiago ,M,CU_5715526,140.67,61.934,04-27-18,Account Coordinator,0,1.0,1,,,A
-Tasson,Tisha,F,CU_8162888,102.97,67.78,03-28-18,Dental Hygienist,0,1.0,1,,,A
-Irion,Denis,M,CU_3348040,214.05,66.043,12-20-18,Technical Writer,0,1.0,1,,A,A
-Parkers,Ken,M,CU_5365327,132.0,37.793,04-14-18,Software Engineer IV,0,1.0,1,,A,A
-Hollimon,Harris ,M,CU_8273488,139.44,45.804,07-04-18,Research Assistant II,0,1.0,2,,A,C
-Normandin,Rehaan ,M,CU_2438737,245.09,66.952,03-16-18,Technical Writer,0,1.0,1,,,A
-Norn,Marcelino,M,CU_4671055,143.31,65.798,05-01-18,Software Engineer IV,0,1.0,1,,A,A
-Kenneth,Matylda ,F,CU_2485839,105.01,26.752,06-06-18,Software Engineer IV,0,1.0,1,,A,A
-Tollinchi,Gaston,M,CU_4912724,194.66,55.502,04-12-18,Research Assistant III,1,1.0,1,,,A
-Barranco,Garrett,M,CU_2580053,265.56,37.416,06-24-18,Dental Hygienist,0,1.0,2,,A,C
-Rhum,Edwin,M,CU_8318550,172.23,62.635,08-26-18,Research Assistant II,0,,1,,,A
-Gietz,Alberto,M,CU_8343123,172.94,33.364,06-16-18,Software Engineer IV,0,1.0,1,,A,A
-Neto,Annabelle,F,CU_4820564,147.69,59.15,04-07-18,,1,1.0,1,,A,A
-Highbaugh,Sumaya ,F,CU_4120155,174.03,40.098,10-09-18,Research Assistant III,0,1.0,1,,,A
-Frieling,Syed ,M,CU_3618396,197.42,53.417,02-16-18,Dental Hygienist,1,,1,,A,A
-Kown,Emanuel,M,CU_7030368,136.07,33.184,09-09-18,Safety Technician III,0,1.0,1,,A,A
-Behlen,Chelsea ,F,CU_4003430,120.57,72.134,06-05-18,Accountant I,0,1.0,1,,A,A
-Dyess,Aran ,M,CU_1615464,374.67,26.646,02-21-18,Dental Hygienist,0,1.0,1,,,A
-Dinora,Evie-Mae ,F,CU_5637739,158.42,33.763,05-09-18,Safety Technician III,0,1.0,1,,,A
-Haupt,Kameron ,M,CU_4664942,198.67,,03-17-18,Food Chemist,0,1.0,1,,A,A
-Geralds,Yousif ,M,CU_9170544,153.51,54.659,02-15-18,,0,1.0,1,,A,A
-Whittler,Arnas ,M,CU_6420082,155.84,33.465,09-23-18,,0,1.0,1,,A,A
-Izsak,Wade,M,CU_3702387,119.39,40.602,12-20-18,Editor,0,1.0,1,,,A
-Fratzke,Oliwier ,M,CU_8459893,503.88,,06-20-18,Research Assistant II,0,1.0,1,,A,A
-Manthe,Monty ,M,CU_9576053,129.09,54.681,03-08-18,Software Engineer IV,0,,1,,A,A
-Peveto,Ronny,M,CU_3737207,134.91,61.871,11-28-18,Software Engineer IV,0,,1,,,A
-Mustaro,Porter,M,CU_7253625,216.73,33.426,02-10-18,Research Assistant III,0,1.0,1,,,A
-Scharfenberg,Lucien,M,CU_2240124,162.16,,06-24-18,Accountant I,0,1.0,1,,A,B
-Isita,Asiya ,F,CU_4875901,263.53,51.643,11-15-18,Food Chemist,0,1.0,2,,,C
-Homola,Riley ,F,CU_4165252,151.15,55.573,10-12-18,Research Assistant II,0,1.0,1,,,A
-Boneta,Harvey ,M,CU_8937094,209.41,55.431,09-11-18,Research Assistant II,0,1.0,1,,A,A
-Mcduff,Ernie,M,CU_2086536,232.5,40.675,07-19-18,,0,1.0,1,,A,A
-Orcutt,Sheikh ,M,CU_6491785,175.91,53.072,06-03-18,Software Engineer IV,0,1.0,1,,A,A
-Calvani,Dewayne,M,CU_7804555,143.33,34.309,07-26-18,Software Engineer IV,0,1.0,1,,A,A
-Cockran,Donald ,M,CU_9827980,148.32,24.497,10-28-18,Dental Hygienist,1,,1,,A,A
-Mugg,Anoushka ,F,CU_6211214,135.24,28.626,06-16-18,,0,1.0,1,,A,A
-Jolicoeur,Buddy,M,CU_9813647,179.61,29.404,10-30-18,Structural Engineer,0,1.0,1,,A,A
-Sarullo,Lacey-Mai ,F,CU_9993872,246.88,38.384,06-01-18,Research Assistant II,0,,1,,A,A
-Gruca,Dawud ,M,CU_4048529,128.88,64.048,06-11-18,,0,1.0,1,,,A
-Mazzanti,Abu ,M,CU_4824726,249.26,59.222,12-04-18,Research Assistant II,0,1.0,1,,A,A
-Passer,Alphonse,M,CU_4384407,414.13,,07-31-18,Quality Control Specialist,0,1.0,1,,A,B
-Biggio,Eugenio,M,CU_8298141,160.38,29.587,02-14-18,Research Assistant III,1,1.0,1,,A,A
-Jakupcak,Hibba ,F,CU_8308383,137.6,71.559,10-18-18,Research Assistant II,0,1.0,1,,A,A
-Windhorst,Madeleine,F,CU_5576353,291.5,43.535,06-25-18,Food Chemist,0,1.0,1,,A,A
-Lansden,Kaylum ,M,CU_1185443,130.63,57.139,05-05-18,,1,1.0,1,,A,A
-Ritcher,Ines ,F,CU_9770664,87.86,25.228,01-23-18,Web Developer II,0,,1,,A,A
-Rupp,Amir ,M,CU_1058477,162.24,59.653,06-24-18,Food Chemist,1,1.0,1,,A,A
-Colaianni,Robbie ,M,CU_9674413,142.14,34.37,06-11-18,Software Engineer IV,0,1.0,1,,A,A
-Leso,Micheal,M,CU_6350511,120.03,49.005,03-09-18,Quality Control Specialist,0,,1,,,A
-Sonntag,Laaibah ,F,CU_6119087,157.68,,11-29-18,Research Assistant III,0,1.0,1,,A,A
-Vranes,Wilford,M,CU_8185523,195.38,54.471,09-16-18,Research Assistant II,1,1.0,1,,A,A
-Wolfley,Lucien ,M,CU_2700981,134.65,49.507,02-14-18,,0,,1,,,A
-Minner,Lamar,M,CU_1836728,145.78,56.904,01-17-18,,0,1.0,1,,A,A
-Addicks,Blaine,M,CU_7978681,156.5,24.16,11-05-18,Cost Accountant,1,1.0,1,,A,A
-Aicklen,Sammy ,M,CU_3555002,154.91,36.437,11-05-18,Safety Technician III,0,,1,,A,A
-Smitley,Harland,M,CU_7550651,137.19,31.051,02-22-18,Accountant I,0,,1,,A,A
-Rehfeld,Mylie ,F,CU_1636028,208.46,48.236,09-04-18,,1,,1,,A,A
-Swicord,Aariz ,M,CU_4239039,139.78,,02-28-18,Editor,0,1.0,1,,,A
-Tibbits,Carol,F,CU_9574080,199.26,58.749,05-28-18,Research Assistant II,0,1.0,1,,A,A
-Vandee,Alfred,M,CU_1224385,129.74,39.979,07-17-18,Research Assistant II,0,1.0,1,,,A
-Agerter,Irvin,M,CU_7927491,304.43,,11-27-18,Dental Hygienist,0,1.0,1,,A,A
-Darrin,Lois,F,CU_3753669,129.2,49.734,10-18-18,Research Assistant II,0,1.0,1,,A,A
-Wolk,Stephanie ,F,CU_3083975,264.45,20.965,08-23-18,Cost Accountant,0,1.0,1,,,A
-Mckelvin,Mack,M,CU_7618248,52.18,40.453,07-30-18,Software Engineer IV,0,1.0,1,,A,A
-Girsch,Hermione ,F,CU_8830670,163.53,37.184,12-29-18,,1,1.0,1,,A,A
-Wigfall,Eldon,M,CU_8720080,292.59,,03-10-18,Software Engineer IV,0,1.0,1,,A,A
-Kreuter,Hadley ,M,CU_9805520,133.89,32.811,01-02-18,Dental Hygienist,0,1.0,1,,,A
-Chulla,Maha ,F,CU_4718291,218.56,70.195,05-06-18,Food Chemist,0,1.0,1,,A,A
-Both,Payton ,F,CU_6237907,94.69,64.634,06-01-18,Research Assistant III,0,1.0,1,,,A
-Wethington,Leona ,F,CU_6282964,88.29,,08-25-18,Software Engineer IV,0,,1,,,A
-Severy,Ernesto,M,CU_5295831,355.02,29.377,09-19-18,Dental Hygienist,0,1.0,1,,A,A
-Luedke,Young,F,CU_9092824,63.32,25.346,12-30-18,Software Engineer IV,0,,1,,A,A
-Treider,Nathaniel,M,CU_2694871,102.39,58.273,01-01-18,Accountant I,0,,1,,A,A
-Wasmus,Tess ,F,CU_9199319,483.8,47.191,09-28-18,Quality Control Specialist,1,1.0,1,,A,A
-Lauriano,Horace,M,CU_8986331,188.52,59.165,03-02-18,Software Engineer IV,1,1.0,1,,A,A
-Fettig,Faris ,M,CU_7239388,124.61,62.704,02-17-18,Dental Hygienist,1,1.0,1,,,A
-Reichow,Courtney,M,CU_7479004,175.12,45.406,05-23-18,Safety Technician III,0,,1,,A,A
-Golian,Stevie ,F,CU_9522910,109.1,36.706,09-28-18,Data Coordiator,0,,1,,,A
-Nooman,Mikayla ,F,CU_7642849,196.44,28.341,02-06-18,Quality Control Specialist,1,,1,,,A
-Adey,Hayden,M,CU_7999203,126.41,38.616,06-04-18,Structural Engineer,0,1.0,1,,A,A
-Safranek,Inaaya ,F,CU_2543331,461.01,55.584,05-25-18,Quality Control Specialist,0,1.0,1,,A,A
-Waltemath,Autumn,F,CU_7857892,144.0,50.102,03-24-18,Research Assistant II,0,1.0,1,,A,A
-Lowrey,Marley ,F,CU_4536038,149.9,39.017,07-15-18,Safety Technician III,0,1.0,1,,A,A
-Poth,Humberto,M,CU_7831271,191.24,,10-03-18,,0,1.0,1,,,A
-Sothen,Aizah ,F,CU_2307814,146.16,33.322,03-22-18,Quality Control Specialist,0,1.0,1,,,A
-Schwartzwalde,Caleb ,M,CU_4077289,216.82,28.535,01-07-18,Dental Hygienist,1,1.0,1,,A,A
-Sciacchitano,Kacper ,M,CU_9459434,227.87,59.381,10-02-18,Research Assistant III,0,1.0,1,,A,A
-Drobny,Milena ,F,CU_9756396,258.35,28.742,07-24-18,Research Assistant II,0,1.0,1,,A,A
-Cardinali,Kendrick,M,CU_1187564,137.35,51.835,04-18-18,Account Coordinator,0,1.0,1,,A,A
-Varian,Olivia,F,CU_5132014,119.15,59.633,05-31-18,Research Assistant II,0,1.0,1,,A,A
-Thorade,Williams,M,CU_6766319,167.59,34.739,04-16-18,Editor,0,1.0,1,,,A
-Gayfield,Zakariyya ,M,CU_4210420,129.26,41.272,02-14-18,Dental Hygienist,1,,1,,A,A
-Weckwerth,Truman,M,CU_6209271,98.23,63.317,10-08-18,Technical Writer,1,1.0,1,,A,A
-Thompon,Kurtis ,M,CU_8670968,144.34,58.673,12-17-18,,1,1.0,1,,A,A
-Betsill,Shannon,M,CU_5826298,168.11,55.521,04-21-18,Quality Control Specialist,0,1.0,1,,A,A
-Ciskowski,Melissa ,F,CU_4071165,107.23,49.325,10-14-18,Research Assistant II,0,1.0,1,,A,A
-Wilcutt,Kaylee ,F,CU_5189374,94.03,53.82,03-17-18,Software Engineer IV,1,1.0,1,,A,A
-Dockum,Arturo,M,CU_7352064,156.58,38.497,09-18-18,Software Engineer IV,0,1.0,1,,,A
-Sarria,Jordon,M,CU_9295619,155.92,61.305,05-19-18,Accountant I,0,1.0,1,,A,A
-Nadolski,Abraham,M,CU_8914692,130.15,59.491,08-09-18,Software Engineer IV,0,1.0,1,,,A
-Guignard,Bryant,M,CU_8185605,143.13,59.111,07-18-18,Web Developer II,0,,1,,A,A
-Linares,Adrienne,F,CU_2070284,771.69,44.577,09-22-18,Research Assistant II,0,1.0,1,,A,A
-Bernt,Mallory,F,CU_8718094,346.27,65.918,06-17-18,Editor,1,1.0,1,,A,A
-Stred,Ahmad,M,CU_3567381,627.94,31.313,12-12-18,,1,1.0,1,,A,A
-Mulvihill,Kaitlyn ,F,CU_8021784,161.18,62.226,05-18-18,Account Coordinator,1,1.0,1,,A,A
-Coones,Eliseo,M,CU_3608346,127.45,31.014,01-12-18,Technical Writer,0,1.0,1,,A,A
-Utzinger,Aayush ,M,CU_5431069,143.82,51.414,01-01-18,Software Engineer IV,0,1.0,1,,A,A
-Gilroy,Krystian ,M,CU_6049565,142.06,,09-25-18,Software Engineer IV,0,1.0,1,,A,A
-Govert,Billy,M,CU_2877214,144.59,42.032,01-12-18,Account Coordinator,0,1.0,1,,,A
-Flora,Harry,M,CU_7644961,74.87,50.285,09-01-18,Quality Control Specialist,1,1.0,1,,,A
-Start,Justine,F,CU_2049828,139.34,64.149,08-11-18,Dental Hygienist,0,1.0,1,,,A
-Damone,Waylon,M,CU_4892456,158.97,30.468,05-13-18,Structural Engineer,1,1.0,1,,A,A
-Knopinski,Wilfred,M,CU_4241193,86.85,26.599,06-05-18,Software Engineer IV,0,1.0,1,,,A
-Chiarello,Curtis ,M,CU_9617192,136.57,41.946,08-30-18,Software Engineer IV,0,1.0,1,,A,A
-Spiegle,Lynwood,M,CU_9131820,123.52,,12-19-18,Dental Hygienist,1,1.0,1,,,A
-Stauble,Alva,M,CU_9860908,132.21,33.848,03-08-18,Software Engineer IV,0,1.0,1,,A,A
-Stolecki,Carlton,M,CU_3288878,135.83,61.395,02-27-18,,0,1.0,1,,A,A
-Ries,Aisha,F,CU_4089647,284.25,69.32,09-23-18,,0,1.0,1,,A,A
-Schlitt,Dave,M,CU_4177711,133.05,79.624,08-13-18,Software Engineer IV,0,1.0,1,,,A
-Gaudy,Elbert,M,CU_2039602,127.24,49.071,03-01-18,Software Engineer IV,0,1.0,1,,A,A
-Fitzsimons,Nicky,M,CU_2715444,143.33,36.188,09-18-18,Research Assistant III,0,1.0,1,,A,A
-Twyman,Zayd ,M,CU_7141173,273.14,61.315,08-17-18,Web Developer II,1,1.0,1,,A,A
-Gjokaj,Marcus ,M,CU_9793334,286.69,55.861,10-02-18,Data Coordiator,0,1.0,1,,A,A
-Reil,Aston ,M,CU_2869047,249.48,62.343,01-13-18,Software Engineer IV,0,1.0,1,,A,A
-Bugni,Jody,M,CU_2848567,156.36,37.996,01-27-18,Technical Writer,1,1.0,1,,A,A
-Murrill,Felecia,F,CU_3491643,140.2,38.905,05-05-18,Research Assistant III,0,1.0,1,,A,A
-Gomberg,Viola,F,CU_6311740,133.58,,01-14-18,Data Coordiator,0,,1,,A,A
-Wertman,Hallie,F,CU_3575616,145.76,26.7,09-06-18,Accountant I,0,,1,,,A
-Jonathan,Orlando ,M,CU_5347137,178.3,56.736,05-11-18,Technical Writer,0,1.0,1,,,A
-Boklund,Shannon,F,CU_5353282,204.21,68.03,07-11-18,Quality Control Specialist,0,,1,,A,A
-Selfridge,Earl,M,CU_7206723,173.84,63.083,01-25-18,Software Engineer IV,0,1.0,1,,,A
-Risper,Eben ,M,CU_9412420,86.99,46.095,11-24-18,,0,1.0,1,,A,A
-Ancy,Rosella,F,CU_1472330,282.74,35.849,06-01-18,Cost Accountant,1,1.0,1,,,A
-Hefti,Reuben ,M,CU_1736529,57.3,46.504,05-28-18,Research Assistant III,0,1.0,1,,A,A
-Gyles,Julia ,F,CU_5064531,171.81,43.836,08-20-18,Research Assistant III,0,1.0,1,,A,A
-Rajewski,Abdulrahman ,M,CU_3235667,143.18,37.008,08-05-18,Software Engineer IV,0,,1,,A,A
-Iavarone,Sandy,F,CU_4409173,368.33,53.901,04-22-18,,0,1.0,1,,A,A
-Bednarczyk,Scarlet ,F,CU_7565142,228.77,48.6,11-18-18,Software Engineer IV,0,1.0,1,,,A
-Reihe,Devon,M,CU_3413847,104.69,59.687,02-26-18,Dental Hygienist,1,1.0,1,,A,A
-Mineo,Rebecca ,F,CU_6811481,147.56,,06-23-18,Dental Hygienist,0,1.0,1,,A,A
-Kerney,Nina,F,CU_8220506,171.75,57.73,03-11-18,Structural Engineer,0,1.0,1,,,A
-Lisowski,Jerry,F,CU_9201504,255.21,39.145,01-01-18,Technical Writer,0,1.0,1,,A,A
-Theaker,Kenzo ,M,CU_2053986,212.92,37.805,10-08-18,Data Coordiator,0,1.0,1,,,A
-Sudan,Kaleb ,M,CU_1611619,236.69,,10-12-18,Research Assistant II,0,1.0,1,,A,A
-Saadeh,Kallum ,M,CU_7155559,146.48,39.632,07-03-18,Software Engineer IV,0,1.0,1,,,A
-Loera,Paris,M,CU_7501674,352.9,47.144,11-19-18,Technical Writer,0,1.0,1,,A,A
-Stocking,Iyla ,F,CU_6983531,118.81,53.61,11-21-18,Software Engineer IV,1,,1,,A,A
-Doljac,Laurie ,M,CU_1345387,123.34,40.704,01-16-18,Software Engineer IV,1,1.0,1,,A,A
-Boon,Ernest,M,CU_4769647,133.74,38.023,11-07-18,Dental Hygienist,0,,1,,,A
-Colby,Jaydon ,M,CU_4648818,147.01,59.261,03-01-18,Research Assistant II,0,1.0,1,,,A
-Bila,Ellie-Mae ,F,CU_7958388,575.63,28.506,08-14-18,Cost Accountant,0,1.0,2,,A,C
-Rones,Nick,M,CU_5392245,227.71,55.783,05-10-18,Account Coordinator,0,1.0,1,,A,A
-Emenaha,Brad,M,CU_3055485,62.24,26.061,10-15-18,Software Engineer IV,1,,1,,A,A
-Luhmann,Delia,F,CU_4239232,63.17,,01-17-18,Quality Control Specialist,0,1.0,1,,A,A
-Isabelle,Regina,F,CU_2621314,129.45,32.236,09-13-18,Account Coordinator,1,,1,,A,A
-Ramrez,Manraj ,M,CU_5238659,154.2,52.322,01-10-18,Food Chemist,0,1.0,1,,,A
-Pharao,Ihsan ,M,CU_3204997,510.0,50.789,12-06-18,Research Assistant II,0,,1,,A,A
-Wilton,Sheena,F,CU_7878534,175.19,37.609,12-16-18,Research Assistant II,1,1.0,1,,A,A
-Oberfell,Adela,F,CU_7835525,123.08,,06-27-18,Dental Hygienist,0,1.0,1,,A,A
-Perman,Nathaniel ,M,CU_1355662,132.96,57.76,10-15-18,Dental Hygienist,1,,1,,,A
-Merlain,Isha ,F,CU_1042322,159.73,55.135,05-21-18,Software Engineer IV,0,,1,,A,A
-Betesh,Isabel ,F,CU_7569300,115.03,29.578,06-20-18,Quality Control Specialist,0,1.0,1,,A,A
-Onofre,Leland,M,CU_1585047,171.16,55.491,01-11-18,Software Engineer IV,0,1.0,1,,A,A
-Alvorez,Flynn ,M,CU_8431513,198.26,50.781,01-24-18,Research Assistant II,0,1.0,1,,A,A
-Davidian,Eloy,M,CU_5875612,118.53,,02-21-18,Structural Engineer,0,1.0,1,,,A
-Prechtl,Reagan ,M,CU_3895197,192.43,59.93,02-09-18,Dental Hygienist,1,1.0,1,,A,A
-Sarac,Gavin ,M,CU_5037982,117.8,47.631,06-26-18,Software Engineer IV,0,1.0,1,,A,A
-Azure,Lupe,F,CU_2361249,192.84,,08-01-18,Software Engineer IV,0,1.0,1,,A,A
-Deodato,Travis,M,CU_1034147,165.49,45.635,11-05-18,Research Assistant III,0,1.0,1,,,B
-Castel,Tristan,M,CU_7438245,497.46,32.934,11-22-18,Research Assistant III,0,1.0,1,,,A
-Rybarczyk,Arabella ,F,CU_3420073,151.57,56.006,08-24-18,Accountant I,0,1.0,1,,A,A
-Urbanek,Gillian,F,CU_5605291,211.5,40.835,08-13-18,Web Developer II,0,1.0,1,,,A
-Malander,Angela,F,CU_3872684,164.94,35.493,03-09-18,Dental Hygienist,0,,1,,,A
-Sponaugle,Lora,F,CU_3262380,155.48,58.004,02-26-18,Software Engineer IV,1,1.0,1,,,A
-Clery,Catalina,F,CU_9310126,173.67,40.724,06-02-18,Research Assistant II,0,1.0,1,,A,A
-John,Nicolas,M,CU_4126639,244.38,59.781,01-28-18,Software Engineer IV,0,1.0,1,,A,A
-Santillanez,Elden,M,CU_9394097,58.82,31.574,09-10-18,Quality Control Specialist,0,1.0,1,,A,A
-Chadek,Filiberto,M,CU_7616436,93.7,26.837,08-30-18,Data Coordiator,1,1.0,1,,A,A
-Mikkelsen,Arron,M,CU_2992053,154.23,50.307,05-26-18,Quality Control Specialist,0,1.0,1,,,A
-Garnsey,Spencer,M,CU_3381179,200.07,60.923,12-11-18,Dental Hygienist,0,1.0,1,,,A
-Pruss,Carmen ,F,CU_7301052,173.91,59.681,01-06-18,Software Engineer IV,0,1.0,1,,A,A
-Guys,Victoria,F,CU_8431551,259.19,49.867,06-27-18,Quality Control Specialist,0,1.0,1,,,A
-Homsey,Claudine,F,CU_7425984,153.99,32.951,08-06-18,Dental Hygienist,1,1.0,1,,,A
-Campos,Joyce,F,CU_3628997,243.16,27.674,06-08-18,Cost Accountant,0,1.0,1,,,A
-Mcbath,Florentino,M,CU_6655942,161.75,51.886,03-24-18,Quality Control Specialist,1,1.0,1,,A,A
-Felson,Nickolas,M,CU_5070791,167.15,51.379,06-05-18,Dental Hygienist,0,1.0,1,,A,A
-Azevedo,Freddie,M,CU_4190162,141.34,57.876,12-27-18,,1,,1,,A,A
-Borcherding,Jaiden ,M,CU_6311896,162.48,38.196,04-15-18,Food Chemist,1,,1,,A,A
-Carbine,Felicia,F,CU_3872729,171.71,45.363,05-24-18,Software Engineer IV,0,1.0,1,,,A
-Port,Teegan ,F,CU_1482712,169.47,52.411,09-16-18,Research Assistant III,1,1.0,1,,A,A
-Bronner,Sarah ,F,CU_3176411,144.56,57.66,10-29-18,Dental Hygienist,0,,1,,,A
-Vandesteene,Hadiya ,F,CU_6293468,310.36,65.066,08-01-18,Research Assistant III,0,1.0,1,,,A
-Coy,Lenore,F,CU_4435932,173.66,,02-09-18,Cost Accountant,0,1.0,1,,A,A
-Siracuse,Luca ,M,CU_7104476,398.59,24.447,05-19-18,Research Assistant II,0,1.0,1,,A,A
-Rybowiak,Henrietta ,F,CU_9953247,341.42,56.436,10-04-18,Cost Accountant,1,1.0,1,,A,A
-Didio,Stanislaw ,M,CU_9105377,190.6,44.683,11-07-18,Research Assistant II,0,1.0,1,,,A
-Ko,Janie,F,CU_3831777,129.88,57.968,01-05-18,Software Engineer IV,0,,1,,,A
-Rape,Ayush ,M,CU_9525219,119.31,,06-01-18,Dental Hygienist,0,1.0,1,,A,A
-Repenning,Julia,F,CU_8404964,162.68,51.828,04-26-18,,0,,1,,,A
-Southwell,Mariah ,F,CU_7399395,165.14,34.662,10-09-18,Software Engineer IV,0,1.0,1,,,A
-Blocker,Harley,M,CU_9132004,403.04,31.17,01-02-18,Research Assistant II,0,,1,,A,A
-Craton,Jamil ,M,CU_8261603,105.35,48.208,03-22-18,Software Engineer IV,0,1.0,1,,,A
-Penley,Bob,M,CU_5339114,127.67,,11-11-18,Editor,0,,1,,A,A
-Feurtado,Simon ,M,CU_5711851,160.28,65.837,12-29-18,Quality Control Specialist,0,1.0,1,,A,A
-Morrical,Rumaysa ,F,CU_7399409,168.45,35.697,06-06-18,Research Assistant II,0,1.0,1,,,A
-Frase,Haris ,M,CU_7911414,267.35,36.828,03-29-18,Software Engineer IV,0,1.0,1,,A,A
-Geeslin,Vickie,F,CU_9979895,137.23,61.925,06-27-18,Data Coordiator,1,1.0,1,,A,A
-Rabey,Mercy ,F,CU_5298169,65.78,48.721,01-18-18,Editor,0,1.0,1,,,A
-Moldonado,Stan,M,CU_2301948,137.55,58.494,01-28-18,Research Assistant II,0,1.0,1,,,A
-Lummus,Trisha,F,CU_8622077,231.65,51.101,02-04-18,Accountant I,0,,1,,A,A
+,surname,forename,gender,id,balance,age,start,profession,online,single num,weight_num,null,single cat,weight_cat
+0,Kushiner,Crystal ,F,CU_6461441,125.75,53.807,08-31-18,Help Desk Operator,0,1.0,1,,,A
+1,Cudney,Angelo,M,CU_6688771,613.32,,02-22-18,Analyst Programmer,0,1.0,1,,A,A
+2,Reill,Logan ,M,CU_5998596,125.9,52.901,12-02-18,Help Desk Operator,0,1.0,1,,A,A
+3,Marmon,Tammi,F,CU_4317188,177.57,59.977,06-04-18,,0,1.0,1,,,A
+4,Bellafiore,Vito,M,CU_5677060,197.9,,07-26-18,Senior Editor,0,1.0,1,,A,A
+5,Alliston,Caio ,M,CU_1861640,146.7,51.16,12-24-18,Senior Sales Associate,0,1.0,1,,,A
+6,Wiggett,Emmanuella ,F,CU_4726794,228.06,50.576,06-08-18,Human Resources Manager,1,1.0,1,,A,A
+7,Warens,Kathleen,F,CU_7462922,205.83,49.408,06-30-18,,0,1.0,1,,A,A
+8,Hoge,Fraser ,M,CU_8617994,157.81,31.895,09-24-18,Senior Sales Associate,0,1.0,1,,A,A
+9,Holsey,Jeremiah ,M,CU_2068493,175.51,,11-26-18,Research Assistant III,0,,1,,A,A
+10,Digness,Ioan ,M,CU_6047757,305.0,59.956,06-12-18,Research Assistant III,0,1.0,1,,A,A
+11,Formey,Elif ,F,CU_9883663,155.34,35.179,12-29-18,Senior Sales Associate,0,1.0,1,,,A
+12,Jozwick,Quinton,M,CU_9115670,96.19,36.154,07-19-18,Senior Sales Associate,0,1.0,1,,,A
+13,Matsuura,Wilson ,M,CU_3645465,230.99,,01-14-18,Senior Sales Associate,0,1.0,2,,A,C
+14,Outler,Francisco,M,CU_6340638,127.58,73.849,10-12-18,,0,,1,,A,A
+15,Fons,Domingo,M,CU_6307874,103.57,61.18,10-22-18,,0,1.0,1,,A,A
+16,Frieden,Shaun,M,CU_1988642,209.03,50.622,12-04-18,Information Systems Manager,0,1.0,1,,A,A
+17,Cooper,Kristin,F,CU_1167395,398.94,28.083,02-22-18,Senior Sales Associate,1,1.0,1,,A,A
+18,Gloss,Chung,M,CU_9064485,219.44,53.526,02-19-18,Senior Editor,0,1.0,1,,A,A
+19,Garber,Cai ,M,CU_6961186,150.14,38.535,04-07-18,,0,1.0,1,,A,A
+20,Wencl,Emmanuel ,M,CU_5566504,123.7,62.634,12-04-18,Senior Sales Associate,0,1.0,1,,,A
+21,Darras,Hassan,M,CU_2797608,305.53,,05-05-18,Assistant Professor,1,1.0,1,,,A
+22,Godert,Adolph,M,CU_4790315,124.55,39.554,10-08-18,Senior Editor,0,1.0,1,,A,A
+23,Serenil,Latoya,F,CU_2730029,239.3,54.453,06-17-18,Human Resources Manager,1,1.0,1,,,A
+24,Stare,Safiyah ,F,CU_5451824,163.97,47.403,12-26-18,Senior Editor,0,1.0,1,,A,B
+25,Strothmann,Jeri,F,CU_1755185,161.11,50.035,08-02-18,Senior Editor,1,1.0,1,,,A
+26,Hosse,Cordelia ,F,CU_7856176,213.11,40.876,03-06-18,,1,1.0,1,,A,A
+27,Bittle,Faisal ,M,CU_7268403,122.02,72.086,03-20-18,Office Assistant II,0,1.0,1,,A,A
+28,Mcanulty,Bonnie,F,CU_4579380,323.26,36.345,12-03-18,,0,1.0,1,,A,A
+29,Aceuedo,Carlo,M,CU_4038709,134.84,,07-10-18,Human Resources Manager,0,1.0,1,,,A
+30,Volpi,Ayla ,F,CU_7112755,163.86,,05-24-18,Senior Sales Associate,0,,1,,A,A
+31,Hoepfner,Mustafa ,M,CU_7669815,171.48,47.886,01-12-18,Office Assistant II,0,1.0,1,,,A
+32,Doxtator,Ahmed ,M,CU_6780983,345.83,23.592,08-31-18,Research Assistant III,0,1.0,1,,A,A
+33,Diez,Payton ,F,CU_3932217,93.92,46.777,09-21-18,Senior Sales Associate,0,,1,,,A
+34,Rosetta,Ashley ,M,CU_4005941,209.1,,03-24-18,Senior Sales Associate,1,1.0,1,,,A
+35,Aurelia,Maisie ,F,CU_6932539,186.92,48.283,04-18-18,Research Assistant III,0,,1,,A,A
+36,Wojdak,Lawerence,M,CU_3975231,143.24,46.738,02-04-18,Assistant Professor,1,1.0,1,,A,A
+37,Sanks,Tristan ,M,CU_6148159,127.82,35.461,10-26-18,Senior Sales Associate,0,1.0,1,,A,A
+38,Jageman,Scarlett-Rose ,F,CU_6912065,172.65,20.692,11-18-18,Senior Sales Associate,0,1.0,1,,,A
+39,Cruey,Krisha ,F,CU_3780672,438.85,57.813,06-13-18,Senior Sales Associate,0,1.0,1,,,A
+40,Bielski,Jeannie,F,CU_7682115,229.6,57.598,12-06-18,Senior Sales Associate,0,,1,,A,A
+41,Wasielewski,Janell,F,CU_8001605,58.26,41.211,12-22-18,,0,1.0,1,,A,A
+42,Guethle,Stella,F,CU_5181511,225.17,22.221,07-26-18,Senior Editor,1,1.0,1,,,A
+43,Brunker,Alisha,F,CU_4999239,92.0,35.571,12-29-18,Senior Sales Associate,0,1.0,1,,,A
+44,Riederer,Yusuf ,M,CU_4485195,112.12,55.867,11-20-18,Senior Editor,0,1.0,1,,,A
+45,Sartain,Ernest ,M,CU_9881678,129.48,28.551,02-06-18,Senior Editor,0,1.0,1,,,A
+46,Shiraishi,Graham,M,CU_6465615,293.18,55.367,03-02-18,,0,1.0,1,,,A
+47,Mazzeo,Andres,M,CU_1556560,199.73,56.442,08-10-18,Sales Associate,0,,1,,A,A
+48,Chinskey,Buck,M,CU_8992851,134.34,,04-09-18,Junior Executive,0,1.0,1,,,A
+49,Makinson,Benedict ,M,CU_7256149,151.12,43.059,11-01-18,Office Assistant II,0,1.0,1,,,A
+50,Bonini,Eden ,F,CU_3776601,131.48,36.545,01-06-18,Senior Sales Associate,1,1.0,1,,A,A
+51,Bambrick,Franciszek ,M,CU_1327194,270.33,42.095,07-13-18,Human Resources Assistant IV,0,,1,,,A
+52,Sunderland,Devon,M,CU_7729243,144.58,59.981,04-28-18,Senior Sales Associate,1,1.0,1,,,A
+53,Schut,Anita ,F,CU_9240667,161.1,47.136,10-15-18,Senior Editor,0,1.0,1,,A,A
+54,Bonjour,Amalia,F,CU_2893917,232.28,39.54,04-30-18,Senior Sales Associate,0,1.0,1,,A,A
+55,Villines,Adrienne,F,CU_5015641,120.0,56.377,06-15-18,Sales Associate,0,1.0,1,,A,A
+56,Ferrell,William ,M,CU_1251423,112.39,59.044,07-06-18,Senior Sales Associate,0,,1,,A,A
+57,Jeancy,Ayoub ,M,CU_6180957,130.11,55.106,07-12-18,Office Assistant II,1,1.0,1,,,A
+58,Gallups,Jak ,M,CU_9232485,40.21,42.931,07-09-18,Senior Editor,0,1.0,1,,,A
+59,Rials,Willian,M,CU_3446886,141.31,,01-27-18,,0,1.0,1,,,A
+60,Offerman,Shannon,F,CU_4790373,169.99,44.962,01-11-18,Director of Sales,0,1.0,1,,A,A
+61,Zumstein,Lorene,F,CU_8869993,691.46,38.349,12-25-18,Senior Sales Associate,0,1.0,1,,,A
+62,Bordon,Carly ,F,CU_8644715,112.53,,07-14-18,Senior Sales Associate,0,1.0,1,,,A
+63,Dalmata,Bennie,M,CU_1804396,122.44,20.053,12-05-18,Senior Sales Associate,1,1.0,1,,,A
+64,Zummo,Nadine,F,CU_4366445,150.04,24.079,08-09-18,Senior Editor,0,1.0,1,,A,A
+65,Kukene,Zayn ,M,CU_4651122,133.72,,12-13-18,Senior Editor,0,1.0,1,,A,A
+66,Sundby,Yusef ,M,CU_1796213,125.97,,12-19-18,Office Assistant II,0,1.0,1,,A,A
+67,Weatherly,Cornelia,F,CU_6764663,155.05,37.853,01-09-18,,0,1.0,1,,,A
+68,Viscia,Winston,M,CU_8388729,158.05,53.423,05-24-18,Senior Sales Associate,0,,1,,A,A
+69,Rybka,Nita,F,CU_9506938,181.71,27.337,04-24-18,Assistant Professor,0,1.0,1,,,A
+70,Tilleman,Digby ,M,CU_3436667,283.84,63.778,01-12-18,Human Resources Manager,0,1.0,1,,A,A
+71,Sperberg,Riley-James ,M,CU_2699388,134.32,26.198,01-29-18,Senior Sales Associate,1,1.0,1,,A,A
+72,Kight,Rajveer ,M,CU_5429373,129.59,24.289,10-14-18,Information Systems Manager,0,1.0,1,,A,A
+73,Konwinski,Mina ,F,CU_9560194,178.52,58.108,05-28-18,VP Product Management,0,1.0,1,,A,A
+74,Desort,Hamish ,M,CU_5034115,220.86,66.49,12-08-18,Senior Editor,0,1.0,1,,A,A
+75,Leisher,Heath ,M,CU_9117827,169.69,40.108,11-12-18,VP Product Management,0,1.0,1,,A,A
+76,Fulmore,Olen,M,CU_2494598,172.86,27.06,04-26-18,VP Product Management,0,1.0,1,,A,A
+77,Haven,Tammy,F,CU_1065095,105.4,31.024,01-17-18,Office Assistant II,0,,1,,A,A
+78,Howryla,Lou,F,CU_4921482,124.06,43.638,07-01-18,Senior Editor,0,1.0,1,,,A
+79,Jadin,Kamran ,M,CU_9592971,122.43,56.636,06-26-18,Help Desk Operator,0,1.0,1,,A,A
+80,Kvamme,Dewayne,M,CU_2302090,54.05,,12-14-18,Senior Editor,0,,1,,A,A
+81,Mcgrone,Cletus,M,CU_3539086,634.71,,04-18-18,Office Assistant II,1,1.0,1,,A,A
+82,Jurin,Alphonso,M,CU_7436431,148.85,46.247,07-01-18,Help Desk Operator,0,1.0,1,,A,A
+83,Massimo,Jerrod,M,CU_3508368,220.93,52.969,03-27-18,Senior Editor,0,,1,,A,A
+84,Mistrot,Jodie,F,CU_2535570,170.93,54.403,08-18-18,,0,1.0,1,,A,A
+85,Wallor,Lonnie,M,CU_5109908,106.83,27.459,09-09-18,Help Desk Operator,0,,1,,A,A
+86,Vancise,Anibal,M,CU_6138005,134.56,27.49,07-27-18,Human Resources Assistant IV,0,1.0,1,,A,A
+87,Bayless,Ulysses,M,CU_2961558,163.85,62.379,09-18-18,Information Systems Manager,0,1.0,1,,A,A
+88,Loatman,Kip,M,CU_9433238,154.1,36.006,11-03-18,Data Coordiator,0,1.0,1,,,A
+89,Heddlesten,Sam,M,CU_6576281,220.92,47.237,09-03-18,Research Assistant III,0,1.0,1,,A,A
+90,Krivak,Aminah ,F,CU_3182746,170.01,57.441,01-17-18,Help Desk Operator,1,,1,,A,A
+91,Packard,Mathew ,M,CU_9175194,118.17,65.261,09-30-18,Senior Editor,0,1.0,1,,,A
+92,Neidert,Marquis,M,CU_7368860,175.94,21.558,05-28-18,Senior Sales Associate,0,1.0,1,,A,A
+93,Craney,Jude,M,CU_3997849,148.14,31.833,05-23-18,Senior Editor,0,1.0,1,,,A
+94,Lebrane,Maiya ,F,CU_9734302,113.7,59.871,11-03-18,,0,1.0,1,,A,A
+95,Haggberg,Maude,F,CU_3842206,108.77,55.266,04-08-18,Office Assistant II,0,1.0,1,,,A
+96,Souliere,Karl,M,CU_2146464,196.06,73.996,01-09-18,Senior Editor,0,1.0,1,,A,A
+97,Moehrle,Emre ,M,CU_8200353,134.41,,06-30-18,Senior Sales Associate,1,1.0,1,,,A
+98,Chua,Rory,M,CU_8784028,140.37,48.914,10-18-18,,1,,1,,,A
+99,Delano,Aniyah ,F,CU_1175715,47.24,30.792,01-10-18,Office Assistant II,0,1.0,1,,,A
+100,Montefusco,Theo ,M,CU_8927396,150.07,37.512,09-02-18,Help Desk Operator,0,1.0,1,,A,A
+101,Condroski,Alejandro,M,CU_7530660,118.58,45.05,07-07-18,Human Resources Manager,0,1.0,1,,,A
+102,Ciccolini,Ryan,M,CU_5263528,118.35,56.226,01-24-18,Human Resources Manager,1,1.0,1,,A,A
+103,Adames,Stefan,M,CU_1411242,130.79,,08-02-18,Senior Editor,0,1.0,1,,A,A
+104,Greider,Vera ,F,CU_6938796,196.11,56.156,09-29-18,Analyst Programmer,1,1.0,1,,A,A
+105,Heyn,Pam,F,CU_1276076,128.24,30.383,07-30-18,Senior Sales Associate,0,1.0,1,,A,A
+106,Smolinski,Effie,F,CU_6594736,223.8,57.884,11-24-18,Office Assistant II,0,1.0,1,,A,A
+107,Camargo,Jaeden ,M,CU_3422385,139.8,55.574,04-23-18,Help Desk Operator,0,1.0,1,,A,A
+108,Dymond,Jackson ,M,CU_4968626,150.7,57.644,09-24-18,Help Desk Operator,0,1.0,1,,A,A
+109,Rossean,Carl ,M,CU_5451954,227.75,,12-12-18,Senior Sales Associate,0,1.0,1,,A,A
+110,Newgard,Randall,M,CU_7930035,423.54,43.864,03-23-18,Senior Editor,1,,1,,,A
+111,Gelder,Lyman,M,CU_5501109,136.68,,09-17-18,,0,1.0,1,,A,A
+112,Gensel,Emile,M,CU_3629240,135.14,57.868,09-04-18,Senior Editor,0,1.0,1,,A,A
+113,Reager,Josiah,M,CU_4780216,99.56,45.208,06-05-18,Junior Executive,1,1.0,1,,A,A
+114,Hentrich,Hamza ,M,CU_6310072,57.09,28.649,08-20-18,Sales Associate,0,1.0,1,,,A
+115,Alvirez,Vincent ,M,CU_4200636,125.5,55.281,07-14-18,Senior Sales Associate,0,1.0,1,,,A
+116,Senteno,Andre ,M,CU_5339324,182.24,,03-26-18,Senior Editor,0,1.0,1,,,A
+117,Huckaby,Finnley ,M,CU_2445502,166.93,41.36,04-25-18,Senior Editor,0,1.0,1,,A,A
+118,Ripke,Robby,M,CU_5468351,175.05,55.77,02-10-18,VP Product Management,1,,1,,A,A
+119,Schlather,Russ,M,CU_6353086,145.13,34.442,05-16-18,Help Desk Operator,1,1.0,1,,A,A
+120,Kennaugh,Ted ,M,CU_4780221,323.71,28.96,06-16-18,,0,1.0,1,,,A
+121,Khubba,Eesa ,M,CU_9826499,151.86,32.765,12-14-18,Junior Executive,0,1.0,1,,,A
+122,Tollefson,Reyna,F,CU_1513670,241.71,21.889,06-01-18,Senior Sales Associate,0,1.0,1,,,A
+123,Uzelac,Cade ,M,CU_4696264,135.93,49.503,05-13-18,Senior Sales Associate,0,1.0,1,,A,A
+124,Koehne,Baxter ,M,CU_7979209,171.95,,07-22-18,Senior Sales Associate,0,1.0,1,,A,A
+125,Vaccarello,Judson,M,CU_8671435,304.4,,06-09-18,Human Resources Manager,0,1.0,1,,A,A
+126,Fennewald,Herb,M,CU_7065805,244.47,39.492,08-05-18,Information Systems Manager,0,,1,,,A
+127,Maki,Lawrence,M,CU_7815374,157.11,,10-08-18,Office Assistant II,0,1.0,1,,,A
+128,Tubville,Mitch,M,CU_4606163,77.49,38.957,01-28-18,Senior Sales Associate,0,1.0,1,,,A
+129,Parikh,Mikhail ,M,CU_9085139,138.37,56.542,07-10-18,Senior Sales Associate,0,1.0,1,,A,A
+130,Cioppa,Carlos ,M,CU_1874133,89.36,62.521,05-21-18,Information Systems Manager,0,1.0,1,,A,A
+131,Garia,Carrie,F,CU_4849878,123.95,55.139,02-18-18,Senior Editor,1,1.0,1,,A,A
+132,Kolden,Avni ,F,CU_9595093,166.13,32.292,05-10-18,,0,1.0,1,,A,A
+133,Granzella,Dirk,M,CU_1620184,173.7,49.689,03-09-18,Office Assistant II,0,1.0,1,,A,A
+134,Revier,Maia ,F,CU_4239578,152.72,23.588,12-11-18,Help Desk Operator,1,1.0,1,,A,A
+135,Truss,Ladonna,F,CU_5914848,167.32,,01-03-18,Senior Editor,0,1.0,1,,,A
+136,Wearrien,Jeff,M,CU_1855713,139.23,34.943,12-19-18,Senior Editor,1,1.0,1,,,A
+137,Gornikiewicz,Stacy,M,CU_1634530,126.21,37.073,07-16-18,Junior Executive,1,1.0,1,,,A
+138,Marflak,Angelina,F,CU_3113187,168.43,62.118,11-08-18,Office Assistant II,0,,1,,A,A
+139,Tauer,Zoha ,F,CU_1605870,161.8,59.463,10-04-18,Senior Sales Associate,0,1.0,1,,,A
+140,Sartin,Maryanne,F,CU_5896434,139.07,56.576,12-22-18,Director of Sales,0,1.0,1,,,A
+141,Cothron,Wallace,M,CU_8143092,120.24,37.749,02-25-18,Senior Editor,0,1.0,1,,,A
+142,Chell,Wilburn,M,CU_2101496,154.65,43.597,10-11-18,Office Assistant II,0,1.0,1,,,A
+143,Bedward,Edna,F,CU_3664122,103.91,21.174,08-06-18,Senior Sales Associate,0,,1,,A,A
+144,Sauage,Kyla ,F,CU_3008764,145.02,49.579,12-17-18,VP Product Management,0,1.0,1,,,A
+145,Moxley,Rudy,M,CU_3248385,153.36,40.778,02-13-18,,0,1.0,1,,,A
+146,Hakimi,Jeromy,M,CU_4243714,165.15,57.957,03-17-18,Senior Sales Associate,0,1.0,1,,A,A
+147,Legrand,Christopher ,M,CU_1038597,117.05,,02-26-18,Help Desk Operator,0,1.0,1,,A,A
+148,Quartucci,Russell,M,CU_4866309,333.32,74.232,03-12-18,Research Assistant III,0,1.0,1,,A,A
+149,Ross,Frances,M,CU_1005838,503.04,27.478,07-19-18,Senior Editor,0,1.0,1,,A,A
+150,Hardon,Kyan ,M,CU_1708303,137.49,55.434,07-08-18,Information Systems Manager,0,,1,,,A
+151,Fowkes,Bret,M,CU_6869273,67.85,24.725,04-11-18,Sales Associate,1,1.0,1,,,A
+152,Fidel,Christina ,F,CU_7878938,507.19,57.479,10-27-18,Senior Sales Associate,0,1.0,1,,A,A
+153,Spettel,Amos,M,CU_3565855,147.19,64.478,08-31-18,Senior Editor,0,1.0,1,,A,A
+154,Hamberry,Ava-Grace ,F,CU_6783264,105.15,30.256,10-20-18,Senior Sales Associate,1,,1,,A,A
+155,Kolppa,King,M,CU_3266848,141.09,44.65,02-10-18,Senior Editor,0,1.0,1,,,A
+156,Kull,Caitlin ,F,CU_9955618,304.65,29.13,04-22-18,Senior Sales Associate,0,,1,,A,A
+157,Liddy,Sufyan ,M,CU_3418403,40.37,41.932,01-04-18,Senior Sales Associate,1,1.0,1,,,A
+158,Wadman,Lidia,F,CU_4790567,695.5,53.229,11-28-18,Senior Editor,0,1.0,1,,A,A
+159,Redford,Omar ,M,CU_2208040,136.1,54.935,01-12-18,Analyst Programmer,0,,1,,A,A
+160,Gotschall,Samantha ,F,CU_7614759,224.58,58.085,07-01-18,Office Assistant II,0,1.0,1,,A,A
+161,Nozicka,Dev ,M,CU_2023722,120.8,55.238,01-25-18,Office Assistant II,0,1.0,1,,A,A
+162,Fouse,Josef ,M,CU_8685866,153.55,56.598,05-13-18,Senior Sales Associate,0,1.0,1,,A,A
+163,Garthee,Augustine,M,CU_9857324,224.29,55.564,06-13-18,Junior Executive,0,1.0,1,,A,A
+164,Goldie,Abel ,M,CU_2883882,129.05,,12-14-18,Human Resources Assistant IV,1,,1,,A,A
+165,Unglaub,Sumayyah ,F,CU_6193454,413.78,25.141,06-20-18,VP Product Management,0,,1,,A,A
+166,Morgret,Sylvie ,F,CU_7862575,165.0,35.624,02-16-18,VP Product Management,0,1.0,1,,,A
+167,Bargstadt,Yvonne,F,CU_3125553,93.7,53.376,04-04-18,Sales Associate,0,1.0,1,,A,A
+168,Bode,Bert,M,CU_8325426,201.91,36.137,08-10-18,Help Desk Operator,0,1.0,1,,A,A
+169,Yerdon,Laurence,M,CU_9742646,309.88,58.466,04-03-18,VP Product Management,0,,1,,A,A
+170,Ajose,Daniel,M,CU_5038394,214.56,39.329,08-27-18,,1,1.0,1,,,A
+171,Blackstar,Esteban,M,CU_6764858,177.95,31.463,02-21-18,Senior Editor,1,1.0,1,,A,A
+172,Roghair,Tomos ,M,CU_4239674,132.1,43.254,11-13-18,Office Assistant II,0,1.0,1,,,A
+173,Kliethermes,Reba,F,CU_1567037,208.19,42.516,01-16-18,VP Product Management,0,1.0,1,,A,A
+174,Voisin,Aleeza ,F,CU_6975805,170.01,67.173,02-05-18,Sales Associate,0,1.0,1,,A,A
+175,Parhan,Pablo,M,CU_1147199,86.29,38.342,09-17-18,,0,1.0,1,,A,A
+176,Maobi,Jessie,F,CU_2113860,178.25,55.807,02-13-18,Help Desk Operator,0,1.0,1,,A,A
+177,Tarone,Ray ,M,CU_5765444,130.66,65.473,11-16-18,Senior Editor,0,1.0,1,,,A
+178,Kansas,Pete,M,CU_4718916,117.64,37.501,07-16-18,Senior Sales Associate,0,1.0,1,,A,A
+179,Swinney,Felecia,F,CU_1423690,134.91,42.35,10-09-18,Senior Editor,0,1.0,1,,A,A
+180,Sehl,Sebastien ,M,CU_4381003,238.55,,11-12-18,Senior Sales Associate,1,1.0,1,,,A
+181,Guerera,Dulcie ,F,CU_4399436,315.05,36.168,06-17-18,Human Resources Assistant IV,0,1.0,1,,A,A
+182,Tashjian,Niall ,M,CU_1253709,134.58,,02-15-18,Office Assistant II,1,1.0,1,,A,A
+183,Gutreuter,Bessie,F,CU_2861390,126.99,25.212,10-19-18,Research Assistant III,0,,1,,A,A
+184,Necochea,Frederick,M,CU_4262223,127.79,38.904,12-07-18,Analyst Programmer,0,1.0,1,,,A
+185,Creson,Eddy,M,CU_1149262,157.82,58.427,06-21-18,Senior Editor,1,1.0,1,,,A
+186,Rowald,Andrei ,M,CU_9638235,554.71,42.625,02-15-18,Human Resources Assistant IV,1,1.0,1,,A,A
+187,Fludd,Edward,M,CU_6469984,143.65,57.003,03-07-18,,0,,1,,A,A
+188,Abbitt,Kye ,M,CU_1141090,148.44,60.331,09-05-18,Sales Associate,1,1.0,1,,,A
+189,Koon,Corina,F,CU_5630307,144.5,47.63,04-01-18,Senior Sales Associate,0,,1,,A,A
+190,Tomasek,Sheikh ,M,CU_8526179,127.99,54.985,08-08-18,Office Assistant II,0,1.0,1,,A,A
+191,Mahajan,Deirdre,F,CU_2429295,149.09,35.176,08-02-18,,0,1.0,1,,A,A
+192,Morrall,Mavis,F,CU_2322800,107.67,,11-30-18,Senior Sales Associate,0,1.0,1,,,A
+193,Condict,Mohammed,M,CU_2945391,580.03,,03-21-18,Senior Sales Associate,0,,1,,A,A
+194,Hewgley,Wilbur,M,CU_6826357,136.62,52.653,10-22-18,Office Assistant II,1,1.0,1,,A,A
+195,Scurry,Dan,M,CU_7264629,234.87,67.833,03-25-18,Help Desk Operator,0,1.0,1,,A,A
+196,Donayre,Lucille,F,CU_4542839,143.42,56.693,04-29-18,Senior Sales Associate,1,1.0,1,,,A
+197,Margison,Shad,M,CU_1900919,153.99,,07-19-18,Senior Editor,0,1.0,1,,,A
+198,Sourlis,Georgette,F,CU_5814649,102.28,28.525,12-20-18,Office Assistant II,0,1.0,1,,,A
+199,Rachar,Sonny,M,CU_3516792,147.01,57.776,02-28-18,Senior Sales Associate,0,1.0,1,,,A
+200,Hohenbrink,Stephanie,F,CU_2978173,114.6,58.04,07-23-18,Office Assistant II,0,,1,,,A
+201,Betschart,Hyman,M,CU_4503934,178.29,22.295,07-01-18,Senior Sales Associate,0,1.0,1,,,A
+202,Sessler,Ayan ,M,CU_3056000,173.54,41.292,06-15-18,,0,,1,,A,A
+203,Corea,Justin ,M,CU_8724870,168.54,69.843,12-29-18,Office Assistant II,0,1.0,1,,,A
+204,Pavek,Lowell,M,CU_6986126,120.57,52.952,09-25-18,Office Assistant II,0,1.0,1,,A,A
+205,Mozee,Inaya ,F,CU_5341585,161.67,,05-03-18,Director of Sales,0,1.0,1,,,C
+206,Fraklin,April ,F,CU_4403606,187.78,59.29,09-03-18,Help Desk Operator,0,1.0,1,,A,A
+207,Brasington,Henry ,M,CU_2531736,60.99,32.228,02-03-18,Human Resources Manager,0,1.0,1,,,A
+208,Bodman,Susannah ,F,CU_4004250,48.79,,06-26-18,Office Assistant II,0,1.0,1,,,A
+209,Davda,Zayna ,F,CU_7045533,168.53,35.9,04-10-18,Human Resources Assistant IV,0,1.0,1,,,A
+210,Golebiewski,Taran ,M,CU_1382815,108.04,27.494,08-02-18,Senior Editor,0,1.0,1,,,A
+211,Buchner,Gillian,F,CU_1880483,245.7,28.314,07-15-18,Office Assistant II,0,1.0,1,,,A
+212,Wojciechowski,Morgan,M,CU_4026790,502.83,47.19,07-22-18,Junior Executive,0,1.0,1,,,A
+213,Bonzo,Safwan ,M,CU_1540522,145.59,37.349,11-11-18,Analyst Programmer,0,1.0,1,,A,A
+214,Dushaj,Raleigh,M,CU_5712299,186.06,35.587,08-09-18,Human Resources Manager,0,,1,,A,A
+215,Swiat,Kathie,F,CU_9656750,213.5,59.136,11-16-18,,0,,1,,,A
+216,Massoud,Luther,M,CU_1667502,145.4,57.864,09-01-18,Senior Sales Associate,0,,1,,A,A
+217,Mayr,Jasper ,M,CU_9226671,137.93,45.238,09-13-18,Senior Sales Associate,0,1.0,1,,A,A
+218,Forsman,Dylan,M,CU_4061617,44.11,55.971,02-12-18,Help Desk Operator,0,1.0,1,,,A
+219,Skenandore,Otis,M,CU_4139443,120.04,62.525,03-08-18,Senior Editor,0,1.0,1,,,A
+220,Wonsik,Lori,F,CU_6336950,192.83,65.169,12-21-18,Help Desk Operator,0,,1,,A,A
+221,Cruson,Naima ,F,CU_8821174,174.93,48.043,07-16-18,Sales Associate,0,1.0,1,,,A
+222,Kasprak,Elliott ,M,CU_4891064,159.45,54.505,08-22-18,Senior Sales Associate,0,1.0,1,,,A
+223,Orazine,Rueben,M,CU_2279865,146.45,27.62,09-05-18,Help Desk Operator,1,1.0,1,,,A
+224,Bissegger,Patrick,M,CU_8487355,110.75,28.363,12-03-18,Assistant Professor,0,,1,,,A
+225,Popovich,Fanny,F,CU_2126268,285.14,56.938,09-01-18,Senior Sales Associate,0,1.0,1,,A,A
+226,Issa,Ines ,F,CU_8069565,152.79,29.547,08-16-18,Sales Associate,0,1.0,1,,,A
+227,Dammad,Eshal ,F,CU_4813249,118.57,52.108,05-01-18,Senior Sales Associate,0,1.0,1,,A,A
+228,Edmonds,Wesley ,M,CU_5233091,92.16,22.143,04-08-18,Senior Editor,0,,1,,A,A
+229,Boston,Layton ,M,CU_2070980,356.16,68.241,08-25-18,Senior Sales Associate,0,1.0,1,,A,A
+230,Kern,Ayomide ,M,CU_2009540,208.52,28.828,05-24-18,Office Assistant II,1,1.0,1,,,A
+231,Nevwirth,Annie,F,CU_6373829,98.06,59.59,05-19-18,Human Resources Assistant IV,0,1.0,1,,A,A
+232,Steinhaus,Gus,M,CU_2908613,98.25,54.302,06-10-18,Senior Sales Associate,0,1.0,1,,,A
+233,Houten,Nana ,M,CU_1702342,357.15,50.27,11-10-18,Sales Associate,0,1.0,1,,A,A
+234,Arntson,Robyn,F,CU_5929416,347.45,24.953,10-18-18,Office Assistant II,1,,1,,A,A
+235,Bichrest,Holly,F,CU_9834951,163.39,54.183,04-05-18,Senior Editor,1,,1,,A,A
+236,Ordon,Ollie,M,CU_8507851,119.58,31.758,11-21-18,Senior Sales Associate,0,1.0,1,,,A
+237,Rouff,Kenny ,M,CU_6674885,140.53,34.923,02-07-18,Senior Sales Associate,1,1.0,1,,,A
+238,Solina,Antione,M,CU_1679821,260.73,55.946,11-29-18,Office Assistant II,0,1.0,1,,,A
+239,Sharrard,Antwan,M,CU_9996750,80.59,63.228,07-01-18,Research Assistant III,1,1.0,1,,A,A
+240,Bunn,Erika ,F,CU_7631315,158.31,58.869,08-27-18,Senior Sales Associate,1,1.0,1,,,A
+241,Mcloone,Troy ,M,CU_2224595,89.55,33.315,11-07-18,Senior Editor,1,1.0,1,,A,A
+242,Pilchowski,Clement,M,CU_3267032,118.97,33.767,05-19-18,VP Product Management,0,1.0,1,,A,A
+243,Rides,Farah ,F,CU_7307739,664.4,53.379,10-30-18,Senior Editor,1,1.0,1,,,A
+244,Gasperini,Darla,F,CU_7686621,143.6,39.93,08-24-18,Senior Editor,0,,1,,,A
+245,Junker,Karina,F,CU_7545314,299.66,25.14,02-06-18,Human Resources Manager,0,1.0,1,,,A
+246,Paneto,Ahmad,M,CU_8151525,145.25,60.27,06-18-18,Help Desk Operator,0,1.0,1,,A,A
+247,Hoak,Leta,F,CU_4805093,243.83,55.305,12-06-18,Office Assistant II,0,1.0,1,,A,A
+248,Leuasseur,Randal,M,CU_6238693,139.41,,12-06-18,Senior Sales Associate,0,1.0,1,,,A
+249,Sleighter,Renae ,F,CU_9869797,154.53,,02-13-18,VP Product Management,0,1.0,1,,A,A
+250,Devargas,Macy ,F,CU_5761514,91.91,59.422,12-09-18,Senior Editor,0,,1,,A,A
+251,Mormann,Cecilia ,F,CU_6535659,171.22,37.659,12-20-18,,0,1.0,1,,,A
+252,Crotts,Jeffery,M,CU_2310637,230.54,58.208,02-20-18,,0,1.0,1,,,A
+253,Tacket,Berry,M,CU_7819759,302.48,66.041,11-21-18,Senior Sales Associate,0,1.0,1,,A,A
+254,Manka,Magnus ,M,CU_9531890,155.88,24.441,06-14-18,Sales Associate,0,1.0,1,,,A
+255,Peale,Alyssia ,F,CU_3357170,192.13,35.237,12-26-18,Office Assistant II,0,,1,,,A
+256,Sandridge,Isidro,M,CU_7168500,212.27,64.069,12-24-18,,1,1.0,1,,A,A
+257,Campeau,Milan ,M,CU_2658802,171.99,43.201,03-03-18,Research Assistant III,0,1.0,1,,A,A
+258,Larabell,Chas,M,CU_9832951,96.4,31.408,08-13-18,Sales Associate,0,1.0,1,,A,A
+259,Winterroth,Helen,F,CU_6793719,392.68,62.766,07-10-18,Senior Editor,1,1.0,1,,A,A
+260,Palla,Mabel,F,CU_3500537,120.42,,12-24-18,Senior Sales Associate,0,1.0,1,,,A
+261,Gilday,Jonathon,M,CU_5767671,123.26,45.782,07-11-18,,0,1.0,1,,A,A
+262,Levers,Zara ,F,CU_1532414,159.85,,04-14-18,Senior Sales Associate,0,1.0,1,,A,A
+263,Webre,Scottie,M,CU_4014592,244.42,,03-07-18,,0,,1,,,A
+264,Kuczkowski,Deniz ,M,CU_6646275,401.01,51.167,11-25-18,Assistant Professor,0,,1,,A,A
+265,Lue,Sophia,F,CU_8999433,41.9,58.456,07-05-18,Data Coordiator,1,1.0,1,,,A
+266,Raynes,Lynda,F,CU_6334985,125.23,,06-01-18,Analyst Programmer,0,1.0,1,,A,A
+267,Mcnutt,Lula,F,CU_3879433,165.3,69.595,08-29-18,Junior Executive,1,1.0,1,,A,A
+268,Lautman,Madiha ,F,CU_7741964,247.52,59.977,04-15-18,Analyst Programmer,1,1.0,1,,A,A
+269,Lachappelle,Mysha ,F,CU_6181389,191.64,59.114,01-01-18,Junior Executive,0,1.0,1,,,A
+270,Casuse,Antony,M,CU_8974863,134.91,47.306,10-30-18,,0,1.0,1,,A,A
+271,Hedtke,Ryley ,M,CU_7426576,152.64,63.084,02-08-18,Senior Sales Associate,0,,1,,A,A
+272,Agresta,Yasin ,M,CU_5364241,181.73,,01-08-18,Analyst Programmer,0,1.0,1,,A,A
+273,Ferroni,Patryk ,M,CU_2376214,90.15,31.375,12-02-18,Human Resources Assistant IV,0,1.0,1,,A,A
+274,Curz,Tyler-James ,M,CU_8028696,170.24,38.366,01-19-18,Help Desk Operator,0,1.0,1,,,A
+275,Blanscet,Isa ,M,CU_1321500,174.9,62.68,03-06-18,Senior Sales Associate,0,,1,,,A
+276,Nolen,Genaro,M,CU_7856669,44.17,,04-19-18,Senior Editor,0,1.0,1,,A,A
+277,Lattner,Wilda,F,CU_1374749,142.82,23.291,05-27-18,Senior Sales Associate,0,1.0,1,,A,A
+278,Delozier,Minnie,F,CU_5767711,154.76,46.414,07-02-18,Senior Sales Associate,0,1.0,1,,,A
+279,Wilbourne,Dorian ,M,CU_3226143,117.64,59.622,03-13-18,Senior Sales Associate,0,,1,,,A
+280,Comparoni,Tommie ,M,CU_8120867,92.32,,10-25-18,Assistant Professor,0,1.0,1,,,A
+281,Staehle,Melanie ,F,CU_7541284,124.6,56.671,01-03-18,Sales Associate,0,1.0,1,,A,A
+282,Neun,Melisa ,F,CU_9884204,80.52,56.288,07-24-18,Research Assistant III,0,,1,,A,A
+283,Barriere,Alba,F,CU_5841453,353.05,37.983,02-10-18,Human Resources Manager,0,1.0,1,,,A
+284,Catalfamo,Maximillian ,M,CU_9998896,458.97,56.984,07-12-18,Human Resources Assistant IV,0,1.0,1,,,A
+285,Hammerschmidt,Barrett,M,CU_7338544,273.29,59.042,08-04-18,Senior Sales Associate,0,1.0,1,,A,A
+286,Fusha,Ivan,M,CU_1288754,162.58,52.724,03-11-18,Human Resources Assistant IV,0,,1,,A,A
+287,Gorgone,Floyd,M,CU_1925682,107.97,56.716,05-10-18,Office Assistant II,0,1.0,2,,A,C
+288,Rabern,Hafsa ,F,CU_3875381,96.87,54.774,07-05-18,Director of Sales,0,1.0,1,,A,A
+289,Golub,Preston,M,CU_7094837,221.69,58.485,05-01-18,Junior Executive,0,,1,,,A
+290,Heydt,Leonel,M,CU_1911353,109.97,25.564,12-11-18,Senior Sales Associate,1,1.0,1,,A,A
+291,Flud,Noah ,M,CU_1157691,138.94,28.575,05-24-18,Assistant Professor,0,,1,,,A
+292,Hayworth,Kristi,F,CU_3076668,317.31,77.7,04-13-18,Office Assistant II,1,1.0,1,,A,A
+293,Clendenon,Ernie,M,CU_4545087,182.73,,05-17-18,Office Assistant II,1,,1,,A,A
+294,Pittman,Marla,F,CU_8751681,131.61,59.253,12-17-18,Assistant Professor,1,1.0,1,,A,A
+295,Ven,Amar ,M,CU_2075201,122.74,,01-12-18,Senior Editor,0,1.0,1,,A,A
+296,Ramy,Hugh,M,CU_6974020,165.29,48.5,04-07-18,,0,1.0,1,,A,A
+297,Everest,Myron,M,CU_2982469,123.99,29.46,08-25-18,Office Assistant II,1,1.0,1,,A,A
+298,Haxton,Alfie-Lee ,M,CU_7897668,162.42,,05-17-18,Help Desk Operator,0,1.0,1,,A,A
+299,Gajardo,Bo ,F,CU_7420487,155.0,62.469,04-01-18,Senior Sales Associate,0,1.0,1,,,A
+300,Neumeier,Zayaan ,M,CU_3725895,117.88,35.006,06-15-18,Senior Sales Associate,0,1.0,1,,,A
+301,Brozowski,Rosemary ,F,CU_6752839,379.07,71.876,01-14-18,Sales Associate,0,1.0,1,,A,A
+302,Gunyan,Debora,F,CU_7346762,138.81,57.867,09-26-18,Senior Editor,1,1.0,1,,,A
+303,Gossling,Brant,M,CU_1034827,141.45,,08-22-18,,0,1.0,1,,A,A
+304,Mcfeely,Isla ,F,CU_4866636,42.82,61.476,02-03-18,,0,1.0,1,,,A
+305,Gaukroger,Trenton,M,CU_2550347,164.27,35.467,05-05-18,Senior Editor,0,1.0,1,,,A
+306,Pedrosa,Bryony ,F,CU_3922511,133.1,40.744,11-06-18,Director of Sales,0,1.0,1,,A,A
+307,Nickson,Jaydon ,M,CU_8245841,150.3,46.552,07-24-18,Senior Editor,0,1.0,1,,,A
+308,Likes,Matthew ,M,CU_3631700,208.6,57.323,03-15-18,,1,1.0,1,,A,A
+309,Shelman,Jorge ,M,CU_9091671,195.55,64.742,04-27-18,Senior Editor,0,1.0,1,,A,A
+310,Leemow,Daisy,F,CU_5581400,160.11,30.201,04-28-18,Junior Executive,0,1.0,1,,A,A
+311,Barnwell,Jaclyn,F,CU_5093979,126.79,55.927,08-19-18,VP Product Management,0,1.0,1,,A,A
+312,Vandyke,Calum ,M,CU_5139040,135.94,56.07,05-14-18,Office Assistant II,1,,1,,,A
+313,Derivan,Sofia ,F,CU_7559777,188.38,63.184,09-12-18,Junior Executive,0,1.0,1,,,A
+314,Romash,Seth,M,CU_9108068,137.93,,08-07-18,Office Assistant II,0,1.0,1,,,A
+315,Eichner,Rhonda,F,CU_5814886,244.08,26.525,10-14-18,Help Desk Operator,0,1.0,1,,,A
+316,Ghibaudy,Antonio,M,CU_3707495,435.99,31.724,01-19-18,Sales Associate,0,,1,,,A
+317,Rotter,Patrice,F,CU_4815464,167.81,23.587,09-28-18,Analyst Programmer,0,1.0,1,,A,A
+318,Toulouse,Arthur ,M,CU_4727400,119.93,34.947,10-17-18,,0,1.0,1,,A,A
+319,Spisak,Hasan ,M,CU_5632615,257.45,25.684,02-28-18,Senior Editor,0,1.0,1,,A,A
+320,Pelkey,Kianna ,F,CU_5239412,302.33,56.279,01-26-18,Senior Sales Associate,1,1.0,1,,,A
+321,Braddy,Humza ,M,CU_1763958,149.3,37.936,04-17-18,Human Resources Assistant IV,1,,1,,A,A
+322,Tuzzolo,Darrell,M,CU_2159222,200.54,,06-17-18,Senior Sales Associate,0,,1,,A,A
+323,Alhameed,Charlotte ,F,CU_2034296,121.64,,10-29-18,Human Resources Manager,0,1.0,1,,,A
+324,Laregina,Eisa ,M,CU_5450361,119.76,36.351,07-23-18,Senior Editor,0,1.0,1,,A,A
+325,Thongdy,Keziah ,F,CU_2810488,557.74,63.634,02-25-18,Senior Editor,1,1.0,1,,A,A
+326,Velega,Jimmy ,M,CU_7582330,207.62,64.194,05-28-18,Research Assistant III,0,,1,,,A
+327,Sleet,Jospeh,M,CU_5216892,120.51,32.741,06-12-18,Senior Sales Associate,0,1.0,1,,,A
+328,Lisiecki,Elaine,F,CU_1446520,194.09,,02-07-18,Research Assistant III,1,1.0,1,,A,A
+329,Owca,Vivian,F,CU_7103095,142.02,57.868,06-03-18,Sales Associate,1,,1,,,A
+330,Goodsell,Salman ,M,CU_8899199,149.92,63.97,10-14-18,Senior Sales Associate,0,1.0,1,,A,A
+331,Frizzle,Stanton,M,CU_9417344,234.38,,01-22-18,,0,1.0,1,,,A
+332,Klice,Eoin ,M,CU_6173308,202.97,24.936,06-09-18,Senior Sales Associate,0,,1,,A,A
+333,Adema,Willis,M,CU_1733250,172.05,35.565,08-10-18,Director of Sales,0,1.0,1,,,A
+334,Mcloy,Remy ,M,CU_4301444,153.98,41.635,03-01-18,Help Desk Operator,0,1.0,1,,A,A
+335,Shearer,Rishi ,M,CU_4682373,125.74,51.656,03-13-18,Office Assistant II,0,1.0,1,,,A
+336,Canclini,Kaya ,M,CU_6718088,37.35,39.954,03-19-18,,0,1.0,1,,A,A
+337,Pfister,Hector ,M,CU_6732425,176.46,,06-01-18,Help Desk Operator,0,,1,,A,A
+338,Meffert,Wesley,M,CU_7848587,336.94,,02-17-18,,0,1.0,1,,,A
+339,Grassia,Cecily ,F,CU_9904783,93.18,30.832,08-24-18,Research Assistant III,0,1.0,1,,A,A
+340,Horns,Emme ,F,CU_4555414,83.56,57.323,09-03-18,Senior Editor,0,1.0,1,,A,A
+341,Troxler,Sterling,M,CU_7496342,67.14,28.714,09-09-18,Senior Sales Associate,0,,1,,,A
+342,Calixte,Pearl ,F,CU_1964699,138.23,,06-19-18,Senior Sales Associate,0,1.0,1,,,A
+343,Crain,Sonia ,F,CU_8704669,225.61,,01-31-18,Office Assistant II,0,1.0,1,,,A
+344,Maras,Darcy ,M,CU_1532577,185.12,36.151,07-26-18,Office Assistant II,0,1.0,1,,,A
+345,Lower,Cameron ,M,CU_9321123,168.86,44.293,08-25-18,Senior Editor,0,,1,,A,A
+346,Meiler,Alana ,F,CU_7635620,173.96,55.442,10-09-18,Analyst Programmer,0,1.0,1,,A,A
+347,Huschle,Corey,M,CU_3543724,148.39,37.652,01-14-18,Senior Editor,1,1.0,1,,,A
+348,Puddy,Marnie ,F,CU_6400694,175.55,50.384,05-01-18,Data Coordiator,0,,1,,A,A
+349,Driscol,Norman,M,CU_4661946,174.48,61.64,08-03-18,Senior Sales Associate,0,1.0,1,,,A
+350,Moore,Tessa,F,CU_9153211,219.16,46.263,06-10-18,Analyst Programmer,1,1.0,1,,A,A
+351,Matera,Wilton,M,CU_7398081,514.59,45.196,12-11-18,Help Desk Operator,1,,1,,A,A
+352,Helmstetler,Mercy ,F,CU_7842498,138.19,50.065,12-20-18,Help Desk Operator,0,1.0,1,,A,A
+353,Sweeden,Kai ,M,CU_4797123,154.99,22.428,01-16-18,Senior Sales Associate,0,1.0,1,,,A
+354,Mokler,Stacie,F,CU_8428228,149.26,33.135,03-04-18,Senior Editor,0,1.0,1,,A,A
+355,Angeline,Cherry ,F,CU_8370884,145.53,56.199,08-14-18,Office Assistant II,1,,1,,,A
+356,Distefano,Lillie-Mae ,F,CU_2192069,330.24,36.222,12-21-18,Office Assistant II,0,1.0,1,,A,A
+357,Kuns,Lou,M,CU_3840713,293.71,54.374,11-13-18,Office Assistant II,0,1.0,1,,,A
+358,Burkhalter,Selina ,F,CU_8383178,164.74,,03-10-18,Office Assistant II,0,,1,,A,A
+359,Stohl,Jaime,F,CU_7639754,143.37,,03-14-18,Help Desk Operator,1,,1,,A,A
+360,Milum,Yusra ,F,CU_8458953,143.73,49.983,07-16-18,,0,1.0,1,,A,A
+361,Daquila,Lucinda,F,CU_1229518,130.07,59.874,07-03-18,Research Assistant III,0,1.0,1,,A,A
+362,Montalbo,Lance,M,CU_8471247,134.46,,08-03-18,Help Desk Operator,1,1.0,1,,A,A
+363,Hattub,Louis ,M,CU_6365902,122.75,57.743,08-27-18,Senior Editor,0,,1,,A,A
+364,Hilyer,Andrea,M,CU_6615762,155.19,,10-09-18,Senior Sales Associate,0,1.0,1,,,A
+365,Vlashi,Denzel ,M,CU_5139155,120.24,25.428,03-23-18,Senior Editor,0,,1,,A,A
+366,Bretana,Bruce ,M,CU_9380573,171.63,37.11,10-02-18,Assistant Professor,1,1.0,1,,A,A
+367,Elfenbein,Rafe ,M,CU_2736861,137.15,32.075,03-07-18,Senior Sales Associate,0,1.0,1,,,A
+368,Vallero,Willie,F,CU_6406882,130.74,36.699,11-27-18,Help Desk Operator,1,1.0,1,,A,A
+369,Culwell,Paddy ,M,CU_4629221,112.56,63.163,05-28-18,Senior Sales Associate,0,,1,,A,A
+370,Bolman,Shirley,F,CU_1829606,215.12,,03-18-18,Assistant Professor,1,1.0,1,,A,A
+371,Maltais,Dee,F,CU_7979750,162.75,56.757,07-17-18,Human Resources Assistant IV,0,,1,,A,A
+372,Sandona,Gordon,M,CU_9972454,192.74,55.499,05-20-18,Help Desk Operator,0,1.0,1,,,A
+373,Carlis,Riley,M,CU_9212647,53.76,42.404,09-21-18,Senior Sales Associate,0,1.0,1,,,A
+374,Wolff,Hung,M,CU_5536490,31.09,66.371,12-18-18,Office Assistant II,1,1.0,1,,A,A
+375,Wengren,Nicola,F,CU_5624555,153.79,34.23,03-31-18,Senior Editor,0,1.0,1,,A,A
+376,Billot,Edward ,M,CU_2079473,129.52,55.64,01-17-18,Senior Sales Associate,0,1.0,1,,,A
+377,Artley,Sammy,M,CU_6189814,140.27,43.904,12-18-18,Human Resources Assistant IV,1,,1,,,A
+378,Polidore,Annie ,F,CU_9446136,239.34,35.149,08-21-18,,0,1.0,1,,A,A
+379,Rastelli,Tory,M,CU_1321721,128.58,38.558,11-04-18,Senior Editor,0,1.0,1,,A,A
+380,Kiehl,Antoni ,M,CU_9673466,120.55,51.086,10-22-18,Senior Editor,0,1.0,1,,,A
+381,Magin,Aman ,M,CU_2243320,179.85,63.105,06-26-18,Senior Editor,0,,1,,,A
+382,Zukowsky,Lacey,F,CU_2142969,119.99,62.597,05-27-18,Office Assistant II,0,1.0,1,,,A
+383,Otterson,Abbas ,M,CU_5096190,207.49,59.438,01-14-18,VP Product Management,0,,1,,,A
+384,Rinderer,Mikayla ,F,CU_9396990,184.19,68.135,03-07-18,Senior Editor,1,1.0,1,,,A
+385,Beermann,Victoria ,F,CU_9530112,145.03,38.173,08-24-18,Senior Editor,0,1.0,1,,,A
+386,Sauerbry,Musa ,M,CU_3957504,164.57,58.817,07-03-18,Information Systems Manager,0,1.0,1,,A,A
+387,Gertz,Bob,M,CU_7406337,178.49,57.823,05-23-18,Office Assistant II,0,1.0,1,,A,A
+388,Hackley,Dilan ,M,CU_8389374,175.06,22.696,05-09-18,Human Resources Assistant IV,0,1.0,1,,,A
+389,Kreis,Lukas ,M,CU_1905412,119.23,38.608,03-07-18,Help Desk Operator,0,1.0,1,,,A
+390,Lamorella,Tegan ,F,CU_6140676,215.79,64.652,02-16-18,Office Assistant II,0,,1,,,A
+391,Mallicoat,Zayne ,M,CU_5425925,148.41,46.166,04-08-18,Senior Sales Associate,0,1.0,1,,A,A
+392,Colasanti,Noreen,F,CU_3539720,158.39,55.988,10-23-18,Senior Sales Associate,0,1.0,1,,A,A
+393,Fiorini,Sherman,M,CU_9075466,388.33,60.183,12-28-18,Human Resources Assistant IV,0,,1,,,A
+394,Lorton,Franky ,M,CU_2368269,105.62,47.134,04-03-18,Senior Editor,0,1.0,1,,A,A
+395,Reuter,Ayrton ,M,CU_1102608,137.8,28.722,11-17-18,Junior Executive,0,1.0,1,,A,A
+396,Mcgrane,Amelie ,F,CU_3724048,269.89,,03-21-18,VP Product Management,0,1.0,1,,,A
+397,Guerrazzi,Aran ,M,CU_7199504,83.69,61.647,10-01-18,Senior Sales Associate,0,1.0,1,,A,A
+398,Haverstick,Yuvraj ,M,CU_6189846,117.25,56.887,07-22-18,VP Product Management,1,,1,,,A
+399,Kaleel,Hal,M,CU_3369752,677.05,,03-04-18,Director of Sales,0,,1,,A,A
+400,Worthington,Hazel,F,CU_5786392,299.9,,05-18-18,Senior Editor,0,,1,,A,A
+401,Liebermann,Gary,M,CU_4254491,159.91,40.151,05-10-18,,1,,1,,,A
+402,Metelus,Joesph,M,CU_4797211,432.02,64.086,11-10-18,Human Resources Assistant IV,1,1.0,1,,,A
+403,Arnaudet,Sheri,F,CU_7602974,137.12,70.791,01-06-18,,0,,1,,A,A
+404,Nuhfer,Donald,M,CU_9636638,176.47,58.349,09-16-18,Office Assistant II,0,1.0,1,,A,A
+405,Inscore,Rosa,F,CU_5616416,289.8,,10-28-18,,0,1.0,1,,,A
+406,Wollen,Janet,F,CU_1909537,184.37,29.947,10-11-18,,0,,1,,A,A
+407,Cryder,Madeleine,F,CU_7281443,169.78,51.015,06-02-18,Help Desk Operator,0,1.0,1,,,A
+408,Chapmon,Mohsin ,M,CU_7873316,152.62,40.69,01-24-18,Senior Editor,0,1.0,1,,,A
+409,Claypool,Arun ,M,CU_1452838,146.46,35.035,02-02-18,Human Resources Manager,0,1.0,1,,A,A
+410,Litchard,Conor ,M,CU_4526886,117.8,37.817,03-18-18,Office Assistant II,0,1.0,1,,,A
+411,Palmertree,Elvis,M,CU_2390828,192.04,33.646,05-23-18,Sales Associate,0,1.0,1,,,A
+412,Bormet,Ike,M,CU_2626349,160.8,64.857,06-30-18,Sales Associate,1,1.0,1,,,A
+413,Mcvaigh,Tracey,F,CU_8434481,256.46,49.696,08-11-18,Data Coordiator,0,1.0,1,,,A
+414,Machold,Saif ,M,CU_5909298,202.63,59.859,10-24-18,Senior Editor,0,1.0,1,,A,A
+415,Roscorla,Tristan,M,CU_8557365,145.79,28.764,12-25-18,Senior Editor,0,1.0,1,,A,A
+416,Bitsko,Bianka ,F,CU_5303094,705.43,56.95,06-18-18,Office Assistant II,0,1.0,1,,A,A
+417,Cadden,Kelley,M,CU_7486265,137.49,25.006,07-25-18,Senior Editor,0,1.0,1,,A,A
+418,Vugteveen,Vivienne ,F,CU_8090429,194.0,56.973,12-11-18,Sales Associate,0,1.0,1,,,A
+419,Massei,Mac,M,CU_4041534,122.39,32.279,10-26-18,Senior Sales Associate,0,1.0,1,,A,A
+420,Stoney,Keri,F,CU_7990091,158.15,61.986,12-05-18,Senior Sales Associate,0,1.0,1,,,A
+421,Tejera,Kay ,F,CU_3535694,157.73,35.539,10-24-18,,0,,1,,,A
+422,Rhue,Rey,M,CU_2401103,191.57,64.118,01-28-18,Office Assistant II,0,1.0,1,,,A
+423,Mcconaghy,Oisin ,M,CU_3386192,225.33,49.989,01-08-18,Help Desk Operator,0,1.0,1,,A,A
+424,Nusz,Amrit ,F,CU_3033940,219.4,59.672,02-10-18,,1,1.0,1,,A,A
+425,Klickman,Jackson,M,CU_8581973,175.77,44.247,02-09-18,Senior Sales Associate,0,1.0,1,,A,A
+426,Bunselmeyer,Haiden ,M,CU_4993877,104.26,58.097,01-24-18,Help Desk Operator,0,,1,,,A
+427,Spackman,Mackenzie ,M,CU_4293461,157.3,55.828,05-18-18,Senior Editor,0,1.0,1,,,A
+428,Wenthold,Raymundo,M,CU_5849944,136.03,,12-22-18,Office Assistant II,0,1.0,1,,,A
+429,Latzka,Billie,M,CU_2704217,142.0,36.195,02-17-18,,0,1.0,1,,A,A
+430,Cabag,Barnaby ,M,CU_6161244,145.63,,08-22-18,Senior Sales Associate,1,1.0,1,,A,A
+431,Walkins,Scot,M,CU_3996511,150.08,53.735,06-19-18,Junior Executive,1,1.0,1,,A,A
+432,Brede,Sarina ,F,CU_5591904,156.33,35.233,08-01-18,Senior Editor,0,1.0,1,,A,A
+433,Limage,Abdirahman ,M,CU_4561765,143.43,60.137,04-11-18,Help Desk Operator,0,1.0,1,,A,A
+434,Balmaceda,Armando,M,CU_8061798,140.52,32.271,11-29-18,VP Product Management,0,1.0,1,,A,A
+435,Wheelis,Ben ,M,CU_6189925,46.6,46.16,10-26-18,Human Resources Manager,1,1.0,1,,,A
+436,Lagares,Mitchel,M,CU_7951208,163.4,56.878,08-30-18,Assistant Professor,0,1.0,1,,A,A
+437,Whitsel,Garth,M,CU_6968174,161.6,,10-05-18,Information Systems Manager,0,1.0,1,,,A
+438,Tackitt,Neil ,M,CU_8786798,242.04,61.615,12-15-18,Senior Sales Associate,1,,1,,,A
+439,Overshiner,Lynn,M,CU_9087858,197.13,,02-26-18,Analyst Programmer,1,1.0,1,,A,A
+440,Baca,Reginald ,M,CU_7973747,161.56,56.512,04-28-18,Help Desk Operator,0,1.0,1,,A,A
+441,Murayama,Parker ,M,CU_8975220,146.01,38.295,06-10-18,Senior Sales Associate,1,1.0,1,,A,A
+442,Carlton,Seth ,M,CU_5786485,113.05,50.448,12-24-18,Senior Editor,0,1.0,1,,,A
+443,Gadway,Ava ,F,CU_7080823,243.04,55.352,01-10-18,Senior Editor,0,1.0,1,,A,A
+444,Freedland,Nikhil ,M,CU_7412599,76.69,58.314,08-21-18,Help Desk Operator,0,1.0,1,,A,A
+445,Challender,Toney,M,CU_3033978,191.32,60.03,04-13-18,Office Assistant II,0,1.0,1,,,A
+446,Moskwa,Simone,F,CU_1649532,143.34,,10-23-18,Senior Sales Associate,0,1.0,1,,A,A
+447,Ohanesian,Arya ,M,CU_5538685,166.39,,12-10-18,Office Assistant II,0,1.0,1,,A,A
+448,Sundblad,Isra ,F,CU_4434812,204.19,38.015,04-10-18,Help Desk Operator,0,1.0,1,,A,A
+449,Rossa,Israel ,M,CU_9991043,73.44,59.831,09-10-18,Office Assistant II,0,1.0,1,,,A
+450,Dorner,Christian,M,CU_1477512,391.67,22.3,09-08-18,Senior Editor,1,1.0,1,,,A
+451,Cookus,Cheryl,F,CU_3853195,143.85,38.446,11-21-18,Sales Associate,0,1.0,1,,,A
+452,Egge,Meredith ,F,CU_4922255,98.93,27.924,10-26-18,VP Product Management,0,1.0,1,,A,A
+453,Fratercangelo,Aston ,M,CU_5849999,139.08,63.204,02-13-18,Senior Editor,1,1.0,1,,A,A
+454,Ranweiler,Jeremy ,M,CU_2911121,99.54,38.791,06-26-18,Sales Associate,0,1.0,1,,,A
+455,Feith,Bailey ,F,CU_1123219,428.81,,12-03-18,Senior Sales Associate,1,1.0,1,,,A
+456,Vigoren,Federico,M,CU_6316948,137.02,37.413,02-01-18,Senior Sales Associate,0,1.0,1,,,A
+457,Archambault,Bud,M,CU_3857302,164.75,57.373,10-23-18,Senior Sales Associate,0,1.0,1,,A,B
+458,Cattano,Chris ,M,CU_2638744,150.94,59.07,01-21-18,Help Desk Operator,0,1.0,1,,,A
+459,Rathbum,Orval,M,CU_2544537,114.91,32.696,04-12-18,Senior Editor,1,1.0,1,,A,A
+460,Mccreedy,Johnathan ,M,CU_8018840,416.64,38.948,06-09-18,Information Systems Manager,0,1.0,1,,A,A
+461,Frazey,Nieve ,F,CU_9186203,345.5,58.18,08-17-18,,1,,1,,,A
+462,Lofft,Aled ,M,CU_4428697,77.49,,04-08-18,Help Desk Operator,0,1.0,1,,,A
+463,Nadoff,Johnny,M,CU_6400922,70.79,60.435,02-09-18,,0,1.0,1,,A,A
+464,Kaune,Jeanette,F,CU_2833308,104.95,,05-15-18,,0,1.0,1,,,A
+465,Hubner,Devin,M,CU_8792986,162.42,68.082,05-21-18,,1,,1,,,A
+466,Tustison,Rolf,M,CU_1698721,215.96,46.976,11-29-18,Office Assistant II,0,,1,,A,A
+467,Bousman,Tommie,F,CU_1708964,123.41,60.808,12-18-18,Help Desk Operator,1,1.0,1,,A,A
+468,Izaquirre,Abdur ,M,CU_2251684,174.24,41.918,03-26-18,Senior Editor,1,1.0,1,,A,A
+469,Welsch,Zaynah ,F,CU_3619753,146.99,58.055,02-23-18,Human Resources Manager,0,1.0,1,,A,A
+470,Bohnenblust,Jake ,M,CU_7097258,177.35,71.007,12-16-18,Senior Editor,1,1.0,1,,A,A
+471,Tappen,Maya ,F,CU_8514475,165.03,57.652,02-08-18,Sales Associate,0,1.0,1,,A,A
+472,Carathers,Rich,M,CU_5154736,132.04,36.043,07-06-18,Senior Sales Associate,0,,1,,,A
+473,Bolins,Ambrose,M,CU_3419057,164.89,36.41,08-08-18,Help Desk Operator,0,,1,,A,A
+474,Zahner,Jay ,M,CU_7437236,154.81,70.171,09-11-18,Senior Editor,0,,1,,A,A
+475,Misura,Harvey,M,CU_9526197,268.84,56.774,11-16-18,Senior Editor,0,,1,,A,A
+476,Wah,Leland,M,CU_9907126,154.5,59.198,01-30-18,Senior Editor,1,1.0,1,,,A
+477,Dreese,Lazaro,M,CU_2010040,138.65,,04-27-18,Senior Sales Associate,1,1.0,1,,A,A
+478,Marinaccio,Arya ,F,CU_5452729,131.82,39.949,10-12-18,Senior Editor,1,,1,,,A
+479,Taibl,Jose ,M,CU_4187069,124.6,,10-04-18,Senior Sales Associate,0,1.0,1,,,A
+480,Lund,Milly ,F,CU_3849152,114.89,56.957,02-28-18,Senior Sales Associate,1,1.0,1,,,A
+481,Huckabaa,Teddie ,M,CU_9296833,175.47,58.423,10-09-18,Help Desk Operator,0,,1,,,A
+482,Thoeny,Rayan ,F,CU_2235330,183.54,43.862,04-01-18,Analyst Programmer,0,,1,,A,A
+483,Johngrass,Roxanne,F,CU_5508034,181.63,38.61,10-23-18,,0,1.0,1,,,A
+484,Nesselrodt,Colin ,M,CU_8543170,147.67,28.975,10-17-18,Senior Sales Associate,0,1.0,1,,,A
+485,Munns,Cruz,M,CU_8612805,243.94,29.967,01-08-18,Senior Sales Associate,1,1.0,1,,,A
+486,Wintersteen,Jenna,F,CU_1971143,256.77,57.465,08-14-18,Office Assistant II,0,1.0,1,,A,A
+487,Brenes,Gethin ,M,CU_2311117,175.47,47.542,12-19-18,Data Coordiator,1,,1,,,A
+488,Barrero,Jules,M,CU_2067407,106.67,55.901,12-12-18,Data Coordiator,0,1.0,1,,A,A
+489,Cambric,Napoleon,M,CU_8811475,145.27,59.723,06-29-18,Senior Sales Associate,1,1.0,1,,,A
+490,Slauson,Marianne,F,CU_9522134,97.09,42.153,05-08-18,Senior Sales Associate,0,1.0,1,,A,A
+491,Wash,Laiba ,F,CU_1676247,134.54,59.211,12-08-18,VP Product Management,0,1.0,1,,,A
+492,Dimiceli,Jensen ,M,CU_9511897,483.38,38.99,05-16-18,Senior Sales Associate,0,1.0,1,,A,A
+493,Seip,Alan,M,CU_8535003,130.41,57.456,06-07-18,Help Desk Operator,0,1.0,1,,,A
+494,Padiong,Hanna ,F,CU_8391649,139.93,27.898,05-03-18,Senior Sales Associate,0,,1,,,A
+495,Malan,Earl,M,CU_1907682,123.75,67.64,04-11-18,Analyst Programmer,1,1.0,2,,A,C
+496,Boom,Corey ,M,CU_4969449,125.26,35.148,03-09-18,Senior Editor,1,1.0,1,,A,A
+497,Mensch,Robin,M,CU_8139755,84.94,59.308,07-20-18,Help Desk Operator,0,1.0,1,,,A
+498,Magnia,Marie ,F,CU_1203184,285.74,26.703,11-22-18,Office Assistant II,0,1.0,1,,A,A
+499,Jappa,Tate ,M,CU_3267568,210.31,38.147,11-25-18,Senior Sales Associate,0,1.0,1,,A,A
+500,Ahumada,Moshe,M,CU_6497268,159.23,55.669,01-29-18,Senior Sales Associate,0,1.0,1,,A,A
+501,Seifts,Olivia ,F,CU_7887866,136.03,38.665,09-15-18,Office Assistant II,0,,1,,,A
+502,Dozal,Jacinto,M,CU_3859451,129.63,,08-05-18,Analyst Programmer,0,1.0,1,,,A
+503,Pelyo,Zachariah ,M,CU_6894588,248.0,,11-19-18,Senior Editor,1,1.0,1,,,A
+504,Garczynski,Reilly ,M,CU_6280194,158.14,35.399,02-17-18,Help Desk Operator,0,1.0,1,,,A
+505,Heron,Cassius ,M,CU_5338120,116.47,,04-25-18,Help Desk Operator,0,1.0,1,,,A
+506,Alers,Pranav ,M,CU_5749772,121.98,,04-05-18,Senior Editor,0,,1,,A,A
+507,Pretzel,Callie,F,CU_3290130,71.03,61.384,07-02-18,,0,1.0,1,,A,A
+508,Gezalyan,Yunus ,M,CU_8309782,224.09,56.74,03-08-18,Senior Editor,0,1.0,1,,A,A
+509,Reif,Caiden ,M,CU_8930326,129.43,20.961,06-13-18,Office Assistant II,0,1.0,1,,,A
+510,Ekhoff,Ismail ,M,CU_1604632,227.42,,09-07-18,Senior Sales Associate,1,1.0,1,,,A
+511,Cambia,Ethel ,F,CU_8963097,101.05,58.027,11-15-18,Data Coordiator,0,,2,,,C
+512,Dejoseph,Anas ,M,CU_5071907,171.65,46.068,12-19-18,Assistant Professor,0,1.0,1,,A,A
+513,Mezza,Ollie ,M,CU_7859236,151.85,36.61,10-11-18,Senior Sales Associate,0,1.0,1,,A,A
+514,Ghazvini,Ann ,F,CU_4949028,139.49,56.885,08-28-18,Senior Sales Associate,1,1.0,1,,A,A
+515,Fujikawa,Adyan ,M,CU_6827043,445.86,35.43,04-13-18,Junior Executive,1,1.0,1,,,A
+516,Hernanadez,Yasir ,M,CU_9049127,685.13,56.24,11-12-18,Senior Sales Associate,0,1.0,1,,A,A
+517,Sturtevant,Conrad,M,CU_1950758,300.48,38.207,09-22-18,Senior Sales Associate,0,1.0,1,,A,A
+518,Gadsen,Kaylee ,F,CU_3535913,145.4,28.742,07-04-18,Senior Sales Associate,0,,1,,A,A
+519,Llaneza,Christy,F,CU_7242787,263.71,72.994,03-12-18,Assistant Professor,0,1.0,1,,A,A
+520,Klaja,Neal,M,CU_9507886,391.79,47.964,03-21-18,Sales Associate,0,,1,,A,A
+521,Hillin,Hiram,M,CU_3953710,507.71,35.983,03-04-18,Senior Editor,0,1.0,1,,A,A
+522,Sanes,Shelley,F,CU_8315952,167.28,,03-11-18,Junior Executive,1,1.0,1,,A,A
+523,Nosel,Yolanda,F,CU_3603505,241.9,40.409,05-22-18,,0,,1,,A,A
+524,Yundt,Jack ,M,CU_9753647,316.51,57.538,02-15-18,Senior Sales Associate,0,1.0,1,,,A
+525,Offen,Oren,M,CU_4586549,204.57,58.644,11-15-18,Information Systems Manager,0,1.0,1,,,A
+526,Gunsolus,Rodrigo ,M,CU_8803382,141.74,29.061,12-08-18,Help Desk Operator,0,1.0,1,,A,A
+527,Agel,Noe,M,CU_6298683,149.07,78.896,03-30-18,Senior Editor,0,1.0,1,,A,A
+528,Lehmberg,Yahya ,M,CU_9937980,160.05,32.986,07-30-18,Office Assistant II,0,1.0,1,,,A
+529,Heitkamp,Kim,F,CU_1692731,156.56,26.856,10-07-18,,0,1.0,1,,A,A
+530,Demarzio,Sheila ,F,CU_7334976,142.47,55.636,04-19-18,Senior Editor,0,1.0,1,,A,A
+531,Sandmeier,Rickie,M,CU_6743106,357.44,63.614,01-16-18,Senior Editor,1,1.0,1,,,A
+532,Slavinski,Cory,M,CU_5256262,29.54,69.72,04-27-18,Office Assistant II,0,1.0,1,,A,A
+533,Gianopoulos,Karyn,F,CU_1975366,149.64,48.164,08-08-18,Office Assistant II,0,1.0,1,,A,A
+534,Gores,Ian ,M,CU_9675848,211.99,,06-10-18,Senior Editor,0,1.0,1,,A,A
+535,Turco,Jewell,M,CU_1649737,269.68,,03-02-18,Assistant Professor,0,1.0,1,,,A
+536,Sprung,Monroe,M,CU_4465734,164.98,42.588,03-22-18,Help Desk Operator,0,1.0,1,,,A
+537,Delanoy,Xavier ,M,CU_5198922,160.55,32.009,12-13-18,Senior Editor,0,1.0,1,,A,A
+538,Wolanin,Caden ,M,CU_6290505,183.04,47.214,11-26-18,Senior Editor,0,,1,,,A
+539,Mazurek,Rahma ,F,CU_9847889,244.83,62.187,04-23-18,Senior Sales Associate,0,1.0,1,,A,A
+540,Hantz,Courtney,M,CU_1346643,230.81,39.692,07-12-18,,0,1.0,1,,A,A
+541,Stvil,Seymour,M,CU_2612309,261.37,40.483,09-06-18,Research Assistant III,0,1.0,1,,A,A
+542,Toussant,Caleb ,M,CU_1524822,131.03,38.004,07-27-18,Office Assistant II,0,,1,,A,A
+543,Ibdah,Octavio,M,CU_5031004,204.44,58.893,05-06-18,Human Resources Manager,0,1.0,1,,,A
+544,Mirelez,Aqsa ,F,CU_6501469,152.02,,09-12-18,Junior Executive,0,1.0,1,,A,A
+545,Pellitier,Gracie ,F,CU_1981534,218.61,25.341,11-02-18,Help Desk Operator,1,1.0,1,,A,A
+546,Maliska,Hoyt,M,CU_4942944,135.04,,02-19-18,Assistant Professor,1,1.0,1,,A,A
+547,Larate,Omer ,M,CU_5428325,130.57,45.129,10-27-18,Office Assistant II,0,1.0,1,,A,A
+548,Pingitore,Atticus ,M,CU_1164394,121.03,36.006,08-02-18,Senior Sales Associate,0,1.0,1,,,A
+549,Angiolelli,Caelan ,M,CU_8305770,768.48,59.961,10-20-18,Junior Executive,0,1.0,1,,,A
+550,Donnellon,Jerry,M,CU_2763888,133.94,,01-23-18,Assistant Professor,0,1.0,1,,A,A
+551,Tenuta,Izaak ,M,CU_7013489,35.46,44.427,01-10-18,,0,1.0,1,,,A
+552,Guderian,Keiran ,M,CU_1907827,174.15,50.673,03-22-18,,0,1.0,1,,A,A
+553,Hodgman,Rocky ,M,CU_4576372,261.72,56.469,08-28-18,Senior Sales Associate,1,1.0,1,,,A
+554,Zeidler,Jon,M,CU_9284724,163.18,57.162,07-23-18,Help Desk Operator,0,1.0,1,,,A
+555,Caivano,Efrain,M,CU_8619127,111.28,72.142,06-07-18,Senior Editor,0,1.0,1,,,A
+556,Prator,Kory,M,CU_1352825,124.77,55.528,04-06-18,Senior Editor,0,1.0,1,,A,A
+557,Chopton,Steven ,M,CU_3724411,193.28,50.632,07-12-18,Help Desk Operator,1,1.0,1,,A,A
+558,Gourd,Damion,M,CU_5911680,361.38,58.422,07-17-18,Office Assistant II,0,1.0,1,,,A
+559,Weisbrod,Franklin,M,CU_8639616,128.66,74.649,07-07-18,Office Assistant II,0,1.0,1,,,A
+560,Trichel,Naomi ,F,CU_3429509,164.13,37.622,07-04-18,Senior Sales Associate,0,1.0,1,,,A
+561,Chamnanphony,Joshua,M,CU_5233800,129.55,32.573,02-27-18,Human Resources Assistant IV,0,1.0,1,,A,A
+562,Bulgin,Aleksandra ,F,CU_7580809,130.66,32.7,09-28-18,Senior Sales Associate,0,1.0,1,,,A
+563,Karo,Loraine,F,CU_9766025,124.68,64.125,11-16-18,Sales Associate,0,1.0,1,,A,A
+564,Shells,Dixie,F,CU_6360201,123.96,61.485,02-28-18,,1,,1,,A,A
+565,Friedrichs,Leopoldo,M,CU_9026700,134.66,26.835,04-21-18,Senior Sales Associate,0,1.0,1,,A,A
+566,Ouchi,Emir ,M,CU_2442383,408.06,52.482,02-04-18,Help Desk Operator,0,,1,,A,A
+567,Raleigh,Alice ,F,CU_2682003,100.98,58.892,11-23-18,Research Assistant III,1,1.0,1,,,A
+568,Catacun,Yasmin ,F,CU_3482773,154.13,54.847,12-05-18,VP Product Management,0,1.0,1,,A,A
+569,Everet,Myles ,M,CU_2059416,93.43,41.718,10-12-18,Senior Sales Associate,0,1.0,1,,,A
+570,Hajdas,Charmaine,F,CU_2315417,167.72,70.193,01-25-18,Help Desk Operator,1,1.0,1,,A,A
+571,Klinker,Modesto,M,CU_5784734,61.8,31.783,09-22-18,,0,1.0,1,,,A
+572,Wala,Kelly ,F,CU_8524960,90.03,,05-03-18,,0,1.0,1,,A,A
+573,Derocher,Kraig,M,CU_7337121,183.1,39.596,01-15-18,,0,1.0,1,,,A
+574,Mulkey,Ricardo,M,CU_5063840,234.88,36.826,07-13-18,Human Resources Manager,0,,1,,A,A
+575,Keville,Yaqub ,M,CU_7750820,194.73,56.964,08-18-18,Senior Sales Associate,1,1.0,1,,,A
+576,Altvater,Harriet ,F,CU_7937189,473.93,56.695,09-10-18,Data Coordiator,1,1.0,1,,A,A
+577,Daquilante,Dolcie ,F,CU_5041320,304.9,37.528,07-01-18,Office Assistant II,1,,1,,A,A
+578,Kinikini,Kendrick,M,CU_5174441,139.59,45.021,01-16-18,Senior Sales Associate,0,,1,,A,A
+579,Klopp,Caroline,F,CU_8760494,160.22,69.446,04-24-18,Senior Editor,0,1.0,1,,A,A
+580,Quirarte,David ,M,CU_2354350,636.13,,07-24-18,Senior Editor,0,,1,,,A
+581,Nixon,Ebony,F,CU_3529904,233.9,57.595,08-03-18,Director of Sales,1,1.0,1,,A,A
+582,Yoest,Julia ,F,CU_3613874,118.72,64.357,11-03-18,Senior Sales Associate,0,1.0,1,,,A
+583,Kraichely,John,M,CU_6806709,264.66,49.227,08-26-18,,0,1.0,1,,A,A
+584,Twombly,Darius ,M,CU_2270390,97.8,38.293,01-13-18,,0,,1,,,A
+585,Limehouse,Shayne,M,CU_4082869,118.58,57.585,12-30-18,Sales Associate,0,,1,,,A
+586,Backhaus,Leona ,F,CU_6026424,166.35,53.703,05-30-18,Senior Sales Associate,0,1.0,1,,A,A
+587,Mcalphin,Lynn ,F,CU_9829557,190.76,59.44,04-24-18,Sales Associate,0,1.0,1,,,A
+588,Monhollen,Phoenix ,F,CU_4998329,686.32,59.805,02-17-18,VP Product Management,0,1.0,1,,A,A
+589,Mcmenamin,Shae ,M,CU_7488700,161.44,,11-08-18,Senior Editor,0,1.0,1,,A,A
+590,Larish,Edmund ,M,CU_6763709,157.1,68.522,10-01-18,Help Desk Operator,1,,1,,A,A
+591,Choma,Grayson ,M,CU_3517633,140.45,,01-08-18,Senior Editor,0,,1,,A,A
+592,Sain,Roxanne ,F,CU_4760772,414.85,37.522,07-12-18,Senior Editor,0,1.0,1,,A,A
+593,Wahlberg,Velma,F,CU_5106884,121.37,,08-01-18,Senior Sales Associate,0,1.0,1,,,A
+594,Vier,Dorsey,M,CU_7969993,140.51,60.178,02-22-18,Office Assistant II,0,,1,,A,A
+595,Casteneda,Laverne,M,CU_1799369,538.53,28.457,08-15-18,Senior Editor,1,1.0,1,,A,A
+596,Herklotz,Ashley,M,CU_4615371,145.47,55.652,01-03-18,Sales Associate,0,1.0,1,,,A
+597,Heymann,Bianca,F,CU_7597260,205.35,,06-18-18,Help Desk Operator,0,1.0,1,,A,A
+598,Rodrick,Denise,F,CU_1471698,150.79,58.959,07-21-18,Office Assistant II,0,,1,,,A
+599,Wanberg,Rodrigo,M,CU_5889236,97.39,55.977,06-05-18,Senior Editor,0,1.0,1,,,A
+600,Glauberman,Aida,F,CU_8516823,405.27,64.948,03-21-18,Research Assistant III,0,1.0,1,,A,A
+601,Salam,Christian ,M,CU_2297048,133.42,24.52,02-25-18,Senior Editor,0,,1,,,A
+602,Valdes,Brenton,M,CU_6079705,153.56,35.299,08-20-18,Senior Editor,0,,1,,A,A
+603,Pete,Brogan ,M,CU_7529689,125.83,,08-05-18,Research Assistant III,1,1.0,1,,A,A
+604,Dilox,Nelda,F,CU_4775129,174.91,50.417,04-13-18,Senior Sales Associate,1,1.0,1,,,A
+605,Glotzbecker,Willy,M,CU_9342171,119.81,56.531,08-11-18,Office Assistant II,0,1.0,1,,A,A
+606,Geyer,Borys ,M,CU_3337438,156.36,37.374,06-08-18,Senior Sales Associate,0,1.0,1,,A,A
+607,Vinegar,Alfred,M,CU_6675683,183.13,,04-19-18,Senior Editor,0,1.0,1,,,A
+608,Masullo,Carroll,M,CU_9952485,151.17,,02-04-18,Information Systems Manager,0,1.0,1,,A,A
+609,Mcinnish,Gabriel ,M,CU_1096933,125.35,,11-24-18,Office Assistant II,0,1.0,1,,A,A
+610,Meyerott,Minh,M,CU_9360615,107.14,22.124,03-31-18,Office Assistant II,0,1.0,1,,A,A
+611,Delore,Sheena,F,CU_2237674,133.95,38.646,08-12-18,Data Coordiator,0,,1,,,A
+612,Petzold,Aryan ,M,CU_1719531,88.35,57.265,10-18-18,Help Desk Operator,0,1.0,1,,A,A
+613,Isby,River ,F,CU_4074732,218.92,55.357,08-15-18,Senior Sales Associate,0,,1,,A,A
+614,Drowne,Elden,M,CU_3165419,135.37,61.017,04-23-18,Senior Editor,0,1.0,1,,A,A
+615,Rivas,Paula ,F,CU_8611061,201.29,,09-27-18,Senior Sales Associate,0,1.0,1,,,A
+616,Benkert,Millicent ,F,CU_6624509,192.36,53.967,08-23-18,Senior Sales Associate,0,,1,,A,A
+617,Tomory,Isabelle ,F,CU_8512768,119.69,54.091,07-16-18,Senior Sales Associate,0,1.0,1,,A,A
+618,Minardi,Ciara ,F,CU_4814081,339.09,50.597,12-21-18,Human Resources Manager,0,1.0,1,,A,A
+619,Dominski,Ehsan ,M,CU_3331330,169.82,34.53,07-06-18,Senior Editor,0,1.0,1,,,A
+620,Reinsmith,Alfreda,F,CU_3654914,128.97,55.496,03-01-18,Information Systems Manager,0,1.0,1,,,A
+621,Voner,Nathanael ,M,CU_8701186,88.86,33.722,10-19-18,,1,1.0,1,,A,A
+622,Dergurahian,Khalid ,M,CU_6919427,142.24,40.99,11-01-18,Office Assistant II,0,1.0,1,,A,A
+623,Keitzer,Marina ,F,CU_3695883,142.74,62.057,12-10-18,Help Desk Operator,0,1.0,1,,A,A
+624,Lantgen,Keneth,M,CU_9690383,134.29,62.145,07-16-18,,0,1.0,1,,A,A
+625,Skay,Holly ,F,CU_5016848,312.37,45.009,09-02-18,Help Desk Operator,0,,1,,A,A
+626,Hempe,Britney,F,CU_4955414,142.53,50.473,03-01-18,Office Assistant II,0,1.0,1,,,A
+627,Jae,Bartlomiej ,M,CU_6970647,175.81,47.351,01-28-18,Office Assistant II,0,1.0,1,,,A
+628,Beston,Usman ,M,CU_2561305,83.65,38.07,06-27-18,Senior Sales Associate,1,,1,,,A
+629,Ronning,Jannie,F,CU_7724314,273.61,59.454,10-31-18,Office Assistant II,0,1.0,1,,,A
+630,Ailiff,Millard,M,CU_5319963,96.08,,10-12-18,Senior Sales Associate,0,1.0,1,,A,A
+631,Sinkler,Valentina ,F,CU_2567452,137.35,45.671,02-04-18,Senior Sales Associate,0,1.0,1,,A,A
+632,Rily,Long,M,CU_4252956,102.1,,03-15-18,Senior Sales Associate,0,1.0,1,,A,A
+633,Fregozo,Hollie,F,CU_7632160,68.47,64.686,02-14-18,Senior Editor,0,1.0,1,,A,A
+634,Cornman,Kasey,M,CU_9577761,122.74,35.225,12-17-18,Office Assistant II,0,1.0,1,,A,A
+635,Olszewski,Leonard ,M,CU_4607266,110.84,54.69,07-27-18,Senior Editor,0,1.0,1,,A,A
+636,Sedlachek,Bryan,M,CU_7605539,179.39,55.884,06-18-18,Senior Sales Associate,0,1.0,1,,A,A
+637,Tynon,Caroline ,F,CU_9143584,298.92,42.941,12-23-18,Senior Editor,0,1.0,1,,A,A
+638,Seawright,Lennie ,M,CU_5950759,139.8,56.794,10-18-18,Senior Editor,1,1.0,1,,,A
+639,Vartanian,Nojus ,M,CU_1852714,98.39,,09-11-18,Senior Sales Associate,1,1.0,1,,,A
+640,Sargetakis,Claire ,F,CU_6608171,144.64,34.548,10-26-18,Senior Editor,0,1.0,1,,A,A
+641,Pickar,Orson ,M,CU_1043761,188.93,39.122,09-04-18,Senior Editor,0,1.0,1,,A,A
+642,Demaine,Richard,M,CU_7572786,230.64,41.103,10-05-18,Senior Sales Associate,0,1.0,1,,A,A
+643,Bonvillain,Abdullah ,M,CU_1701172,124.54,43.909,08-20-18,Senior Editor,0,,1,,A,A
+644,Mazon,Alexis,F,CU_2714936,148.68,,06-06-18,Senior Editor,0,,2,,A,C
+645,Corban,Niamh ,F,CU_7460155,102.53,64.796,02-17-18,Assistant Professor,0,1.0,1,,A,A
+646,Daulerio,Abram,M,CU_6098237,160.24,62.204,03-21-18,Office Assistant II,0,1.0,1,,A,A
+647,Vile,Allan,M,CU_3988798,131.27,52.756,07-17-18,Office Assistant II,0,1.0,1,,,A
+648,Mckeirnan,Rosalyn,F,CU_4580675,138.42,61.363,10-17-18,Office Assistant II,0,1.0,1,,A,A
+649,Tsistinas,Ieuan ,M,CU_2612550,162.65,57.999,07-18-18,Senior Sales Associate,0,,1,,A,A
+650,Cantin,Bruno,M,CU_8394055,147.1,41.811,01-23-18,VP Product Management,0,1.0,1,,A,A
+651,Graciani,Hunter ,M,CU_2184523,197.46,,08-02-18,VP Product Management,0,1.0,1,,,A
+652,Coday,Glen,M,CU_7478605,143.96,50.413,04-28-18,Assistant Professor,0,1.0,1,,,A
+653,Norvell,Nathanael,M,CU_2260303,182.74,,11-10-18,Senior Editor,0,1.0,1,,A,A
+654,Hevrin,Neva,F,CU_7400784,381.08,59.437,11-29-18,Senior Sales Associate,0,1.0,1,,A,A
+655,Navarrete,Skylar ,F,CU_7816527,135.57,60.32,08-23-18,Director of Sales,0,1.0,1,,A,A
+656,Hemani,Nicky,M,CU_3355988,156.48,51.681,05-07-18,Human Resources Assistant IV,0,1.0,1,,,A
+657,Blevans,Riya ,F,CU_8803668,32.56,30.953,01-06-18,Senior Sales Associate,0,1.0,1,,A,A
+658,Bernard,Damien,M,CU_7804246,214.44,40.88,07-25-18,Senior Editor,0,1.0,1,,A,A
+659,Mayoka,Twila,F,CU_4797784,183.91,39.93,10-05-18,Human Resources Assistant IV,0,1.0,1,,A,A
+660,Whary,Felipe,M,CU_6407516,131.71,35.746,05-26-18,Human Resources Assistant IV,0,1.0,1,,A,A
+661,Surminec,Reyes,M,CU_3611998,173.35,36.109,02-27-18,Help Desk Operator,0,1.0,1,,A,A
+662,Plakke,Malik ,M,CU_6141280,196.19,58.437,05-20-18,Human Resources Assistant IV,0,1.0,1,,,A
+663,Matkowski,Beau,M,CU_8000867,154.02,,01-06-18,Human Resources Manager,0,1.0,1,,A,A
+664,Romjue,Ashlee,F,CU_6280550,464.76,48.638,05-16-18,Senior Sales Associate,1,1.0,1,,,A
+665,Breslin,Declan ,M,CU_7957863,385.21,,05-16-18,Analyst Programmer,1,1.0,1,,A,A
+666,Steinlicht,Reuben,M,CU_5717352,138.12,36.612,11-10-18,Senior Sales Associate,0,1.0,1,,,A
+667,Spinuzzi,Isaac,M,CU_9471338,146.03,40.599,02-03-18,Senior Editor,0,1.0,1,,,A
+668,Kruckeberg,Izabella ,F,CU_6227306,101.98,53.408,07-01-18,,0,1.0,1,,,A
+669,Dipietrantoni,Jo,F,CU_7177582,118.1,28.538,01-18-18,Sales Associate,1,,1,,A,A
+670,Degooyer,Gerald,M,CU_1903982,466.9,39.357,05-16-18,Sales Associate,0,1.0,1,,A,A
+671,Haaf,Mary ,F,CU_2516337,360.77,22.818,08-01-18,Senior Sales Associate,0,1.0,1,,,A
+672,Pniewski,Brody ,M,CU_4404594,163.4,33.374,09-24-18,Assistant Professor,0,1.0,1,,A,A
+673,Krohn,Lillie-Rose ,F,CU_5494131,97.87,37.914,07-30-18,Human Resources Manager,0,,1,,A,A
+674,Bloomquist,Hasnain ,M,CU_9321842,151.36,55.45,10-19-18,Director of Sales,0,1.0,1,,,A
+675,Sprandel,Maurice,M,CU_2850165,146.95,39.295,08-28-18,,1,1.0,1,,A,A
+676,Coote,Amelia,F,CU_9397622,139.19,32.086,08-29-18,Sales Associate,0,,1,,A,A
+677,Scribellito,Zakariyya ,M,CU_9172343,137.81,59.252,05-17-18,Office Assistant II,0,1.0,1,,A,A
+678,Watters,Cain ,M,CU_7961972,223.01,52.277,10-18-18,Senior Sales Associate,0,,1,,,A
+679,Silman,Donny,M,CU_2545017,201.56,57.898,12-02-18,Senior Sales Associate,1,1.0,1,,A,A
+680,Fischl,Lewis ,M,CU_6372722,127.38,43.463,08-02-18,Research Assistant III,0,1.0,1,,A,A
+681,Kaszton,Ines,F,CU_4130172,122.76,53.467,03-05-18,Sales Associate,0,1.0,1,,A,B
+682,Kosinski,Bethan ,F,CU_9831806,194.66,61.044,01-08-18,Office Assistant II,0,1.0,1,,A,A
+683,Buske,Maxwell ,M,CU_2430336,138.15,30.338,05-25-18,Senior Editor,0,1.0,1,,A,A
+684,Litzau,Jarvis,M,CU_6122882,143.54,58.307,07-27-18,VP Product Management,0,,1,,,A
+685,Schuffert,Sophia ,F,CU_7966084,309.21,30.1,10-04-18,Senior Editor,0,1.0,1,,,A
+686,Rhymes,Major,M,CU_1965451,355.62,55.734,08-17-18,Senior Editor,0,1.0,1,,,A
+687,Ravenscraft,Tricia,F,CU_4009356,296.11,58.95,06-13-18,Senior Sales Associate,1,1.0,1,,A,A
+688,Mcdonough,Norah ,F,CU_1768845,192.45,30.786,06-10-18,Sales Associate,0,,1,,A,A
+689,Digrazia,Raymond,M,CU_4511120,100.96,43.967,04-14-18,,0,1.0,1,,A,A
+690,Hascall,Ana ,F,CU_4017553,156.79,59.833,08-30-18,VP Product Management,0,1.0,1,,,A
+691,Crewe,Merrill,M,CU_6870417,229.89,54.933,09-16-18,Assistant Professor,0,,1,,A,A
+692,Krewson,Augustus,M,CU_7085459,67.69,39.72,12-16-18,Junior Executive,0,1.0,1,,A,A
+693,Slayden,Tayla ,F,CU_4033940,167.2,57.673,12-18-18,VP Product Management,0,1.0,1,,A,A
+694,Danks,Aden ,M,CU_6030739,165.16,52.174,08-06-18,,0,,1,,A,A
+695,Wolslegel,Blake,M,CU_4261268,213.76,22.876,03-10-18,Senior Editor,0,1.0,1,,A,A
+696,Godlove,Kacie ,F,CU_9756051,60.0,55.609,08-01-18,Senior Editor,1,1.0,1,,A,A
+697,Valdivia,Sasha,F,CU_7224729,127.07,52.267,09-22-18,Office Assistant II,0,1.0,1,,A,A
+698,Petrulis,Pearl,F,CU_9971097,133.46,35.624,12-09-18,,1,1.0,1,,A,A
+699,Rojos,Eugene,M,CU_8410523,258.55,35.451,09-05-18,,0,1.0,1,,,A
+700,Rotermund,Denny,M,CU_1944993,203.15,51.568,09-04-18,Help Desk Operator,0,1.0,1,,,A
+701,Manalang,Franklin ,M,CU_7732641,118.47,59.213,09-05-18,Sales Associate,1,1.0,1,,A,A
+702,Fyffe,Enrique,M,CU_7624099,141.84,35.154,03-28-18,Senior Sales Associate,0,1.0,1,,A,A
+703,Bassin,Maura,F,CU_1936801,92.36,56.868,10-24-18,Senior Sales Associate,0,1.0,1,,A,A
+704,Hiscock,Beth ,F,CU_5299622,131.3,42.188,12-27-18,,0,1.0,1,,,A
+705,Krzewinski,Raymond ,M,CU_7597481,873.97,39.276,12-05-18,Sales Associate,0,1.0,1,,,A
+706,Stammer,Roisin ,F,CU_9614762,164.45,49.89,06-22-18,Office Assistant II,0,1.0,1,,,A
+707,Pontiff,Keaton ,M,CU_1179054,140.75,51.88,02-19-18,Senior Sales Associate,0,,1,,A,A
+708,Fitzhugh,Rhett,M,CU_8793519,125.59,,09-13-18,Office Assistant II,0,1.0,1,,A,A
+709,Bandel,Ethan,M,CU_1508785,149.3,42.939,04-01-18,,0,1.0,1,,,A
+710,Samide,Isabel,F,CU_7292340,171.27,,09-20-18,Sales Associate,0,1.0,1,,,A
+711,Popke,Dane,M,CU_1945012,150.33,26.635,10-01-18,Senior Sales Associate,0,,1,,,A
+712,Rinkel,Son,M,CU_2411958,329.4,,05-01-18,Senior Editor,0,1.0,1,,,A
+713,Prinz,Veronica ,F,CU_8129974,154.31,30.05,06-20-18,Help Desk Operator,0,1.0,1,,A,A
+714,Standaert,Kasey ,F,CU_3507638,130.39,60.722,05-10-18,Help Desk Operator,0,,1,,,A
+715,Forbach,Clementine ,F,CU_1527225,126.12,,09-24-18,Office Assistant II,0,,1,,A,A
+716,Josef,Jana ,F,CU_5496250,52.09,56.376,06-29-18,Senior Sales Associate,0,1.0,1,,A,A
+717,Knolton,Cornell,M,CU_5612982,233.13,42.252,01-27-18,Human Resources Assistant IV,1,,1,,A,A
+718,Brucato,Shayaan ,M,CU_2379196,134.48,32.558,05-07-18,Senior Editor,0,1.0,1,,,A
+719,Bacolor,Lana ,F,CU_1795519,193.83,53.136,11-26-18,Office Assistant II,0,1.0,1,,A,A
+720,Arizola,Lenny,M,CU_7851456,272.5,64.686,10-21-18,Help Desk Operator,0,1.0,1,,A,A
+721,Poteet,Evalyn ,F,CU_2264515,173.7,,01-20-18,Research Assistant III,0,1.0,1,,A,A
+722,Tetz,Alma,F,CU_4199878,93.86,29.355,11-30-18,Director of Sales,0,,1,,,A
+723,Traver,Patricia,M,CU_7511497,166.22,31.629,11-27-18,,1,1.0,1,,A,A
+724,Wahoske,Lewie ,M,CU_1355210,141.84,25.446,04-29-18,Help Desk Operator,0,1.0,2,,,C
+725,Gastellum,Taylan ,M,CU_9999817,154.06,35.032,04-02-18,VP Product Management,0,,1,,A,A
+726,Brightman,Virginia,F,CU_4763084,129.35,49.826,12-16-18,,0,1.0,1,,,A
+727,Bonnema,Dawid ,M,CU_9063884,420.19,68.899,06-27-18,,0,1.0,1,,A,A
+728,Schopflin,Kaleb ,M,CU_5690831,62.24,,05-28-18,Office Assistant II,1,1.0,1,,,A
+729,Pepez,Adela,F,CU_4441551,180.67,72.031,01-17-18,Senior Sales Associate,0,,1,,A,A
+730,Airington,Asma ,F,CU_3255761,211.38,56.798,09-01-18,,0,1.0,1,,,A
+731,Kanda,Sachin ,M,CU_1521104,122.89,,07-02-18,Human Resources Manager,0,1.0,1,,,A
+732,Lofthus,Rayhan ,M,CU_5467603,153.44,37.357,11-04-18,Human Resources Assistant IV,0,1.0,1,,A,A
+733,Gierlach,Dana ,F,CU_3806672,147.82,45.964,10-31-18,VP Product Management,1,1.0,1,,,A
+734,Abrev,Imelda,F,CU_8760789,179.25,26.285,11-12-18,Help Desk Operator,0,1.0,1,,,A
+735,Capel,Rosalind,F,CU_2422228,134.65,21.54,04-01-18,Junior Executive,1,1.0,1,,,A
+736,Barus,Rebekah,F,CU_6315484,206.3,26.594,11-09-18,Human Resources Assistant IV,0,,1,,A,A
+737,Oshima,Nichole,F,CU_2125279,136.74,57.217,08-23-18,Research Assistant III,0,1.0,1,,A,A
+738,Adomaitis,Fergus ,M,CU_6886881,545.34,64.764,10-18-18,Data Coordiator,0,1.0,1,,A,A
+739,Betz,Ryan ,M,CU_9731553,331.24,35.474,05-08-18,Senior Editor,0,1.0,1,,A,A
+740,Primas,Margarito,M,CU_7409123,219.56,,02-24-18,Senior Sales Associate,0,1.0,1,,,A
+741,Formby,Robbie ,M,CU_5158373,111.38,69.726,10-03-18,,0,1.0,1,,,A
+742,Hickam,Gracie-Mae ,F,CU_5223912,162.01,54.214,05-30-18,Help Desk Operator,0,1.0,1,,,A
+743,Suckow,Fredrick,M,CU_2909673,117.85,,10-31-18,,0,1.0,1,,A,A
+744,Ziola,Terri,F,CU_1523180,167.34,29.752,04-24-18,Senior Sales Associate,0,,1,,A,A
+745,Witman,Ella-May ,F,CU_6397421,124.23,39.762,01-10-18,Senior Editor,0,1.0,1,,A,A
+746,Leysath,Mya ,F,CU_9289198,234.78,42.045,05-04-18,Office Assistant II,0,1.0,1,,,A
+747,Him,Xander ,M,CU_2811372,139.57,,07-14-18,Senior Sales Associate,0,,1,,,A
+748,Westra,Jewel,F,CU_7337457,125.53,31.297,04-23-18,Senior Editor,0,,1,,,A
+749,Stell,Tasha,F,CU_1924596,83.01,54.702,03-24-18,Help Desk Operator,0,1.0,1,,,A
+750,Malinski,Lorena,F,CU_2905588,154.12,29.294,09-20-18,Office Assistant II,0,1.0,1,,,A
+751,Cutsinger,Krzysztof ,M,CU_2063863,119.46,36.098,07-11-18,Research Assistant III,0,1.0,1,,A,A
+752,Fasheh,Saul,M,CU_6548984,136.93,,12-03-18,Office Assistant II,0,1.0,1,,,A
+753,Mcswain,Branden,M,CU_2233850,400.75,,02-22-18,Senior Editor,0,1.0,1,,A,A
+754,Boyken,Charles,M,CU_8363514,133.77,49.168,10-13-18,Senior Sales Associate,0,1.0,1,,A,A
+755,Arnot,Emmie ,F,CU_3526139,137.12,20.501,08-03-18,Director of Sales,0,,1,,A,A
+756,Shipley,Freeman,M,CU_4658685,178.31,55.685,06-05-18,Office Assistant II,0,1.0,1,,,A
+757,Greely,Carlos,M,CU_4199935,125.56,39.415,11-27-18,Office Assistant II,0,,1,,A,A
+758,Grassano,Lacey-May ,F,CU_6407679,148.18,56.709,04-16-18,Director of Sales,0,1.0,1,,,A
+759,Sparacino,Lara,F,CU_4343296,152.73,52.964,10-07-18,Senior Editor,0,,1,,,A
+760,Veney,Josef,M,CU_5694978,146.54,55.228,07-19-18,,0,1.0,1,,A,A
+761,Minneweather,Malakai ,M,CU_9807364,160.04,56.506,01-27-18,Senior Editor,0,1.0,1,,A,A
+762,Clouse,Esther ,F,CU_9827845,120.37,77.917,01-10-18,Senior Editor,0,,1,,,A
+763,Holbert,Ron,M,CU_9086471,459.35,62.717,02-11-18,Senior Editor,0,1.0,1,,,A
+764,Capurro,Tod,M,CU_2326024,270.45,32.334,02-22-18,Human Resources Manager,0,1.0,1,,A,A
+765,Beerman,Kaidan ,M,CU_6991372,185.32,42.451,05-15-18,,0,,1,,,A
+766,Guereca,Brittany,F,CU_3505677,183.72,27.957,03-10-18,Senior Editor,0,1.0,1,,,A
+767,Dornfeld,Aurelia ,F,CU_6350349,130.74,52.047,04-28-18,Office Assistant II,1,1.0,2,,,C
+768,Akal,Wojciech ,M,CU_4124175,131.87,65.052,01-23-18,Sales Associate,0,1.0,1,,,A
+769,Gerow,Numbers,M,CU_4081168,161.41,49.722,11-26-18,Sales Associate,1,1.0,1,,A,A
+770,Oland,Nola,F,CU_4390413,166.89,47.485,10-01-18,Office Assistant II,0,,1,,A,A
+771,Morano,Aubrey,M,CU_3022354,227.56,59.284,08-14-18,,0,,1,,A,A
+772,Franqui,Dawud ,M,CU_2909712,164.48,35.988,08-17-18,,0,1.0,1,,A,A
+773,Lehnertz,Errol,M,CU_3638806,54.41,53.264,02-08-18,Office Assistant II,0,1.0,1,,A,A
+774,Mccluney,Santos,M,CU_9006616,548.42,49.579,06-20-18,Senior Editor,0,1.0,1,,,A
+775,Eldert,Emil,M,CU_6403610,221.48,20.709,01-20-18,Junior Executive,0,1.0,1,,,A
+776,Frutos,Lynette,F,CU_4994590,224.26,57.869,11-09-18,Senior Sales Associate,0,1.0,1,,A,A
+777,Sohn,Rico,M,CU_7089695,204.77,40.4,10-20-18,Senior Sales Associate,0,,1,,A,A
+778,Grether,Max,M,CU_7087649,117.98,,08-20-18,Data Coordiator,0,1.0,1,,A,A
+779,Doring,Rayan ,M,CU_9741858,134.69,57.271,05-28-18,Research Assistant III,1,1.0,1,,A,A
+780,Kulig,Lacy,M,CU_9623074,523.1,78.986,06-16-18,Senior Sales Associate,1,1.0,1,,A,A
+781,Digmann,Efren,M,CU_8398370,271.08,55.735,05-13-18,Senior Sales Associate,1,1.0,1,,A,B
+782,Wesler,Tom ,M,CU_1091109,363.07,37.006,08-08-18,,1,1.0,1,,,A
+783,Depaolo,Teresa,F,CU_9893415,141.01,53.217,04-26-18,Senior Sales Associate,0,1.0,1,,,A
+784,Helke,Stella ,F,CU_8203816,176.67,43.069,06-15-18,Senior Editor,0,,1,,A,A
+785,Kammerzell,Leola,F,CU_4118061,150.44,62.351,01-18-18,Senior Sales Associate,0,,1,,,A
+786,Wildey,Denver,M,CU_4361773,150.41,,01-13-18,Director of Sales,1,1.0,1,,A,A
+787,Bolinsky,Buster,M,CU_7708208,174.0,67.874,09-20-18,Office Assistant II,0,1.0,1,,A,A
+788,Flagler,Malaika ,F,CU_2135601,132.39,37.264,03-07-18,Senior Editor,0,1.0,1,,,A
+789,Ferland,Moises,M,CU_3182130,215.5,65.993,06-19-18,Office Assistant II,1,1.0,1,,A,A
+790,Emswiler,Fermin,M,CU_9786932,200.0,39.768,02-15-18,Senior Sales Associate,0,1.0,1,,,A
+791,Lindblad,Lola ,F,CU_3921463,172.22,52.881,01-08-18,,1,1.0,1,,,A
+792,Steves,Paul,M,CU_3673655,163.77,56.613,11-08-18,Office Assistant II,0,1.0,1,,A,A
+793,Trevithick,Kaycee ,F,CU_5824059,285.44,51.333,12-30-18,,1,1.0,1,,A,A
+794,Spoden,Elijah,M,CU_4312635,211.53,,04-05-18,Help Desk Operator,0,1.0,2,,A,C
+795,Girardot,Sheldon,M,CU_5742142,114.2,56.786,03-30-18,Office Assistant II,0,1.0,1,,,A
+796,Weathersbee,Ivan ,M,CU_8652358,140.84,46.68,06-05-18,Human Resources Manager,1,1.0,1,,A,A
+797,Mcamis,Abu ,M,CU_3941964,316.36,37.829,08-04-18,,0,1.0,1,,A,A
+798,Baez,Jess,M,CU_3907151,164.86,46.821,02-26-18,Senior Sales Associate,1,1.0,1,,,A
+799,Handshaw,Chanelle ,F,CU_7024212,346.19,,06-03-18,Human Resources Assistant IV,0,1.0,2,,A,C
+800,Goyal,Alicia,F,CU_4208220,182.27,54.29,07-17-18,Sales Associate,0,,1,,,A
+801,Raveling,Vern,M,CU_5279328,97.4,43.0,05-26-18,Senior Editor,0,1.0,1,,A,A
+802,Daczewitz,Sophie,F,CU_3501665,62.9,24.458,01-31-18,Sales Associate,0,1.0,1,,A,A
+803,Heinlen,Mariya ,F,CU_2430562,136.9,23.44,10-25-18,Office Assistant II,0,1.0,1,,,A
+804,Discala,Nestor,M,CU_3264099,130.5,62.35,09-04-18,Help Desk Operator,0,,1,,A,A
+805,Hosman,Jana,F,CU_1971812,123.5,55.996,02-19-18,Office Assistant II,0,1.0,1,,A,A
+806,Rosenberger,Cruz ,M,CU_3989095,402.71,46.166,07-24-18,Senior Sales Associate,0,1.0,1,,A,A
+807,Chaix,Kristy,F,CU_6065768,163.93,56.864,06-14-18,Senior Sales Associate,0,1.0,1,,,A
+808,Leef,Kasper ,M,CU_5299821,102.91,56.898,11-07-18,Senior Sales Associate,0,1.0,1,,,A
+809,Inouye,Len,M,CU_3268209,97.66,45.169,10-11-18,Help Desk Operator,0,1.0,1,,A,A
+810,Guzzio,Jonas,M,CU_6338162,289.14,38.419,03-12-18,Analyst Programmer,0,1.0,1,,A,A
+811,Dupont,Melody ,F,CU_3067511,187.23,,01-07-18,Office Assistant II,0,1.0,1,,A,A
+812,Matelich,Beau ,M,CU_3370616,210.93,40.254,07-14-18,Assistant Professor,1,1.0,1,,,A
+813,Mou,Zak ,M,CU_4003455,118.43,58.783,04-08-18,Information Systems Manager,0,1.0,1,,A,A
+814,Viviano,Omer,M,CU_5086851,136.01,,05-18-18,Data Coordiator,0,,1,,A,A
+815,Volentine,Omari ,M,CU_3520131,110.2,,05-07-18,Sales Associate,0,,1,,,A
+816,Zurkus,Jasper,M,CU_6565509,148.77,,09-07-18,Senior Editor,0,1.0,1,,,A
+817,Jackovitz,Milena ,F,CU_4392581,92.3,35.088,09-01-18,Senior Sales Associate,0,1.0,1,,A,B
+818,Ferrandino,Darren ,M,CU_7364229,148.34,22.377,05-02-18,VP Product Management,0,1.0,2,,,C
+819,Shelton,Tomas,M,CU_2973326,134.94,52.651,12-14-18,Office Assistant II,0,1.0,1,,,A
+820,Margarita,Randy,M,CU_3964559,112.83,,11-05-18,Human Resources Manager,0,1.0,1,,A,A
+821,Repp,Ifan ,M,CU_2836113,171.54,35.403,08-19-18,Office Assistant II,0,1.0,1,,A,A
+822,Krucke,Thomas ,M,CU_6379157,140.7,34.121,07-02-18,Office Assistant II,0,1.0,1,,A,A
+823,Salvitti,Laith ,M,CU_4894358,175.78,41.193,08-22-18,Office Assistant II,0,1.0,1,,A,A
+824,Hardyman,Safa ,F,CU_1576598,146.93,36.137,03-06-18,Senior Sales Associate,0,,1,,A,A
+825,Lawhead,Harriett,F,CU_2135704,73.65,35.197,03-16-18,Senior Sales Associate,1,1.0,1,,A,A
+826,Rusche,Lottie ,F,CU_5240477,90.62,42.081,08-16-18,Senior Sales Associate,0,1.0,1,,A,A
+827,Ulvan,Nate ,M,CU_8122019,129.24,57.01,10-30-18,Senior Editor,0,,1,,A,A
+828,Thiery,Ayana ,F,CU_8754853,117.68,55.553,10-21-18,Analyst Programmer,0,1.0,1,,,A
+829,Gaby,Sylvia ,F,CU_8248998,163.9,56.357,05-26-18,Human Resources Assistant IV,0,1.0,1,,A,A
+830,Wilderson,Gino,M,CU_7927463,60.48,38.62,02-03-18,Sales Associate,0,1.0,1,,A,B
+831,Settler,Sabrina,F,CU_1195688,153.45,54.209,05-31-18,Senior Sales Associate,0,1.0,1,,A,A
+832,Wymore,Zunairah ,F,CU_2678438,172.94,37.046,10-10-18,Sales Associate,0,1.0,1,,A,A
+833,Rave,Queen,F,CU_1195687,107.66,33.601,04-11-18,VP Product Management,0,1.0,1,,A,A
+834,Deprince,Maxine,F,CU_5279406,161.51,51.479,08-24-18,Help Desk Operator,0,1.0,1,,A,A
+835,Rushanan,Emmanuel,M,CU_5609138,198.48,66.585,05-30-18,Junior Executive,0,,1,,A,A
+836,Szpak,Jovan ,M,CU_6958771,53.53,42.584,06-08-18,Sales Associate,0,1.0,1,,A,A
+837,Andresen,Ethel,F,CU_4982457,595.82,31.534,11-05-18,,1,1.0,1,,A,A
+838,Arquero,Krystal,F,CU_5963458,147.29,43.857,03-16-18,Office Assistant II,0,,1,,,A
+839,Veley,Connie,F,CU_4599494,120.84,22.702,06-14-18,Office Assistant II,0,1.0,1,,A,A
+840,Northup,Sherwood,M,CU_4124362,102.15,58.546,10-21-18,VP Product Management,1,1.0,1,,A,A
+841,Moldan,Dorothea,F,CU_5670602,378.55,,04-30-18,Data Coordiator,0,,1,,,A
+842,Berkstresser,Hadiya ,F,CU_4808401,36.55,63.106,03-14-18,Sales Associate,0,1.0,1,,A,A
+843,Galka,Shawn ,M,CU_8470226,104.58,69.378,02-25-18,Senior Editor,1,1.0,1,,A,A
+844,Farlee,Jennie,F,CU_4835027,641.11,,06-20-18,Director of Sales,1,,1,,A,A
+845,Duryee,Ed,M,CU_8902353,101.38,83.138,12-08-18,Analyst Programmer,0,,1,,A,A
+846,Sippel,Saskia ,F,CU_6031064,179.18,57.819,02-12-18,VP Product Management,0,,1,,A,A
+847,Baltodano,Tyrell ,M,CU_6584029,261.79,51.135,01-12-18,Human Resources Assistant IV,0,1.0,1,,,A
+848,Flores,Toby ,M,CU_9424608,179.62,,01-14-18,Senior Sales Associate,0,1.0,1,,A,A
+849,Haile,Glenna,F,CU_8460001,176.98,,09-10-18,Senior Editor,0,1.0,1,,,A
+850,Hollyfield,Jaxson ,M,CU_6037218,264.96,47.068,12-07-18,Help Desk Operator,1,1.0,1,,A,A
+851,Buford,Hollis,M,CU_6495977,399.26,39.856,10-28-18,Senior Sales Associate,0,1.0,1,,A,A
+852,Luby,Malik,M,CU_6481642,137.25,38.569,10-23-18,Senior Sales Associate,0,1.0,1,,,A
+853,Wetterauer,Sebastian,M,CU_4634347,143.09,64.004,02-08-18,Office Assistant II,1,1.0,1,,A,A
+854,Barnak,Rhea ,F,CU_5738220,132.83,54.375,11-05-18,Sales Associate,0,1.0,1,,A,A
+855,Sicinski,Emma ,F,CU_3294953,227.65,36.685,02-06-18,Assistant Professor,0,1.0,1,,A,A
+856,Augustave,Gracie-Mai ,F,CU_5123822,193.27,33.498,10-24-18,Senior Editor,0,1.0,1,,,A
+857,Procknow,Jayden ,M,CU_2383599,190.35,56.818,12-12-18,Senior Sales Associate,0,1.0,1,,A,A
+858,Eltzroth,Terrance,M,CU_3892981,219.33,,01-20-18,Senior Sales Associate,0,1.0,1,,,A
+859,Zarozinski,Mitchell,M,CU_1500920,118.85,32.66,12-13-18,Information Systems Manager,0,,1,,,A
+860,Sacher,Kyle ,M,CU_6676218,147.03,47.531,07-13-18,Data Coordiator,0,1.0,1,,A,A
+861,Amarante,Heath,M,CU_1603323,168.69,63.082,06-27-18,Junior Executive,0,,1,,A,A
+862,Myrlie,Alonso,M,CU_8398589,210.23,78.312,09-20-18,Human Resources Assistant IV,0,,1,,A,A
+863,Pinkney,Jefferson,M,CU_1861376,334.99,48.781,11-30-18,Senior Sales Associate,0,1.0,1,,A,A
+864,Hradecky,Arron,M,CU_8955651,327.54,43.553,06-10-18,Assistant Professor,0,1.0,1,,A,A
+865,Stupak,Thad,M,CU_9264900,45.48,30.745,12-24-18,Office Assistant II,0,1.0,1,,,A
+866,Lander,Celeste,F,CU_6305541,215.14,39.355,01-23-18,Office Assistant II,1,,1,,A,A
+867,Deline,Jermaine,M,CU_1529605,320.95,36.834,11-19-18,Help Desk Operator,0,,1,,,A
+868,Yehle,Casey ,M,CU_6434568,152.23,62.446,11-11-18,Senior Sales Associate,0,,1,,,A
+869,Jennins,Teddy,M,CU_3567368,39.44,65.043,01-16-18,Senior Sales Associate,0,1.0,1,,A,A
+870,Meardon,Cassidy ,F,CU_7008015,123.33,61.413,12-19-18,Analyst Programmer,0,1.0,1,,A,A
+871,Kiflezghie,Nataniel ,M,CU_7595792,148.16,46.743,10-08-18,Senior Editor,0,1.0,1,,A,A
+872,Drewett,Cleo,M,CU_3589904,224.72,45.231,11-17-18,,0,1.0,1,,A,A
+873,Edstrom,Kamal ,M,CU_8189714,167.4,63.956,11-17-18,Help Desk Operator,0,1.0,1,,,A
+874,Wolner,Joel,M,CU_2256656,124.09,38.992,06-03-18,Help Desk Operator,0,1.0,1,,,A
+875,Debrito,Santino ,M,CU_9522959,131.56,54.25,09-28-18,Sales Associate,0,1.0,1,,A,A
+876,Shamburg,Aahil ,M,CU_3671831,45.51,63.112,06-23-18,,0,1.0,1,,A,A
+877,Ruhlman,Loren,M,CU_5170969,232.55,57.459,04-30-18,VP Product Management,0,1.0,1,,A,A
+878,Valsin,Ferdinand,M,CU_1699609,37.53,37.594,07-10-18,Junior Executive,1,1.0,1,,A,A
+879,Keyt,Malcolm,M,CU_9342747,168.36,58.243,04-22-18,Senior Sales Associate,0,1.0,1,,A,A
+880,Azotea,Charley ,F,CU_2103069,142.09,,07-03-18,Senior Editor,0,1.0,1,,,A
+881,Stcyr,Sahib ,M,CU_5039901,100.65,35.457,08-03-18,Senior Sales Associate,0,,1,,A,A
+882,Tolbent,Noble,M,CU_3206942,157.74,38.096,08-15-18,Office Assistant II,0,1.0,1,,A,A
+883,Dinnendahl,Graig,M,CU_5705505,67.88,40.363,09-27-18,Director of Sales,0,1.0,1,,A,A
+884,Balderrama,Carole,F,CU_1668899,51.78,43.187,07-14-18,Information Systems Manager,0,1.0,1,,A,A
+885,Ugalde,Danny,M,CU_4181800,358.87,55.167,08-04-18,,0,1.0,1,,A,A
+886,Hixon,Aditya ,M,CU_2496298,136.7,30.089,02-02-18,Help Desk Operator,0,1.0,1,,A,A
+887,Kleber,Micah ,M,CU_8075053,138.87,,12-17-18,Director of Sales,1,1.0,1,,,A
+888,Quintana,Jamie,F,CU_7083822,319.86,35.311,06-25-18,Senior Sales Associate,0,1.0,1,,A,A
+889,Longstaff,Saim ,M,CU_5603121,344.33,,12-06-18,Senior Editor,0,1.0,1,,,A
+890,Crespin,Hadi ,M,CU_5203762,95.81,64.035,02-15-18,Analyst Programmer,1,,1,,A,A
+891,Russow,Rayyan ,M,CU_9418547,110.4,34.199,04-28-18,Sales Associate,1,1.0,1,,A,A
+892,Lanman,Riley ,F,CU_1752884,145.65,26.596,08-09-18,Data Coordiator,0,1.0,1,,A,A
+893,Yuricic,Merle,F,CU_6188853,142.59,,06-01-18,,0,1.0,1,,A,A
+894,Chipman,Dominik ,M,CU_2099001,149.27,,05-21-18,Information Systems Manager,0,1.0,1,,A,A
+895,Kochis,Bobby,M,CU_6874940,479.91,64.766,02-28-18,Sales Associate,0,1.0,1,,A,A
+896,Vanlaere,Roshan ,M,CU_6707006,137.58,,01-22-18,Human Resources Assistant IV,0,1.0,1,,A,A
+897,Conover,Junaid ,M,CU_4423488,150.92,39.846,05-05-18,Senior Sales Associate,0,1.0,1,,A,A
+898,Dulberg,Momina ,F,CU_4906816,120.67,43.228,12-13-18,Help Desk Operator,0,1.0,1,,,A
+899,Havice,Gladys ,F,CU_2406210,128.49,51.816,11-01-18,,0,1.0,1,,,A
+900,Odil,Julie,F,CU_9080646,170.91,,09-24-18,Senior Sales Associate,0,1.0,1,,,A
+901,Zeimantz,Thaddeus,M,CU_5121868,321.22,58.51,08-01-18,Help Desk Operator,0,1.0,1,,A,A
+902,Corrigeux,Shelby,M,CU_5889870,105.04,44.01,09-26-18,Help Desk Operator,0,1.0,1,,,A
+903,Havir,Keith,M,CU_6700881,143.82,68.595,02-24-18,Analyst Programmer,0,1.0,1,,A,A
+904,Engebretson,Patty,F,CU_9234260,440.73,51.015,05-28-18,Help Desk Operator,1,1.0,1,,,A
+905,Gutieres,Codie ,M,CU_7290714,130.33,,06-14-18,Senior Editor,0,1.0,1,,A,A
+906,Marcy,Alejandra,F,CU_7759707,461.28,,05-16-18,Junior Executive,0,1.0,1,,A,A
+907,Liew,Bo,M,CU_7892828,173.1,57.681,09-07-18,Senior Sales Associate,0,1.0,1,,A,A
+908,Buscarino,Carter,M,CU_8132445,114.59,49.525,01-22-18,Senior Sales Associate,0,1.0,1,,,A
+909,Alarcone,Georgie ,M,CU_1038173,186.02,,10-12-18,,0,1.0,1,,A,A
+910,Mesta,Huey,M,CU_3704668,97.29,53.976,04-27-18,Office Assistant II,0,1.0,1,,A,A
+911,Stevener,Maja ,F,CU_9357152,127.91,40.907,09-11-18,Senior Sales Associate,0,1.0,1,,A,A
+912,Maule,Denis ,M,CU_6702945,289.38,39.718,10-12-18,Senior Sales Associate,0,1.0,1,,A,A
+913,Yohe,Marcel ,M,CU_8750945,274.31,39.52,10-16-18,VP Product Management,0,1.0,1,,A,A
+914,Normandin,Oskar ,M,CU_4079459,113.62,41.005,05-31-18,Sales Associate,1,1.0,1,,A,A
+915,Reindl,Devon ,M,CU_9201509,84.82,42.224,08-21-18,Senior Sales Associate,0,1.0,1,,A,A
+916,Digiouanni,Michael,F,CU_8316774,275.35,69.412,09-18-18,Office Assistant II,0,,1,,A,A
+917,Hachting,Marlon,M,CU_3166056,97.06,43.608,12-09-18,Assistant Professor,0,,1,,,A
+918,Honus,Dewi ,M,CU_3170153,127.22,61.581,04-09-18,Sales Associate,0,1.0,1,,,A
+919,Jegede,Lyla ,F,CU_7208810,230.99,59.346,11-18-18,Office Assistant II,0,,1,,A,A
+920,Espelien,Ophelia ,F,CU_9762672,130.84,28.594,11-20-18,VP Product Management,1,1.0,1,,,A
+921,Gropp,Rachael,F,CU_3833720,203.54,32.4,06-28-18,Analyst Programmer,0,1.0,1,,A,A
+922,Mantini,Hugo,M,CU_9602939,219.34,54.783,01-02-18,Senior Sales Associate,0,1.0,1,,,A
+923,Withem,Emerson,M,CU_1025916,189.4,58.076,05-25-18,Senior Editor,0,1.0,1,,A,A
+924,Slusher,Lemuel,M,CU_1257340,89.04,35.015,01-09-18,Junior Executive,0,1.0,1,,A,A
+925,Reitz,Ibraheem ,M,CU_1873790,205.19,35.809,06-02-18,Human Resources Assistant IV,0,,1,,A,A
+926,Shouse,Liza,F,CU_7604092,127.28,33.454,07-23-18,Office Assistant II,0,1.0,1,,A,A
+927,Brydges,Elwood,M,CU_1619840,121.01,67.453,04-06-18,Human Resources Assistant IV,0,1.0,1,,,A
+928,Ocker,Dustin,M,CU_8824705,456.13,58.58,04-05-18,Office Assistant II,0,1.0,1,,A,A
+929,Stansfield,Warren,M,CU_1032069,128.6,44.388,07-18-18,,0,1.0,1,,A,A
+930,Delles,Braydon ,M,CU_3334024,210.52,52.391,11-05-18,Senior Sales Associate,1,1.0,1,,,A
+931,Berns,Bridget,F,CU_9920393,179.43,,05-16-18,Senior Editor,0,1.0,1,,A,A
+932,Sieradski,Prince ,M,CU_6274956,155.17,49.339,04-30-18,Office Assistant II,0,1.0,1,,,A
+933,Naguin,Hester,F,CU_4298637,154.08,38.114,04-22-18,Sales Associate,0,1.0,1,,A,A
+934,Kiddle,Lawrence ,M,CU_3909520,173.43,57.397,06-27-18,Senior Editor,0,1.0,1,,,A
+935,Edmison,Chi,M,CU_6526865,165.62,42.615,08-09-18,Senior Sales Associate,0,1.0,1,,A,A
+936,Montesdeoca,Benton,M,CU_7737234,377.42,68.824,06-09-18,Senior Sales Associate,0,,1,,A,A
+937,Filbey,Landon,M,CU_8771475,149.93,,06-27-18,Office Assistant II,0,1.0,1,,A,A
+938,Brumlow,Livia ,F,CU_7911314,250.19,,05-08-18,Help Desk Operator,1,,1,,,A
+939,Curlee,Teri,F,CU_8331157,122.5,,12-26-18,Senior Editor,0,1.0,1,,,A
+940,Pevy,Debra,F,CU_5013396,168.44,47.231,03-27-18,Senior Sales Associate,0,1.0,2,,A,C
+941,Angelocci,Ramona,F,CU_4444055,173.77,25.75,03-11-18,Office Assistant II,0,1.0,1,,A,A
+942,Gallati,Keisha,F,CU_9834394,103.09,44.784,01-23-18,Senior Editor,0,,1,,A,A
+943,Baldwin,Erika,F,CU_8257434,119.11,54.89,11-09-18,Director of Sales,0,1.0,1,,A,A
+944,Kyzar,Azaan ,M,CU_3641244,198.87,47.403,03-27-18,Senior Editor,0,,1,,A,A
+945,Fare,Emilio ,M,CU_2783134,166.59,34.345,10-15-18,Senior Editor,0,1.0,1,,,A
+946,Callan,Kaci ,F,CU_6053790,36.15,73.479,08-20-18,Senior Sales Associate,1,,1,,A,A
+947,Kaleohano,Evangeline ,F,CU_9658270,128.1,40.508,10-19-18,Information Systems Manager,0,1.0,1,,A,A
+948,Preskitt,Dawood ,M,CU_2305953,128.08,38.915,05-25-18,Senior Editor,1,1.0,1,,A,A
+949,Kantis,Darlene,F,CU_9998242,161.72,41.083,08-08-18,Help Desk Operator,0,,1,,,A
+950,Espiridion,Irving,M,CU_4169634,148.92,43.739,11-23-18,Analyst Programmer,1,,1,,A,A
+951,Dirago,Meghan ,F,CU_9244579,128.19,,04-13-18,,1,1.0,1,,A,A
+952,Overmyer,Hassan ,M,CU_7464869,148.23,59.62,06-07-18,Analyst Programmer,1,1.0,1,,A,A
+953,Bangert,Abe,M,CU_1787815,123.51,30.59,08-11-18,Data Coordiator,0,1.0,1,,A,A
+954,Jernejcic,Johnathan,M,CU_3037096,139.81,55.538,07-31-18,Senior Sales Associate,1,1.0,1,,,A
+955,Elbertson,Finnian ,M,CU_2490280,418.36,34.537,01-11-18,VP Product Management,0,1.0,1,,A,A
+956,Zephyr,Dillon ,M,CU_9854891,92.22,59.544,01-29-18,Human Resources Manager,0,1.0,1,,A,A
+957,Abajian,Carey,F,CU_6846382,152.94,52.686,01-27-18,Senior Editor,0,1.0,1,,A,A
+958,Berley,Fynn ,M,CU_9445296,91.99,21.429,07-21-18,Senior Editor,1,1.0,1,,,B
+959,Vandenbosch,Aurelio,M,CU_7440305,172.42,56.192,01-25-18,Senior Sales Associate,0,1.0,1,,,A
+960,Heholt,Renaldo,M,CU_6291377,158.2,55.275,08-11-18,Senior Editor,0,1.0,1,,A,A
+961,Holycross,Ronnie ,M,CU_9514928,157.65,68.603,03-01-18,Research Assistant III,0,1.0,1,,,A
+962,Krisman,Burl,M,CU_3579828,164.44,36.577,07-05-18,Senior Sales Associate,0,,1,,,A
+963,Apyuan,Anisa ,F,CU_2486197,209.57,61.903,08-22-18,Senior Sales Associate,0,1.0,1,,,A
+964,Chillis,Darin,M,CU_4243381,260.3,35.461,10-30-18,Human Resources Manager,1,1.0,1,,A,A
+965,Hargrow,Muhammed ,M,CU_5719985,128.75,54.226,04-06-18,Senior Editor,0,1.0,1,,A,A
+966,Siter,Donovan,M,CU_4714420,206.07,35.283,02-12-18,Senior Sales Associate,0,1.0,1,,A,A
+967,Guy,Leonardo,M,CU_7419833,156.11,41.15,08-22-18,Senior Editor,1,1.0,1,,A,A
+968,Meisner,Pippa ,F,CU_1447865,136.81,,03-26-18,Office Assistant II,0,1.0,1,,,A
+969,Cookman,Rohan ,M,CU_7952315,183.38,55.548,12-02-18,Senior Editor,0,1.0,1,,,A
+970,Exton,Cornelius,M,CU_4605884,131.65,55.249,12-28-18,Director of Sales,0,1.0,1,,A,A
+971,Heit,Reva,F,CU_5765053,125.04,50.296,08-29-18,Office Assistant II,0,1.0,1,,,A
+972,Dahler,Yousef ,M,CU_4917182,124.86,35.107,09-12-18,,0,1.0,1,,,A
+973,Grilli,Jean,M,CU_9977789,128.74,36.347,03-02-18,Director of Sales,0,1.0,1,,,A
+974,Boegel,Brodie ,F,CU_1634232,111.55,60.252,11-27-18,Help Desk Operator,0,1.0,1,,A,A
+975,Lummis,Alejandro ,M,CU_2394049,95.39,29.848,08-10-18,Sales Associate,0,1.0,1,,A,A
+976,Peakes,Rhian ,F,CU_3366851,293.32,55.889,07-28-18,,1,,1,,A,A
+977,Geoghan,Vinnie ,M,CU_2977731,108.8,56.517,10-15-18,Office Assistant II,0,,1,,A,A
+978,Dahling,Sadie ,F,CU_8693701,345.24,30.271,04-13-18,Sales Associate,0,1.0,1,,,A
+979,Cisar,Nabil ,M,CU_1859527,200.15,21.815,03-17-18,VP Product Management,1,1.0,1,,A,A
+980,Manzur,Will,M,CU_8208330,155.83,89.468,07-16-18,Help Desk Operator,0,,1,,,A
+981,Waybill,Raphael,M,CU_5210058,125.68,47.994,09-13-18,Sales Associate,1,1.0,1,,,A
+982,Frymier,Neil,M,CU_8030155,190.81,68.088,07-21-18,Human Resources Manager,0,1.0,1,,A,A
+983,Eskelsen,Renee,F,CU_1839053,173.72,56.423,08-29-18,Senior Sales Associate,0,1.0,1,,A,A
+984,Pettay,Kermit,M,CU_3897293,110.92,46.087,06-22-18,VP Product Management,0,1.0,1,,A,A
+985,Livigni,Noel ,M,CU_7444431,104.17,31.312,10-04-18,VP Product Management,0,1.0,1,,,A
+986,Rowzee,Joanna,F,CU_9838544,89.52,,06-24-18,Senior Sales Associate,0,,1,,,A
+987,Mignone,Kayla,F,CU_8792010,63.49,,01-30-18,Analyst Programmer,0,1.0,1,,A,A
+988,Maharaj,Vera,F,CU_4880344,116.91,35.301,12-08-18,Senior Sales Associate,0,,1,,,A
+989,Fehrenbach,Fatima ,F,CU_2179045,440.43,36.484,12-08-18,VP Product Management,0,1.0,1,,,A
+990,Schlensker,Colleen,F,CU_7811046,167.87,46.895,09-06-18,,1,,1,,A,A
+991,Debey,Candace,F,CU_5763048,122.13,39.586,08-04-18,Senior Editor,0,1.0,1,,,A
+992,Barager,Mary,M,CU_2914285,128.75,51.663,05-05-18,Office Assistant II,1,,1,,A,A
+993,Comiso,Zakaria ,M,CU_9441262,121.46,50.04,10-30-18,Senior Editor,0,1.0,1,,A,A
+994,Reitman,Isabel ,F,CU_9930733,192.42,35.083,11-29-18,VP Product Management,1,1.0,1,,,A
+995,Katoa,Farhan ,M,CU_6565872,131.07,43.588,12-22-18,Senior Editor,0,1.0,1,,A,A
+996,Traut,Ada ,F,CU_8278000,402.47,49.107,01-28-18,Senior Sales Associate,0,1.0,1,,A,A
+997,Younghans,Kathryn ,F,CU_5124081,132.21,53.145,05-18-18,Analyst Programmer,0,1.0,1,,,A
+998,Lauzon,Tracie,F,CU_2623484,138.95,57.07,04-13-18,Senior Sales Associate,0,1.0,1,,,A
+999,Swartzbaugh,Della,F,CU_1515518,142.9,,12-12-18,Senior Editor,0,,1,,A,A

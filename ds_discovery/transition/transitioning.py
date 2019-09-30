@@ -34,13 +34,13 @@ class TransitionAgent(object):
         # set property managers
         self._data_pm = DataPropertyManager.from_properties(contract_name=contract_name,
                                                             connector_contract=data_properties)
-        if self.data_pm.has_persisted_properties():
+        if self._data_pm.has_persisted_properties():
             self._data_pm.load_properties()
         self._knowledge_catalogue = ['overview', 'notes', 'observations', 'attribute', 'dictionary', 'tor']
         self._augment_pm = AugmentedPropertyManager.from_properties(self._contract_name,
                                                                     connector_contract=augment_properties,
                                                                     knowledge_catalogue=self._knowledge_catalogue)
-        if self.augment_pm.has_persisted_properties():
+        if self._augment_pm.has_persisted_properties():
             self._augment_pm.load_properties()
         # initialise the values
         self.persist_contract(save=self._default_save)
@@ -63,10 +63,10 @@ class TransitionAgent(object):
         _module_name = 'ds_discovery.handlers.pandas_handlers'
         _data_pm = DataPropertyManager(contract_name)
         _location = os.path.join(contract_path, contract_name)
-        _data_connector = ConnectorContract(resource="config_data_{}.yaml".format(contract_name),
+        _data_connector = ConnectorContract(resource="config_transition_data{}.yaml".format(contract_name),
                                             connector_type='yaml', location=_location, module_name=_module_name,
                                             handler='PandasPersistHandler')
-        _augment_connector = ConnectorContract(resource="config_augment_{}.yaml".format(contract_name),
+        _augment_connector = ConnectorContract(resource="config_transition_augment_{}.yaml".format(contract_name),
                                                connector_type='yaml', location=_location, module_name=_module_name,
                                                handler='PandasPersistHandler')
         return cls(contract_name=contract_name, data_properties=_data_connector, augment_properties=_augment_connector,
@@ -562,7 +562,7 @@ class TransitionAgent(object):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
         attribute properties
 
-        :param df: the dataframe to view
+        :param df: the DataFrame to view
         :param stylise: if True present the report stylised.
         :param inc_next_dom: (optional) if to include the next dominate element column
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist

@@ -655,7 +655,7 @@ class PandasCleaners(AbstractCleaners):
 
     @staticmethod
     def to_date_type(df, headers=None, drop=False, dtype=None, exclude=False, regex=None, re_ignore_case=None,
-                     as_num=False, day_first=False, year_first=False, inplace=False) -> [dict, pd.DataFrame]:
+                     as_num=False, day_first=False, year_first=False, date_format=None, inplace=False) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -673,8 +673,10 @@ class PandasCleaners(AbstractCleaners):
         :param day_first: specifies if to parse with the day first
                 If True, parses dates with the day first, eg %d-%m-%Y.
                 If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+        :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
+        infer_datetime_format = date_format is None
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -682,8 +684,8 @@ class PandasCleaners(AbstractCleaners):
                                                  regex=regex, re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
-            df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=True,
-                                   dayfirst=day_first, yearfirst=year_first)
+            df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
+                                   dayfirst=day_first, yearfirst=year_first, format=date_format)
             if as_num:
                 df[c] = mdates.date2num(df[c])
         if inplace:

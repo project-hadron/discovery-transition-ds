@@ -153,10 +153,13 @@ class CleanerTest(unittest.TestCase):
         df = pd.DataFrame()
         df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y', seed=101)
         df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y %H:%M:%S', seed=102)
-
+        df['number'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%Y%m%d.0', seed=101)
         df = cleaner.to_date_type(df, headers=['date', 'datetime'])
         self.assertEqual('10-08-2010', df['date'].iloc[0].strftime(format='%d-%m-%Y'))
         self.assertEqual('17-10-2007', df['datetime'].iloc[0].strftime(format='%d-%m-%Y'))
+        df = cleaner.to_date_type(df, headers=['number'], date_format='%Y%m%d')
+        self.assertEqual('08-10-2010', df['number'].iloc[0].strftime(format='%d-%m-%Y'))
+
         df['numtime'] = df['datetime']
         df = cleaner.to_date_type(df, headers=['numtime'], as_num=True)
         self.assertEqual(732966.241887, round(df['numtime'].iloc[0],6))
