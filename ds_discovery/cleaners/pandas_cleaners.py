@@ -644,7 +644,7 @@ class PandasCleaners(AbstractCleaners):
         for c in obj_cols:
             df[c] = df[c].astype(str)
             if nulls_list is not None:
-                df[c] = df[c].replace(nulls_lamist, np.nan)
+                df[c] = df[c].replace(nulls_list, np.nan)
 
         if inplace:
             return PandasCleaners._build_section('to_str_type', headers=headers, drop=drop, dtype=dtype,
@@ -655,7 +655,8 @@ class PandasCleaners(AbstractCleaners):
 
     @staticmethod
     def to_date_type(df, headers=None, drop=False, dtype=None, exclude=False, regex=None, re_ignore_case=None,
-                     as_num=False, day_first=False, year_first=False, date_format=None, inplace=False) -> [dict, pd.DataFrame]:
+                     as_num=False, day_first=False, year_first=False, date_format=None,
+                     inplace=False) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
         :param df: the Pandas.DataFrame to get the column headers from
