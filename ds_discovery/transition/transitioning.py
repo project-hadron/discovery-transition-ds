@@ -15,6 +15,8 @@ class TransitionAgent(object):
 
     ORIGIN_CONNECTOR = 'origin_connector'
     PERSIST_CONNECTOR = 'persist_connector'
+    PM_DATA_CONNECTOR: str
+    PM_AUGMENT_CONNECTOR: str
 
     def __init__(self, contract_name: str, data_properties: [ConnectorContract],
                  augment_properties: [ConnectorContract], default_save=None):
@@ -34,17 +36,85 @@ class TransitionAgent(object):
         # set property managers
         self._data_pm = DataPropertyManager.from_properties(contract_name=contract_name,
                                                             connector_contract=data_properties)
+        self.PM_DATA_CONNECTOR = self._data_pm.CONTRACT_CONNECTOR
         if self._data_pm.has_persisted_properties():
             self._data_pm.load_properties()
         self._knowledge_catalogue = ['overview', 'notes', 'observations', 'attribute', 'dictionary', 'tor']
         self._augment_pm = AugmentedPropertyManager.from_properties(self._contract_name,
                                                                     connector_contract=augment_properties,
                                                                     knowledge_catalogue=self._knowledge_catalogue)
+        self.PM_AUGMENT_CONNECTOR = self.augment_pm.CONTRACT_CONNECTOR
         if self._augment_pm.has_persisted_properties():
             self._augment_pm.load_properties()
         # initialise the values
         self.persist_contract(save=self._default_save)
         self._raw_attribute_list = []
+
+    @classmethod
+    def from_remote(cls, contract_name: str, vertical: str=None, default_save=None):
+        """ Class Factory Method that builds the connector handlers from the default remote.
+        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+
+         :param contract_name: The reference name of the properties contract
+         :param vertical: (optional) the name of the discovery vertical. default to 'scratch'
+                    Options include 'client', 'discovery', 'synthetic' or 'scratch'
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :return: the initialised class instance
+         """
+        for param in ['contract_name']:
+            if not isinstance(eval(param), str) or len(eval(param)) == 0:
+                raise ValueError("a {} must be provided".format(param))
+        _default_save = default_save if isinstance(default_save, bool) else True
+        _vertical = 'scratch' if not isinstance(vertical, str) else vertical
+        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
+        _data_pm = DataPropertyManager(contract_name)
+        _location = 'discovery-persistence'
+        _resource_prefix = "{v}/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
+        _data_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
+                                            location=_location, module_name=_module_name,
+                                            handler='AwsPersistHandler')
+
+        _resource_prefix = "{v}/{n}/config_transition_augment_{n}.yaml".format(v=_vertical, n=contract_name)
+        _augment_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
+                                               location=_location, module_name=_module_name,
+                                               handler='AwsPersistHandler')
+        rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
+                      augment_properties=_augment_connector, default_save=default_save)
+        rtn_cls.set_persist_contract()
+        return rtn_cls
+
+    @classmethod
+    def from_remote_client(cls, contract_name: str, default_save=None):
+        """ Class Factory Method that builds the connector handlers from the default remote.
+        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+
+         :param contract_name: The reference name of the properties contract
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :return: the initialised class instance
+         """
+        return cls.from_remote(contract_name=contract_name, vertical='client', default_save=default_save)
+
+    @classmethod
+    def from_remote_discovery(cls, contract_name: str, default_save=None):
+        """ Class Factory Method that builds the connector handlers from the default remote.
+        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+
+         :param contract_name: The reference name of the properties contract
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :return: the initialised class instance
+         """
+        return cls.from_remote(contract_name=contract_name, vertical='discovery', default_save=default_save)
+
+    @classmethod
+    def from_remote_synthetic(cls, contract_name: str, default_save=None):
+        """ Class Factory Method that builds the connector handlers from the default remote.
+        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+
+         :param contract_name: The reference name of the properties contract
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :return: the initialised class instance
+         """
+        return cls.from_remote(contract_name=contract_name, vertical='synthetic', default_save=default_save)
 
     @classmethod
     def from_path(cls, contract_name: str,  contract_path: str, default_save=None):
@@ -63,14 +133,16 @@ class TransitionAgent(object):
         _module_name = 'ds_discovery.handlers.pandas_handlers'
         _data_pm = DataPropertyManager(contract_name)
         _location = os.path.join(contract_path, contract_name)
-        _data_connector = ConnectorContract(resource="config_transition_data{}.yaml".format(contract_name),
+        _data_connector = ConnectorContract(resource="config_transition_data_{}.yaml".format(contract_name),
                                             connector_type='yaml', location=_location, module_name=_module_name,
                                             handler='PandasPersistHandler')
         _augment_connector = ConnectorContract(resource="config_transition_augment_{}.yaml".format(contract_name),
                                                connector_type='yaml', location=_location, module_name=_module_name,
                                                handler='PandasPersistHandler')
-        return cls(contract_name=contract_name, data_properties=_data_connector, augment_properties=_augment_connector,
-                   default_save=default_save)
+        rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
+                      augment_properties=_augment_connector, default_save=default_save)
+        rtn_cls.set_persist_contract()
+        return rtn_cls
 
     @classmethod
     def from_env(cls, contract_name: str,  default_save=None):
@@ -171,34 +243,22 @@ class TransitionAgent(object):
         self._raw_attribute_list = []
         self.persist_contract(save)
 
-    def set_source_contract(self, resource, connector_type=None, location=None, module_name: str=None,
-                            handler: str=None, load: bool=False, save: bool=None,
-                            **kwargs) -> Union[pd.DataFrame, None]:
+    def set_source_contract(self, resource: str, location: str, connector_type: str, module_name: str, handler: str,
+                            load: bool=False, save: bool=None, **kwargs) -> Union[pd.DataFrame, None]:
         """ Sets the source contract, returning the source data as a DataFrame if load=True
 
         :param resource: a local file, connector, URI or URL
-        :param connector_type: (optional) a reference to the type of resource. if None then csv file assumed
-        :param location: (optional) a path, region or uri reference that can be used to identify location of resource
+        :param location: a path, region or uri reference that can be used to identify location of resource
+        :param connector_type:  a reference to the type of resource. if None then csv file assumed
         :param module_name: a module name with full package path e.g 'ds_discovery.handlers.pandas_handlers
         :param handler: the name of the Handler Class. Must be
-        :param load: if True,` attempts to read the given file or source and returns a pandas.DataFrame
-        :param save: if True, save to file. Default is True
+        :param load: (optional) if True,` attempts to read the given file or source and returns a pandas.DataFrame
+        :param save: (optional) if True, save to file. Default is True
         :param kwargs: (optional) a list of key additional word argument properties associated with the resource
         :return: if load is True, returns a Pandas.DataFrame else None
         """
         save = save if isinstance(save, bool) else self._default_save
         load = load if isinstance(load, bool) else False
-        if resource is None or not resource:
-            raise ValueError("A resource name must be provided, currently it is empty or None")
-        if connector_type is None:
-            _, _, connector_type = resource.rpartition('.')
-        if location is None:
-            if 'DTU_ORIGIN_PATH' in os.environ.keys():
-                location = os.environ['DTU_ORIGIN_PATH']
-            else:
-                raise ValueError("A location must be provided if the os.environ['DTU_ORIGIN_PATH'] is not set")
-        module_name = 'ds_discovery.handlers.pandas_handlers' if module_name is None else module_name
-        handler = 'PandasSourceHandler' if handler is None else handler
         self.data_pm.set_connector_contract(self.ORIGIN_CONNECTOR, resource=resource, connector_type=connector_type,
                                             location=location, module_name=module_name, handler=handler, **kwargs)
         self.persist_contract(save)
@@ -206,9 +266,10 @@ class TransitionAgent(object):
             return self.load_source_canonical()
         return
 
-    def set_persist_contract(self, resource=None, connector_type=None, location=None, module_name: str=None,
-                             handler: str=None, save: bool=None, **kwargs):
-        """ Sets the persist contract
+    def set_persist_contract(self, resource: str=None, connector_type: str=None, location: str=None,
+                             module_name: str=None, handler: str=None, save: bool=None, **kwargs):
+        """ Sets the persist contract. For parameters not provided the default resource name and data properties
+        connector contract module and handler are used.
 
         :param resource: a local file, connector, URI or URL
         :param connector_type: (optional) a reference to the type of resource. if None then csv file assumed
@@ -224,15 +285,12 @@ class TransitionAgent(object):
             resource = self.get_persist_file_name('transition')
         if connector_type is None:
             connector_type = 'pickle'
-        if location is None:
-            if 'DTU_PERSIST_PATH' in os.environ.keys():
-                location = os.environ['DTU_PERSIST_PATH']
-            elif 'DTU_ORIGIN_PATH' in os.environ.keys():
-                location = os.environ['DTU_ORIGIN_PATH']
-            else:
-                raise ValueError("A location must be provided if the os.environ['DTU_PERSIST_PATH'] is not set")
-        module_name = 'ds_discovery.handlers.pandas_handlers' if module_name is None else module_name
-        handler = 'PandasPersistHandler' if handler is None else handler
+        if not isinstance(location, str):
+            location = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).location
+        if not isinstance(module_name, str):
+            module_name = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).module_name
+        if not isinstance(handler, str):
+            handler = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).handler
         self.data_pm.set_connector_contract(self.PERSIST_CONNECTOR, resource=resource, connector_type=connector_type,
                                             location=location, module_name=module_name, handler=handler, **kwargs)
         self.persist_contract(save)

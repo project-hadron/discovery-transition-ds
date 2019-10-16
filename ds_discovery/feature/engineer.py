@@ -390,6 +390,31 @@ class FeatureBuilderTools(object):
         return min_diff, mean_diff, max_diff
 
     @staticmethod
+    def remove_outliers(df: pd.DataFrame, lower_quantile: float=None, upper_quantile: float=None) -> pd.DataFrame:
+        """ removes outliers by removing the boundary quantiles
+
+        :param df: the DataFrame to apply
+        :param lower_quantile: (optional) the lower quantile, default is 0.25
+        :param upper_quantile: (optional) the upper quantile
+        :return: the revised values
+        """
+        lower_quantile = 0.25 if not isinstance(lower_quantile, float) else lower_quantile
+        upper_quantile = 0.75 if not isinstance(upper_quantile, float) else upper_quantile
+
+        df_out = pd.DataFrame()
+        for column_name in df.columns:
+            if df[column_name].min() == df[column_name].max():
+                df_out[column_name] = df[column_name]
+                continue
+            q1 = df[column_name].quantile(lower_quantile)
+            q3 = df[column_name].quantile(upper_quantile)
+            iqr = q3-q1
+            fence_low = q1-1.5*iqr
+            fence_high = q3+1.5*iqr
+            df_out[column_name] = df[column_name].loc[(df[column_name] > fence_low) & (df[column_name] < fence_high)]
+        return df_out
+
+    @staticmethod
     def merge(df_left, df_right, how='inner', on=None, left_on=None, right_on=None, left_index=False,
               right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False, validate=None):
         """ converts columns to object type
