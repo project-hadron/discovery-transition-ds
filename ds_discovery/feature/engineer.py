@@ -103,8 +103,8 @@ class FeatureBuilderTools(object):
             if size > 0:
                 if is_numeric_dtype(col):
                     result = Discovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
-                                                        chunk_size=chunk_size, replace_zero=replace_zero,
-                                                        precision=precision)
+                                                      chunk_size=chunk_size, replace_weight_zero=replace_zero,
+                                                      precision=precision)
                     col[col.isna()] = Tools.get_number(from_value=result.get('lower'), to_value=result.get('upper'),
                                                            weight_pattern=result.get('weighting'), precision=0, size=size)
                 elif is_datetime64_any_dtype(col):

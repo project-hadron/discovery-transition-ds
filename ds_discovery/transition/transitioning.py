@@ -69,18 +69,19 @@ class TransitionAgent(object):
         _module_name = 'ds_connectors.handlers.aws_s3_handlers'
         _data_pm = DataPropertyManager(contract_name)
         _location = 'discovery-persistence'
-        _resource_prefix = "{v}/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
+        _resource_prefix = "{v}/contract/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
         _data_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
                                             location=_location, module_name=_module_name,
                                             handler='AwsPersistHandler')
 
-        _resource_prefix = "{v}/{n}/config_transition_augment_{n}.yaml".format(v=_vertical, n=contract_name)
+        _resource_prefix = "{v}/contract/{n}/config_transition_augment_{n}.pickle".format(v=_vertical, n=contract_name)
         _augment_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
                                                location=_location, module_name=_module_name,
                                                handler='AwsPersistHandler')
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
-        rtn_cls.set_persist_contract()
+        if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
+            rtn_cls.set_persist_contract()
         return rtn_cls
 
     @classmethod
@@ -141,7 +142,8 @@ class TransitionAgent(object):
                                                handler='PandasPersistHandler')
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
-        rtn_cls.set_persist_contract()
+        if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
+            rtn_cls.set_persist_contract()
         return rtn_cls
 
     @classmethod
@@ -700,7 +702,7 @@ class TransitionAgent(object):
 
     def get_persist_file_name(self, prefix: str):
         """ Returns a persist pattern based on name"""
-        _pattern = "{}_{}_{}.pkl"
+        _pattern = "{}_{}_{}.pickle"
         return _pattern.format(prefix, self.contract_name, self.version)
 
     def get_report_file_name(self, prefix: str):

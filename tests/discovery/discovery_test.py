@@ -46,7 +46,7 @@ class TestDiscovery(unittest.TestCase):
     def test_data_dictionary_filter(self):
         tr = TransitionAgent.from_env('synthetic')
         df = tr.load_source_canonical()
-        result = tr.canonical_report(df, stylise=False, report_header='%_Null', condition="> 0.8")
+        result = tr.canonical_report(df, stylise=False)
         print(result)
 
 if __name__ == '__main__':

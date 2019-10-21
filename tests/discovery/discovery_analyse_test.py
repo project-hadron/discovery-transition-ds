@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import matplotlib
 matplotlib.use("TkAgg")
 
@@ -9,7 +11,7 @@ import warnings
 
 from ds_discovery.transition.discovery import DataDiscovery as Discover
 from ds_discovery.cleaners.pandas_cleaners import PandasCleaners as Cleaner
-from ds_behavioral import DataBuilderTools
+from ds_behavioral.generator.data_builder_tools import DataBuilderTools
 
 def ignore_warnings(test_func):
     def do_test(self, *args, **kwargs):
@@ -105,14 +107,34 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual((1,10,2.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
 
         result = Discover.analyse_number(dataset, granularity=3.0)
-        control = [30.0, 30.0, 40.0]
+        control = [40.0, 30.0, 30.0]
         self.assertEqual(control, result.get('weighting'))
         self.assertEqual((1,10,3.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
 
         result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=10)
-        control = [0.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        control = [10.0, 10.0, 10.0, 10.0, 10.0, 0.0, 10.0, 10.0, 10.0, 10.0, 10.0]
         self.assertEqual(control, result.get('weighting'))
         self.assertEqual((0,10,1.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
+
+    def test_number_zero_count(self):
+        dataset = [1,0,0,1,1,1,0,0,1,0]
+        result = Discover.analyse_number(dataset)
+        self.assertEqual([50.0], result.get('zero_count'))
+        dataset = [1,0,0,2,5,4,0,4,1,0]
+        result = Discover.analyse_number(dataset, lower=0, granularity=3)
+        self.assertEqual([40.0], result.get('zero_count'))
+        self.assertEqual([10], result.get('sample'))
+        result = Discover.analyse_number(dataset, lower=1, granularity=3)
+        self.assertEqual([40.0], result.get('zero_count'))
+        self.assertEqual([6], result.get('sample'))
+
+    def test_anaysis(self):
+        tools = DataBuilderTools
+        df = pd.DataFrame()
+        df['values'] = tools.get_number(from_value=20, dominant_value=0, dominance=0.6, dominance_weighting=[], size=1000)
+        assosiate = [{'values': {'granularity': 0, 'precision': 3, 'lower': 0.001}}]
+        analysis = Discover.analyse_association(df, columns_list=assosiate)
+        pprint(analysis)
 
     def test_analyse_number_lower_upper(self):
         # Default
@@ -170,8 +192,8 @@ class MyTestCase(unittest.TestCase):
     def test_analyse_value_chunk(self):
         tools = Discover()
         values = [1,2,2,1,np.nan,4,2,1,3,9,9,18,21, np.nan]
-        result = tools.analyse_number(values, granularity=3, chunk_size=2, replace_zero=0.1)
-        control = [[85.71, 0.1, 0.1], [28.57, 28.57, 28.57]]
+        result = tools.analyse_number(values, granularity=3, chunk_size=2, replace_weight_zero=0.1)
+        control = [[71.43, 0.1, 14.29], [28.57, 28.57, 28.57]]
         self.assertEqual(control, result.get('weighting'))
         control = [14.29, 14.29]
         self.assertEqual(control, result.get('null_values'))
