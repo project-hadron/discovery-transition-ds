@@ -73,12 +73,12 @@ class TransitionAgent(object):
         _resource_prefix = "{v}/contract/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
         _data_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
                                             location=_location, module_name=_module_name,
-                                            handler='AwsPersistHandler')
+                                            handler='AwsS3PersistHandler')
 
         _resource_prefix = "{v}/contract/{n}/config_transition_augment_{n}.pickle".format(v=_vertical, n=contract_name)
         _augment_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
                                                location=_location, module_name=_module_name,
-                                               handler='AwsPersistHandler')
+                                               handler='AwsS3PersistHandler')
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
         if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
@@ -254,17 +254,16 @@ class TransitionAgent(object):
         self._raw_attribute_list = []
         self.persist_contract(save)
 
-    def set_source_contract(self, resource: str, connector_type: str, location: str=None, module_name: str= None,
-                            handler: str=None, load: bool=False, save: bool=None,
-                            **kwargs) -> Union[pd.DataFrame, None]:
+    def set_source_contract(self, resource: str, connector_type: str, location: str, module_name: str, handler: str,
+                            load: bool=False, save: bool=None, **kwargs) -> Union[pd.DataFrame, None]:
         """ Sets the source contract, returning the source data as a DataFrame if load=True. If the connection
         module_name and/or handler is not provided the the default properties connection setting are used
 
         :param resource: a local file, connector, URI or URL
         :param location: a path, region or uri reference that can be used to identify location of resource
         :param connector_type:  a reference to the type of resource. if None then csv file assumed
-        :param module_name: (optional) a module name with full package path e.g 'ds_discovery.handlers.pandas_handlers
-        :param handler: (optional)the name of the Handler Class. Must be
+        :param module_name: a module name with full package path
+        :param handler: the name of the Handler Class within the module.
         :param load: (optional) if True,` attempts to read the given file or source and returns a pandas.DataFrame
         :param save: (optional) if True, save to file. Default is True
         :param kwargs: (optional) a list of key additional word argument properties associated with the resource

@@ -37,6 +37,14 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         TransitionAgent.from_env('TestAgent')
 
+    def test_factory_remote(self):
+        tr = TransitionAgent.from_remote('test_factory')
+        tr.set_source_contract(resource='scratch/source/synthetic_customer.csv', connector_type='csv',
+                               location='discovery-persistence', module_name='ds_connectors.handlers.aws_s3_handlers',
+                               handler='AwsS3SourceHandler')
+        df = tr.load_source_canonical()
+        self.assertEqual((1000, 15), df.shape)
+
     def test_keys(self):
         tr = TransitionAgent.from_env('Example01')
         join = tr.data_pm.join
