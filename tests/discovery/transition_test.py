@@ -11,9 +11,11 @@ from ds_behavioral.sample.sample_data import ProfileSample
 
 from ds_discovery import TransitionAgent
 from ds_foundation.properties.property_manager import PropertyManager
+from ds_connectors.handlers.pandas_handlers import PandasSourceHandler
 
 
 class TransitionTest(unittest.TestCase):
+
     """Test: """
     def setUp(self):
         # set environment variables
@@ -237,9 +239,17 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual('synthetic_#test', result)
         self.assertEqual(['synthetic_#test'], tr.snapshots)
 
+    def test_notes_add_remove(self):
+        tr = TransitionAgent.from_env('synthetic')
+        control = ['overview', 'notes', 'observations', 'attribute', 'dictionary', 'tor', 'general']
+        self.assertEqual(control, tr.augment_pm.catalogue)
+        tr.add_attribute_notes(text='Text for Attribute A', attribute='attrA')
+        tr.add_notes('add note for label A', label='labelA')
+        tr.add_notes('include note type', label='scale', note_type=tr.augment_pm.catalogue[0])
+        tr.remove_notes()
+
     def test_notes_report(self):
         tr = TransitionAgent.from_env('synthetic')
-        df = tr.set_source_contract(resource='synthetic.csv', sep=',', encoding='latin1', load=True)
         tr.add_notes(text='The file is a synthetic customer data file created for this demonstration')
         tr.add_notes(label='connector', text='This was generated using the Discovery Behavioral Synthetic Data Generator')
         tr.add_notes(label='connector', text='The script to rerun the data generation can be found in the synthetic scripts folder')
@@ -256,7 +266,8 @@ class TransitionTest(unittest.TestCase):
         with self.assertRaises(ModuleNotFoundError) as context:
             tr.is_source_modified()
         self.assertTrue("The connector 'origin_connector' has not been set" in str(context.exception))
-        tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract(resource='synthetic.csv', connector_type='csv', location=os.environ['DTU_ORIGIN_PATH'],
+                                    module_name=tr.MODULE_NAME, handler=tr.SOURCE_HANDLER, sep=',', encoding='latin1', load=False)
         tr.set_persist_contract()
         tr.load_source_canonical()
         self.assertFalse(tr.is_source_modified())

@@ -128,6 +128,19 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([40.0], result.get('zero_count'))
         self.assertEqual([6], result.get('sample'))
 
+    def test_analysis_granularity_list(self):
+        dataset = [0,1,2,3]
+        intervals = [(0,1,'both'),(1,2),(2,3)]
+        result = Discover.analyse_number(dataset, granularity=intervals)
+        control = [50.0, 25.0, 25.0]
+        self.assertEqual(control, result.get('weighting'))
+        intervals = [(0,1,'both'),(1,2,'both'),(2,3)]
+        result = Discover.analyse_number(dataset, granularity=intervals)
+        control = [50.0, 50.0, 25.0]
+        self.assertEqual(control, result.get('weighting'))
+        pprint(result)
+
+
     def test_anaysis(self):
         tools = DataBuilderTools
         df = pd.DataFrame()

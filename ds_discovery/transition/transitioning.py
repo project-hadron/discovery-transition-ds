@@ -17,6 +17,9 @@ class TransitionAgent(object):
     PERSIST_CONNECTOR = 'persist_connector'
     PM_DATA_CONNECTOR: str
     PM_AUGMENT_CONNECTOR: str
+    MODULE_NAME: str
+    SOURCE_HANDLER: str
+    PERSIST_HANDLER: str
 
     def __init__(self, contract_name: str, data_properties: [ConnectorContract],
                  augment_properties: [ConnectorContract], default_save=None):
@@ -81,6 +84,9 @@ class TransitionAgent(object):
                                                handler='AwsS3PersistHandler')
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
+        rtn_cls.MODULE_NAME = _module_name
+        rtn_cls.SOURCE_HANDLER = 'AwsS3SourceHandler'
+        rtn_cls.PERSIST_HANDLER = 'AwsS3PersistHandler'
         if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
             _resource = "{v}/persist/transition/{f}".format(v=_vertical, f=rtn_cls.get_persist_file_name('transition'))
             rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
@@ -150,6 +156,9 @@ class TransitionAgent(object):
                                                handler='PandasPersistHandler')
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
+        rtn_cls.MODULE_NAME = _module_name
+        rtn_cls.SOURCE_HANDLER = 'PandasSourceHandler'
+        rtn_cls.PERSIST_HANDLER = 'PandasPersistHandler'
         if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
             _resource = rtn_cls.get_persist_file_name('transition')
             rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
@@ -464,12 +473,12 @@ class TransitionAgent(object):
         self.persist_contract(save)
         return
 
-    def remove_notes(self, note_type: str=None, label: str=None, save=None):
+    def remove_notes(self, note_type: str, label: str=None, save=None):
         """ removes a all entries for a labeled note
 
         :param note_type: the type of note to delete, if left empyt all notes removed
-        :param label: the name of the label to be removed
-        :param save: if True, save to file. Default is True
+        :param label: (Optional) the name of the label to be removed
+        :param save: (Optional) if True, save to file. Default is True
         :return: True is successful, False if not
         """
         if not isinstance(save, bool):
