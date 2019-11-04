@@ -22,7 +22,7 @@ def ignore_warnings(test_func):
     return do_test
 
 
-class MyTestCase(unittest.TestCase):
+class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def setUp(self):
          pass
@@ -91,30 +91,33 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual([10], result.get('sample'))
         dataset = [1,2,3,4,5,6,7,8,9,10]
 
-        result = Discover.analyse_number(dataset, granularity=10)
-        control = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        result = Discover.analyse_number(dataset, granularity=2)
+        control = [50.0, 50.0]
         self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
+        self.assertEqual(control, result.get('granularity'))
 
-        result = Discover.analyse_number(dataset, granularity=1.0)
-        control = [10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0]
+        result = Discover.analyse_number(dataset, granularity=3.0)
+        control = [30.0, 30.0, 40.0]
         self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10,1.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=2.0)
         control = [20.0, 20.0, 20.0, 20.0, 20.0]
         self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10,2.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
 
-        result = Discover.analyse_number(dataset, granularity=3.0)
-        control = [40.0, 30.0, 30.0]
+        result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
+        control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
         self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10,3.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
-
-        result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=10)
-        control = [10.0, 10.0, 10.0, 10.0, 10.0, 0.0, 10.0, 10.0, 10.0, 10.0, 10.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((0,10,1.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
+        control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
@@ -138,16 +141,11 @@ class MyTestCase(unittest.TestCase):
         result = Discover.analyse_number(dataset, granularity=intervals)
         control = [50.0, 50.0, 25.0]
         self.assertEqual(control, result.get('weighting'))
+        # percentile
+        dataset = [0, 0, 2, 2, 1, 2, 3]
+        percentile = [.25, .5, .75]
+        result = Discover.analyse_number(dataset, granularity=percentile)
         pprint(result)
-
-
-    def test_anaysis(self):
-        tools = DataBuilderTools
-        df = pd.DataFrame()
-        df['values'] = tools.get_number(from_value=20, dominant_value=0, dominance=0.6, dominance_weighting=[], size=1000)
-        assosiate = [{'values': {'granularity': 0, 'precision': 3, 'lower': 0.001}}]
-        analysis = Discover.analyse_association(df, columns_list=assosiate)
-        pprint(analysis)
 
     def test_analyse_number_lower_upper(self):
         # Default
