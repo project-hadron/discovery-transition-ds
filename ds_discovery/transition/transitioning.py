@@ -5,7 +5,7 @@ from typing import Union, List
 from ds_foundation.managers.augment_properties import AugmentedPropertyManager
 from ds_foundation.managers.data_properties import DataPropertyManager
 from ds_foundation.handlers.abstract_handlers import ConnectorContract
-from ds_discovery.cleaners.pandas_cleaners import PandasCleaners
+from ds_discovery.intent.pandas_cleaners import PandasCleaners
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
@@ -406,8 +406,8 @@ class TransitionAgent(object):
         return
 
     def set_cleaner(self, cleaner_section: dict, level: int=None, save: bool=None):
-        """ sets the cleaner section in the yaml configuration file. Note: by default any identical cleaners, e.g.
-        cleaners with the same intent (name) and the same parameter values, are removed from any level.
+        """ sets the cleaner section in the yaml configuration file. Note: by default any identical intent, e.g.
+        intent with the same intent (name) and the same parameter values, are removed from any level.
 
         :param cleaner_section: a dictionary type set of configuration representing a cleaner section contract
         :param level: (optional) the level of the cleaner,
@@ -429,7 +429,7 @@ class TransitionAgent(object):
         return
 
     def report_cleaners(self, stylise: bool=True):
-        """ generates a report on all the cleaners
+        """ generates a report on all the intent
 
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe

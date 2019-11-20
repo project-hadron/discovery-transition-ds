@@ -26,6 +26,16 @@ class FeatureBuilderTools(object):
         return rtn_list
 
     @staticmethod
+    def hellinger(p, q):
+        """Hellinger distance between distributions (Hoens et al, 2011)"""
+        return sum([(np.sqrt(t[0]) - np.sqrt(t[1])) * (np.sqrt(t[0]) - np.sqrt(t[1])) for t in zip(p, q)])/np.sqrt(2.)
+
+    @staticmethod
+    def total_variation_distance(a, b):
+        """Total Variation Distance (Levin et al, 2008)"""
+        return sum(abs(a - b)) / 2
+
+    @staticmethod
     def date_matrix(df, key, column, index_key=True) -> pd.DataFrame:
         """ returns a pandas.Dataframe of the datetime broken down
 
@@ -148,7 +158,7 @@ class FeatureBuilderTools(object):
     def association_builder(dataset: Any, associations: list, actions: dict, header_name: str=None,
                           default_value: Any=None, default_header: str=None,
                           day_first: bool=False, year_first: bool=False):
-        """ Associates a a set of criteria of an input values to a set of actions
+        """ Associates a set of criteria of an input values to a set of actions
             The association dictionary takes the form of a set of dictionaries in a list with each item in the list
             representing an index key for the action dictionary. Each dictionary are to associated relationship.
             In this example for the first index the associated values should be header1 is within a date range
@@ -284,9 +294,9 @@ class FeatureBuilderTools(object):
 
     @staticmethod
     def apply_substitution(value: str, **kwargs):
-        """ reular expression subsitution of key value pairs to the value string
+        """ regular expression substitution of key value pairs to the value string
 
-        :param value: the value to apply the subsitutions to
+        :param value: the value to apply the substitution to
         :param kwargs: a set of keys to replace with the values
         :return: the amended value
         """

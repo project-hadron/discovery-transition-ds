@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.dates as mdates
 from typing import Union, List
 
-from ds_foundation.cleaners.abstract_cleaners import AbstractCleaners
+from ds_foundation.intent.abstract_cleaners import AbstractCleaners
 
 __author__ = 'Darryl Oatridge'
 

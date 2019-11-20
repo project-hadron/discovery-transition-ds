@@ -10,7 +10,7 @@ import unittest
 import warnings
 
 from ds_discovery.transition.discovery import DataDiscovery as Discover
-from ds_discovery.cleaners.pandas_cleaners import PandasCleaners as Cleaner
+from ds_discovery.intent.pandas_cleaners import PandasCleaners as Cleaner
 from ds_behavioral.generator.data_builder_tools import DataBuilderTools
 
 def ignore_warnings(test_func):
@@ -34,90 +34,83 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         """Basic smoke test"""
         Discover()
 
-    @ignore_warnings
-    def test_analyse_date(self):
+    def test_analyse_category(self):
         tools = DataBuilderTools()
-        str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
-        ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
-        result = Discover.analyse_date(str_dates, granularity=6, chunk_size=1)
-        control =  [10.0, 20.0, 30.0, 10.0, 10.0, 20.0]
-        self.assertEqual(control, result.get('weighting'))
-        result = Discover.analyse_date(ts_dates, granularity=2, chunk_size=1, date_format='%d-%m-%Y')
-        control = [60.0, 40.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual(('09-02-2016','02-12-2017',2), (result.get('lower'), result.get('upper'), result.get('granularity')))
-        result = Discover.analyse_date(ts_dates, granularity=pd.Timedelta(days=365), chunk_size=1, date_format='%d-%m-%Y')
-        control = [60.0, 40.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual(('09-02-2016','02-12-2017',365.0), (result.get('lower'), result.get('upper'), result.get('granularity')))
-        control = {'dropped': [0],
-                   'dtype': 'date',
-                   'granularity': 365.0,
-                   'lower': '09-02-2016',
-                   'null_values': [0.0],
-                   'sample': [10],
-                   'selection': [('09-02-2016', '08-02-2017'), ('08-02-2017', '08-02-2018')],
-                   'upper': '02-12-2017',
-                   'weighting': [60.0, 40.0]}
-        self.assertEqual(control, result)
-        result = Discover.analyse_date(['12/12/2015'], granularity=2, date_format='%d-%m-%Y')
-        control = {'dropped': [0],
-                   'dtype': 'date',
-                   'granularity': 2,
-                   'lower': '12-12-2015',
-                   'quantity': 0.0,
-                   'sample': [1],
-                   'selection': [('12-12-2015', '12-12-2015')],
-                   'upper': '12-12-2015',
-                   'weighting': [100.0]}
-        self.assertEqual(control, result)
+        dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
+        result = Discover.analyse_category(dataset)
+        control = ['intent', 'patterns', 'stats']
+        self.assertCountEqual(control, list(result.keys()))
+        control = ['dtype', 'selection']
+        self.assertCountEqual(control, list(result.get('intent').keys()))
+        control = ['weighting']
+        self.assertCountEqual(control, list(result.get('patterns').keys()))
+        control = ['dropped', 'nulls_percent', 'sample']
+        self.assertCountEqual(control, list(result.get('stats').keys()))
 
-    def test_analysis_dictionary(self):
+    def test_analyse_category_limits(self):
+        ## Lower upper top
+        top = 2
         tools = DataBuilderTools()
-        df = tools.get_profiles(size=10, mf_weighting=[60, 40], seed=31)
-        df['str_dates'] = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
-        df['ts_dates'] = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
-        df['age'] = tools.get_number(20, 90, weight_pattern=[2,3,6,3,2,6,7,4,2,1,0.5], size=10, seed=31)
-        df['fare'] = tools.get_number(5.0, 300.0, weight_pattern=[2,7,3,1,0,0,0,0,0,0,1], precision=2, size=10, seed=31)
-        result = Discover.analysis_dictionary(df, granularity=4, col_kwargs={'age': {'granularity': 2}})
-        print(Cleaner.filter_columns(result, headers=['Attribute', 'Type', 'Granularity']))
+        dataset = ['A']*8 + ['B']*6 + ['C']*4 + ['D']*2
+        result = Discover.analyse_category(dataset, top=top, weighting_precision=0)
+        control = ['dtype', 'selection', 'top']
+        self.assertCountEqual(control, list(result.get('intent').keys()))
+        self.assertEqual(top, result.get('intent').get('top'))
+        self.assertEqual(top, len(result.get('intent').get('selection')))
+        self.assertCountEqual(['A', 'B'], result.get('intent').get('selection'))
+        self.assertCountEqual([40, 30], result.get('patterns').get('weighting'))
+        self.assertEqual(6, result.get('stats').get('dropped'))
+        self.assertEqual(14, result.get('stats').get('sample'))
+        lower = 0.2
+        upper = 7
+        result = Discover.analyse_category(dataset, lower=lower, upper=upper, weighting_precision=0)
+        control = ['dtype', 'selection', 'upper', 'lower']
+        self.assertCountEqual(control, list(result.get('intent').keys()))
+        self.assertEqual(lower, result.get('intent').get('lower'))
+        self.assertEqual(upper, result.get('intent').get('upper'))
+        self.assertCountEqual(['C', 'B'], result.get('intent').get('selection'))
+        self.assertCountEqual([33, 50], result.get('patterns').get('weighting'))
+        self.assertEqual(10, result.get('stats').get('dropped'))
+        self.assertEqual(10, result.get('stats').get('sample'))
 
-    def test_analyse_value(self):
-        dataset = [1,1,1,1,1,1,1,1,1,1]
-        result = Discover.analyse_number(dataset, granularity=10)
-        control = [100.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,1,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
-        self.assertEqual([10], result.get('sample'))
-        dataset = [1,2,3,4,5,6,7,8,9,10]
+    def test_analyse_number(self):
+         dataset = [0]*7 + [1]*7 + [2]*4 + [3]*2
+         result = Discover.analyse_number(dataset, granularity=1.0)
+         pprint(result)
 
-        result = Discover.analyse_number(dataset, granularity=2)
-        control = [50.0, 50.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
-        self.assertEqual(control, result.get('granularity'))
+         # control = [100.0]
+        # self.assertEqual(control, result.get('weighting'))
+        # self.assertEqual((1,1,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        # self.assertEqual([10], result.get('sample'))
+        # dataset = [1,2,3,4,5,6,7,8,9,10]
 
-        result = Discover.analyse_number(dataset, granularity=3.0)
-        control = [30.0, 30.0, 40.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
-
-        result = Discover.analyse_number(dataset, granularity=2.0)
-        control = [20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
-
-        result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
-        control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
-        control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
+        # result = Discover.analyse_number(dataset, granularity=2)
+        # control = [50.0, 50.0]
+        # self.assertEqual(control, result.get('weighting'))
+        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        # control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
+        # self.assertEqual(control, result.get('granularity'))
+        #
+        # result = Discover.analyse_number(dataset, granularity=3.0)
+        # control = [30.0, 30.0, 40.0]
+        # self.assertEqual(control, result.get('weighting'))
+        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        # control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
+        # self.assertEqual(control, result.get('granularity'))
+        #
+        # result = Discover.analyse_number(dataset, granularity=2.0)
+        # control = [20.0, 20.0, 20.0, 20.0, 20.0]
+        # self.assertEqual(control, result.get('weighting'))
+        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        # control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
+        # self.assertEqual(control, result.get('granularity'))
+        #
+        # result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
+        # control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
+        # self.assertEqual(control, result.get('weighting'))
+        # self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
+        # control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
+        # self.assertEqual(control, result.get('granularity'))
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
@@ -185,44 +178,15 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                     'upper': 8,
                     'weighting': [28.57, 28.57, 42.86]}
         self.assertEqual(control, result)
-        # Test nulls and chunks
-        dataset = [1, np.nan, 3,4,5,6,7,8,np.nan]
-        result = Discover.analyse_number(dataset, lower=2, upper=8, chunk_size=2)
-        control = {'dropped': [1, 0],
-                   'dtype': 'number',
-                   'granularity': 3,
-                   'lower': 2,
-                   'null_values': [25.0, 25.0],
-                   'sample': [3, 3],
-                   'selection': [(2, 4), (4, 6), (6, 8)],
-                   'upper': 8,
-                   'weighting': [[25.0, 50.0, 0.0], [0.0, 0.0, 75.0]]}
-        self.assertEqual(control, result)
 
-
-    def test_analyse_value_chunk(self):
-        tools = Discover()
-        values = [1,2,2,1,np.nan,4,2,1,3,9,9,18,21, np.nan]
-        result = tools.analyse_number(values, granularity=3, chunk_size=2, replace_weight_zero=0.1)
-        control = [[71.43, 0.1, 14.29], [28.57, 28.57, 28.57]]
-        self.assertEqual(control, result.get('weighting'))
-        control = [14.29, 14.29]
-        self.assertEqual(control, result.get('null_values'))
-        self.assertEqual([6,6], result.get('sample'))
-
-    def test_analyse_cat(self):
+    @ignore_warnings
+    def test_analyse_date(self):
         tools = DataBuilderTools()
-        df = sns.load_dataset('titanic')
-        df.loc[0, ('sex')] = 'unknown'
-        df.loc[600:620, ('sex')] = 'unknown'
-        result = Discover.analyse_category(df['sex'], chunk_size=2)
-        control = {'dtype': 'category', 'selection': ['unknown', 'female', 'male'], 'sample': [446, 445],
-                   'weighting': [[0.22, 38.34, 61.43], [4.72, 30.34, 64.94]], 'null_values': [0.0, 0.0]}
-        self.assertEqual(control, result)
-        df = tools.get_profiles(size=100, mf_weighting=[60, 40], seed=31, quantity=90.0)
-        result = Discover.analyse_category(df['gender'])
-        control = {'selection': ['F', 'M'], 'weighting': [34.44, 65.56], 'sample': [90], 'dtype': 'category', 'null_values': [10.0]}
-        self.assertEqual(control, result)
+        str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
+        ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
+        result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
+        pprint(result)
+
 
     @ignore_warnings
     def test_analyse_associate_single(self):

@@ -51,7 +51,7 @@ class TransitionTest(unittest.TestCase):
         tr = TransitionAgent.from_env('Example01')
         join = tr.data_pm.join
         self.assertEqual('data.Example01.connectors', tr.data_pm.KEY.connectors_key)
-        self.assertEqual('data.Example01.cleaners', tr.data_pm.KEY.cleaners_key)
+        self.assertEqual('data.Example01.intent', tr.data_pm.KEY.cleaners_key)
         self.assertEqual('data.Example01.connectors.resource', join(tr.data_pm.KEY.connectors_key, 'resource'))
         self.assertEqual('data.Example01.connectors.type', join(tr.data_pm.KEY.connectors_key, 'type'))
         self.assertEqual('data.Example01.connectors.location', join(tr.data_pm.KEY.connectors_key, 'location'))
@@ -180,7 +180,7 @@ class TransitionTest(unittest.TestCase):
         tr = TransitionAgent.from_env(name)
         dpm = tr.data_pm
         self.assertTrue(name in dpm.contract_name)
-        control = {'TestContract': {'cleaners': {},'snapshot': {},
+        control = {'TestContract': {'intent': {},'snapshot': {},
                   'connectors': {'pm_data_testcontract': {'handler': 'PandasPersistHandler',
                                                       'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/TestContract',
                                                       'modified': 0,
@@ -215,7 +215,7 @@ class TransitionTest(unittest.TestCase):
         structure = tr.data_pm.get(tr.data_pm.KEY.contract_key)
         tr2 = TransitionAgent.from_env('control')
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
-        control = {'cleaners': {}, 'snapshot': {}, 'connectors':
+        control = {'intent': {}, 'snapshot': {}, 'connectors':
                    {'pm_data_control': {'handler': 'PandasPersistHandler',
                                  'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/control',
                                  'modified': 0,
