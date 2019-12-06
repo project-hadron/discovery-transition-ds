@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-from typing import Union, List
 
 from ds_foundation.managers.augment_properties import AugmentedPropertyManager
 from ds_foundation.managers.data_properties import DataPropertyManager
@@ -18,8 +17,8 @@ class TransitionAgent(object):
     PM_DATA_CONNECTOR: str
     PM_AUGMENT_CONNECTOR: str
     MODULE_NAME: str
-    SOURCE_HANDLER: str
-    PERSIST_HANDLER: str
+    HANDLER_SOURCE: str
+    HANDLER_PERSIST: str
 
     def __init__(self, contract_name: str, data_properties: [ConnectorContract],
                  augment_properties: [ConnectorContract], default_save=None):
@@ -71,7 +70,6 @@ class TransitionAgent(object):
         _default_save = default_save if isinstance(default_save, bool) else True
         _vertical = 'scratch' if not isinstance(vertical, str) else vertical
         _module_name = 'ds_connectors.handlers.aws_s3_handlers'
-        _data_pm = DataPropertyManager(contract_name)
         _location = 'discovery-persistence' if not isinstance(location, str) else location
         _resource_prefix = "{v}/contract/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
         _data_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
@@ -85,8 +83,8 @@ class TransitionAgent(object):
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
         rtn_cls.MODULE_NAME = _module_name
-        rtn_cls.SOURCE_HANDLER = 'AwsS3SourceHandler'
-        rtn_cls.PERSIST_HANDLER = 'AwsS3PersistHandler'
+        rtn_cls.HANDLER_SOURCE = 'AwsS3SourceHandler'
+        rtn_cls.HANDLER_PERSIST = 'AwsS3PersistHandler'
         if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
             _resource = "{v}/persist/transition/{f}".format(v=_vertical, f=rtn_cls.get_persist_file_name('transition'))
             rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
@@ -146,7 +144,6 @@ class TransitionAgent(object):
                 raise ValueError("a {} must be provided".format(param))
         _default_save = default_save if isinstance(default_save, bool) else True
         _module_name = 'ds_discovery.handlers.pandas_handlers'
-        _data_pm = DataPropertyManager(contract_name)
         _location = os.path.join(contract_path, contract_name)
         _data_connector = ConnectorContract(resource="config_transition_data_{}.yaml".format(contract_name),
                                             connector_type='yaml', location=_location, module_name=_module_name,
@@ -157,8 +154,8 @@ class TransitionAgent(object):
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
         rtn_cls.MODULE_NAME = _module_name
-        rtn_cls.SOURCE_HANDLER = 'PandasSourceHandler'
-        rtn_cls.PERSIST_HANDLER = 'PandasPersistHandler'
+        rtn_cls.HANDLER_SOURCE = 'PandasSourceHandler'
+        rtn_cls.HANDLER_PERSIST = 'PandasPersistHandler'
         if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
             _resource = rtn_cls.get_persist_file_name('transition')
             rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
@@ -259,7 +256,7 @@ class TransitionAgent(object):
         self.persist_contract(save)
 
     def set_source_contract(self, resource: str, connector_type: str, location: str, module_name: str, handler: str,
-                            load: bool=False, save: bool=None, **kwargs) -> Union[pd.DataFrame, None]:
+                            load: bool=False, save: bool=None, **kwargs) -> [pd.DataFrame, None]:
         """ Sets the source contract, returning the source data as a DataFrame if load=True. If the connection
         module_name and/or handler is not provided the the default properties connection setting are used
 
@@ -309,6 +306,8 @@ class TransitionAgent(object):
             module_name = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).module_name
         if not isinstance(handler, str):
             handler = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).handler
+        if self.data_pm.has_connector(self.PERSIST_CONNECTOR):
+            self.data_pm.remove_connector_contract(self.PERSIST_CONNECTOR)
         self.data_pm.set_connector_contract(self.PERSIST_CONNECTOR, resource=resource, connector_type=connector_type,
                                             location=location, module_name=module_name, handler=handler, **kwargs)
         self.persist_contract(save)
@@ -735,7 +734,7 @@ class TransitionAgent(object):
         return _pattern.format(prefix, self.contract_name, ref_name, self.version)
 
     @staticmethod
-    def list_formatter(value) -> [List[str], list, None]:
+    def list_formatter(value) -> [list, None]:
         """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
         if isinstance(value, (int, float, str, pd.Timestamp)):
             return [value]

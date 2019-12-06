@@ -9,7 +9,7 @@ import seaborn as sns
 import unittest
 import warnings
 
-from ds_discovery.transition.discovery import DataDiscovery as Discover
+from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics
 from ds_discovery.intent.pandas_cleaners import PandasCleaners as Cleaner
 from ds_behavioral.generator.data_builder_tools import DataBuilderTools
 
@@ -34,17 +34,25 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         """Basic smoke test"""
         Discover()
 
+    def test_discovery_analytics_class(self):
+        tools = DataBuilderTools()
+        dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
+        result = Discover.analyse_category(dataset)
+        analytics = DataAnalytics('tester', result)
+        print(analytics.dominance_map)
+
+
     def test_analyse_category(self):
         tools = DataBuilderTools()
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats']
         self.assertCountEqual(control, list(result.keys()))
-        control = ['dtype', 'selection']
+        control = ['dtype', 'selection', 'upper', 'lower']
         self.assertCountEqual(control, list(result.get('intent').keys()))
-        control = ['weighting']
+        control = ['weight_pattern']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
-        control = ['dropped', 'nulls_percent', 'sample']
+        control = ['outlier_percent', 'nulls_percent', 'sample']
         self.assertCountEqual(control, list(result.get('stats').keys()))
 
     def test_analyse_category_limits(self):
@@ -53,13 +61,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = DataBuilderTools()
         dataset = ['A']*8 + ['B']*6 + ['C']*4 + ['D']*2
         result = Discover.analyse_category(dataset, top=top, weighting_precision=0)
-        control = ['dtype', 'selection', 'top']
+        control = ['dtype', 'selection', 'top', 'upper', 'lower']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         self.assertEqual(top, result.get('intent').get('top'))
         self.assertEqual(top, len(result.get('intent').get('selection')))
         self.assertCountEqual(['A', 'B'], result.get('intent').get('selection'))
-        self.assertCountEqual([40, 30], result.get('patterns').get('weighting'))
-        self.assertEqual(6, result.get('stats').get('dropped'))
+        self.assertCountEqual([40, 30], result.get('patterns').get('weight_pattern'))
+        self.assertEqual(30, result.get('stats').get('outlier_percent'))
         self.assertEqual(14, result.get('stats').get('sample'))
         lower = 0.2
         upper = 7
@@ -69,8 +77,8 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(lower, result.get('intent').get('lower'))
         self.assertEqual(upper, result.get('intent').get('upper'))
         self.assertCountEqual(['C', 'B'], result.get('intent').get('selection'))
-        self.assertCountEqual([33, 50], result.get('patterns').get('weighting'))
-        self.assertEqual(10, result.get('stats').get('dropped'))
+        self.assertCountEqual([33, 50], result.get('patterns').get('weight_pattern'))
+        self.assertEqual(50, result.get('stats').get('outlier_percent'))
         self.assertEqual(10, result.get('stats').get('sample'))
 
     def test_analyse_number(self):
