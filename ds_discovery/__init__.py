@@ -2,4 +2,4 @@
 from ds_discovery.transition.transitioning import TransitionAgent
 
 # release version number picked up in the setup.py
-__version__ = "2.03.064"
+__version__ = "2.03.065"
