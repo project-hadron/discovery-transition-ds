@@ -79,9 +79,10 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(50, result.get('stats').get('outlier_percent'))
         self.assertEqual(10, result.get('stats').get('sample'))
 
-    def test_analyse_number(self):
-         dataset = [0]*7 + [1]*7 + [2]*4 + [3]*2
-         result = Discover.analyse_number(dataset, granularity=1.0)
+    def test_analyse_number_empty(self):
+         dataset = []
+         result = Discover.analyse_number(dataset)
+
          pprint(result)
 
          # control = [100.0]
