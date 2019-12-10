@@ -48,7 +48,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats']
         self.assertCountEqual(control, list(result.keys()))
-        control = ['dtype', 'selection', 'upper', 'lower']
+        control = ['dtype', 'selection', 'upper', 'lower', 'granularity', 'weighting_precision']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         control = ['weight_pattern']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
@@ -56,12 +56,10 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertCountEqual(control, list(result.get('stats').keys()))
 
     def test_analyse_category_limits(self):
-        ## Lower upper top
         top = 2
-        tools = DataBuilderTools()
         dataset = ['A']*8 + ['B']*6 + ['C']*4 + ['D']*2
         result = Discover.analyse_category(dataset, top=top, weighting_precision=0)
-        control = ['dtype', 'selection', 'top', 'upper', 'lower']
+        control = ['dtype', 'selection', 'top', 'upper', 'lower', 'granularity', 'weighting_precision']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         self.assertEqual(top, result.get('intent').get('top'))
         self.assertEqual(top, len(result.get('intent').get('selection')))
@@ -72,7 +70,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         lower = 0.2
         upper = 7
         result = Discover.analyse_category(dataset, lower=lower, upper=upper, weighting_precision=0)
-        control = ['dtype', 'selection', 'upper', 'lower']
+        control = ['dtype', 'selection', 'upper', 'lower', 'granularity', 'weighting_precision']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         self.assertEqual(lower, result.get('intent').get('lower'))
         self.assertEqual(upper, result.get('intent').get('upper'))
