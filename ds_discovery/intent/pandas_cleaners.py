@@ -160,9 +160,9 @@ class PandasCleaners(AbstractCleaners):
         :param df: the Pandas.DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes. Default is False
-        :param regex: a regiar expression to seach the headers
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :return: a filtered list of headers
 
@@ -216,7 +216,7 @@ class PandasCleaners(AbstractCleaners):
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
-        :param regex: a regiar expression to seach the headers
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :return:
