@@ -169,16 +169,14 @@ When you create a new project, or set up your default master notebook you import
 
 
 Within my master notebook, just as a fail-safe, as it costs nothing, I also set up the environment variable
-``os.environ['DTU_ORIGIN_PATH']`` with your root working path. In this example using the environmnt variable of ``PWD``
+``os.environ['TR_CONTRACT_PATH']`` with your root working path. In this example using the environmnt variable of ``PWD``
 
 .. code-block:: python
 
     # set environment variables
-    os.environ['DTU_ORIGIN_PATH'] = Path(os.environ['PWD']).as_posix()
+    os.environ['TR_CONTRACT_PATH'] = Path(os.environ['PWD']).as_posix()
 
-Along with ``DTU_ORIGIN_PATH`` you can also set ``DTU_PERSIST_PATH`` and ``DTU_CONTACT_PATH`` environment variables
-allowing one to define where to persist transitioned data and also where to place contract properties. If not set
-then the origin path is taken as the default for all.
+Setting ``TR_CONTRACT_PATH`` allows you to use the init factory pattern ``TransitionAgent.from_env(contract_name)``.
 
 We now have all the appropriate imports and environment variables.
 
@@ -216,7 +214,7 @@ Creating a Transitioning Contract Pipeline
 
 .. code-block:: python
 
-    tr = TransitionAgent('synthetic_customer')
+    tr = TransitionAgent.from_env('synthetic_customer')
 
 Reset the Source Contract
 ~~~~~~~~~~~~~~~~~~~~~~~~~

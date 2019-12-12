@@ -164,14 +164,16 @@ class TransitionAgent(object):
     @classmethod
     def from_env(cls, contract_name: str,  default_save=None):
         """ Class Factory Method that builds the connector handlers taking the property contract path from
-        the os.envon['DTU_CONTRACT_PATH'] or locally from the current working directory 'dtu/contracts' if
+        the os.envon['TR_CONTRACT_PATH'] or locally from the current working directory 'dtu/contracts' if
         no environment variable is found. This assumes the use of the pandas handler module and yaml persisted file.
 
          :param contract_name: The reference name of the properties contract
          :param default_save: (optional) if the configuration should be persisted
          :return: the initialised class instance
          """
-        if 'DTU_CONTRACT_PATH' in os.environ.keys():
+        if 'TR_CONTRACT_PATH' in os.environ.keys():
+            contract_path = os.environ['TR_CONTRACT_PATH']
+        elif 'DTU_CONTRACT_PATH' in os.environ.keys(): # Legacy
             contract_path = os.environ['DTU_CONTRACT_PATH']
         else:
             contract_path = os.path.join(os.getcwd(), 'dtu', 'contracts')
