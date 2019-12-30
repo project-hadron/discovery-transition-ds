@@ -6,7 +6,7 @@ matplotlib.use("TkAgg")
 import unittest
 import warnings
 
-from ds_discovery.feature.engineer import FeatureBuilderTools as fb
+from ds_discovery.feature.engineer import FeatureEngineerTools as fb
 from ds_behavioral import DataBuilderTools as tools
 
 

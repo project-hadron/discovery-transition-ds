@@ -75,6 +75,11 @@ class PandasCleaners(AbstractCleaners):
                                                 dtype=settings.get('dtype'), exclude=settings.get('exclude'),
                                                 regex=settings.get('regex'),
                                                 re_ignore_case=settings.get('re_ignore_case'), inplace=True)
+        # auto drop correlated
+        if cleaner_contract.get('auto_drop_correlated') is not None:
+            settings = cleaner_contract.get('auto_drop_correlated')
+            PandasCleaners.auto_drop_correlated(df, threshold=settings.get('threshold'),
+                                                inc_category=settings.get('inc_category'), inplace=True)
         # 'to remove'
         if cleaner_contract.get('to_remove') is not None:
             settings = cleaner_contract.get('to_remove')
@@ -294,13 +299,13 @@ class PandasCleaners(AbstractCleaners):
     @staticmethod
     def auto_remove_columns(df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
                             auto_contract: bool=True, inplace=False) -> Union[dict, pd.DataFrame]:
-        """ auto removes columns that are np.NaN, a single value or have a predominat value greater than.
+        """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
         :param df: the pandas.DataFrame to auto remove
         :param null_min: the minimum number of null values default to 0.998 (99.8%) nulls
         :param predominant_max: the percentage max a single field predominates default is 0.998
         :param nulls_list: can be boolean or a list:
-                    if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None']
+                    if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None', ' ']
                     if list then this is considered potential null values.
         :param auto_contract: if the auto_category or to_category should be returned
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
@@ -309,7 +314,7 @@ class PandasCleaners(AbstractCleaners):
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         if isinstance(nulls_list, bool) and nulls_list:
-            nulls_list = ['NaN', 'nan', 'null', '', 'None']
+            nulls_list = ['NaN', 'nan', 'null', '', 'None', ' ']
         elif not isinstance(nulls_list, list):
             nulls_list = None
         df_len = len(df)
@@ -318,12 +323,12 @@ class PandasCleaners(AbstractCleaners):
             col = deepcopy(df[c])
             if nulls_list is not None:
                 col.replace(nulls_list, np.nan, inplace=True)
-            if round(col.isnull().sum() / df_len, 3) > null_min:
+            if round(col.isnull().sum() / df_len, 5) > null_min:
                 col_drop.append(c)
             elif col.nunique() == 1:
                 col_drop.append(c)
             elif round((col.value_counts() / np.float(len(col.dropna()))).sort_values(
-                    ascending=False).values[0], 3) >= predominant_max:
+                    ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
 
         result = PandasCleaners.to_remove(df, headers=col_drop, inplace=inplace)
@@ -332,18 +337,18 @@ class PandasCleaners(AbstractCleaners):
                                                  predominant_max=predominant_max, nulls_list=nulls_list)
         return result
 
-    # drop duplicate rows and columns
+    # drop duplicate columns
     @staticmethod
     def auto_drop_duplicates(df, headers=None, drop=False, dtype=None, exclude=False, regex=None, re_ignore_case=None,
                              inplace=False) -> Union[dict, pd.DataFrame]:
-        """ drops duplicate rows and columns
+        """ drops duplicate columns from the pd.DataFrame.
 
         :param df: the pandas.DataFrame to drop duplicates from
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
-        :param regex: a regiar expression to seach the headers
+        :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
@@ -351,12 +356,51 @@ class PandasCleaners(AbstractCleaners):
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = PandasCleaners.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+        df_filter = PandasCleaners.filter_columns(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                                  regex=regex, re_ignore_case=re_ignore_case)
-        df.drop_duplicates(subset=obj_cols, inplace=inplace)
+        duplicated_col = []
+        for i in range(0, len(df_filter)):
+            col_1 = df_filter.columns[i]
+
+            for col_2 in df_filter.columns[i + 1:]:
+                if df_filter[col_1].equals(df_filter[col_2]):
+                    duplicated_col.append(col_2)
+        df.drop(labels=duplicated_col, axis=1, inplace=True)
         if inplace:
             return PandasCleaners._build_section('auto_drop_duplicates', headers=headers, drop=drop, dtype=dtype,
                                                  exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
+        return df
+
+    # drops highly correlated columns
+    @staticmethod
+    def auto_drop_correlated(df, threshold: float=None, inc_category: bool=False, inplace=False) -> [dict, pd.DataFrame]:
+        """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
+        set by default to 0.998.
+
+        :param df: data: the Canonical data to drop duplicates from
+        :param threshold: (optional) threshold correlation between columns. default 0.998
+        :param inc_category: (optional) if category type columns should be converted to numeric representations
+        :param inplace: if the passed Canonical, should be used or a deep copy
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy Canonical,.
+        """
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
+        threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
+        df_filter = PandasCleaners.filter_columns(df, dtype=['number'], exclude=False)
+        if inc_category:
+            for col in PandasCleaners.filter_columns(df, dtype=['category'], exclude=False):
+                df_filter[col] = df[col].cat.codes
+        col_corr = set()
+        corr_matrix = df_filter.corr()
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i):
+                if abs(corr_matrix.iloc[i, j]) > threshold:  # we are interested in absolute coeff value
+                    colname = corr_matrix.columns[i]  # getting the name of column
+                    col_corr.add(colname)
+        df.drop(labels=col_corr, axis=1, inplace=True)
+        if inplace:
+            return PandasCleaners._build_section('auto_drop_correlated', threshold=threshold, inc_category=inc_category)
         return df
 
     # drop unwanted
@@ -755,7 +799,7 @@ class PandasCleaners(AbstractCleaners):
                        null_min=None, null_max=None, single_value=None, nulls_list=None, unique_max=None,
                        regex=None, re_ignore_case=None, case=None, rename_map=None, replace_spaces=None,
                        predominant_max=None, errors=None, precision=None, as_num=None, day_first=None,
-                       year_first=None) -> dict:
+                       year_first=None, threshold: float=None, inc_category: bool=None) -> dict:
         section = {}
         if headers is not None:
             section['headers'] = headers
@@ -798,4 +842,8 @@ class PandasCleaners(AbstractCleaners):
             section['rename_map'] = rename_map
         if replace_spaces is not None:
             section['replace_spaces'] = replace_spaces
+        if threshold is not None:
+            section['threshold'] = threshold
+        if inc_category is not None:
+            section['inc_category'] = inc_category
         return {key: section}
