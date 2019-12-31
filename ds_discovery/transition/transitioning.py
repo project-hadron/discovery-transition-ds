@@ -53,131 +53,91 @@ class TransitionAgent(object):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_remote(cls, contract_name: str, location: str=None, vertical: str=None, default_save=None):
-        """ Class Factory Method that builds the connector handlers from the default remote.
-        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+    def from_remote(cls, contract_name: str, properties_uri: str, default_save=None):
+        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store.
+        Note: the 'properties_uri' only provides a URI up to and including the path but not the properties file names.
 
          :param contract_name: The reference name of the properties contract
-         :param location: (optional) the location or bucket where the data resource can be found
-         :param vertical: (optional) the name of the discovery vertical. default to 'scratch'
-                    Options include 'client', 'discovery', 'synthetic' or 'scratch'
+         :param properties_uri: A URI that identifies the S3 properties resource path. The syntax should be:
+                          https://s3.[<region>].amazonaws.com/<bucket>/<path>/
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :return: the initialised class instance
          """
-        for param in ['contract_name']:
-            if not isinstance(eval(param), str) or len(eval(param)) == 0:
-                raise ValueError("a {} must be provided".format(param))
+        if not isinstance(contract_name, str) or len(contract_name) == 0:
+            raise ValueError("A contract_name must be provided")
         _default_save = default_save if isinstance(default_save, bool) else True
-        _vertical = 'scratch' if not isinstance(vertical, str) else vertical
         _module_name = 'ds_connectors.handlers.aws_s3_handlers'
-        _location = 'discovery-persistence' if not isinstance(location, str) else location
-        _resource_prefix = "{v}/contract/{n}/config_transition_data_{n}.pickle".format(v=_vertical, n=contract_name)
-        _data_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
-                                            location=_location, module_name=_module_name,
-                                            handler='AwsS3PersistHandler')
-
-        _resource_prefix = "{v}/contract/{n}/config_transition_augment_{n}.pickle".format(v=_vertical, n=contract_name)
-        _augment_connector = ConnectorContract(resource=_resource_prefix, connector_type='pickle',
-                                               location=_location, module_name=_module_name,
-                                               handler='AwsS3PersistHandler')
+        _handler = 'AwsS3PersistHandler'
+        _data_uri = os.path.join(properties_uri, "config_transition_data_{}.pickle".format(contract_name))
+        _data_connector = ConnectorContract(uri=_data_uri, module_name=_module_name, handler=_handler)
+        _augment_uri = os.path.join(_data_uri, "config_transition_augment_{}.pickle".format(contract_name))
+        _augment_connector = ConnectorContract(uri=_augment_uri, module_name=_module_name, handler=_handler)
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
         rtn_cls.MODULE_NAME = _module_name
         rtn_cls.HANDLER_SOURCE = 'AwsS3SourceHandler'
-        rtn_cls.HANDLER_PERSIST = 'AwsS3PersistHandler'
-        if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
-            _resource = "{v}/persist/transition/{f}".format(v=_vertical, f=rtn_cls.get_persist_file_name('transition'))
-            rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
+        rtn_cls.HANDLER_PERSIST = _handler
         return rtn_cls
 
     @classmethod
-    def from_remote_client(cls, contract_name: str, location: str=None, default_save=None):
-        """ Class Factory Method that builds the connector handlers from the default remote.
-        This assumes the use of the pandas handler module and pickle persistence on a remote default.
+    def from_remote_env(cls, contract_name: str,  default_save=None):
+        """ Class Factory Method that builds the connector handlers taking the URI from the os.envon['TR_REMOTE_URI']
+        that use the Amazon AWS S3 storage and default S3 handler.
 
          :param contract_name: The reference name of the properties contract
-         :param location: (optional) the location or bucket where the data resource can be found
-         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param default_save: (optional) if the configuration should be persisted
          :return: the initialised class instance
          """
-        return cls.from_remote(contract_name=contract_name, location=location, vertical='client',
-                               default_save=default_save)
+        if 'TR_REMOTE_URI' in os.environ.keys():
+            uri = os.environ['TR_REMOTE_URI']
+        else:
+            raise EnvironmentError()
+        return cls.from_remote(contract_name=contract_name, properties_uri=uri, default_save=default_save)
 
     @classmethod
-    def from_remote_discovery(cls, contract_name: str, location: str=None, default_save=None):
-        """ Class Factory Method that builds the connector handlers from the default remote.
-        This assumes the use of the pandas handler module and pickle persistence on a remote default.
-
-         :param contract_name: The reference name of the properties contract
-         :param location: (optional) the location or bucket where the data resource can be found
-         :param default_save: (optional) if the configuration should be persisted. default to 'True'
-         :return: the initialised class instance
-         """
-        return cls.from_remote(contract_name=contract_name, location=location, vertical='discovery',
-                               default_save=default_save)
-
-    @classmethod
-    def from_remote_synthetic(cls, contract_name: str, location: str=None, default_save=None):
-        """ Class Factory Method that builds the connector handlers from the default remote.
-        This assumes the use of the pandas handler module and pickle persistence on a remote default.
-
-         :param contract_name: The reference name of the properties contract
-         :param location: (optional) the location or bucket where the data resource can be found
-         :param default_save: (optional) if the configuration should be persisted. default to 'True'
-         :return: the initialised class instance
-         """
-        return cls.from_remote(contract_name=contract_name, location=location, vertical='synthetic',
-                               default_save=default_save)
-
-    @classmethod
-    def from_path(cls, contract_name: str,  contract_path: str, default_save=None):
-        """ Class Factory Method that builds the connector handlers from the data paths.
+    def from_local(cls, contract_name: str,  properties_uri: str=None, default_save=None):
+        """ Class Factory Method that builds the connector handlers from a local resource path.
         This assumes the use of the pandas handler module and yaml persisted file.
 
         :param contract_name: The reference name of the properties contract
-        :param contract_path: (optional) the path of the properties contracts
+        :param properties_uri: (optional) A URI that identifies the properties resource path. by default is './'
         :param default_save: (optional) if the configuration should be persisted
         :return: the initialised class instance
         """
-        for param in ['contract_name', 'contract_path']:
-            if not isinstance(eval(param), str) or len(eval(param)) == 0:
-                raise ValueError("a {} must be provided".format(param))
+        if not isinstance(contract_name, str) or len(contract_name) == 0:
+            raise ValueError("A contract_name must be provided")
+        _properties_uri = properties_uri if isinstance(properties_uri, str) and len(properties_uri) > 0 else '.'
         _default_save = default_save if isinstance(default_save, bool) else True
         _module_name = 'ds_discovery.handlers.pandas_handlers'
-        _location = os.path.join(contract_path, contract_name)
-        _data_connector = ConnectorContract(resource="config_transition_data_{}.yaml".format(contract_name),
-                                            connector_type='yaml', location=_location, module_name=_module_name,
-                                            handler='PandasPersistHandler')
-        _augment_connector = ConnectorContract(resource="config_transition_augment_{}.yaml".format(contract_name),
-                                               connector_type='yaml', location=_location, module_name=_module_name,
-                                               handler='PandasPersistHandler')
+        _handler = 'PandasPersistHandler'
+        _data_uri = os.path.join(properties_uri, "config_transition_data_{}.pickle".format(contract_name))
+        _data_connector = ConnectorContract(uri=_data_uri, module_name=_module_name, handler=_handler)
+        _augment_uri = os.path.join(_data_uri, "config_transition_augment_{}.pickle".format(contract_name))
+        _augment_connector = ConnectorContract(uri=_augment_uri, module_name=_module_name, handler=_handler)
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
         rtn_cls.MODULE_NAME = _module_name
         rtn_cls.HANDLER_SOURCE = 'PandasSourceHandler'
-        rtn_cls.HANDLER_PERSIST = 'PandasPersistHandler'
-        if not rtn_cls.data_pm.has_connector(rtn_cls.PERSIST_CONNECTOR):
-            _resource = rtn_cls.get_persist_file_name('transition')
-            rtn_cls.set_persist_contract(resource=_resource, connector_type='pickle')
+        rtn_cls.HANDLER_PERSIST = _handler
         return rtn_cls
 
     @classmethod
     def from_env(cls, contract_name: str,  default_save=None):
         """ Class Factory Method that builds the connector handlers taking the property contract path from
-        the os.envon['TR_CONTRACT_PATH'] or locally from the current working directory 'dtu/contracts' if
+        the os.envon['TR_LOCAL_URI'] or locally from the current working directory './' if
         no environment variable is found. This assumes the use of the pandas handler module and yaml persisted file.
 
          :param contract_name: The reference name of the properties contract
          :param default_save: (optional) if the configuration should be persisted
          :return: the initialised class instance
          """
-        if 'TR_CONTRACT_PATH' in os.environ.keys():
-            contract_path = os.environ['TR_CONTRACT_PATH']
-        elif 'DTU_CONTRACT_PATH' in os.environ.keys(): # Legacy
-            contract_path = os.environ['DTU_CONTRACT_PATH']
+        if 'TR_LOCAL_URI' in os.environ.keys():
+            properties_uri = os.environ['TR_CONTRACT_PATH']
+        elif 'TR_CONTRACT_PATH' in os.environ.keys():  # Legacy
+            properties_uri = os.environ['TR_CONTRACT_PATH']
         else:
-            contract_path = os.path.join(os.getcwd(), 'dtu', 'contracts')
-        return cls.from_path(contract_name=contract_name, contract_path=contract_path, default_save=default_save)
+            properties_uri = os.path.join(os.getcwd(), 'dtu', 'contracts')
+        return cls.from_local(contract_name=contract_name, properties_uri=properties_uri, default_save=default_save)
 
     @property
     def contract_name(self) -> str:
@@ -350,8 +310,7 @@ class TransitionAgent(object):
         df = pd.DataFrame()
         join = self.data_pm.join
         dpm = self.data_pm
-        df['param'] = ['connector_name', 'resource', 'connector_type', 'location', 'module_name',
-                       'handler', 'modified', 'kwargs']
+        df['param'] = ['connector_name', 'uri', 'module_name', 'handler', 'modified', 'kwargs', 'query', 'params']
         for name_key in dpm.get(join(dpm.KEY.connectors_key)).keys():
             if isinstance(connector_name, str) and connector_name != name_key:
                 continue
@@ -371,16 +330,22 @@ class TransitionAgent(object):
                         if len(kwargs) > 0:
                             kwargs += "  "
                         kwargs += "{}='{}'".format(k, v)
+                query = ''
+                if isinstance(connector_contract.query, dict):
+                    for k, v in connector_contract.query.items():
+                        if len(query) > 0:
+                            query += "  "
+                        query += "{}='{}'".format(k, v)
                 df[label] = [
                     name_key,
-                    connector_contract.resource,
-                    connector_contract.connector_type,
-                    connector_contract.location,
+                    connector_contract.address,
                     connector_contract.module_name,
                     connector_contract.handler,
+                    kwargs,
+                    query,
+                    connector_contract.params,
                     dpm.get(join(dpm.KEY.connectors_key, name_key, 'modified')) if dpm.is_key(
                         join(dpm.KEY.connectors_key, name_key, 'modified')) else '',
-                    kwargs
                 ]
         if stylise:
             df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
@@ -717,10 +682,10 @@ class TransitionAgent(object):
             self.augment_pm.persist_properties()
         return
 
-    def get_persist_file_name(self, prefix: str):
+    def get_persist_file_name(self):
         """ Returns a persist pattern based on name"""
-        _pattern = "{}_{}_{}.pickle"
-        return _pattern.format(prefix, self.contract_name, self.version)
+        _pattern = "transition_{}_{}.pickle"
+        return _pattern.format(self.contract_name, self.version)
 
     def get_report_file_name(self, prefix: str):
         """ Returns a report pattern based on name"""

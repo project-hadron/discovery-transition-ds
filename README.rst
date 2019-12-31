@@ -269,7 +269,8 @@ have defined the file separator and encoding.
 
 .. code-block:: python
 
-    tr.set_source_contract(resource='synthetic_customer.csv', sep=',', encoding='latin1', load=False)
+    tr.set_source_contract(uri='synthetic_customer.csv', module_name='ds_discovery.handlers.pandas_handlers',
+                           handler='PandasSourceHandler', sep=',', encoding='latin1', load=False)
 
 Other Connectivity
 ^^^^^^^^^^^^^^^^^^
@@ -280,10 +281,9 @@ containing csv files .
 
 .. code-block:: python
 
-    tr.set_source_contract(resource="synthetic_customer.csv", source_type='s3:csv', location='/sftp/data/repo',
+    tr.set_source_contract(uri="s3://eu-west-1.amazonaws.com/synthetic/sftp/data/repo/synthetic_customer.csv",
                            module_name='ds_connectivity.handlers.aws_handlers', handler='S3SourceHandler',
-                           bucket="synthetic", aws_secret='SaHZedSd4Fd43s/8wDs3/cdsw7cw2',
-                           aws_access='DF3E5THA3U85FG', sep=',', encoding='latin1', load=False)
+                           sep=',', encoding='latin1', load=False)
 
 
 Source Separation of Concerns
