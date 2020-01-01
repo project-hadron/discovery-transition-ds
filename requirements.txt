@@ -15,6 +15,7 @@ xlsxwriter
 xlrd
 pyarrow
 boto3
+botocore
 
 # SQl and HTML libs
 #sqlalchemy

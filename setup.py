@@ -70,6 +70,7 @@ setup(
         'xlrd',
         'pyarrow',
         'boto3',
+        'botocore',
     ],
     test_suite='tests',
 )
