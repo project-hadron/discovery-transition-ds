@@ -1,6 +1,4 @@
-import filecmp
 import os
-import shutil
 from contextlib import closing
 import threading
 
@@ -23,8 +21,8 @@ class PandasSourceHandler(AbstractSourceHandler):
                     uri = <scheme>://<netloc>/[<path>/]<filename.ext>
 
         Extra Parameters in the ConnectorContract kwargs:
-            :param file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            :param read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
     """
 
     def __init__(self, connector_contract: ConnectorContract):
@@ -37,7 +35,12 @@ class PandasSourceHandler(AbstractSourceHandler):
         return ['parquet', 'csv', 'tsv', 'txt', 'json', 'pickle', 'xlsx']
 
     def load_canonical(self) -> pd.DataFrame:
-        """ returns the canonical dataset based on the connector contract"""
+        """ returns the canonical dataset based on the connector contract
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+        """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The PandasSource Connector Contract has not been set")
         _cc = self.connector_contract
@@ -74,9 +77,9 @@ class PandasPersistHandler(AbstractPersistHandler):
                     uri = <scheme>://<netloc>/[<path>/]<filename.ext>
 
         Extra Parameters in the ConnectorContract kwargs:
-            :param file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            :param read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-            :param write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
     """
 
     def __init__(self, connector_contract: ConnectorContract):
@@ -101,7 +104,12 @@ class PandasPersistHandler(AbstractPersistHandler):
         return False
 
     def load_canonical(self) -> pd.DataFrame:
-        """ returns the canonical dataset based on the connector contract"""
+        """ returns the canonical dataset based on the connector contract
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+        """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The PandasSource Connector Contract has not been set")
         _cc = self.connector_contract
@@ -125,43 +133,61 @@ class PandasPersistHandler(AbstractPersistHandler):
         return df
 
     def persist_canonical(self, canonical: pd.DataFrame) -> bool:
-        """ persists either the canonical dataset or the YAML contract dictionary"""
+        """ persists the canonical dataset
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+        """
+        if not isinstance(self.connector_contract, ConnectorContract):
+            return False
+        _uri = self.connector_contract.address
+        return self.backup_canonical(uri=_uri, canonical=canonical)
+
+    def backup_canonical(self, canonical: pd.DataFrame, uri: str) -> bool:
+        """ creates a backup of the canonical to an alternative URI
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+        """
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
         _cc = self.connector_contract
+        _address = _cc.parse_address(uri=uri)
         _key_values = _cc.kwargs.get('write_kw', {})
-        _, _ext = os.path.splitext(_cc.address)
+        _, _ext = os.path.splitext(_address)
         file_type = _key_values.pop('file_type', _ext if len(_ext) > 0 else 'yaml')
         # parquet
         if file_type.lower() in ['pq', 'pqt', 'parquet']:
             with threading.Lock():
-                canonical.to_parquet(_cc.address, **_key_values)
+                canonical.to_parquet(_address, **_key_values)
             return True
         # pickle
         if file_type.lower() in ['pkl', 'pickle']:
             _compression = _key_values.pop('compression', None)
             _protocol = _key_values.pop('protocol', pickle.HIGHEST_PROTOCOL)
             with threading.Lock():
-                canonical.to_pickle(path=_cc.address, compression=_compression, protocol=_protocol)
+                canonical.to_pickle(path=_address, compression=_compression, protocol=_protocol)
             return True
         if file_type.lower() in ['json']:
             with threading.Lock():
-                canonical.to_json(_cc.address, **_key_values)
+                canonical.to_json(_address, **_key_values)
             return True
         if file_type.lower() in ['csv', 'tsv', 'txt']:
             with threading.Lock():
-                canonical.to_csv(_cc.address, **_key_values)
+                canonical.to_csv(_address, **_key_values)
             return True
         if file_type.lower() in ['pkl', 'pickle']:
             _compression = _key_values.pop('compression', None)
             _protocol = _key_values.pop('protocol', pickle.HIGHEST_PROTOCOL)
             with threading.Lock():
-                canonical.to_pickle(path=_cc.address, compression=_compression, protocol=_protocol)
+                canonical.to_pickle(path=_address, compression=_compression, protocol=_protocol)
             return True
         # yaml
         if file_type.lower() in ['yml', 'yaml']:
             default_flow_style = _key_values.pop('default_flow_style', False)
-            self._yaml_dump(data=canonical, path_file=_cc.address, default_flow_style=default_flow_style,
+            self._yaml_dump(data=canonical, path_file=_address, default_flow_style=default_flow_style,
                             **_key_values)
             return True
         # not found
@@ -170,44 +196,17 @@ class PandasPersistHandler(AbstractPersistHandler):
     def remove_canonical(self) -> bool:
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
-        if os.path.exists(self.connector_contract.address):
-            os.remove(self.connector_contract.address)
+        _cc = self.connector_contract
+        if len(_cc.schema) > 0:
+            raise NotImplemented("Remove Canonical does not support {} schema based URIs".format(_cc.schema))
+        if os.path.exists(_cc.address):
+            os.remove(_cc.address)
             return True
         return False
 
-    def backup_canonical(self, max_backups=None):
-        """ creates a backup of the current source contract resource"""
-        if not isinstance(self.connector_contract, ConnectorContract):
-            return
-        _cc = self.connector_contract
-        max_backups = max_backups if isinstance(max_backups, int) else 10
-        # Check existence of previous versions
-        name, _, ext = _cc.address.rpartition('.')
-        for index in range(max_backups):
-            backup = '%s_%2.2d.%s' % (name, index, ext)
-            if index > 0:
-                # No need to backup if file and last version
-                # are identical
-                old_backup = '%s_%2.2d.%s' % (name, index - 1, ext)
-                if not os.path.exists(old_backup):
-                    break
-                abspath = os.path.abspath(old_backup)
-
-                try:
-                    if os.path.isfile(abspath) and filecmp.cmp(abspath, _cc.address, shallow=False):
-                        continue
-                except OSError:
-                    pass
-            try:
-                if not os.path.exists(backup):
-                    shutil.copy(_cc.address, backup)
-            except (OSError, IOError):
-                pass
-        return
-
     @staticmethod
     def _yaml_dump(data, path_file, default_flow_style=False, **kwargs) -> None:
-        """
+        """ dump YAML file
 
         :param data: the data to persist
         :param path_file: the name and path of the file
