@@ -3,15 +3,13 @@ import shutil
 import unittest
 import numpy as np
 
-from pprint import pprint
 from pathlib import Path
 
 from ds_behavioral import DataBuilder
 from ds_behavioral.sample.sample_data import ProfileSample
 
-from ds_discovery import TransitionAgent
+from ds_discovery import Transition
 from ds_foundation.properties.property_manager import PropertyManager
-from ds_connectors.handlers.pandas_handlers import PandasSourceHandler
 
 
 class TransitionTest(unittest.TestCase):
@@ -37,18 +35,18 @@ class TransitionTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        TransitionAgent.from_env('TestAgent')
+        Transition.from_uri('TestAgent')
 
     def test_factory_remote(self):
-        tr = TransitionAgent.from_remote('test_factory')
-        tr.set_source_contract(resource='scratch/source/synthetic_customer.csv', connector_type='csv',
-                               location='discovery-persistence', module_name='ds_connectors.handlers.aws_s3_handlers',
-                               handler='AwsS3SourceHandler')
+        tr = Transition.from_uri('test_factory', properties_uri='s3://aistac-discovery-persist/contracts/testing')
+        tr.set_persist_contract(uri="s3://aistac-discovery-persist/persist/transition/test.pkl")
+        tr.set_source_contract(uri='s3://aistac-discovery-persist/data/synthetic/synthetic_customer.csv',
+                               module_name=tr.MODULE_NAME, handler=tr.HANDLER_SOURCE)
         df = tr.load_source_canonical()
-        self.assertEqual((1000, 15), df.shape)
+        self.assertEqual((500, 16), df.shape)
 
     def test_keys(self):
-        tr = TransitionAgent.from_env('Example01')
+        tr = Transition.from_uri('Example01')
         join = tr.data_pm.join
         self.assertEqual('data.Example01.connectors', tr.data_pm.KEY.connectors_key)
         self.assertEqual('data.Example01.intent', tr.data_pm.KEY.cleaners_key)
@@ -60,7 +58,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual('data.Example01.connectors.kwargs', join(tr.data_pm.KEY.connectors_key, 'kwargs'))
 
     def test_is_contract_empty(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         self.assertTrue(tr.is_contract_empty())
         tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         self.assertFalse(tr.is_contract_empty())
@@ -77,13 +75,13 @@ class TransitionTest(unittest.TestCase):
         self.assertTrue(tr.is_contract_empty())
 
     def test_source_report(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         report = tr.report_source(stylise=False)
         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report.columns))
 
     def test_load_clean_file(self):
-        tr = TransitionAgent.from_env('Example01')
+        tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
         tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
@@ -106,7 +104,7 @@ class TransitionTest(unittest.TestCase):
         return
 
     def test_load_clean_layers(self):
-        tr = TransitionAgent.from_env('Example01')
+        tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
         tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
@@ -138,7 +136,7 @@ class TransitionTest(unittest.TestCase):
         return
 
     def test_load_clean_remove(self):
-        tr = TransitionAgent.from_env('Example01')
+        tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
         tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
@@ -177,30 +175,28 @@ class TransitionTest(unittest.TestCase):
 
     def test_create_contract(self):
         name = 'TestContract'
-        tr = TransitionAgent.from_env(name)
+        tr = Transition.from_uri(name)
         dpm = tr.data_pm
         self.assertTrue(name in dpm.contract_name)
-        control = {'TestContract': {'intent': {},'snapshot': {},
+        control = {'TestContract': {'cleaners': {},'snapshot': {},
                   'connectors': {'pm_data_testcontract': {'handler': 'PandasPersistHandler',
-                                                      'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/TestContract',
                                                       'modified': 0,
                                                       'module_name': 'ds_discovery.handlers.pandas_handlers',
-                                                      'resource': 'config_data_TestContract.yaml',
-                                                      'connector_type': 'yaml'}},
+                                                      'uri': '/tmp/contracts/config_transition_data_TestContract.yaml'}},
                   'version': 'v0.00'}}
         result = dpm.get(dpm.KEY.manager_key)
         self.assertEqual(control, result)
 
     def test_snapshot(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         tr.create_snapshot(suffix='Test')
         print(tr.data_pm.get(tr.data_pm.KEY.snapshot_key).keys())
         self.assertTrue('synthetic_#Test' in tr.data_pm.get(tr.data_pm.KEY.snapshot_key).keys())
         self.assertTrue('synthetic_#Test' in tr.snapshots)
 
     def test_refresh_canonical(self):
-        tr = TransitionAgent.from_env('synthetic')
-        df = tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=True)
+        tr = Transition.from_uri('synthetic')
+        df = tr.set_source_contract(uri='synthetic.csv', sep=',', encoding='latin1', load=True)
         tr.set_persist_contract()
         self.assertEqual((5000, 14), df.shape)
         tr.set_cleaner(tr.clean.auto_clean_header(df, rename_map={'start': 'start_date'}, inplace=True))
@@ -211,9 +207,9 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual((5000, 9), df.shape)
 
     def test_multi_instance(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         structure = tr.data_pm.get(tr.data_pm.KEY.contract_key)
-        tr2 = TransitionAgent.from_env('control')
+        tr2 = Transition.from_uri('control')
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
         control = {'intent': {}, 'snapshot': {}, 'connectors':
                    {'pm_data_control': {'handler': 'PandasPersistHandler',
@@ -224,12 +220,12 @@ class TransitionTest(unittest.TestCase):
                                  'connector_type': 'yaml'}},
                    'version': 'v0.00'}
         self.assertEqual(control, tr2.data_pm.get(tr2.data_pm.KEY.contract_key))
-        tr2 = TransitionAgent.from_env('control')
+        tr2 = Transition.from_uri('control')
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
         self.assertEqual(control, tr2.data_pm.get(tr2.data_pm.KEY.contract_key))
 
     def test_is_backup(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         tr.backup_contract()
         self.assertTrue(os.path.exists("./work/config/synthetic/config_data_synthetic_00.yaml"))
         tr.set_version('v0.01')
@@ -240,7 +236,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(['synthetic_#test'], tr.snapshots)
 
     def test_notes_add_remove(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         control = ['overview', 'notes', 'observations', 'attribute', 'dictionary', 'tor', 'general']
         self.assertEqual(control, tr.augment_pm.catalogue)
         tr.add_attribute_notes(text='Text for Attribute A', attribute='attrA')
@@ -249,7 +245,7 @@ class TransitionTest(unittest.TestCase):
         tr.remove_notes()
 
     def test_notes_report(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         tr.add_notes(text='The file is a synthetic customer data file created for this demonstration')
         tr.add_notes(label='connector', text='This was generated using the Discovery Behavioral Synthetic Data Generator')
         tr.add_notes(label='connector', text='The script to rerun the data generation can be found in the synthetic scripts folder')
@@ -262,7 +258,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(control, report.to_dict(orient='list'))
 
     def test_is_raw_modified(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         with self.assertRaises(ModuleNotFoundError) as context:
             tr.is_source_modified()
         self.assertTrue("The connector 'origin_connector' has not been set" in str(context.exception))
@@ -277,7 +273,7 @@ class TransitionTest(unittest.TestCase):
         self.assertTrue(tr.is_source_modified())
 
     def test_source_load_change(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_uri('synthetic')
         tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         tr.set_persist_contract()
         df = tr.load_source_canonical()
@@ -288,7 +284,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual((100, 16), df.shape)
 
     def test_reload_instance(self):
-        control = TransitionAgent.from_env('synthetic_test')
+        control = Transition.from_uri('synthetic_test')
         control.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
         control.set_persist_contract()
         control.set_version('v_test')
@@ -296,7 +292,7 @@ class TransitionTest(unittest.TestCase):
         contract = control.data_pm.get(control.data_pm.KEY.contract_key)
         control.data_pm.reset_contract_properties()
         reset = control.data_pm.get(control.data_pm.KEY.contract_key)
-        tr = TransitionAgent.from_env('synthetic_test')
+        tr = Transition.from_uri('synthetic_test')
         result = tr.data_pm.get(tr.data_pm.KEY.contract_key)
         self.assertEqual(contract, result)
 

@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from datetime import datetime
 
 from ds_foundation.managers.augment_properties import AugmentedPropertyManager
 from ds_foundation.managers.data_properties import DataPropertyManager
@@ -10,12 +11,12 @@ from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 __author__ = 'Darryl Oatridge'
 
 
-class TransitionAgent(object):
+class Transition(object):
 
-    ORIGIN_CONNECTOR = 'origin_connector'
-    PERSIST_CONNECTOR = 'persist_connector'
-    PM_DATA_CONNECTOR: str
-    PM_AUGMENT_CONNECTOR: str
+    CONNECTOR_SOURCE = 'read_only_connector'
+    CONNECTOR_PERSIST = 'persist_connector'
+    CONNECTOR_DATA_INTENT: str
+    CONNECTOR_AUGMENT_INTENT: str
     MODULE_NAME: str
     HANDLER_SOURCE: str
     HANDLER_PERSIST: str
@@ -38,14 +39,14 @@ class TransitionAgent(object):
         # set property managers
         self._data_pm = DataPropertyManager.from_properties(contract_name=contract_name,
                                                             connector_contract=data_properties)
-        self.PM_DATA_CONNECTOR = self._data_pm.CONTRACT_CONNECTOR
+        self.CONNECTOR_DATA_INTENT = self._data_pm.CONNECTOR_INTENT
         if self._data_pm.has_persisted_properties():
             self._data_pm.load_properties()
         self._knowledge_catalogue = ['overview', 'notes', 'observations', 'attribute', 'dictionary', 'tor']
         self._augment_pm = AugmentedPropertyManager.from_properties(self._contract_name,
                                                                     connector_contract=augment_properties,
                                                                     knowledge_catalogue=self._knowledge_catalogue)
-        self.PM_AUGMENT_CONNECTOR = self.augment_pm.CONTRACT_CONNECTOR
+        self.CONNECTOR_AUGMENT_INTENT = self.augment_pm.CONNECTOR_INTENT
         if self._augment_pm.has_persisted_properties():
             self._augment_pm.load_properties()
         # initialise the values
@@ -53,49 +54,60 @@ class TransitionAgent(object):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_remote(cls, contract_name: str, properties_uri: str, default_save=None):
+    def from_uri(cls, contract_name: str, properties_uri: str=None, default_save=None):
+        """ Class Factory Method that builds the connector handlers for the properties contract. The method uses
+        the schema of the URI to determine if it is remote or local. s3:// schema denotes remote, empty schema denotes
+        local.
+        Note: the 'properties_uri' only provides a URI up to and including the path but not the properties file names.
+
+         :param contract_name: The reference name of the properties contract
+         :param properties_uri: A URI that identifies the resource path. The syntax should be either
+                          s3://<bucket>/<path>/ for remote or <path> for local
+                          if no uri is passed local /tmp/contract is used
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :return: the initialised class instance
+         """
+        _uri = properties_uri if isinstance(properties_uri, str) else "/tmp/contracts"
+        _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=_uri)
+        if str(_schema).lower().startswith('s3'):
+            return cls._from_remote(contract_name=contract_name, properties_uri=_uri, default_save=default_save)
+        if not str(_schema).lower().startswith('http'):
+            _uri = _path
+            if not os.path.exists(_path):
+                os.makedirs(_path, exist_ok=True)
+        return cls._from_local(contract_name=contract_name, properties_uri=_uri, default_save=default_save)
+
+    @classmethod
+    def _from_remote(cls, contract_name: str, properties_uri: str, default_save=None):
         """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store.
         Note: the 'properties_uri' only provides a URI up to and including the path but not the properties file names.
 
          :param contract_name: The reference name of the properties contract
          :param properties_uri: A URI that identifies the S3 properties resource path. The syntax should be:
-                          https://s3.[<region>].amazonaws.com/<bucket>/<path>/
+                          s3://<bucket>/<path>/
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :return: the initialised class instance
          """
         if not isinstance(contract_name, str) or len(contract_name) == 0:
             raise ValueError("A contract_name must be provided")
         _default_save = default_save if isinstance(default_save, bool) else True
-        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
+        _module_name = 'ds_discovery.handlers.aws_s3_handlers'
         _handler = 'AwsS3PersistHandler'
-        _data_uri = os.path.join(properties_uri, "config_transition_data_{}.pickle".format(contract_name))
-        _data_connector = ConnectorContract(uri=_data_uri, module_name=_module_name, handler=_handler)
-        _augment_uri = os.path.join(_data_uri, "config_transition_augment_{}.pickle".format(contract_name))
-        _augment_connector = ConnectorContract(uri=_augment_uri, module_name=_module_name, handler=_handler)
+        _address = ConnectorContract.parse_address(uri=properties_uri)
+        _query_kw = ConnectorContract.parse_query(uri=properties_uri)
+        _data_uri = os.path.join(_address, "config_transition_data_{}.pickle".format(contract_name))
+        _data_connector = ConnectorContract(uri=_data_uri, module_name=_module_name, handler=_handler, **_query_kw)
+        _aug_uri = os.path.join(_address, "config_transition_augment_{}.pickle".format(contract_name))
+        _aug_connector = ConnectorContract(uri=_aug_uri, module_name=_module_name, handler=_handler, **_query_kw)
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
-                      augment_properties=_augment_connector, default_save=default_save)
+                      augment_properties=_aug_connector, default_save=default_save)
         rtn_cls.MODULE_NAME = _module_name
         rtn_cls.HANDLER_SOURCE = 'AwsS3SourceHandler'
         rtn_cls.HANDLER_PERSIST = _handler
         return rtn_cls
 
     @classmethod
-    def from_remote_env(cls, contract_name: str,  default_save=None):
-        """ Class Factory Method that builds the connector handlers taking the URI from the os.envon['TR_REMOTE_URI']
-        that use the Amazon AWS S3 storage and default S3 handler.
-
-         :param contract_name: The reference name of the properties contract
-         :param default_save: (optional) if the configuration should be persisted
-         :return: the initialised class instance
-         """
-        if 'TR_REMOTE_URI' in os.environ.keys():
-            uri = os.environ['TR_REMOTE_URI']
-        else:
-            raise EnvironmentError()
-        return cls.from_remote(contract_name=contract_name, properties_uri=uri, default_save=default_save)
-
-    @classmethod
-    def from_local(cls, contract_name: str,  properties_uri: str=None, default_save=None):
+    def _from_local(cls, contract_name: str,  properties_uri: str=None, default_save=None):
         """ Class Factory Method that builds the connector handlers from a local resource path.
         This assumes the use of the pandas handler module and yaml persisted file.
 
@@ -110,9 +122,9 @@ class TransitionAgent(object):
         _default_save = default_save if isinstance(default_save, bool) else True
         _module_name = 'ds_discovery.handlers.pandas_handlers'
         _handler = 'PandasPersistHandler'
-        _data_uri = os.path.join(properties_uri, "config_transition_data_{}.pickle".format(contract_name))
+        _data_uri = os.path.join(properties_uri, "config_transition_data_{}.yaml".format(contract_name))
         _data_connector = ConnectorContract(uri=_data_uri, module_name=_module_name, handler=_handler)
-        _augment_uri = os.path.join(_data_uri, "config_transition_augment_{}.pickle".format(contract_name))
+        _augment_uri = os.path.join(properties_uri, "config_transition_augment_{}.yaml".format(contract_name))
         _augment_connector = ConnectorContract(uri=_augment_uri, module_name=_module_name, handler=_handler)
         rtn_cls = cls(contract_name=contract_name, data_properties=_data_connector,
                       augment_properties=_augment_connector, default_save=default_save)
@@ -120,24 +132,6 @@ class TransitionAgent(object):
         rtn_cls.HANDLER_SOURCE = 'PandasSourceHandler'
         rtn_cls.HANDLER_PERSIST = _handler
         return rtn_cls
-
-    @classmethod
-    def from_env(cls, contract_name: str,  default_save=None):
-        """ Class Factory Method that builds the connector handlers taking the property contract path from
-        the os.envon['TR_LOCAL_URI'] or locally from the current working directory './' if
-        no environment variable is found. This assumes the use of the pandas handler module and yaml persisted file.
-
-         :param contract_name: The reference name of the properties contract
-         :param default_save: (optional) if the configuration should be persisted
-         :return: the initialised class instance
-         """
-        if 'TR_LOCAL_URI' in os.environ.keys():
-            properties_uri = os.environ['TR_CONTRACT_PATH']
-        elif 'TR_CONTRACT_PATH' in os.environ.keys():  # Legacy
-            properties_uri = os.environ['TR_CONTRACT_PATH']
-        else:
-            properties_uri = os.path.join(os.getcwd(), 'dtu', 'contracts')
-        return cls.from_local(contract_name=contract_name, properties_uri=properties_uri, default_save=default_save)
 
     @property
     def contract_name(self) -> str:
@@ -185,15 +179,15 @@ class TransitionAgent(object):
     def is_contract_empty(self):
         """Test if the transitioning contract is empty but excludes the contract connector"""
         connector_list = self.data_pm.connector_contract_list
-        if self.data_pm.CONTRACT_CONNECTOR in connector_list:
-            connector_list.remove(self.data_pm.CONTRACT_CONNECTOR)
+        if self.data_pm.CONNECTOR_INTENT in connector_list:
+            connector_list.remove(self.data_pm.CONNECTOR_INTENT)
         if len(connector_list) > 0 or self.data_pm.has_cleaners() or len(self.data_pm.snapshots) > 0:
             return False
         return True
 
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
-        return self.data_pm.is_modified(self.ORIGIN_CONNECTOR)
+        return self.data_pm.is_modified(self.CONNECTOR_SOURCE)
 
     def reset_transition_contracts(self, save: bool=None):
         """ resets the contract back to a default.
@@ -213,78 +207,68 @@ class TransitionAgent(object):
         """
         if not isinstance(save, bool):
             save = self._default_save
-        self.data_pm.remove_connector_contract(self.ORIGIN_CONNECTOR)
+        self.data_pm.remove_connector_contract(self.CONNECTOR_SOURCE)
         self._raw_attribute_list = []
         self.persist_contract(save)
 
-    def set_source_contract(self, resource: str, connector_type: str, location: str, module_name: str, handler: str,
-                            load: bool=False, save: bool=None, **kwargs) -> [pd.DataFrame, None]:
+    def set_source_contract(self, uri: str, module_name: str=None, handler: str=None, save: bool=None, **kwargs):
         """ Sets the source contract, returning the source data as a DataFrame if load=True. If the connection
         module_name and/or handler is not provided the the default properties connection setting are used
 
-        :param resource: a local file, connector, URI or URL
-        :param location: a path, region or uri reference that can be used to identify location of resource
-        :param connector_type:  a reference to the type of resource. if None then csv file assumed
-        :param module_name: a module name with full package path
-        :param handler: the name of the Handler Class within the module.
+        :param uri: A Uniform Resource Identifier that unambiguously identifies a particular resource
+        :param module_name: (optional) a module name with full package path. Default MODULE_NAME constant
+        :param handler: (optional) the name of the Handler Class within the module. Default tr.HANDLER_SOURCE constant
         :param load: (optional) if True,` attempts to read the given file or source and returns a pandas.DataFrame
         :param save: (optional) if True, save to file. Default is True
         :param kwargs: (optional) a list of key additional word argument properties associated with the resource
         :return: if load is True, returns a Pandas.DataFrame else None
         """
         save = save if isinstance(save, bool) else self._default_save
-        load = load if isinstance(load, bool) else False
-        if not isinstance(location, str):
-            location = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).location
         if not isinstance(module_name, str):
-            module_name = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).module_name
+            module_name = self.MODULE_NAME
         if not isinstance(handler, str):
-            handler = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).handler
-        self.data_pm.set_connector_contract(self.ORIGIN_CONNECTOR, resource=resource, connector_type=connector_type,
-                                            location=location, module_name=module_name, handler=handler, **kwargs)
+            handler = self.HANDLER_SOURCE
+        if self.data_pm.has_connector(self.CONNECTOR_SOURCE):
+            self.data_pm.remove_connector_contract(self.CONNECTOR_SOURCE)
+        self.data_pm.set_connector_contract(self.CONNECTOR_SOURCE, uri=uri, module_name=module_name, handler=handler,
+                                            **kwargs)
         self.persist_contract(save)
-        if load:
-            return self.load_source_canonical()
         return
 
-    def set_persist_contract(self, resource: str, connector_type: str, location: str=None,
-                             module_name: str=None, handler: str=None, save: bool=None, **kwargs):
+    def set_persist_contract(self, uri: str, module_name: str=None, handler: str=None, save: bool=None, **kwargs):
         """ Sets the persist contract. For parameters not provided the default resource name and data properties
         connector contract module and handler are used.
 
-        :param resource: a local file, connector, URI or URL
-        :param connector_type: a reference to the type of resource. if None then csv file assumed
-        :param location: (optional) a path, region or uri reference that can be used to identify location of resource
-        :param module_name: a module name with full package path e.g 'ds_discovery.handlers.pandas_handlers
+        :param uri: A Uniform Resource Identifier that unambiguously identifies a particular resource
+        :param module_name: (optional) a module name with full package path. Default MODULE_NAME constant
+        :param handler: (optional) the name of the Handler Class within the module. Default tr.HANDLER_PERSIST constant
         :param handler: the name of the Handler Class. Must be
         :param save: if True, save to file. Default is True
         :param kwargs: (optional) a list of key additional word argument properties associated with the resource
         :return: if load is True, returns a Pandas.DataFrame else None
         """
         save = save if isinstance(save, bool) else self._default_save
-        if not isinstance(location, str):
-            location = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).location
         if not isinstance(module_name, str):
-            module_name = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).module_name
+            module_name = self.MODULE_NAME
         if not isinstance(handler, str):
-            handler = self.data_pm.get_connector_contract(self.PM_DATA_CONNECTOR).handler
-        if self.data_pm.has_connector(self.PERSIST_CONNECTOR):
-            self.data_pm.remove_connector_contract(self.PERSIST_CONNECTOR)
-        self.data_pm.set_connector_contract(self.PERSIST_CONNECTOR, resource=resource, connector_type=connector_type,
-                                            location=location, module_name=module_name, handler=handler, **kwargs)
+            handler = self.HANDLER_SOURCE
+        if self.data_pm.has_connector(self.CONNECTOR_PERSIST):
+            self.data_pm.remove_connector_contract(self.CONNECTOR_PERSIST)
+        self.data_pm.set_connector_contract(self.CONNECTOR_PERSIST, uri=uri, module_name=module_name, handler=handler,
+                                            **kwargs)
         self.persist_contract(save)
         return
 
     def load_source_canonical(self) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame"""
-        if self.data_pm.has_connector(self.ORIGIN_CONNECTOR):
-            handler = self.data_pm.get_connector_handler(self.ORIGIN_CONNECTOR)
+        if self.data_pm.has_connector(self.CONNECTOR_SOURCE):
+            handler = self.data_pm.get_connector_handler(self.CONNECTOR_SOURCE)
             df = handler.load_canonical()
             if isinstance(df, dict):
                 df = pd.DataFrame(df)
             if len(df.columns) > 0:
                 self._raw_attribute_list = df.columns.to_list()
-            self.data_pm.set_modified(self.ORIGIN_CONNECTOR, handler.get_modified())
+            self.data_pm.set_modified(self.CONNECTOR_SOURCE, handler.get_modified())
             return df
         return pd.DataFrame()
 
@@ -299,11 +283,11 @@ class TransitionAgent(object):
         :return: pd.DataFrame
         """
         if connector_name in ['source', 'data', 'dataset', 'origin', 'raw']:
-            connector_name = self.ORIGIN_CONNECTOR
+            connector_name = self.CONNECTOR_SOURCE
         if connector_name in ['persist', 'canonical', 'transition']:
-            connector_name = self.PERSIST_CONNECTOR
+            connector_name = self.CONNECTOR_PERSIST
         if connector_name in ['properties', 'property', 'props', 'config']:
-            connector_name = self.data_pm.CONTRACT_CONNECTOR
+            connector_name = self.data_pm.CONNECTOR_INTENT
         stylise = True if not isinstance(stylise, bool) else stylise
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
@@ -316,11 +300,11 @@ class TransitionAgent(object):
                 continue
             connector_contract = dpm.get_connector_contract(name_key)
             if isinstance(connector_contract, ConnectorContract):
-                if name_key == self.ORIGIN_CONNECTOR:
+                if name_key == self.CONNECTOR_SOURCE:
                     label = 'Data Source'
-                elif name_key == self.PERSIST_CONNECTOR:
+                elif name_key == self.CONNECTOR_PERSIST:
                     label = 'Persist Source'
-                elif name_key == self.data_pm.CONTRACT_CONNECTOR:
+                elif name_key == self.data_pm.CONNECTOR_INTENT:
                     label = 'Property Source'
                 else:
                     label = name_key
@@ -568,8 +552,8 @@ class TransitionAgent(object):
 
     def load_clean_canonical(self) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        if self.data_pm.has_connector(self.PERSIST_CONNECTOR):
-            handler = self.data_pm.get_connector_handler(self.PERSIST_CONNECTOR)
+        if self.data_pm.has_connector(self.CONNECTOR_PERSIST):
+            handler = self.data_pm.get_connector_handler(self.CONNECTOR_PERSIST)
             df = handler.load_canonical()
             return df
         return pd.DataFrame()
@@ -581,21 +565,21 @@ class TransitionAgent(object):
         for level in sorted(self.data_pm.cleaners.keys()):
             clean_contract = self.data_pm.get(join(self.data_pm.KEY.cleaners_key, level))
             df = self.clean.run_contract_pipeline(df, cleaner_contract=clean_contract)
-        handler = self.data_pm.get_connector_handler(self.PERSIST_CONNECTOR)
+        handler = self.data_pm.get_connector_handler(self.CONNECTOR_PERSIST)
         handler.persist_canonical(df)
         return df
 
     def save_clean_canonical(self, df):
         """Saves the pandas.DataFrame to the clean files folder"""
-        if self.data_pm.has_connector(self.PERSIST_CONNECTOR):
-            handler = self.data_pm.get_connector_handler(self.PERSIST_CONNECTOR)
+        if self.data_pm.has_connector(self.CONNECTOR_PERSIST):
+            handler = self.data_pm.get_connector_handler(self.CONNECTOR_PERSIST)
             handler.persist_canonical(df)
         return
 
     def remove_clean_canonical(self):
         """removes the current persisted canonical"""
-        if self.data_pm.has_connector(self.PERSIST_CONNECTOR):
-            handler = self.data_pm.get_connector_handler(self.PERSIST_CONNECTOR)
+        if self.data_pm.has_connector(self.CONNECTOR_PERSIST):
+            handler = self.data_pm.get_connector_handler(self.CONNECTOR_PERSIST)
             handler.remove_canonical()
         return
 
@@ -666,11 +650,15 @@ class TransitionAgent(object):
         self.persist_contract(save)
         return
 
-    def backup_contract(self, max_backups=None):
+    def backup_canonical(self, df: pd.DataFrame):
         """backup of the contract properties with optional maximum backups, defaults to 10"""
-        if self.data_pm.has_connector(self.data_pm.CONTRACT_CONNECTOR):
-            _handler = self.data_pm.get_connector_handler(connector_name=self.data_pm.CONTRACT_CONNECTOR)
-            _handler.backup_canonical(max_backups=max_backups)
+        if self.data_pm.has_connector(self.data_pm.CONNECTOR_INTENT):
+            _handler = self._data_pm.get_connector_handler(self.data_pm.CONNECTOR_INTENT)
+            _cc = self._data_pm.get_connector_contract(self.data_pm.CONNECTOR_INTENT)
+            _address = _cc.parse_address(uri=_cc.uri)
+            _path, _, _ext = _address.rpartition('.')
+            _new_uri = "{}_{}.{}".format(_path, str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')), _ext)
+            _handler.backup_canonical(canonical=df, uri=_new_uri)
         return
 
     def persist_contract(self, save=None):

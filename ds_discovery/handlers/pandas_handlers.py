@@ -19,10 +19,6 @@ class PandasSourceHandler(AbstractSourceHandler):
                     uri = '[/<path>/]<filename.ext>'
         but can be a full url
                     uri = <scheme>://<netloc>/[<path>/]<filename.ext>
-
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
     """
 
     def __init__(self, connector_contract: ConnectorContract):
@@ -32,70 +28,41 @@ class PandasSourceHandler(AbstractSourceHandler):
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
-        return ['parquet', 'csv', 'tsv', 'txt', 'json', 'pickle', 'xlsx']
+        return ['parquet', 'csv', 'tsv', 'txt', 'json', 'pickle', 'xlsx', 'yaml']
 
-    def load_canonical(self) -> pd.DataFrame:
-        """ returns the canonical dataset based on the connector contract
+    def load_canonical(self) -> [pd.DataFrame, dict]:
+        """ returns the canonical dataset based on the connector contract. This method utilises the pandas
+        'pd.read_' methods and directly passes the kwargs to these methods.
 
         Extra Parameters in the ConnectorContract kwargs:
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - read_params: (optional) value pair dict of parameters to pass to the read methods. Underlying
+                           read methods the parameters are passed to are all pandas 'read_*', e.g. pd.read_csv
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The PandasSource Connector Contract has not been set")
         _cc = self.connector_contract
-        _key_values = _cc.kwargs.get('read_kw', {})
-        _, _ext = os.path.splitext(_cc.address)
-        file_type = _cc.kwargs.get('file_type', _ext if len(_ext) > 0 else 'csv')
+        load_params = _cc.kwargs
+        load_params.update(_cc.query)  # Update kwargs with those in the uri query
+        _, _, _ext = _cc.address.rpartition('.')
+        file_type = load_params.pop('file_type', _ext if len(_ext) > 0 else 'csv')
         with threading.Lock():
-            if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                df = pd.read_parquet(_cc.address, **_key_values)
+            if file_type.lower() in ['parquet', 'pq']:
+                rtn_data = pd.read_parquet(_cc.address, **load_params)
             elif file_type.lower() in ['csv', 'tsv', 'txt']:
-                df = pd.read_csv(_cc.address, **_key_values)
+                rtn_data = pd.read_csv(_cc.address, **load_params)
             elif file_type.lower() in ['json']:
-                df = pd.read_json(_cc.address, **_key_values)
-            elif file_type.lower() in ['pkl ', 'pickle']:
-                df = pd.read_pickle(_cc.address, **_key_values)
+                rtn_data = pd.read_json(_cc.address, **load_params)
             elif file_type.lower() in ['xls', 'xlsx']:
-                df = pd.read_excel(_cc.address, **_key_values)
+                rtn_data = pd.read_excel(_cc.address, **load_params)
+            elif file_type.lower() in ['pkl ', 'pickle']:
+                rtn_data = self._pickle_load(path_file=_cc.address, **load_params)
+            elif file_type.lower() in ['yml', 'yaml']:
+                rtn_data = self._yaml_load(path_file=_cc.address, **load_params)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
         self._modified = os.stat(_cc.address)[8] if os.path.exists(_cc.address) else 0
-        return df
-
-    def get_modified(self) -> [int, float, str]:
-        """ returns the modified state of the connector resource"""
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The PandasSource Connector Contract has not been set")
-        return os.stat(self.connector_contract.address)[8] if os.path.exists(self.connector_contract.address) else 0
-
-
-class PandasPersistHandler(AbstractPersistHandler):
-    """ Pandas read/write Persist Handler. The format of the uri should be as a minimum:
-                    uri = '[/<path>/]<filename.ext>'
-        but can be a full url
-                    uri = <scheme>://<netloc>/[<path>/]<filename.ext>
-
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-    """
-
-    def __init__(self, connector_contract: ConnectorContract):
-        """ initialise the Handler passing the connector_contract dictionary """
-        super().__init__(connector_contract)
-        self._modified = 0
-
-    def supported_types(self) -> list:
-        """ The source types supported with this module"""
-        return ['pickle', 'yaml', 'parquet', 'json', 'xlsx']
-
-    def get_modified(self) -> [int, float, str]:
-        """ returns True if the modified state of the connector resource has changed"""
-        if not isinstance(self.connector_contract, ConnectorContract):
-            return False
-        return os.stat(self.connector_contract.address)[8] if os.path.exists(self.connector_contract.address) else 0
+        return rtn_data
 
     def exists(self) -> bool:
         """ Returns True is the file exists """
@@ -103,92 +70,103 @@ class PandasPersistHandler(AbstractPersistHandler):
             return True
         return False
 
-    def load_canonical(self) -> pd.DataFrame:
-        """ returns the canonical dataset based on the connector contract
-
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-        """
+    def get_modified(self) -> [int, float, str]:
+        """ returns the modified state of the connector resource"""
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The PandasSource Connector Contract has not been set")
-        _cc = self.connector_contract
-        _key_values = _cc.kwargs.get('read_kw', {})
-        _, _ext = os.path.splitext(_cc.address)
-        file_type = _cc.kwargs.get('file_type', _ext if len(_ext) > 0 else 'csv')
+        return os.path.getmtime(self.connector_contract.address) if os.path.exists(self.connector_contract.address) else 0
+
+    @staticmethod
+    def _yaml_load(path_file, **kwargs) -> dict:
+        """ loads the YAML file
+
+        :param path_file: the name and path of the file
+        :return: a dictionary
+        """
+        encoding = kwargs.pop('encoding', 'utf-8')
         with threading.Lock():
-            if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                df = pd.read_parquet(_cc.address, **_key_values)
-            elif file_type.lower() in ['csv', 'tsv', 'txt']:
-                df = pd.read_csv(_cc.address, **_key_values)
-            elif file_type.lower() in ['json']:
-                df = pd.read_json(_cc.address, **_key_values)
-            elif file_type.lower() in ['pkl ', 'pickle']:
-                df = pd.read_pickle(_cc.address, **_key_values)
-            elif file_type.lower() in ['xls', 'xlsx']:
-                df = pd.read_excel(_cc.address, **_key_values)
-            else:
-                raise LookupError('The file format {} is not currently supported for read'.format(file_type))
-        self._modified = os.stat(_cc.address)[8] if os.path.exists(_cc.address) else 0
-        return df
+            try:
+                with closing(open(path_file, mode='r', encoding=encoding)) as ymlfile:
+                    rtn_dict = yaml.safe_load(ymlfile)
+            except IOError as e:
+                raise IOError("The yaml file {} failed to open with: {}".format(path_file, e))
+            if not isinstance(rtn_dict, dict) or not rtn_dict:
+                raise TypeError("The yaml file {} could not be loaded as a dict type".format(path_file))
+            return rtn_dict
+
+    @staticmethod
+    def _pickle_load(path_file: str, **kwargs) -> [dict, pd.DataFrame]:
+        """ loads a pickle file """
+        fix_imports = kwargs.pop('fix_imports', True)
+        encoding = kwargs.pop('encoding', 'ASCII')
+        errors = kwargs.pop('errors', 'strict')
+        with threading.Lock():
+            with closing(open(path_file, mode='rb')) as f:
+                return pickle.load(f, fix_imports=fix_imports, encoding=encoding, errors=errors)
+
+
+class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
+    """ Pandas read/write Persist Handler. The format of the uri should be as a minimum:
+                    uri = '[/<path>/]<filename.ext>'
+        but can be a full url
+                    uri = <scheme>://<netloc>/[<path>/]<filename.ext>
+    """
 
     def persist_canonical(self, canonical: pd.DataFrame) -> bool:
         """ persists the canonical dataset
 
         Extra Parameters in the ConnectorContract kwargs:
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
-        _uri = self.connector_contract.address
+        _uri = self.connector_contract.uri
         return self.backup_canonical(uri=_uri, canonical=canonical)
 
-    def backup_canonical(self, canonical: pd.DataFrame, uri: str) -> bool:
+    def backup_canonical(self, canonical: pd.DataFrame, uri: str, ignore_kwargs: bool=False) -> bool:
         """ creates a backup of the canonical to an alternative URI
 
         Extra Parameters in the ConnectorContract kwargs:
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - write_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - write_params (optional) a dictionary of additional write parameters directly passed to 'write_' methods
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
         _cc = self.connector_contract
         _address = _cc.parse_address(uri=uri)
-        _key_values = _cc.kwargs.get('write_kw', {})
-        _, _ext = os.path.splitext(_address)
-        file_type = _key_values.pop('file_type', _ext if len(_ext) > 0 else 'yaml')
+        persist_params = {} if ignore_kwargs else _cc.kwargs
+        persist_params.update(_cc.parse_query(uri=uri))
+        _, _, _ext = _address.rpartition('.')
+        file_type = persist_params.pop('file_type', _ext if len(_ext) > 0 else 'pkl')
+        write_params = persist_params.pop('write_params', {})
         # parquet
         if file_type.lower() in ['pq', 'pqt', 'parquet']:
             with threading.Lock():
-                canonical.to_parquet(_address, **_key_values)
+                canonical.to_parquet(_address, **write_params)
             return True
         # pickle
         if file_type.lower() in ['pkl', 'pickle']:
-            _compression = _key_values.pop('compression', None)
-            _protocol = _key_values.pop('protocol', pickle.HIGHEST_PROTOCOL)
+            _compression = write_params.pop('compression', None)
+            _protocol = write_params.pop('protocol', pickle.HIGHEST_PROTOCOL)
             with threading.Lock():
                 canonical.to_pickle(path=_address, compression=_compression, protocol=_protocol)
             return True
         if file_type.lower() in ['json']:
             with threading.Lock():
-                canonical.to_json(_address, **_key_values)
+                canonical.to_json(_address, **write_params)
             return True
         if file_type.lower() in ['csv', 'tsv', 'txt']:
+            _index = write_params.pop('index', False)
             with threading.Lock():
-                canonical.to_csv(_address, **_key_values)
+                canonical.to_csv(_address, index=_index, **write_params)
             return True
         if file_type.lower() in ['pkl', 'pickle']:
-            _compression = _key_values.pop('compression', None)
-            _protocol = _key_values.pop('protocol', pickle.HIGHEST_PROTOCOL)
             with threading.Lock():
-                canonical.to_pickle(path=_address, compression=_compression, protocol=_protocol)
+                self._pickle_dump(data=canonical, path_file=_address, **write_params)
             return True
         # yaml
         if file_type.lower() in ['yml', 'yaml']:
-            default_flow_style = _key_values.pop('default_flow_style', False)
-            self._yaml_dump(data=canonical, path_file=_address, default_flow_style=default_flow_style,
-                            **_key_values)
+            self._yaml_dump(data=canonical, path_file=_address, **write_params)
             return True
         # not found
         raise LookupError('The file format {} is not currently supported for write'.format(file_type))
@@ -205,17 +183,19 @@ class PandasPersistHandler(AbstractPersistHandler):
         return False
 
     @staticmethod
-    def _yaml_dump(data, path_file, default_flow_style=False, **kwargs) -> None:
+    def _yaml_dump(data, path_file, **kwargs) -> None:
         """ dump YAML file
 
         :param data: the data to persist
         :param path_file: the name and path of the file
         :param default_flow_style: (optional) if to include the default YAML flow style
         """
+        encoding = kwargs.pop('encoding', 'utf-8')
+        default_flow_style = kwargs.pop('default_flow_style', False)
         with threading.Lock():
             # make sure the dump is clean
             try:
-                with closing(open(path_file, 'w')) as ymlfile:
+                with closing(open(path_file, mode='w', encoding=encoding)) as ymlfile:
                     yaml.safe_dump(data=data, stream=ymlfile, default_flow_style=default_flow_style, **kwargs)
             except IOError as e:
                 raise IOError("The yaml file {} failed to open with: {}".format(path_file, e))
@@ -223,18 +203,10 @@ class PandasPersistHandler(AbstractPersistHandler):
         return
 
     @staticmethod
-    def _yaml_load(path_file) -> dict:
-        """ loads the YAML file
-
-        :param path_file: the name and path of the file
-        :return: a dictionary
-        """
+    def _pickle_dump(data, path_file: str, **kwargs) -> None:
+        """ dumps a pickle file"""
+        protocol = kwargs.pop('protocol', pickle.HIGHEST_PROTOCOL)
+        fix_imports = kwargs.pop('fix_imports', True)
         with threading.Lock():
-            try:
-                with closing(open(path_file, 'r')) as ymlfile:
-                    rtn_dict = yaml.safe_load(ymlfile)
-            except IOError as e:
-                raise IOError("The yaml file {} failed to open with: {}".format(path_file, e))
-            if not isinstance(rtn_dict, dict) or not rtn_dict:
-                raise TypeError("The yaml file {} could not be loaded as a dict type".format(path_file))
-            return rtn_dict
+            with closing(open(path_file, mode='wb')) as f:
+                pickle.dump(data, f, protocol=protocol, fix_imports=fix_imports)

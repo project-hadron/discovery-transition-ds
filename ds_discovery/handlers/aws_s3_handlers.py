@@ -1,13 +1,9 @@
-import os
 import threading
-from io import BytesIO
+from io import StringIO, BytesIO
 import pandas as pd
 from botocore.exceptions import ClientError
 import boto3
-try:
-    import pyarrow as pa
-except ImportError:
-    import fastparquet as pa
+import pyarrow as pa
 try:
     import cPickel as pickle
 except ImportError:
@@ -25,214 +21,170 @@ class AwsS3SourceHandler(AbstractSourceHandler):
         URI Format:
             uri = 's3://<bucket>[/<path>]/<filename.ext>'
 
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - get_object_kw: (optional) value pair dictionary of parameters to pass to the Boto3 get_client method
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-
         Restrictions:
             - This does not use the AWS S3 Multipart Upload and is limited to 5GB files
     """
 
     def __init__(self, connector_contract: ConnectorContract):
-        """ initialise the Hander passing the connector_contract dictionary """
+        """ initialise the Hander passing the connector_contract dictionary
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - region_name (optional) session region name
+            - profile_name (optional) session shared credentials file profile name
+        """
         super().__init__(connector_contract)
+        cc_params = connector_contract.kwargs
+        cc_params.update(connector_contract.query)  # Update kwargs with those in the uri query
+        region_name = cc_params.pop('region_name', 'us-east-2')
+        profile_name = cc_params.pop('profile_name', 'default')
+        self._session = boto3.Session(region_name=region_name, profile_name=profile_name)
         self._modified = 0
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
-        return ['parquet', 'csv', 'json', 'pickle', 'xlsx']
+        return ['parquet', 'csv', 'json', 'pickle']
 
-    def load_canonical(self) -> pd.DataFrame:
-        """Loads the canonical dataset, returning a Pandas DataFrame.
+    def exists(self) -> bool:
+        """ Returns True is the file exists
 
         Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - get_object_kw: (optional) value pair dictionary of parameters to pass to the Boto3 get_client method
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
+            - s3_list_params: (optional) a dictionary of additional s3 parameters directly passed to 'list_objects_v2'
+
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The S3 Source Connector Contract has not been set correctly")
         _cc = self.connector_contract
         if not isinstance(_cc, ConnectorContract):
             raise ValueError("The Python Source Connector Contract has not been set correctly")
-        _client_params = _cc.kwargs.get('get_object_kw', {})
-        _read_params = _cc.kwargs.get('read_kw', {})
-        _, _ext = os.path.splitext(_cc.address)
-        file_type = _cc.get_key_value('file_type', _ext if len(_ext) > 0 else 'dsv')
+        cc_params = _cc.kwargs
+        cc_params.update(_cc.query)  # Update kwargs with those in the uri query
+        s3_list_params = cc_params.pop('s3_list_params', {})
+        if _cc.schema not in ['s3']:
+            raise ValueError("The Connector Contract Schema has not been set correctly.")
+        s3_client = self._session.client(_cc.schema)
+        response = s3_client.list_objects_v2(Bucket=_cc.netloc, **s3_list_params)
+        for obj in response.get('Contents', []):
+            if obj['Key'] == _cc.path[1:]:
+                return True
+        return False
+
+    def get_modified(self) -> [int, float, str]:
+        """ returns if the file has been modified
+
+            - s3_get_params: (optional) a dictionary of additional s3 client parameters directly passed to 'get_object'
+        """
+        if not isinstance(self.connector_contract, ConnectorContract):
+            raise ValueError("The S3 Source Connector Contract has not been set correctly")
+        _cc = self.connector_contract
+        if not isinstance(_cc, ConnectorContract):
+            raise ValueError("The Python Source Connector Contract has not been set correctly")
+        cc_params = _cc.kwargs
+        cc_params.update(_cc.query)  # Update kwargs with those in the uri query
+        # pop all the extra params
+        s3_get_params = cc_params.pop('s3_get_params', {})
+        if _cc.schema not in ['s3']:
+            raise ValueError("The Connector Contract Schema has not been set correctly.")
+        s3_client = self._session.client(_cc.schema)
+        try:
+            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path[1:], **s3_get_params)
+        except ClientError as e:
+            code = e.response["Error"]["Code"]
+            raise ConnectionError("Failed to retrieve the object from region '{}', bucket '{}' "
+                                  "Key '{}' with error code '{}'".format(self._session.region_name, _cc.netloc,
+                                                                         _cc.path[1:], code))
+        self._modified = s3_object.get('LastModified', 0)
+        return self._modified
+
+    def load_canonical(self) -> [pd.DataFrame, dict]:
+        """Loads the canonical dataset, returning a Pandas DataFrame. This method utilises the pandas
+        'pd.read_' methods and directly passes the kwargs to these methods.
+
+        Extra Parameters in the ConnectorContract kwargs:
+            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
+            - encoding: (optional) the encoding of the s3 object body. Default 'utf-8'
+            - s3_get_params: (optional) a dictionary of additional s3 client parameters directly passed to 'get_object'
+            - read_params: (optional) value pair dict of parameters to pass to the read methods. Underlying
+                           read methods the parameters are passed to are all pandas 'read_*', e.g. pd.read_csv
+        """
+        if not isinstance(self.connector_contract, ConnectorContract):
+            raise ValueError("The S3 Source Connector Contract has not been set correctly")
+        _cc = self.connector_contract
+        if not isinstance(_cc, ConnectorContract):
+            raise ValueError("The Python Source Connector Contract has not been set correctly")
+        _, _, _ext = _cc.address.rpartition('.')
+        cc_params = _cc.kwargs
+        cc_params.update(_cc.query)  # Update kwargs with those in the uri query
+        # pop all the extra params
+        encoding = cc_params.pop('encoding', 'utf-8')
+        file_type = cc_params.pop('file_type', _ext if len(_ext) > 0 else 'dsv')
+        s3_get_params = cc_params.pop('s3_get_params', {})
+        read_params = cc_params.pop('read_params', {})
         if file_type.lower() not in self.supported_types():
             raise ValueError("The file type {} is not recognised. "
                              "Set file_type parameter to a recognised source type".format(file_type))
-        s3_client = boto3.client(_cc.schema)
-        # take the encoding out before passing the query value pairs
-        encoding = _client_params.pop('encoding', 'utf-8')
+        # session
+        if _cc.schema not in ['s3']:
+            raise ValueError("The Connector Contract Schema has not been set correctly.")
+        s3_client = self._session.client(_cc.schema)
         try:
-            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path, **_client_params)
+            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path[1:], **s3_get_params)
         except ClientError as e:
             code = e.response["Error"]["Code"]
-            raise ConnectionError(f"Failed to retrieve the object from S3 client with error code '{code}")
-        resource_body = s3_object['Body'].read().decode(encoding)
+            raise ConnectionError("Failed to retrieve the object from region '{}', bucket '{}' "
+                                  "Key '{}' with error code '{}'".format(self._session.region_name, _cc.netloc,
+                                                                         _cc.path[1:], code))
+        resource_body = s3_object['Body'].read()
         with threading.Lock():
             if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                df = pd.read_parquet(resource_body, **_read_params)
+                df = pd.read_parquet(BytesIO(resource_body), **read_params)
             elif file_type.lower() in ['csv', 'tsv', 'txt']:
-                df = pd.read_csv(resource_body, **_read_params)
+                df = pd.read_csv(StringIO(resource_body.decode(encoding)), **read_params)
             elif file_type.lower() in ['json']:
-                df = pd.read_json(resource_body, **_read_params)
+                df = pd.read_json(StringIO(resource_body.decode(encoding)), **read_params)
             elif file_type.lower() in ['pkl ', 'pickle']:
-                df = pd.read_pickle(resource_body, **_read_params)
-            elif file_type.lower() in ['xls', 'xlsx']:
-                df = pd.read_excel(resource_body, **_read_params)
+                fix_imports = read_params.pop('fix_imports', True)
+                encoding = read_params.pop('encoding', 'ASCII')
+                errors = read_params.pop('errors', 'strict')
+                df = pickle.loads(BytesIO(resource_body), fix_imports=fix_imports, encoding=encoding, errors=errors)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
         self._modified = s3_object.get('LastModified', 0)
         return df
 
-    def get_modified(self) -> [int, float, str]:
-        """ returns if the file has been modified """
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The S3 Source Connector Contract has not been set correctly")
-        _cc = self.connector_contract
-        if not isinstance(_cc, ConnectorContract):
-            raise ValueError("The Python Source Connector Contract has not been set correctly")
-        _client_params = _cc.kwargs.get('get_object_kw')
-        _ = _client_params.pop('encoding', 'utf-8')
-        s3_client = boto3.client(_cc.schema)
-        try:
-            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path, **_client_params)
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise ConnectionError(f"Failed to retrieve the object from S3 client with error code '{code}")
-        self._modified = s3_object.get('LastModified', 0)
-        return self._modified
 
-
-class AwsS3PersistHandler(AbstractPersistHandler):
+class AwsS3PersistHandler(AwsS3SourceHandler, AbstractPersistHandler):
     """ An Amazon AWS S3 source handler.
 
         URI Format:
             uri = 's3://<bucket>[/<path>]/<filename.ext>'
 
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - get_object_kw: (optional) value pair dict of parameters to pass to the Boto3 get_object method
-            - put_object_kw: (optional) value pair dict of parameters to pass to the Boto3 put_object method
-            - del_object_kw: (optional) value pair dict of parameters to pass to the Boto3 delete_object method
-            - read_kw: (optional) value pair dict of parameters to pass to the read methods
-            - write_kw: (optional) value pair dict of parameters to pass to the write methods
-
         Restrictions:
             - This does not use the AWS S3 Multipart Upload and is limited to 5GB files
     """
 
-    def __init__(self, connector_contract: ConnectorContract):
-        """ initialise the Hander passing the connector_contract dictionary """
-        super().__init__(connector_contract)
-        self._modified = 0
-
-    def supported_types(self) -> list:
-        """ The source types supported with this module"""
-        return ['pickle', 'parquet', 'csv', 'json', 'xlsx']
-
-    def get_modified(self) -> [int, float, str]:
-        """ returns if the file has been modified """
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The S3 Source Connector Contract has not been set correctly")
-        _cc = self.connector_contract
-        if not isinstance(_cc, ConnectorContract):
-            raise ValueError("The Python Source Connector Contract has not been set correctly")
-        _client_params = _cc.kwargs.get('get_object_kw')
-        _ = _client_params.pop('encoding', 'utf-8')
-        s3_client = boto3.client(_cc.schema)
-        try:
-            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path, **_client_params)
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise ConnectionError(f"Failed to retrieve the object from S3 client with error code '{code}")
-        self._modified = s3_object.get('LastModified', 0)
-        return self._modified
-
-    def exists(self) -> bool:
-        """ Returns True is the file exists """
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The S3 Source Connector Contract has not been set correctly")
-        _cc = self.connector_contract
-        if not isinstance(_cc, ConnectorContract):
-            raise ValueError("The Python Source Connector Contract has not been set correctly")
-        s3_client = boto3.client(_cc.schema)
-        response = s3_client.list_objects_v2(Bucket=_cc.netloc)
-        for obj in response.get('Contents', []):
-            if obj['Key'] == _cc.path:
-                return True
-        return False
-
-    def load_canonical(self) -> pd.DataFrame:
-        """Loads the canonical dataset, returning a Pandas DataFrame.
+    def persist_canonical(self, canonical: [pd.DataFrame, dict]) -> bool:
+        """ persists either the canonical dataset.
 
         Extra Parameters in the ConnectorContract kwargs:
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - get_object_kw: (optional) value pair dictionary of parameters to pass to the Boto3 get_client method
-            - read_kw: (optional) value pair dictionary of parameters to pass to the pandas read methods
-        """
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The S3 Source Connector Contract has not been set correctly")
-        _cc = self.connector_contract
-        if not isinstance(_cc, ConnectorContract):
-            raise ValueError("The Python Source Connector Contract has not been set correctly")
-        _client_params = _cc.kwargs.get('get_object_kw', {})
-        _read_params = _cc.kwargs.get('read_kw', {})
-        _, _ext = os.path.splitext(_cc.address)
-        file_type = _cc.get_key_value('file_type', _ext if len(_ext) > 0 else 'dsv')
-        if file_type.lower() not in self.supported_types():
-            raise ValueError("The file type {} is not recognised. "
-                             "Set file_type parameter to a recognised source type".format(file_type))
-        s3_client = boto3.client(_cc.schema)
-        # take the encoding out before passing the query value pairs
-        encoding = _client_params.pop('encoding', 'utf-8')
-        try:
-            s3_object = s3_client.get_object(Bucket=_cc.netloc, Key=_cc.path, **_client_params)
-        except ClientError as e:
-            code = e.response["Error"]["Code"]
-            raise ConnectionError(f"Failed to retrieve the object from S3 client with error code '{code}")
-        resource_body = s3_object['Body'].read().decode(encoding)
-        with threading.Lock():
-            if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                df = pd.read_parquet(resource_body, **_read_params)
-            elif file_type.lower() in ['csv', 'tsv', 'txt']:
-                df = pd.read_csv(resource_body, **_read_params)
-            elif file_type.lower() in ['json']:
-                df = pd.read_json(resource_body, **_read_params)
-            elif file_type.lower() in ['pkl ', 'pickle']:
-                df = pd.read_pickle(resource_body, **_read_params)
-            elif file_type.lower() in ['xls', 'xlsx']:
-                df = pd.read_excel(resource_body, **_read_params)
-            else:
-                raise LookupError('The source format {} is not currently supported for read'.format(file_type))
-        self._modified = s3_object.get('LastModified', 0)
-        return df
-
-    def persist_canonical(self, canonical: pd.DataFrame) -> bool:
-        """ persists either the canonical dataset. if the file extension does
-        not match any supported source types then pass 'file_type=' as a method parameter.
-
-        Extra Parameters in the ConnectorContract kwargs:
-            - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - put_object_kw: (optional) value pair dict of parameters to pass to the Boto3 put_object method
-            - write_kw: (optional) value pair dict of parameters to pass to the write methods
+            - s3_put_params: (optional) a dictionary of additional s3 client parameters directly passed to 'get_object'
+            - write_params: (optional) value pair dict of parameters to pass to the write methods - pandas.to_csv,
+                              pandas.to_json, pickle.dump and parquet.Table.from_pandas
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
         _uri = self.connector_contract.address
         return self.backup_canonical(uri=_uri, canonical=canonical)
 
-    def backup_canonical(self, canonical: pd.DataFrame, uri: str) -> bool:
+    def backup_canonical(self, canonical: [pd.DataFrame, dict], uri: str, ignore_kwargs: bool=False) -> bool:
         """ persists the canonical dataset as a backup to the specified URI resource. Note that only the
         address is taken from the URI and all other attributes are taken from the ConnectorContract
 
         Extra Parameters in the ConnectorContract kwargs:
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
-            - put_object_kw: (optional) value pair dict of parameters to pass to the Boto3 put_object method
-            - write_kw: (optional) value pair dict of parameters to pass to the write methods
+            - s3_put_params: (optional) value pair dict of parameters to pass to the Boto3 put_object method
+            - write_params: (optional) value pair dict of parameters to pass to the write methods - pandas.to_csv,
+                              pandas.to_json, pickle.dump and parquet.Table.from_pandas
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The S3 Source Connector Contract has not been set correctly")
@@ -240,34 +192,45 @@ class AwsS3PersistHandler(AbstractPersistHandler):
         if not isinstance(_cc, ConnectorContract):
             raise ValueError("The Python Source Connector Contract has not been set correctly")
         schema, bucket, path = _cc.parse_address_elements(uri=uri)
-        _client_params = _cc.kwargs.get('put_object_kw', {})
-        _write_params = _cc.kwargs.get('write_kw', {})
-        _, _ext = os.path.splitext(path)
-        file_type = _cc.get_key_value('file_type', _ext if len(_ext) > 0 else 'dsv')
-        s3_client = boto3.client(schema)
+        _, _, _ext = path.rpartition('.')
+        cc_params = {} if ignore_kwargs else _cc.kwargs
+        cc_params.update(_cc.parse_query(uri=uri))
+        # pop all the extra params
+        s3_put_params = cc_params.pop('s3_put_params', _cc.kwargs.get('put_object_kw', {}))
+        write_params = cc_params.pop('write_params', _cc.kwargs.get('write_kw', {}))
+        file_type = cc_params.pop('file_type', _cc.kwargs.get('file_type', _ext if len(_ext) > 0 else 'pkl'))
+        if _cc.schema not in ['s3']:
+            raise ValueError("The Connector Contract Schema has not been set correctly.")
+        s3_client = self._session.client(_cc.schema)
         # csv
         if file_type.lower() in ['csv', 'tsv', 'txt']:
-            byte_obj = BytesIO()
-            _mode = _write_params.pop('mode', 'wb')
+            byte_obj = StringIO()
+            _mode = write_params.pop('mode', 'wb')
+            _index = write_params.pop('index', False)
             with threading.Lock():
-                canonical.to_csv(byte_obj, mode=_mode, **_write_params)
-                s3_client.put_object(Bucket=bucket, Key=path, Body=byte_obj, **_client_params)
+                canonical.to_csv(byte_obj, mode=_mode, index=_index, **write_params)
+                s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         # pickle
         elif file_type.lower() in ['pkl ', 'pickle']:
+            _protocol = write_params.pop('protocol', pickle.HIGHEST_PROTOCOL)
+            _fix_imports = write_params.pop('fix_imports', True)
             with threading.Lock():
-                byte_obj = pickle.dump(canonical, **_write_params)
-                s3_client.put_object(Bucket=bucket, Key=path, Body=byte_obj, **_client_params)
+                byte_obj = pickle.dumps(canonical, protocol=_protocol, fix_imports=_fix_imports)
+                s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj, **s3_put_params)
         # json
         elif file_type.lower() in ['json']:
-            byte_obj = BytesIO()
+            byte_obj = StringIO()
             with threading.Lock():
-                canonical.to_json(byte_obj, **_write_params)
-                s3_client.put_object(Bucket=bucket, Key=path, Body=byte_obj, **_client_params)
+                canonical.to_json(byte_obj, **write_params)
+                s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         # parquet
         elif file_type.lower() in ['parquet', 'pq', 'pqt']:
+            _index = write_params.pop('index', False)
+            byte_obj = BytesIO()
             with threading.Lock():
-                table = pa.Table.from_pandas(df=canonical, **_write_params)
-                s3_client.put_object(Bucket=bucket, Key=path, Body=table, **_client_params)
+                # table = pa.Table.from_pandas(df=canonical, **write_params)
+                canonical.to_parquet(byte_obj, index=_index, **write_params)
+                s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         else:
             raise LookupError('The source format {} is not currently supported for write'.format(file_type))
         return True
@@ -276,16 +239,21 @@ class AwsS3PersistHandler(AbstractPersistHandler):
         """ removes the URI named resource
 
         Extra Parameters in the ConnectorContract kwargs:
-            - del_object_kw: (optional) value pair dict of parameters to pass to the Boto3 delete_object method
+            - s3_del_params: (optional) value pair dict of parameters to pass to the Boto3 delete_object method
         """
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The S3 Source Connector Contract has not been set correctly")
         _cc = self.connector_contract
         if not isinstance(_cc, ConnectorContract):
             raise ValueError("The Python Source Connector Contract has not been set correctly")
-        _client_params = _cc.kwargs.get('del_object_kw', {})
-        s3_client = boto3.client(_cc.schema)
-        response = s3_client.response = s3_client.delete_object(Bucket=_cc.netloc, Key=_cc.path, **_client_params)
+        cc_params = _cc.kwargs
+        cc_params.update(_cc.query)  # Update kwargs with those in the uri query
+        # pop all the extra params
+        s3_del_params = cc_params.pop('s3_put_params', _cc.kwargs.get('put_object_kw', {}))
+        if _cc.schema not in ['s3']:
+            raise ValueError("The Connector Contract Schema has not been set correctly.")
+        s3_client = self._session.client(_cc.schema)
+        response = s3_client.response = s3_client.delete_object(Bucket=_cc.netloc, Key=_cc.path[1:], **s3_del_params)
         if response.get('RequestCharged') is None:
             return False
         return True

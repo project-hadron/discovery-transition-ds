@@ -4,7 +4,7 @@ import unittest
 
 from ds_foundation.properties.property_manager import PropertyManager
 
-from ds_discovery import TransitionAgent
+from ds_discovery import Transition
 
 from ds_discovery.transition.discovery import DataDiscovery as Discovery
 
@@ -35,7 +35,7 @@ class TestDiscovery(unittest.TestCase):
 
     def test_find_file(self):
         ds = Discovery()
-        df = TransitionAgent.from_env('synthetic').load_source_canonical()
+        df = Transition.from_env('synthetic').load_source_canonical()
         result = ds.data_dictionary(df)
         control = ['Attribute', 'dType', '%_Null', '%_Dom', 'Count', 'Unique', 'Observations']
         self.assertEqual(control, result.columns.to_list())
@@ -44,7 +44,7 @@ class TestDiscovery(unittest.TestCase):
         self.assertEqual(control, result.columns.to_list())
 
     def test_data_dictionary_filter(self):
-        tr = TransitionAgent.from_env('synthetic')
+        tr = Transition.from_env('synthetic')
         df = tr.load_source_canonical()
         result = tr.canonical_report(df, stylise=False)
         print(result)

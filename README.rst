@@ -168,16 +168,6 @@ When you create a new project, or set up your default master notebook you import
     from ds_discovery import Transition
 
 
-Within my master notebook, just as a fail-safe, as it costs nothing, I also set up the environment variable
-``os.environ['TR_CONTRACT_PATH']`` with your root working path. In this example using the environmnt variable of ``PWD``
-
-.. code-block:: python
-
-    # set environment variables
-    os.environ['TR_CONTRACT_PATH'] = Path(os.environ['PWD']).as_posix()
-
-Setting ``TR_CONTRACT_PATH`` allows you to use the init factory pattern ``TransitionAgent.from_env(contract_name)``.
-
 We now have all the appropriate imports and environment variables.
 
 Transitioning: Data Sourcing
@@ -203,18 +193,19 @@ Connectivity and the Raw Canonical
 
    transition
 
-Creating a Transitioning Contract Pipeline
-------------------------------------------
-
+Creating a Transition instance
+------------------------------
+In this instance we are going to use a Factory Method to instanciate
+the Transition Class
 -  Creating an instance of the Transitioning Class, passing a unique
-   reference name. when wishing to reference this in other Juptyer
-   Notebooks.
--  The reference name identifies the unique transitioning contract
-   pipeline.
+   reference name to the factory method.
+-  The reference name identifies the unique transitioning contract.
 
 .. code-block:: python
 
-    tr = TransitionAgent.from_env('synthetic_customer')
+    tr = Transition.from_uri('synthetic_customer')
+
+This initialisation
 
 Reset the Source Contract
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,22 +218,6 @@ validates that our values are empty.
     # reset the contract and set the source contract
     tr.reset_contract()
     tr.report_source()
-
-
-Find the files
-~~~~~~~~~~~~~~
-
--  Use the discovery ``find_file(...)`` to explore the names of the raw
-   files
--  Note, we use the file ‘property manager’ ``file_pm`` to get the
-   data_path
--  Because this is a canonical, we can manipulate it as we would our
-   source file
-
-.. code-block:: python
-
-    files = tr.discover.find_file('.csv', root_dir=tr.file_pm.data_path).iloc[:,[0,4]].sort_values('name', axis=0)
-    files
 
 
 Build the Source Contract
@@ -269,8 +244,7 @@ have defined the file separator and encoding.
 
 .. code-block:: python
 
-    tr.set_source_contract(uri='synthetic_customer.csv', module_name='ds_discovery.handlers.pandas_handlers',
-                           handler='PandasSourceHandler', sep=',', encoding='latin1', load=False)
+    tr.set_source_contract(uri='synthetic_customer.csv', sep=',', encoding='latin1', load=False)
 
 Other Connectivity
 ^^^^^^^^^^^^^^^^^^
@@ -281,8 +255,7 @@ containing csv files .
 
 .. code-block:: python
 
-    tr.set_source_contract(uri="s3://eu-west-1.amazonaws.com/synthetic/sftp/data/repo/synthetic_customer.csv",
-                           module_name='ds_connectivity.handlers.aws_handlers', handler='S3SourceHandler',
+    tr.set_source_contract(uri="s3://aistac-discovery-cortex-dev/data/synthetic_customer.csv",
                            sep=',', encoding='latin1', load=False)
 
 

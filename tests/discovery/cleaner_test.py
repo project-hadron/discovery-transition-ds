@@ -8,7 +8,7 @@ import pandas as pd
 from ds_behavioral import DataBuilderTools as tools
 from ds_behavioral.sample.sample_data import ProfileSample
 
-from ds_discovery import TransitionAgent
+from ds_discovery import Transition
 from ds_discovery.intent.pandas_cleaners import PandasCleaners as Cleaner
 
 
@@ -144,9 +144,9 @@ class CleanerTest(unittest.TestCase):
         for value in ['', 0, 0.0, pd.Timestamp(2018,1,1), [], (), pd.Series(), list(), tuple(),
                       'name', ['list1', 'list2'], ('tuple1', 'tuple2'), pd.Series(['series1', 'series2']),
                       {'key1': 'value1', 'key2': 'value2'}, {}, dict()]:
-            result = TransitionAgent.list_formatter(value)
+            result = Transition.list_formatter(value)
             self.assertTrue(isinstance(result, list), value)
-        self.assertEqual(None, TransitionAgent.list_formatter(None))
+        self.assertEqual(None, Transition.list_formatter(None))
 
     def test_to_date(self):
         cleaner = Cleaner()
