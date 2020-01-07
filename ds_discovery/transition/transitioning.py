@@ -67,7 +67,7 @@ class Transition(object):
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :return: the initialised class instance
          """
-        _uri = properties_uri if isinstance(properties_uri, str) else "/tmp/contracts"
+        _uri = properties_uri if isinstance(properties_uri, str) else "/tmp/aistac/contracts"
         _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=_uri)
         if str(_schema).lower().startswith('s3'):
             return cls._from_remote(contract_name=contract_name, properties_uri=_uri, default_save=default_save)
@@ -650,11 +650,11 @@ class Transition(object):
         self.persist_contract(save)
         return
 
-    def backup_canonical(self, df: pd.DataFrame):
+    def backup_canonical(self, connector_name: str, df: [pd.DataFrame, dict]):
         """backup of the contract properties with optional maximum backups, defaults to 10"""
-        if self.data_pm.has_connector(self.data_pm.CONNECTOR_INTENT):
-            _handler = self._data_pm.get_connector_handler(self.data_pm.CONNECTOR_INTENT)
-            _cc = self._data_pm.get_connector_contract(self.data_pm.CONNECTOR_INTENT)
+        if self.data_pm.has_connector(connector_name):
+            _handler = self._data_pm.get_connector_handler(connector_name)
+            _cc = self._data_pm.get_connector_contract(connector_name)
             _address = _cc.parse_address(uri=_cc.uri)
             _path, _, _ext = _address.rpartition('.')
             _new_uri = "{}_{}.{}".format(_path, str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')), _ext)

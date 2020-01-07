@@ -49,7 +49,7 @@ class TransitionTest(unittest.TestCase):
         tr = Transition.from_uri('Example01')
         join = tr.data_pm.join
         self.assertEqual('data.Example01.connectors', tr.data_pm.KEY.connectors_key)
-        self.assertEqual('data.Example01.intent', tr.data_pm.KEY.cleaners_key)
+        self.assertEqual('data.Example01.cleaners', tr.data_pm.KEY.cleaners_key)
         self.assertEqual('data.Example01.connectors.resource', join(tr.data_pm.KEY.connectors_key, 'resource'))
         self.assertEqual('data.Example01.connectors.type', join(tr.data_pm.KEY.connectors_key, 'type'))
         self.assertEqual('data.Example01.connectors.location', join(tr.data_pm.KEY.connectors_key, 'location'))
@@ -60,7 +60,7 @@ class TransitionTest(unittest.TestCase):
     def test_is_contract_empty(self):
         tr = Transition.from_uri('synthetic')
         self.assertTrue(tr.is_contract_empty())
-        tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
         self.assertFalse(tr.is_contract_empty())
         tr.remove_source_contract()
         self.assertTrue(tr.is_contract_empty())
@@ -76,14 +76,14 @@ class TransitionTest(unittest.TestCase):
 
     def test_source_report(self):
         tr = Transition.from_uri('synthetic')
-        tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
         report = tr.report_source(stylise=False)
         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report.columns))
 
     def test_load_clean_file(self):
         tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
-        tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract(uri='example01.csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
 
         tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True))
@@ -106,7 +106,7 @@ class TransitionTest(unittest.TestCase):
     def test_load_clean_layers(self):
         tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
-        tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract('example01.csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
 
         tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True))
@@ -138,7 +138,7 @@ class TransitionTest(unittest.TestCase):
     def test_load_clean_remove(self):
         tr = Transition.from_uri('Example01')
         tr.set_version('0.01')
-        tr.set_source_contract('example01.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract('example01.csv', sep=',', encoding='latin1', load=False)
         df = tr.load_source_canonical()
 
         tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True), level=0)
@@ -182,7 +182,7 @@ class TransitionTest(unittest.TestCase):
                   'connectors': {'pm_data_testcontract': {'handler': 'PandasPersistHandler',
                                                       'modified': 0,
                                                       'module_name': 'ds_discovery.handlers.pandas_handlers',
-                                                      'uri': '/tmp/contracts/config_transition_data_TestContract.yaml'}},
+                                                      'uri': '/tmp/aistac/contracts/config_transition_data_TestContract.yaml'}},
                   'version': 'v0.00'}}
         result = dpm.get(dpm.KEY.manager_key)
         self.assertEqual(control, result)
@@ -211,7 +211,7 @@ class TransitionTest(unittest.TestCase):
         structure = tr.data_pm.get(tr.data_pm.KEY.contract_key)
         tr2 = Transition.from_uri('control')
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
-        control = {'intent': {}, 'snapshot': {}, 'connectors':
+        control = {'cleaners': {}, 'snapshot': {}, 'connectors':
                    {'pm_data_control': {'handler': 'PandasPersistHandler',
                                  'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/control',
                                  'modified': 0,
@@ -223,17 +223,6 @@ class TransitionTest(unittest.TestCase):
         tr2 = Transition.from_uri('control')
         self.assertEqual(structure, tr.data_pm.get(tr.data_pm.KEY.contract_key))
         self.assertEqual(control, tr2.data_pm.get(tr2.data_pm.KEY.contract_key))
-
-    def test_is_backup(self):
-        tr = Transition.from_uri('synthetic')
-        tr.backup_contract()
-        self.assertTrue(os.path.exists("./work/config/synthetic/config_data_synthetic_00.yaml"))
-        tr.set_version('v0.01')
-        tr.backup_contract()
-        self.assertTrue(os.path.exists("./work/config/synthetic/config_data_synthetic_01.yaml"))
-        result = tr.create_snapshot(suffix='test')
-        self.assertEqual('synthetic_#test', result)
-        self.assertEqual(['synthetic_#test'], tr.snapshots)
 
     def test_notes_add_remove(self):
         tr = Transition.from_uri('synthetic')
@@ -274,7 +263,7 @@ class TransitionTest(unittest.TestCase):
 
     def test_source_load_change(self):
         tr = Transition.from_uri('synthetic')
-        tr.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
         tr.set_persist_contract()
         df = tr.load_source_canonical()
         self.assertEqual((5000, 14), df.shape)
@@ -285,7 +274,7 @@ class TransitionTest(unittest.TestCase):
 
     def test_reload_instance(self):
         control = Transition.from_uri('synthetic_test')
-        control.set_source_contract(resource='synthetic.csv', connector_type='csv', sep=',', encoding='latin1', load=False)
+        control.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
         control.set_persist_contract()
         control.set_version('v_test')
         control.persist_contract()

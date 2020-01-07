@@ -145,7 +145,7 @@ class AwsS3SourceHandler(AbstractSourceHandler):
                 fix_imports = read_params.pop('fix_imports', True)
                 encoding = read_params.pop('encoding', 'ASCII')
                 errors = read_params.pop('errors', 'strict')
-                df = pickle.loads(BytesIO(resource_body), fix_imports=fix_imports, encoding=encoding, errors=errors)
+                df = pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
         self._modified = s3_object.get('LastModified', 0)
