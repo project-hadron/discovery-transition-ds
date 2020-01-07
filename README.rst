@@ -164,11 +164,10 @@ When you create a new project, or set up your default master notebook you import
 
 .. code-block:: python
 
-    ...
     from ds_discovery import Transition
 
 
-We now have all the appropriate imports and environment variables.
+We now have all the appropriate imports.
 
 Transitioning: Data Sourcing
 ----------------------------
@@ -188,7 +187,7 @@ Contract and the raw canonical dataset as a prerequisite of the Sourcing
 Contract: 1. Sourcing Notebooks 2. Sourcing Contract 3. Source
 Connectivity and the Raw Canonical
 
-.. figure:: ../98_images/AccML-Transition.png
+.. figure:: https://raw.githubusercontent.com/Gigas64/discovery-foundation/master/docs/images/AccML-Transition.png
    :alt: transition
 
    transition
@@ -276,7 +275,7 @@ Loading the Canonical
 
 Now we have recored the file information, we no longer need to reference
 these details again To load the contract data we use the transitioning
-method ``load_source_canonical()``\  and then we can use the canonical
+method ``load_source_canonical()``  and then we can use the canonical
 dictionary report to examine the data set.
 
 .. code-block:: python
