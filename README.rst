@@ -187,17 +187,14 @@ Contract and the raw canonical dataset as a prerequisite of the Sourcing
 Contract: 1. Sourcing Notebooks 2. Sourcing Contract 3. Source
 Connectivity and the Raw Canonical
 
-.. figure:: https://raw.githubusercontent.com/Gigas64/discovery-foundation/master/docs/images/AccML-Transition.png
+.. figure:: https://raw.githubusercontent.com/Gigas64/discovery-transition-ds/master/docs/images/Transition.png
    :alt: transition
-
-   transition
 
 Creating a Transition instance
 ------------------------------
-In this instance we are going to use a Factory Method to instanciate
+In this instance we are going to use a Factory Method to instantiate
 the Transition Class
--  Creating an instance of the Transitioning Class, passing a unique
-   reference name to the factory method.
+-  Creating an instance of the Transitioning Class, passing a unique reference name to the factory method.
 -  The reference name identifies the unique transitioning contract.
 
 .. code-block:: python
