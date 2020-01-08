@@ -24,7 +24,6 @@ class PandasSourceHandler(AbstractSourceHandler):
     def __init__(self, connector_contract: ConnectorContract):
         """ initialise the Hander passing the connector_contract dictionary """
         super().__init__(connector_contract)
-        self._modified = 0
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
@@ -61,7 +60,6 @@ class PandasSourceHandler(AbstractSourceHandler):
                 rtn_data = self._yaml_load(path_file=_cc.address, **load_params)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
-        self._modified = os.stat(_cc.address)[8] if os.path.exists(_cc.address) else 0
         return rtn_data
 
     def exists(self) -> bool:

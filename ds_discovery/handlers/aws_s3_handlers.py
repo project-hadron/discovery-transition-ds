@@ -3,7 +3,6 @@ from io import StringIO, BytesIO
 import pandas as pd
 from botocore.exceptions import ClientError
 import boto3
-import pyarrow as pa
 try:
     import cPickel as pickle
 except ImportError:
@@ -38,7 +37,6 @@ class AwsS3SourceHandler(AbstractSourceHandler):
         region_name = cc_params.pop('region_name', 'us-east-2')
         profile_name = cc_params.pop('profile_name', 'default')
         self._session = boto3.Session(region_name=region_name, profile_name=profile_name)
-        self._modified = 0
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
@@ -92,8 +90,7 @@ class AwsS3SourceHandler(AbstractSourceHandler):
             raise ConnectionError("Failed to retrieve the object from region '{}', bucket '{}' "
                                   "Key '{}' with error code '{}'".format(self._session.region_name, _cc.netloc,
                                                                          _cc.path[1:], code))
-        self._modified = s3_object.get('LastModified', 0)
-        return self._modified
+        return s3_object.get('LastModified', 0)
 
     def load_canonical(self) -> [pd.DataFrame, dict]:
         """Loads the canonical dataset, returning a Pandas DataFrame. This method utilises the pandas
@@ -136,20 +133,17 @@ class AwsS3SourceHandler(AbstractSourceHandler):
         resource_body = s3_object['Body'].read()
         with threading.Lock():
             if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                df = pd.read_parquet(BytesIO(resource_body), **read_params)
-            elif file_type.lower() in ['csv', 'tsv', 'txt']:
-                df = pd.read_csv(StringIO(resource_body.decode(encoding)), **read_params)
-            elif file_type.lower() in ['json']:
-                df = pd.read_json(StringIO(resource_body.decode(encoding)), **read_params)
-            elif file_type.lower() in ['pkl ', 'pickle']:
+                return pd.read_parquet(BytesIO(resource_body), **read_params)
+            if file_type.lower() in ['csv', 'tsv', 'txt']:
+                return pd.read_csv(StringIO(resource_body.decode(encoding)), **read_params)
+            if file_type.lower() in ['json']:
+                return pd.read_json(StringIO(resource_body.decode(encoding)), **read_params)
+            if file_type.lower() in ['pkl ', 'pickle']:
                 fix_imports = read_params.pop('fix_imports', True)
                 encoding = read_params.pop('encoding', 'ASCII')
                 errors = read_params.pop('errors', 'strict')
-                df = pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
-            else:
-                raise LookupError('The source format {} is not currently supported'.format(file_type))
-        self._modified = s3_object.get('LastModified', 0)
-        return df
+                return pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
+        raise LookupError('The source format {} is not currently supported'.format(file_type))
 
 
 class AwsS3PersistHandler(AwsS3SourceHandler, AbstractPersistHandler):

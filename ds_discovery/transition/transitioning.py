@@ -54,7 +54,7 @@ class Transition(object):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, contract_name: str, properties_uri: str=None, default_save=None):
+    def from_uri(cls, contract_name: str, properties_uri: str, default_save=None):
         """ Class Factory Method that builds the connector handlers for the properties contract. The method uses
         the schema of the URI to determine if it is remote or local. s3:// schema denotes remote, empty schema denotes
         local.
@@ -63,19 +63,35 @@ class Transition(object):
          :param contract_name: The reference name of the properties contract
          :param properties_uri: A URI that identifies the resource path. The syntax should be either
                           s3://<bucket>/<path>/ for remote or <path> for local
-                          if no uri is passed local /tmp/contract is used
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :return: the initialised class instance
          """
-        _uri = properties_uri if isinstance(properties_uri, str) else "/tmp/aistac/contracts"
+        _uri = properties_uri
+        if not isinstance(_uri, str) or len(_uri) == 0:
+            raise ValueError("the URI must take the form 's3://<bucket>/<path>/' for remote or '<path>/' for local")
         _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=_uri)
         if str(_schema).lower().startswith('s3'):
             return cls._from_remote(contract_name=contract_name, properties_uri=_uri, default_save=default_save)
-        if not str(_schema).lower().startswith('http'):
-            _uri = _path
-            if not os.path.exists(_path):
-                os.makedirs(_path, exist_ok=True)
+        _uri = _path
+        if not os.path.exists(_path):
+            os.makedirs(_path, exist_ok=True)
         return cls._from_local(contract_name=contract_name, properties_uri=_uri, default_save=default_save)
+
+    @classmethod
+    def from_env(cls, contract_name: str,  default_save=None):
+        """ Class Factory Method that builds the connector handlers taking the property contract path from
+        the os.envon['AISTAC_TR_URI'] or locally from the current working directory './' if
+        no environment variable is found. This assumes the use of the pandas handler module and yaml persisted file.
+
+         :param contract_name: The reference name of the properties contract
+         :param default_save: (optional) if the configuration should be persisted
+         :return: the initialised class instance
+         """
+        if 'AISTAC_TR_URI' in os.environ.keys():
+            properties_uri = os.environ['AISTAC_TR_URI']
+        else:
+            properties_uri = "/tmp/aistac/contracts"
+        return cls.from_uri(contract_name=contract_name, properties_uri=properties_uri, default_save=default_save)
 
     @classmethod
     def _from_remote(cls, contract_name: str, properties_uri: str, default_save=None):
@@ -107,18 +123,19 @@ class Transition(object):
         return rtn_cls
 
     @classmethod
-    def _from_local(cls, contract_name: str,  properties_uri: str=None, default_save=None):
+    def _from_local(cls, contract_name: str,  properties_uri: str, default_save=None):
         """ Class Factory Method that builds the connector handlers from a local resource path.
         This assumes the use of the pandas handler module and yaml persisted file.
 
         :param contract_name: The reference name of the properties contract
-        :param properties_uri: (optional) A URI that identifies the properties resource path. by default is './'
+        :param properties_uri: (optional) A URI that identifies the properties resource path.
+                            by default is '/tmp/aistac/contracts'
         :param default_save: (optional) if the configuration should be persisted
         :return: the initialised class instance
         """
         if not isinstance(contract_name, str) or len(contract_name) == 0:
             raise ValueError("A contract_name must be provided")
-        _properties_uri = properties_uri if isinstance(properties_uri, str) and len(properties_uri) > 0 else '.'
+        _properties_uri = properties_uri if isinstance(properties_uri, str) else "/tmp/aistac/contracts"
         _default_save = default_save if isinstance(default_save, bool) else True
         _module_name = 'ds_discovery.handlers.pandas_handlers'
         _handler = 'PandasPersistHandler'
@@ -218,7 +235,6 @@ class Transition(object):
         :param uri: A Uniform Resource Identifier that unambiguously identifies a particular resource
         :param module_name: (optional) a module name with full package path. Default MODULE_NAME constant
         :param handler: (optional) the name of the Handler Class within the module. Default tr.HANDLER_SOURCE constant
-        :param load: (optional) if True,` attempts to read the given file or source and returns a pandas.DataFrame
         :param save: (optional) if True, save to file. Default is True
         :param kwargs: (optional) a list of key additional word argument properties associated with the resource
         :return: if load is True, returns a Pandas.DataFrame else None
