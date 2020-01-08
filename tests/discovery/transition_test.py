@@ -77,7 +77,7 @@ class TransitionTest(unittest.TestCase):
     def test_source_report(self):
         tr = Transition.from_uri('synthetic')
         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
-        report = tr.report_source(stylise=False)
+        report = tr.report_connectors(stylise=False)
         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report.columns))
 
     def test_load_clean_file(self):

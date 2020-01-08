@@ -87,10 +87,10 @@ class Transition(object):
          :param default_save: (optional) if the configuration should be persisted
          :return: the initialised class instance
          """
-        if 'AISTAC_TR_URI' in os.environ.keys():
-            properties_uri = os.environ['AISTAC_TR_URI']
+        if 'AISTAC_INTENT' in os.environ.keys():
+            properties_uri = os.environ['AISTAC_INTENT']
         else:
-            properties_uri = "/tmp/aistac/contracts"
+            properties_uri = "/tmp/aistac/transition/contracts"
         return cls.from_uri(contract_name=contract_name, properties_uri=properties_uri, default_save=default_save)
 
     @classmethod
@@ -288,7 +288,7 @@ class Transition(object):
             return df
         return pd.DataFrame()
 
-    def report_source(self, connector_name: str=None, stylise: bool=True):
+    def report_connectors(self, connector_name: str=None, stylise: bool=True):
         """ generates a report on the source contract
 
         :param connector_name: (optional) filters on the connector name. Aliases can be used instead of the default
