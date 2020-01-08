@@ -142,22 +142,18 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
             with threading.Lock():
                 canonical.to_parquet(_address, **write_params)
             return True
-        # pickle
-        if file_type.lower() in ['pkl', 'pickle']:
-            _compression = write_params.pop('compression', None)
-            _protocol = write_params.pop('protocol', pickle.HIGHEST_PROTOCOL)
-            with threading.Lock():
-                canonical.to_pickle(path=_address, compression=_compression, protocol=_protocol)
-            return True
+        # json
         if file_type.lower() in ['json']:
             with threading.Lock():
                 canonical.to_json(_address, **write_params)
             return True
+        # csv
         if file_type.lower() in ['csv', 'tsv', 'txt']:
             _index = write_params.pop('index', False)
             with threading.Lock():
                 canonical.to_csv(_address, index=_index, **write_params)
             return True
+        # pickle
         if file_type.lower() in ['pkl', 'pickle']:
             with threading.Lock():
                 self._pickle_dump(data=canonical, path_file=_address, **write_params)
