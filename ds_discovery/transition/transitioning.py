@@ -267,7 +267,7 @@ class Transition(object):
         if not isinstance(module_name, str):
             module_name = self.MODULE_NAME
         if not isinstance(handler, str):
-            handler = self.HANDLER_SOURCE
+            handler = self.HANDLER_PERSIST
         if self.data_pm.has_connector(self.CONNECTOR_PERSIST):
             self.data_pm.remove_connector_contract(self.CONNECTOR_PERSIST)
         self.data_pm.set_connector_contract(self.CONNECTOR_PERSIST, uri=uri, module_name=module_name, handler=handler,
