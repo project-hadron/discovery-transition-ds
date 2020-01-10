@@ -135,7 +135,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         persist_params = {} if ignore_kwargs else _cc.kwargs
         persist_params.update(_cc.parse_query(uri=uri))
         _, _, _ext = _address.rpartition('.')
-        _path, _ = os.path.split()
+        _path, _ = os.path.split(_address)
         if not os.path.exists(_path):
             os.makedirs(_path)
         file_type = persist_params.pop('file_type', _ext if len(_ext) > 0 else 'pkl')
