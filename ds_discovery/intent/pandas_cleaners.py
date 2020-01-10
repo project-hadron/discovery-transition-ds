@@ -530,7 +530,6 @@ class PandasCleaners(AbstractCleaners):
     def _to_numeric(df, numeric_type, fillna, errors=None, headers=None, drop=False, dtype=None, exclude=False,
                     regex=None, re_ignore_case=None, precision=None, inplace=False) -> Union[dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
-        precision = 15 if not isinstance(precision, int) else precision
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
         if not inplace:
@@ -553,6 +552,11 @@ class PandasCleaners(AbstractCleaners):
             else:
                 df[c] = df[c].fillna(fillna)
 
+            if not isinstance(precision, int):
+                try:
+                    precision = df[c].dropna().apply(str).str.extract('\.(.*)')[0].map(len).max()
+                except:
+                    precision = 15
             if str(numeric_type).lower().startswith('int'):
                 df[c] = df[c].round(0).astype(int)
             elif str(numeric_type).lower().startswith('float'):
@@ -676,7 +680,7 @@ class PandasCleaners(AbstractCleaners):
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
        """
         if isinstance(nulls_list, bool) and nulls_list:
-            nulls_list = ['NaN', 'nan', 'null', '', 'None']
+            nulls_list = ['NaN', 'nan', 'null', 'NULL', ' ', '', 'None']
         elif not isinstance(nulls_list, list):
             nulls_list = None
 
