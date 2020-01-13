@@ -666,16 +666,16 @@ class Transition(object):
         self.persist_contract(save)
         return
 
-    def backup_canonical(self, connector_name: str, df: [pd.DataFrame, dict]):
+    def backup_canonical(self, connector_name: str, df: [pd.DataFrame, dict], uri: str):
         """backup of the contract properties with optional maximum backups, defaults to 10"""
         if self.data_pm.has_connector(connector_name):
             _handler = self._data_pm.get_connector_handler(connector_name)
             _cc = self._data_pm.get_connector_contract(connector_name)
             _address = _cc.parse_address(uri=_cc.uri)
             _path, _, _ext = _address.rpartition('.')
-            _new_uri = "{}_{}.{}".format(_path, str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')), _ext)
-            _handler.backup_canonical(canonical=df, uri=_new_uri)
-        return
+            _handler.backup_canonical(canonical=df, uri=uri)
+            return
+        raise ConnectionError("The connector name {} was not found.".format(connector_name))
 
     def persist_contract(self, save=None):
         """Saves the current configuration to file"""
