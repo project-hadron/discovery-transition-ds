@@ -29,11 +29,11 @@ class Transition(AbstractComponent):
         self._raw_attribute_list = []
 
     @classmethod
-    def _property_manager_class_name(cls) -> type:
+    def _property_manager_class(cls) -> type:
         return TransitionPropertyManager
 
     @classmethod
-    def _intent_model_class_name(cls) -> type:
+    def _intent_model_class(cls) -> type:
         return PandasTransitionIntent
 
     @classmethod
