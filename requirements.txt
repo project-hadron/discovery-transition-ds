@@ -16,6 +16,7 @@ xlrd
 pyarrow
 boto3
 botocore
+requests
 
 # SQl and HTML libs
 #sqlalchemy

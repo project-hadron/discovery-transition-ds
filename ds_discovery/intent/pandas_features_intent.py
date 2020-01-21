@@ -1,23 +1,15 @@
 from typing import Any
-
 import pandas as pd
 import numpy as np
 import matplotlib.dates as mdates
-
+from ds_foundation.intent.abstract_intent import AbstractIntentModel
 from ds_foundation.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
 
-class FeatureBuilderTools(object):
+class PandasFeatureIntent(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
-
-    def __dir__(self):
-        rtn_list = []
-        for m in dir(FeatureBuilderTools):
-            if not m.startswith('_'):
-                rtn_list.append(m)
-        return rtn_list
 
     @staticmethod
     def date_matrix(df, key, column, index_key=True) -> pd.DataFrame:
@@ -111,7 +103,7 @@ class FeatureBuilderTools(object):
             _associations = tmp
         if not isinstance(_dataset, pd.DataFrame):
             raise TypeError("The dataset given is not or could not be convereted to a pandas DataFrame")
-        class_methods = FeatureBuilderTools().__dir__()
+        class_methods = PandasFeatureIntent().__dir__()
 
         rtn_list = []
         for index in range(_dataset.shape[0]):

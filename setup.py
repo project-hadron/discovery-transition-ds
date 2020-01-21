@@ -71,6 +71,7 @@ setup(
         'pyarrow',
         'boto3',
         'botocore',
+        'requests',
     ],
     test_suite='tests',
 )

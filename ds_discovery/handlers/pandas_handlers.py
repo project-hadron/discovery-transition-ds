@@ -1,4 +1,5 @@
 import os
+import requests
 from contextlib import closing
 import threading
 
@@ -39,7 +40,7 @@ class PandasSourceHandler(AbstractSourceHandler):
                            read methods the parameters are passed to are all pandas 'read_*', e.g. pd.read_csv
         """
         if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The PandasSource Connector Contract has not been set")
+            raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
         load_params = _cc.kwargs
         load_params.update(_cc.query)  # Update kwargs with those in the uri query
@@ -64,15 +65,23 @@ class PandasSourceHandler(AbstractSourceHandler):
 
     def exists(self) -> bool:
         """ Returns True is the file exists """
-        if os.path.exists(self.connector_contract.address):
+        if not isinstance(self.connector_contract, ConnectorContract):
+            raise ValueError("The Pandas Connector Contract has not been set")
+        _cc = self.connector_contract
+        if _cc.schema.startswith('http'):
+            return requests.get(_cc.address).status_code == 200
+        if os.path.exists(_cc.address):
             return True
         return False
 
     def get_modified(self) -> [int, float, str]:
         """ returns the modified state of the connector resource"""
         if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The PandasSource Connector Contract has not been set")
-        return os.path.getmtime(self.connector_contract.address) if os.path.exists(self.connector_contract.address) else 0
+            raise ValueError("The Pandas Connector Contract has not been set")
+        _cc = self.connector_contract
+        if _cc.schema.startswith('http'):
+            return requests.head(_cc.address).headers['last-modified']
+        return os.path.getmtime(_cc.address) if os.path.exists(_cc.address) else 0
 
     @staticmethod
     def _yaml_load(path_file, **kwargs) -> dict:
@@ -135,9 +144,10 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         persist_params = {} if ignore_kwargs else _cc.kwargs
         persist_params.update(_cc.parse_query(uri=uri))
         _, _, _ext = _address.rpartition('.')
-        _path, _ = os.path.split(_address)
-        if not os.path.exists(_path):
-            os.makedirs(_path)
+        if not self.connector_contract.schema.startswith('http'):
+            _path, _ = os.path.split(_address)
+            if not os.path.exists(_path):
+                os.makedirs(_path)
         file_type = persist_params.pop('file_type', _ext if len(_ext) > 0 else 'pkl')
         write_params = persist_params.pop('write_params', {})
         # parquet
@@ -172,7 +182,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
         _cc = self.connector_contract
-        if len(_cc.schema) > 0:
+        if self.connector_contract.schema.startswith('http'):
             raise NotImplemented("Remove Canonical does not support {} schema based URIs".format(_cc.schema))
         if os.path.exists(_cc.address):
             os.remove(_cc.address)

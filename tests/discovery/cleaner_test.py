@@ -9,8 +9,7 @@ from ds_behavioral import DataBuilderTools as tools
 from ds_behavioral.sample.sample_data import ProfileSample
 
 from ds_discovery import Transition
-from ds_discovery.intent.pandas_cleaners import PandasCleaners as Cleaner
-
+from ds_discovery.intent.pandas_transition_intent import PandasTransitionIntent as Cleaner
 
 
 class CleanerTest(unittest.TestCase):

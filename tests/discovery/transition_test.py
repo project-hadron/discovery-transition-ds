@@ -5,7 +5,7 @@ import numpy as np
 
 from pathlib import Path
 
-from ds_behavioral import DataBuilder
+from ds_behavioral import DataBuilderComponent
 from ds_behavioral.sample.sample_data import ProfileSample
 
 from ds_discovery import Transition
@@ -17,28 +17,26 @@ class TransitionTest(unittest.TestCase):
     """Test: """
     def setUp(self):
         # set environment variables
-        os.environ['DTU_CONTRACT_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
+        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
         os.environ['DTU_ORIGIN_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
         try:
             shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
         except:
             pass
+        PropertyManager._remove_all()
 
     def tearDown(self):
         try:
             shutil.rmtree('work')
         except:
             pass
-        props = PropertyManager().get_all()
-        for key in props.keys():
-            PropertyManager().remove(key)
 
     def test_runs(self):
         """Basic smoke test"""
-        Transition.from_uri('TestAgent')
+        Transition.from_env('TestAgent')
 
     def test_factory_remote(self):
-        tr = Transition.from_uri('test_factory', properties_uri='s3://aistac-discovery-persist/contracts/testing')
+        tr = Transition.from_env('test_factory')
         tr.set_persist_contract(uri="s3://aistac-discovery-persist/persist/transition/test.pkl")
         tr.set_source_contract(uri='s3://aistac-discovery-persist/data/synthetic/synthetic_customer.csv',
                                module_name=tr.MODULE_NAME, handler=tr.HANDLER_SOURCE)
@@ -291,7 +289,7 @@ class Customer(object):
 
     @staticmethod
     def generate(noise: bool=False, extra: bool=False, sample_size: int=None):
-        builder = DataBuilder('synthetic_data_customer')
+        builder = DataBuilderComponent('synthetic_data_customer')
         tools = builder.tools
 
         # main build
