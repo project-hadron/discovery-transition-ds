@@ -22,19 +22,38 @@ class Transition(AbstractComponent):
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
         :param default_save: The default behaviour of persisting the contracts:
-                    if True: all contract properties are persisted
+
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
         self._raw_attribute_list = []
 
     @classmethod
-    def _property_manager_class(cls) -> type:
-        return AbstractComponent
+    def from_uri(cls, task_name: str, uri_pm_path: str, default_save=None, **kwargs):
+        """ Class Factory Method to instantiates the component application. The Factory Method handles the
+        instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
-    @classmethod
-    def _intent_model_class(cls) -> type:
-        return PandasTransitionIntent
+        To implement a new remote class Factory Method follow the method naming convention '_from_remote_<schema>()'
+        where <schema> is the uri schema name. this method should be a @classmethod and return a tuple of
+        module_name and handler.
+        For example if we were using an AWS S3 where the schema is s3:// the Factory method be similar to:
+        literal blocks::
+                @classmethod
+                def _from_remote_s3(cls) -> (str, str):
+                    _module_name = 'ds_discovery.handler.aws_s3_handlers'
+                    _handler = 'AwsS3PersistHandler'
+                    return _module_name, _handler
+
+         :param task_name: The reference name that uniquely identifies a task or subset of the property manager
+         :param uri_pm_path: A URI that identifies the resource path for the property manager.
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param kwargs: to pass to the connector contract
+         :return: the initialised class instance
+         """
+        _pm = AbstractPropertyManager(task_name=task_name, root_keys=[], knowledge_keys=[])
+        _intent_model = PandasTransitionIntent(property_manager=_pm)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
+        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
