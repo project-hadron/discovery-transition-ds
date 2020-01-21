@@ -2,8 +2,8 @@ import pandas as pd
 
 from ds_foundation.handlers.abstract_handlers import ConnectorContract
 from ds_foundation.aistac.abstract_component import AbstractComponent
+from ds_foundation.properties.abstract_properties import AbstractPropertyManager
 
-from ds_discovery.managers.transition_properties import TransitionPropertyManager
 from ds_discovery.intent.pandas_transition_intent import PandasTransitionIntent
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
@@ -15,7 +15,7 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'read_only_connector'
     CONNECTOR_PERSIST = 'persist_connector'
 
-    def __init__(self, property_manager: TransitionPropertyManager, intent_model: PandasTransitionIntent,
+    def __init__(self, property_manager: AbstractPropertyManager, intent_model: PandasTransitionIntent,
                  default_save=None):
         """ Encapsulation class for the discovery set of classes
 
@@ -30,7 +30,7 @@ class Transition(AbstractComponent):
 
     @classmethod
     def _property_manager_class(cls) -> type:
-        return TransitionPropertyManager
+        return AbstractComponent
 
     @classmethod
     def _intent_model_class(cls) -> type:
