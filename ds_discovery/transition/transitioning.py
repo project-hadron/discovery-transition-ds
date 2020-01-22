@@ -2,9 +2,9 @@ import pandas as pd
 
 from ds_foundation.handlers.abstract_handlers import ConnectorContract
 from ds_foundation.aistac.abstract_component import AbstractComponent
-from ds_foundation.properties.abstract_properties import AbstractPropertyManager
 
 from ds_discovery.intent.transition_intent import TransitionIntentModel
+from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
@@ -15,7 +15,7 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'read_only_connector'
     CONNECTOR_PERSIST = 'persist_connector'
 
-    def __init__(self, property_manager: AbstractPropertyManager, intent_model: TransitionIntentModel,
+    def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None):
         """ Encapsulation class for the discovery set of classes
 
@@ -50,7 +50,7 @@ class Transition(AbstractComponent):
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
-        _pm = AbstractPropertyManager(task_name=task_name, root_keys=[], knowledge_keys=[])
+        _pm = TransitionPropertyManager(task_name=task_name, root_keys=[], knowledge_keys=[])
         _intent_model = TransitionIntentModel(property_manager=_pm)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
