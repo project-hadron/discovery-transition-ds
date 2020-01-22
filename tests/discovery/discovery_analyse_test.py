@@ -10,7 +10,7 @@ import unittest
 import warnings
 
 from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics
-from ds_discovery.intent.pandas_transition_intent import PandasTransitionIntent as Cleaner
+from ds_discovery.intent.transition_intent import TransitionIntentModel as Cleaner
 from ds_behavioral.generator.data_builder_tools import DataBuilderTools
 
 def ignore_warnings(test_func):

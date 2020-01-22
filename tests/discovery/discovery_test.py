@@ -19,15 +19,13 @@ class TestDiscovery(unittest.TestCase):
             shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
         except:
             pass
+        PropertyManager._remove_all()
 
     def tearDown(self):
         try:
             shutil.rmtree('work')
         except:
             pass
-        props = PropertyManager().get_all()
-        for key in props.keys():
-            PropertyManager().remove(key)
 
     def test_runs(self):
         """Basic smoke test"""

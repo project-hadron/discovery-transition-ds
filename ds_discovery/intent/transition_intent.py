@@ -13,7 +13,7 @@ from ds_foundation.intent.abstract_intent import AbstractIntentModel
 __author__ = 'Darryl Oatridge'
 
 
-class PandasTransitionIntent(AbstractIntentModel):
+class TransitionIntentModel(AbstractIntentModel):
     """A set of methods to help clean columns with a Pandas.DataFrame"""
 
     def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=True,
@@ -61,9 +61,9 @@ class PandasTransitionIntent(AbstractIntentModel):
 
         if not isinstance(df, pd.DataFrame):
             raise TypeError("The first function attribute must be a pandas 'DataFrame'")
-        _headers = PandasTransitionIntent.list_formatter(headers)
-        dtype = PandasTransitionIntent.list_formatter(dtype)
-        regex = PandasTransitionIntent.list_formatter(regex)
+        _headers = TransitionIntentModel.list_formatter(headers)
+        dtype = TransitionIntentModel.list_formatter(dtype)
+        regex = TransitionIntentModel.list_formatter(regex)
         _obj_cols = df.columns
         _rtn_cols = set()
         unmodified = True
@@ -108,8 +108,8 @@ class PandasTransitionIntent(AbstractIntentModel):
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = PandasTransitionIntent.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
-                                                         regex=regex, re_ignore_case=re_ignore_case)
+        obj_cols = TransitionIntentModel.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+                                                        regex=regex, re_ignore_case=re_ignore_case)
         return df.loc[:, obj_cols]
 
     def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace=False,
