@@ -113,9 +113,12 @@ class Transition(AbstractComponent):
         self.pm_persist(save)
         return
 
-    def load_source_canonical(self) -> pd.DataFrame:
-        """returns the contracted source data as a DataFrame"""
-        return self.load_canonical(self.CONNECTOR_SOURCE)
+    def load_source_canonical(self) -> [pd.DataFrame]:
+        """returns the contracted source data as a DataFrame """
+        result = self.load_canonical(self.CONNECTOR_SOURCE)
+        if isinstance(result, dict):
+            result = pd.DataFrame.from_dict(data=result, orient='columns')
+        return result
 
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True) -> pd.DataFrame:
         """ generates a report on the source contract
@@ -128,12 +131,12 @@ class Transition(AbstractComponent):
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=super().report_connectors(connector_filter=connector_filter), orient='columns')
-        df.set_index(keys='connector_name', inplace=True)
-        df.transpose()
         if stylise:
             df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['param'], **{'font-weight': 'bold'})
+            _ = df_style.set_properties(subset=['connector_name'], **{'font-weight': 'bold'})
             return df_style
+        else:
+            df.set_index(keys='connector_name', inplace=True)
         return df
 
     def report_cleaners(self, stylise: bool=True) -> pd.DataFrame:
@@ -183,7 +186,10 @@ class Transition(AbstractComponent):
 
     def load_clean_canonical(self) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_PERSIST)
+        result = self.load_canonical(self.CONNECTOR_PERSIST)
+        if isinstance(result, dict):
+            result = pd.DataFrame.from_dict(data=result, orient='columns')
+        return result
 
     def save_clean_canonical(self, df):
         """Saves the pandas.DataFrame to the clean files folder"""

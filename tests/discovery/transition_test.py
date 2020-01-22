@@ -8,6 +8,7 @@ from pathlib import Path
 from ds_behavioral import DataBuilderComponent
 from ds_behavioral.sample.sample_data import ProfileSample
 from ds_foundation.aistac.abstract_component import AbstractComponent
+from ds_foundation.handlers.abstract_handlers import ConnectorContract
 from ds_foundation.intent.python_cleaners_intent import PythonCleanersIntentModel
 from ds_foundation.properties.abstract_properties import AbstractPropertyManager
 
@@ -46,8 +47,16 @@ class TransitionTest(unittest.TestCase):
         im = TransitionIntentModel(pm)
         instance = Transition(pm, im)
         instance._init_properties(pm, os.environ['AISTAC_PM_PATH'])
-        report = instance.report_connectors(stylise=False)
-        self.assertEqual((1,6), report.shape)
+        sc = ConnectorContract(uri='synthetic_customer.csv',
+                               module_name=instance.PYTHON_MODULE_NAME, handler=instance.PYTHON_HANDLER, sep=',', encoding='latin1')
+        instance.set_source_contract(connector_contract=sc)
+        pc = ConnectorContract(uri= instance.file_pattern(),
+                               module_name=instance.PYTHON_MODULE_NAME,
+                               handler=instance.PYTHON_HANDLER)
+        instance.set_persist_contract(connector_contract=pc)
+        report = instance.report_connectors(stylise=True)
+        print(report.columns)
+
 
     def test_factory_remote(self):
         tr = Transition.from_env('test_factory')
