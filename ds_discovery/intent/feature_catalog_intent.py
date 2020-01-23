@@ -8,7 +8,7 @@ from ds_foundation.properties.abstract_properties import AbstractPropertyManager
 __author__ = 'Darryl Oatridge'
 
 
-class PandasFeatureIntent(AbstractIntentModel):
+class FeatureCatalogIntentModel(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     @staticmethod
@@ -103,7 +103,7 @@ class PandasFeatureIntent(AbstractIntentModel):
             _associations = tmp
         if not isinstance(_dataset, pd.DataFrame):
             raise TypeError("The dataset given is not or could not be convereted to a pandas DataFrame")
-        class_methods = PandasFeatureIntent().__dir__()
+        class_methods = FeatureCatalogIntentModel().__dir__()
 
         rtn_list = []
         for index in range(_dataset.shape[0]):

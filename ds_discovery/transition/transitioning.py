@@ -1,7 +1,7 @@
 import pandas as pd
 
 from ds_foundation.handlers.abstract_handlers import ConnectorContract
-from ds_foundation.aistac.abstract_component import AbstractComponent
+from ds_foundation.components.abstract_component import AbstractComponent
 
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
