@@ -63,6 +63,16 @@ class Transition(AbstractComponent):
         return _module_name, _handler
 
     @property
+    def intent_model(self) -> TransitionIntentModel:
+        """The intent model instance"""
+        return self._intent_model
+
+    @property
+    def pm(self) -> TransitionPropertyManager:
+        """The properties manager instance"""
+        return self._component_pm
+
+    @property
     def discover(self) -> DataDiscovery:
         """The discovery instance"""
         return DataDiscovery()
@@ -75,17 +85,6 @@ class Transition(AbstractComponent):
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
         return self.is_canonical_modified(self.CONNECTOR_SOURCE)
-
-    def remove_source_contract(self, save: bool=None):
-        """removes the source contract
-
-        :param save: if True, save to file. Default is True
-        """
-        if not isinstance(save, bool):
-            save = self._default_save
-        self.remove_connector_contract(self.CONNECTOR_SOURCE)
-        self._raw_attribute_list = []
-        self.pm_persist(save)
 
     def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the source contract
@@ -115,10 +114,41 @@ class Transition(AbstractComponent):
 
     def load_source_canonical(self) -> [pd.DataFrame]:
         """returns the contracted source data as a DataFrame """
-        result = self.load_canonical(self.CONNECTOR_SOURCE)
-        if isinstance(result, dict):
-            result = pd.DataFrame.from_dict(data=result, orient='columns')
-        return result
+        return self.load_canonical(self.CONNECTOR_SOURCE)
+
+    def load_clean_canonical(self) -> pd.DataFrame:
+        """loads the clean pandas.DataFrame from the clean folder for this contract"""
+        return self.load_canonical(self.CONNECTOR_PERSIST)
+
+    def load_canonical(self, connector_name: str) -> pd.DataFrame:
+        """returns the canonical of the referenced connector
+
+        :param connector_name: the name or label to identify and reference the connector
+        """
+        canonical = super().load_canonical(connector_name=connector_name)
+        if isinstance(canonical, dict):
+            canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
+        return canonical
+
+    def save_clean_canonical(self, df):
+        """Saves the pandas.DataFrame to the clean files folder"""
+        self.persist_canonical(self.CONNECTOR_PERSIST, df)
+
+    def canonical_report(self, df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
+                         condition: str=None):
+        """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
+        attribute properties
+
+        :param df: the DataFrame to view
+        :param stylise: if True present the report stylised.
+        :param inc_next_dom: (optional) if to include the next dominate element column
+        :param report_header: (optional) filter on a header where the condition is true. Condition must exist
+        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
+                ' > 0.95', ".str.contains('shed')"
+        :return:
+        """
+        return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
+                                             report_header=report_header, condition=condition)
 
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True) -> pd.DataFrame:
         """ generates a report on the source contract
@@ -183,37 +213,6 @@ class Transition(AbstractComponent):
             _ = df_style.set_properties(subset=['label', 'section'], **{'font-size': "120%"})
             return df_style
         return df
-
-    def load_clean_canonical(self) -> pd.DataFrame:
-        """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        result = self.load_canonical(self.CONNECTOR_PERSIST)
-        if isinstance(result, dict):
-            result = pd.DataFrame.from_dict(data=result, orient='columns')
-        return result
-
-    def save_clean_canonical(self, df):
-        """Saves the pandas.DataFrame to the clean files folder"""
-        self.persist_canonical(self.CONNECTOR_PERSIST, df)
-
-    def remove_clean_canonical(self):
-        """removes the current persisted canonical"""
-        self.remove_canonical(self.CONNECTOR_PERSIST)
-
-    def canonical_report(self, df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
-                         condition: str=None):
-        """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
-        attribute properties
-
-        :param df: the DataFrame to view
-        :param stylise: if True present the report stylised.
-        :param inc_next_dom: (optional) if to include the next dominate element column
-        :param report_header: (optional) filter on a header where the condition is true. Condition must exist
-        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
-                ' > 0.95', ".str.contains('shed')"
-        :return:
-        """
-        return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
-                                             report_header=report_header, condition=condition)
 
     @staticmethod
     def list_formatter(value) -> [list, None]:
