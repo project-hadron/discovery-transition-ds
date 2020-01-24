@@ -1,3 +1,4 @@
+import inspect
 from typing import Any
 import pandas as pd
 import numpy as np
@@ -247,31 +248,44 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             dummy_df = dummy_df.set_index(key)
         return dummy_df
 
-    @staticmethod
-    def remove_outliers(df: pd.DataFrame, lower_quantile: float=None, upper_quantile: float=None) -> pd.DataFrame:
+    def remove_outliers(self, canonical, headers: list, lower_quantile: float = None, upper_quantile: float = None,
+                        inplace: bool = False, save_intent: bool = True, level: [int, str] = None):
         """ removes outliers by removing the boundary quantiles
 
-        :param df: the DataFrame to apply
-        :param lower_quantile: (optional) the lower quantile, default is 0.25
-        :param upper_quantile: (optional) the upper quantile
+        :param canonical: the DataFrame to apply
+        :param lower_quantile: (optional) the lower quantile
+        :param upper_quantile: (optional) the upper quantile, default is 0.9
         :return: the revised values
         """
         # TODO: This can be improved by using the anylitics and remove all sort of outliers
-        lower_quantile = 0.25 if not isinstance(lower_quantile, float) else lower_quantile
-        upper_quantile = 0.75 if not isinstance(upper_quantile, float) else upper_quantile
+        # intend code block on the canonical
+        lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 <= lower_quantile < 1 else 0
+        upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile <= 1 else 1
 
-        df_out = pd.DataFrame()
-        for column_name in df.columns:
-            if df[column_name].min() == df[column_name].max():
-                df_out[column_name] = df[column_name]
+        remove_idx = set()
+        for column_name in headers:
+            if canonical[column_name].min() == canonical[column_name].max():
                 continue
-            q1 = df[column_name].quantile(lower_quantile)
-            q3 = df[column_name].quantile(upper_quantile)
-            iqr = q3-q1
-            fence_low = q1-1.5*iqr
-            fence_high = q3+1.5*iqr
-            df_out[column_name] = df[column_name].loc[(df[column_name] > fence_low) & (df[column_name] < fence_high)]
-        return df_out
+            q1 = canonical[column_name].quantile(lower_quantile)
+            q3 = canonical[column_name].quantile(upper_quantile)
+            iqr = q3 - q1
+            fence_low = q1 - 1.5 * iqr
+            fence_high = q3 + 1.5 * iqr
+            remove_idx.update(canonical[column_name].index[~(canonical[column_name] > fence_low) & (
+                        canonical[column_name] < fence_high)].to_list())
+        df_out = canonical.drop(remove_idx, inplace=False)
+
+        # resolve intent persist options
+        if not isinstance(save_intent, bool):
+            save_intent = self._default_save_intent
+        if save_intent:
+            level = level if isinstance(level, (int, str)) else 0
+            method = inspect.currentframe().f_code.co_name
+            self._set_intend_signature(self._intent_builder(method=method, params=locals()), level=level,
+                                       save_intent=save_intent)
+        if not inplace:
+            return df_out
+        return
 
     @staticmethod
     def merge(df_left, df_right, how='inner', on=None, left_on=None, right_on=None, left_index=False,

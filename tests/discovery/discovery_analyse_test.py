@@ -38,7 +38,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = DataBuilderTools()
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
-        analytics = DataAnalytics('tester', result)
+        analytics = DataAnalytics(label='tester', analysis=result)
         print(analytics.dominance_map)
 
 
