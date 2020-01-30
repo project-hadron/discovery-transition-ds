@@ -12,7 +12,7 @@ __author__ = 'Darryl Oatridge'
 
 class Transition(AbstractComponent):
 
-    CONNECTOR_SOURCE = 'read_only_connector'
+    CONNECTOR_SOURCE = 'source_connector'
     CONNECTOR_PERSIST = 'persist_connector'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,

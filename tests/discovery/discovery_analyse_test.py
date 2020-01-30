@@ -1,25 +1,12 @@
 from pprint import pprint
 
-import matplotlib
-matplotlib.use("TkAgg")
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import unittest
-import warnings
 
 from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics
-from ds_discovery.intent.transition_intent import TransitionIntentModel as Cleaner
-from ds_behavioral.generator.data_builder_tools import DataBuilderTools
-
-def ignore_warnings(test_func):
-    def do_test(self, *args, **kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            test_func(self, *args, **kwargs)
-
-    return do_test
+from ds_behavioral.generator.data_builder import DataBuilderTools
 
 
 class DiscoveryAnalysisMethod(unittest.TestCase):
@@ -35,15 +22,15 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         Discover()
 
     def test_discovery_analytics_class(self):
-        tools = DataBuilderTools()
+        tools = DataBuilderTools
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         analytics = DataAnalytics(label='tester', analysis=result)
-        print(analytics.dominance_map)
-
+        self.assertEqual(analytics.selection, analytics.sample_map.index.to_list())
+        self.assertEqual(analytics.sample_distribution, analytics.sample_map.to_list())
 
     def test_analyse_category(self):
-        tools = DataBuilderTools()
+        tools = DataBuilderTools
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats']
@@ -186,7 +173,6 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                     'weighting': [28.57, 28.57, 42.86]}
         self.assertEqual(control, result)
 
-    @ignore_warnings
     def test_analyse_date(self):
         tools = DataBuilderTools()
         str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
@@ -194,8 +180,6 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
         pprint(result)
 
-
-    @ignore_warnings
     def test_analyse_associate_single(self):
         tools = DataBuilderTools()
         size = 50
@@ -248,7 +232,6 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                              'associate': 'dates'}}
         self.assertEqual(control, result)
 
-    @ignore_warnings
     def test_multi_analyse_associate(self):
         tools = DataBuilderTools()
         size = 50
