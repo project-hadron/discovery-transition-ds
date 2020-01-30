@@ -178,7 +178,7 @@ class Transition(AbstractComponent):
         stylise = True if not isinstance(stylise, bool) else stylise
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        df = pd.DataFrame.from_dict(data=self.intent_model.report_intent(), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(), orient='columns')
         if stylise:
             index = df[df['level'].duplicated()].index.to_list()
             df.loc[index, 'level'] = ''
