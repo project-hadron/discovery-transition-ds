@@ -130,7 +130,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         _uri = self.connector_contract.uri
         return self.backup_canonical(uri=_uri, canonical=canonical)
 
-    def backup_canonical(self, canonical: pd.DataFrame, uri: str, ignore_kwargs: bool=False) -> bool:
+    def backup_canonical(self, canonical: pd.DataFrame, uri: str, **kwargs) -> bool:
         """ creates a backup of the canonical to an alternative URI
 
         Extra Parameters in the ConnectorContract kwargs:
@@ -141,7 +141,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
             return False
         _cc = self.connector_contract
         _address = _cc.parse_address(uri=uri)
-        persist_params = {} if ignore_kwargs else _cc.kwargs
+        persist_params = kwargs if isinstance(kwargs, dict) else _cc.kwargs
         persist_params.update(_cc.parse_query(uri=uri))
         _, _, _ext = _address.rpartition('.')
         if not self.connector_contract.schema.startswith('http'):

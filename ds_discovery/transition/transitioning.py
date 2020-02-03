@@ -33,16 +33,8 @@ class Transition(AbstractComponent):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
-        To implement a new remote class Factory Method follow the method naming convention '_from_remote_<schema>()'
-        where <schema> is the uri schema name. this method should be a @classmethod and return a tuple of
-        module_name and handler.
-        For example if we were using an AWS S3 where the schema is s3:// the Factory method be similar to:
-        literal blocks::
-                @classmethod
-                def _from_remote_s3(cls) -> (str, str):
-                    _module_name = 'ds_discovery.handler.aws_s3_handlers'
-                    _handler = 'AwsS3PersistHandler'
-                    return _module_name, _handler
+        by default the handler is local Pandas but also supports remote AWS S3 and Redis. It use these Factory
+        instantiations ensure that the schema is s3:// or redis:// and the handler will be automatically redirected
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
@@ -50,7 +42,7 @@ class Transition(AbstractComponent):
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
-        _pm = TransitionPropertyManager(task_name=task_name, root_keys=[], knowledge_keys=[])
+        _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
@@ -58,19 +50,16 @@ class Transition(AbstractComponent):
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
         """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
-        _module_name = 'ds_discovery.handler.aws_s3_handlers'
+        _module_name = 'ds_connectors.handler.aws_s3_handlers'
         _handler = 'AwsS3PersistHandler'
         return _module_name, _handler
 
-    @property
-    def intent_model(self) -> TransitionIntentModel:
-        """The intent model instance"""
-        return self._intent_model
-
-    @property
-    def pm(self) -> TransitionPropertyManager:
-        """The properties manager instance"""
-        return self._component_pm
+    @classmethod
+    def _from_remote_redis(cls) -> (str, str):
+        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
+        _module_name = 'ds_connectors.handlers.redis_handlers'
+        _handler = 'RedisPersistHandler'
+        return _module_name, _handler
 
     @property
     def discover(self) -> DataDiscovery:
@@ -169,7 +158,7 @@ class Transition(AbstractComponent):
             df.set_index(keys='connector_name', inplace=True)
         return df
 
-    def report_cleaners(self, stylise: bool=True) -> pd.DataFrame:
+    def report_intent(self, stylise: bool=True) -> pd.DataFrame:
         """ generates a report on all the intent
 
         :param stylise: returns a stylised dataframe with formatting
