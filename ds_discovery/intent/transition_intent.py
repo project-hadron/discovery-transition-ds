@@ -150,7 +150,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
         :param df: the pandas.DataFrame to drop duplicates from
         :param rename_map: a from: to dictionary of headers to rename
-        :param case: changes the headers to lower, upper, title. if none of these then no change
+        :param case: changes the headers to lower, upper, title, snake. if none of these then no change
         :param replace_spaces: character to replace spaces with. Default is '_' (underscore)
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -215,9 +215,9 @@ class TransitionIntentModel(AbstractIntentModel):
         for c in obj_cols:
             if df[c].nunique() < unique_max and round(df[c].isnull().sum() / df_len, 2) < null_max:
                 col_cat.append(c)
-        result = self.to_category_type(df, headers=col_cat, inplace=inplace)
+        result = self.to_category_type(df, headers=col_cat, inplace=inplace, save_intent=False)
         if not inplace:
-            return df
+            return result
         return
 
     # drop column that only have 1 value in them
@@ -270,7 +270,7 @@ class TransitionIntentModel(AbstractIntentModel):
             elif round((df_filter[c].value_counts() / np.float(len(df_filter[c].dropna()))).sort_values(
                     ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
-        result = self.to_remove(df, headers=col_drop, inplace=inplace)
+        result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
         if not inplace:
             return result
         return
@@ -440,7 +440,7 @@ class TransitionIntentModel(AbstractIntentModel):
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
 
-        self.to_remove(df, headers=obj_cols, drop=True, inplace=True)
+        self.to_remove(df, headers=obj_cols, drop=True, inplace=True, save_intent=False)
         if not inplace:
             return df
         return
