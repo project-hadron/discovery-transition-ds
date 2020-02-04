@@ -20,10 +20,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
     def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=None,
                  intent_next_available: bool=None):
-        """initialisation of the Intent class. The 'intent_param_exclude' is used to exclude commonly used method
-         parameters from being included in the intent contract, this is particularly useful if passing a canonical, or
-         non relevant parameters to an intent method pattern. Any named parameter in the intent_param_exclude list
-         will not be included in the recorded intent contract for that method
+        """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager

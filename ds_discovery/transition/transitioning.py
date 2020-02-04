@@ -139,7 +139,7 @@ class Transition(AbstractComponent):
         return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True) -> pd.DataFrame:
+    def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract
 
         :param connector_filter: (optional) filters on the connector name.
@@ -158,7 +158,7 @@ class Transition(AbstractComponent):
             df.set_index(keys='connector_name', inplace=True)
         return df
 
-    def report_intent(self, stylise: bool=True) -> pd.DataFrame:
+    def report_intent(self, stylise: bool=True):
         """ generates a report on all the intent
 
         :param stylise: returns a stylised dataframe with formatting
