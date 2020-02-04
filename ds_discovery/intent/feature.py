@@ -176,52 +176,6 @@ class Feature(object):
         return df_sub
 
     @staticmethod
-    def normalise_values(values: Any, precision: int=None):
-        """normalises numeric data to between -1 and 1 (or 0 and 1 if all positive)
-
-        :param values: a list or Series of values
-        :param precision: the return precision of the values
-        :return: an normalised set of data
-        """
-        # TODO: This needs to have the key added to make it a feature Build
-        values = AbstractPropertyManager.list_formatter(values)
-        norm = values / np.linalg.norm(values)
-        if isinstance(precision, int):
-            norm = np.round(norm, precision)
-        return norm
-
-    @staticmethod
-    def flatten_categorical(df, key, column, prefix=None, index_key=True, dups=True) -> pd.DataFrame:
-        """ flattens a categorical as a sum of one-hot
-
-        :param df: the Dataframe to reference
-        :param key: the key column to sum on
-        :param column: the category type column break into the category columns
-        :param prefix: a prefix for the category columns
-        :param index_key: set the key as the index. Default to True
-        :param dups: id duplicates should be removed from the origional df
-        :return: a pd.Dataframe of the flattened categorical
-        """
-        # TODO: Add an option to normalise once flattened
-        # TODO: Allow compound key and multiple columns
-        if key not in df:
-            raise NameError("The key {} can't be found in the DataFrame".format(key))
-        if column not in df:
-            raise NameError("The column {} can't be found in the DataFrame".format(column))
-        if df[column].dtype.name != 'category':
-            df[column] = df[column].astype('category')
-        if prefix is None:
-            prefix = column
-        if not dups:
-            df.drop_duplicates(inplace=True)
-        dummy_df = pd.get_dummies(df[[key, column]], columns=[column], prefix=prefix)
-        dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))]
-        dummy_df = dummy_df.groupby([pd.Grouper(key=key)])[dummy_cols].sum()
-        if index_key:
-            dummy_df = dummy_df.set_index(key)
-        return dummy_df
-
-    @staticmethod
     def merge(df_left, df_right, how='inner', on=None, left_on=None, right_on=None, left_index=False,
               right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False, validate=None):
         """ converts columns to object type

@@ -175,8 +175,8 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def test_analyse_date(self):
         tools = DataBuilderTools()
-        str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
-        ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
+        str_dates = tools._get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
+        ts_dates = tools._get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
         result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
         pprint(result)
 
@@ -215,7 +215,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                'associate': 'numbers'}}
         self.assertEqual(control, result)
         #dates
-        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', date_pattern=[1,9,4], size=size, quantity=0.9, seed=31)
+        df['dates'] = tools._get_datetime('10/10/2000', '31/12/2018', date_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = [{'dates': {'dtype': 'datetime', 'granularity': 3, 'date_format': '%d-%m-%Y'}}]
         result = Discover.analyse_association(df, columns_list)
         control = {'dates': {'analysis': {'dropped': [0],
@@ -237,7 +237,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         size = 50
         df = tools.get_profiles(size=size, mf_weighting=[60, 40], seed=31, quantity=90.0)
         df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
-        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', date_pattern=[1,9,4], size=size, quantity=0.9, seed=31)
+        df['dates'] = tools._get_datetime('10/10/2000', '31/12/2018', date_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = [{'gender': {}}, {'numbers': {}}]
         result = Discover.analyse_association(df, columns_list)
         control = control_01()

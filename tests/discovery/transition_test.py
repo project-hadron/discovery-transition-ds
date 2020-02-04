@@ -323,8 +323,8 @@ class Customer(object):
         df['balance'] = tools.get_number(0.0, 1000, precision=2, weight_pattern=value_distribution, size=sample_size)
         age_pattern = [3, 5, 6, 10, 6, 5, 7, 15, 5, 2, 1, 0.5, 0.2, 0.1]
         df['age'] = tools.get_number(20.0, 90.0, weight_pattern=age_pattern, quantity=0.85, size=sample_size)
-        df['start'] = tools.get_datetime(start='01/01/2018', until='31/12/2018', date_format='%m-%d-%y',
-                                         size=sample_size)
+        df['start'] = tools._get_datetime(start='01/01/2018', until='31/12/2018', date_format='%m-%d-%y',
+                                          size=sample_size)
         prof_pattern = [10, 8, 5, 4, 3, 2] + [1] * 9
         profession = ProfileSample.professions(size=15)
         df['profession'] = tools.get_category(selection=profession, weight_pattern=prof_pattern, quantity=0.90,
@@ -340,9 +340,9 @@ class Customer(object):
 
         # Optional extra fields
         if extra:
-            df['last_login'] = tools.get_datetime(start='01/01/2019', until='01/05/2019',
-                                                  date_pattern=[1, 2, 3, 5, 9, 20], date_format='%m-%d-%y %H:%M',
-                                                  size=sample_size)
+            df['last_login'] = tools._get_datetime(start='01/01/2019', until='01/05/2019',
+                                                   date_pattern=[1, 2, 3, 5, 9, 20], date_format='%m-%d-%y %H:%M',
+                                                   size=sample_size)
             df['status'] = tools.get_category(selection=['Active', 'Closed', 'Suspended'], weight_pattern=[50, 5, 2],
                                               size=sample_size)
         # Optional extra noise

@@ -18,8 +18,8 @@ __author__ = 'Darryl Oatridge'
 class TransitionIntentModel(AbstractIntentModel):
     """A set of methods to help clean columns with a Pandas.DataFrame"""
 
-    def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=True,
-                 intent_next_available: bool=False):
+    def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=None,
+                 intent_next_available: bool=None):
         """initialisation of the Intent class. The 'intent_param_exclude' is used to exclude commonly used method
          parameters from being included in the intent contract, this is particularly useful if passing a canonical, or
          non relevant parameters to an intent method pattern. Any named parameter in the intent_param_exclude list
@@ -67,7 +67,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
-                        canonical = eval(f"self.{method}(canonical, inplace: bool=False, save_intent=False, **{params})")
+                        canonical = eval(f"self.{method}(canonical, inplace=False, save_intent=False, **{params})")
         if not inplace:
             return canonical
 
@@ -126,8 +126,8 @@ class TransitionIntentModel(AbstractIntentModel):
         return [c for c in _rtn_cols]
 
     @staticmethod
-    def filter_columns(df, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
-                       inplace=False) -> [dict, pd.DataFrame]:
+    def filter_columns(df, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
+                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> [dict, pd.DataFrame]:
         """ Returns a subset of columns based on the filter criteria
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -148,7 +148,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return df.loc[:, obj_cols]
 
     def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=False,
-                          save_intent: bool=True, intent_level: [int, str]=None):
+                          save_intent: bool=None, intent_level: [int, str]=None):
         """ clean the headers of a pandas DataFrame replacing space with underscore
 
         :param df: the pandas.DataFrame to drop duplicates from
@@ -190,8 +190,8 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def auto_to_category(self, df, unique_max: int=None, null_max: float=None, inplace: bool=False, save_intent: bool=True,
-                         intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def auto_to_category(self, df, unique_max: int=None, null_max: float=None, inplace: bool=False,
+                         save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ auto categorises columns that have a max number of uniqueness with a min number of nulls
         and are object dtype
 
@@ -225,8 +225,9 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drop column that only have 1 value in them
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                            auto_contract: bool=True, test_size: float=None, random_state: int=None, inplace: bool=False,
-                            save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                            auto_contract: bool=True, test_size: float=None, random_state: int=None,
+                            inplace: bool=False, save_intent: bool=None,
+                            intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
         :param df: the pandas.DataFrame to auto remove
@@ -278,9 +279,11 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drop duplicate columns
-    def auto_drop_duplicates(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                             re_ignore_case: bool=False, test_size: float=None, random_state: int=None, inplace: bool=False,
-                             save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def auto_drop_duplicates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
+                             dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                             re_ignore_case: bool=False, test_size: float=None, random_state: int=None,
+                             inplace: bool=False, save_intent: bool=None,
+                             intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ drops duplicate columns from the pd.DataFrame.
 
         :param df: the pandas.DataFrame to drop duplicates from
@@ -326,7 +329,7 @@ class TransitionIntentModel(AbstractIntentModel):
     # drops highly correlated columns
     def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
                              inc_str: bool=True, test_size: float=None, random_state: int=None, inplace: bool=False,
-                             save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
+                             save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
 
@@ -375,9 +378,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drop unwanted
-    def to_remove(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                  re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=True,
-                  intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def to_remove(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                  exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+                  save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ remove columns from the pandas.DataFrame
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -410,9 +413,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drop unwanted
-    def to_select(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                  re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=True,
-                  intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def to_select(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                  exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+                  save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ remove columns from the pandas.DataFrame
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -446,8 +449,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # convert boolean
-    def to_bool_type(self, df: pd.DataFrame, bool_map, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                     re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=True,
+    def to_bool_type(self, df: pd.DataFrame, bool_map, headers: [str, list]=None, drop: bool=False,
+                     dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                     re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
                      intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts column to bool based on the map
 
@@ -490,10 +494,10 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # convert objects to categories
-    def to_category_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None,
+    def to_category_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                          exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
                          as_num: bool=False, fill_nulls: str=None, nulls_list: [bool, list]=None,
-                         save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                         save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to categories
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -538,9 +542,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def _to_numeric(self, df: pd.DataFrame, numeric_type, fillna, errors=None, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                    exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                    inplace=False) -> [dict, pd.DataFrame]:
+    def _to_numeric(self, df: pd.DataFrame, numeric_type, fillna, errors=None, headers: [str, list]=None,
+                    drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                    re_ignore_case: bool=False, precision=None, inplace=False) -> [dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
@@ -549,6 +553,11 @@ class TransitionIntentModel(AbstractIntentModel):
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
         for c in obj_cols:
+            if not isinstance(precision, int):
+                try:
+                    precision = df[c].dropna().apply(str).str.extract('\.(.*)')[0].map(len).max()
+                except (ValueError, TypeError, IndexError, KeyError, ReferenceError, NameError, RecursionError):
+                    precision = 15
             df[c] = pd.to_numeric(df[c].astype(str).str.replace('[$£€, ]', ''), errors=errors)
             if fillna is None:
                 df[c] = df[c].fillna(np.nan)
@@ -564,20 +573,16 @@ class TransitionIntentModel(AbstractIntentModel):
             else:
                 df[c] = df[c].fillna(fillna)
 
-            if not isinstance(precision, int):
-                try:
-                    precision = df[c].dropna().apply(str).str.extract('\.(.*)')[0].map(len).max()
-                except (ValueError, TypeError, IndexError, KeyError, ReferenceError, NameError, RecursionError):
-                    precision = 15
             if str(numeric_type).lower().startswith('int'):
                 df[c] = df[c].round(0).astype(int)
             elif str(numeric_type).lower().startswith('float'):
                 df[c] = df[c].round(precision).astype(float)
         return df
 
-    def to_numeric_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                        re_ignore_case: bool=False, precision=None, fillna=None, errors=None, inplace: bool=False,
-                        save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def to_numeric_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                        exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
+                        fillna=None, errors=None, inplace: bool=False,
+                        save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -618,8 +623,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_int_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,  regex: [str, list]=None,
-                    re_ignore_case: bool=False, fillna=None, errors=None, inplace: bool=False, save_intent: bool=True,
+    def to_int_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                    exclude: bool=False,  regex: [str, list]=None, re_ignore_case: bool=False, fillna=None,
+                    errors=None, inplace: bool=False, save_intent: bool=None,
                     intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
 
@@ -659,9 +665,10 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_float_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                      re_ignore_case: bool=False, precision=None, fillna=None, errors=None, inplace: bool=False,
-                      save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def to_float_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                      exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
+                      fillna=None, errors=None, inplace: bool=False, save_intent: bool=None,
+                      intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to float type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -702,9 +709,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_normalised(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None,
+    def to_normalised(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                       exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                      inplace: bool=False, save_intent: bool=True, intent_level: [int, str]=None):
+                      inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None):
         """ converts columns to float type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -740,9 +747,10 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_str_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                    re_ignore_case: bool=False, inplace: bool=False, nulls_list: [bool, list]=None, as_num: bool=False,
-                    save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                    exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+                    nulls_list: [bool, list]=None, as_num: bool=False,
+                    save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to object type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -789,9 +797,10 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_date_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                     re_ignore_case: bool=False, as_num=False, day_first=False, year_first=False, date_format=None,
-                     inplace: bool=False, save_intent: bool=True, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
+    def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
+                     exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, as_num=False,
+                     day_first=False, year_first=False, date_format=None, inplace: bool=False, save_intent: bool=None,
+                     intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -848,8 +857,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return temp + delta
         return date_float
 
-    def to_date_from_excel_type(self, df: pd.DataFrame, headers:[str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                                re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=True,
+    def to_date_from_excel_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
+                                dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                                re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
                                 intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """converts excel date formats into datetime
 

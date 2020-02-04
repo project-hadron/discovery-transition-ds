@@ -6,7 +6,7 @@ from datetime import datetime
 from ds_behavioral import DataBuilderTools
 from ds_foundation.handlers.abstract_handlers import ConnectorContract
 
-from ds_discovery.handlers.aws_s3_handlers import AwsS3SourceHandler, AwsS3PersistHandler
+from ds_connectors.handlers.aws_s3_handlers import AwsS3SourceHandler, AwsS3PersistHandler
 
 
 class AwsS3HandlerTest(unittest.TestCase):
