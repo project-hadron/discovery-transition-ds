@@ -168,6 +168,25 @@ class Transition(AbstractComponent):
             df.set_index(keys='connector_name', inplace=True)
         return df
 
+    def report_run_book(self, stylise: bool=True):
+        """ generates a report on all the intent
+
+        :param stylise: returns a stylised dataframe with formatting
+        :return: pd.Dataframe
+        """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+        df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
+        if stylise:
+            index = df[df['name'].duplicated()].index.to_list()
+            df.loc[index, 'name'] = ''
+            df = df.reset_index(drop=True)
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['name'],  **{'font-weight': 'bold', 'font-size': "120%"})
+            return df_style
+        return df
+
     def report_intent(self, stylise: bool=True):
         """ generates a report on all the intent
 
