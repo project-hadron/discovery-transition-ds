@@ -7,17 +7,8 @@ __pycache__/
 *.so
 
 # local directories
-jupyter/working/data/0_raw/paribas.csv
-jupyter/working/data/0_raw/santander.csv
-jupyter/working/data/1_*
-jupyter/working/data/2_*
-jupyter/working/data/3_*
-jupyter/working/data/4_*
-jupyter/working/data/5_*
-jupyter/working/data/6_*
-jupyter/working/data/7_*
-jupyter/working/data/8_*
-jupyter/working/data/x_*
+/jupyter/working/data/
+/jupyter/working/bundles/
 
 # Distribution / packaging
 .Python
