@@ -7,6 +7,8 @@ import matplotlib.dates as mdates
 
 from ds_foundation.intent.abstract_intent import AbstractIntentModel
 from ds_foundation.properties.abstract_properties import AbstractPropertyManager
+
+from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
 
 __author__ = 'Darryl Oatridge'
@@ -29,7 +31,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # set all the defaults
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
-        intent_param_exclude = ['df']
+        intent_param_exclude = ['df', 'canonical']
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level)
 
@@ -47,6 +49,72 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         canonical = eval(f"self.{method}(canonical, save_intent=False, **{params})")
+        return canonical
+
+    def apply_condition(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
+                        dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                        re_ignore_case: bool=False, condition: str=None, save_intent: bool=None,
+                        intent_level: [int, str]=None, **kwargs) -> pd.DataFrame:
+        """applies a condition to the given column labels
+
+        :param canonical: the Pandas.DataFrame to get the column headers from
+        :param headers: a list of headers to apply condition to
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
+                 example:  'condition=' > value', value=0.98'
+                 or:       '.str.contains(name)", name=shed'
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return:
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # Code block for intent
+        headers = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
+                                                        exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
+        if isinstance(condition, str):
+            local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
+            if 'canonical' not in local_kwargs:
+                local_kwargs['canonical'] = canonical
+            for label in headers:
+                str_code = "canonical['{}']{}".format(label, condition)
+                canonical = canonical.where(eval(str_code, globals(), local_kwargs)).dropna()
+        return canonical
+
+    def drop_columns(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
+                     dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
+                     save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+        """
+
+        :param canonical: the Pandas.DataFrame to get the column headers from
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # Code block for intent
+        obj_cols = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
+                                                        exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
+        canonical.drop(obj_cols, axis=1, inplace=True)
         return canonical
 
     def remove_outliers(self, canonical: pd.DataFrame, headers: list, lower_quantile: float=None, upper_quantile: float=None,
@@ -100,7 +168,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         df_sub = canonical[headers].groupby(group_by).agg(aggregator)
-        df_sub = df_sub.sort_values(ascending=False).reset_index()
+        df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
         if include_weighting:
             total = df_sub[headers].sum()
             df_sub['weighting'] = df_sub[headers].apply(lambda x: round((x / total) * 100, 2) if isinstance(x, (int, float)) else 0)

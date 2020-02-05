@@ -75,6 +75,10 @@ class Transition(AbstractComponent):
         """Test if the source file is modified since last load"""
         return self.is_canonical_modified(self.CONNECTOR_SOURCE)
 
+    def get_persist_contract(self):
+        """ gets the persist connector contract that can be used as the next chain source"""
+        return self.pm.get_connector_contract(self.CONNECTOR_PERSIST)
+
     def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the source contract
 
@@ -123,6 +127,12 @@ class Transition(AbstractComponent):
         """Saves the pandas.DataFrame to the clean files folder"""
         self.persist_canonical(self.CONNECTOR_PERSIST, df)
 
+    def run_transition_pipeline(self):
+        """Runs the transition pipeline from source to persist"""
+        canonical = self.load_source_canonical()
+        result = self.intent_model.run_intent_pipeline(canonical)
+        self.save_clean_canonical(result)
+
     def canonical_report(self, df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
@@ -149,7 +159,7 @@ class Transition(AbstractComponent):
         stylise = True if not isinstance(stylise, bool) else stylise
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        df = pd.DataFrame.from_dict(data=super().report_connectors(connector_filter=connector_filter), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
         if stylise:
             df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
             _ = df_style.set_properties(subset=['connector_name'], **{'font-weight': 'bold'})
@@ -193,7 +203,7 @@ class Transition(AbstractComponent):
         drop_dates = False if not isinstance(drop_dates, bool) else drop_dates
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        report = super().report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
+        report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
                                       drop_dates=drop_dates)
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
