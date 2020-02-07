@@ -32,7 +32,7 @@ class TransitionIntentModel(AbstractIntentModel):
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, levels: [int, str, list]=None, inplace: bool=False,
+    def run_intent_pipeline(self, canonical: pd.DataFrame, run_book: [int, str, list]=None, inplace: bool=False,
                             **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
@@ -41,7 +41,7 @@ class TransitionIntentModel(AbstractIntentModel):
         and will contain 'inplace' and 'save_intent' as parameters.
 
         :param canonical: this is the iterative value all intent are applied to and returned.
-        :param levels: (optional) an single or list of levels to run, if list, run in order given
+        :param run_book: (optional) an single or list of levels to run, if list, run in order given
         :param inplace: (optional) change data in place or to return a deep copy. default False
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied or None if inplace is True
@@ -55,11 +55,11 @@ class TransitionIntentModel(AbstractIntentModel):
                 with threading.Lock():
                     canonical = deepcopy(canonical)
             # get the list of levels to run
-            if isinstance(levels, (int, str, list)):
-                levels = self._pm.list_formatter(levels)
+            if isinstance(run_book, (int, str, list)):
+                run_book = self._pm.list_formatter(run_book)
             else:
-                levels = sorted(self._pm.get_intent().keys())
-            for level in levels:
+                run_book = sorted(self._pm.get_intent().keys())
+            for level in run_book:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):

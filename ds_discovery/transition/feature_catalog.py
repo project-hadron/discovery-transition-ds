@@ -58,6 +58,16 @@ class FeatureCatalog(AbstractComponent):
         _handler = 'RedisPersistHandler'
         return _module_name, _handler
 
+    @property
+    def intent_model(self) -> FeatureCatalogIntentModel:
+        """The intent model instance"""
+        return self._intent_model
+
+    @property
+    def pm(self) -> FeatureCatalogPropertyManager:
+        """The properties manager instance"""
+        return self._component_pm
+
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
         return self.is_canonical_modified(connector_name=self.CONNECTOR_SOURCE)

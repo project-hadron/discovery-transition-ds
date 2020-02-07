@@ -22,7 +22,6 @@ class Transition(AbstractComponent):
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
         :param default_save: The default behaviour of persisting the contracts:
-
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
@@ -54,12 +53,15 @@ class Transition(AbstractComponent):
         _handler = 'AwsS3PersistHandler'
         return _module_name, _handler
 
-    @classmethod
-    def _from_remote_redis(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
-        _module_name = 'ds_connectors.handlers.redis_handlers'
-        _handler = 'RedisPersistHandler'
-        return _module_name, _handler
+    @property
+    def intent_model(self) -> TransitionIntentModel:
+        """The intent model instance"""
+        return self._intent_model
+
+    @property
+    def pm(self) -> TransitionPropertyManager:
+        """The properties manager instance"""
+        return self._component_pm
 
     @property
     def discover(self) -> DataDiscovery:
@@ -105,7 +107,7 @@ class Transition(AbstractComponent):
         self.pm_persist(save)
         return
 
-    def load_source_canonical(self) -> [pd.DataFrame]:
+    def load_source_canonical(self) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(self.CONNECTOR_SOURCE)
 
