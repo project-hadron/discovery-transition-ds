@@ -30,7 +30,7 @@ class PandasSourceHandler(AbstractSourceHandler):
         """ The source types supported with this module"""
         return ['parquet', 'csv', 'tsv', 'txt', 'json', 'pickle', 'xlsx', 'yaml']
 
-    def load_canonical(self) -> [pd.DataFrame, dict]:
+    def load_canonical(self, **kwargs) -> [pd.DataFrame, dict]:
         """ returns the canonical dataset based on the connector contract. This method utilises the pandas
         'pd.read_' methods and directly passes the kwargs to these methods.
 
@@ -44,6 +44,7 @@ class PandasSourceHandler(AbstractSourceHandler):
         _cc = self.connector_contract
         load_params = _cc.kwargs
         load_params.update(_cc.query)  # Update kwargs with those in the uri query
+        load_params.update(kwargs)     # Update with any passed though the call
         _, _, _ext = _cc.address.rpartition('.')
         file_type = load_params.pop('file_type', _ext if len(_ext) > 0 else 'csv')
         with threading.Lock():
@@ -119,7 +120,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
                     uri = <scheme>://<netloc>/[<path>/]<filename.ext>
     """
 
-    def persist_canonical(self, canonical: pd.DataFrame) -> bool:
+    def persist_canonical(self, canonical: pd.DataFrame, **kwargs) -> bool:
         """ persists the canonical dataset
 
         Extra Parameters in the ConnectorContract kwargs:
@@ -128,7 +129,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         if not isinstance(self.connector_contract, ConnectorContract):
             return False
         _uri = self.connector_contract.uri
-        return self.backup_canonical(uri=_uri, canonical=canonical)
+        return self.backup_canonical(uri=_uri, canonical=canonical, **kwargs)
 
     def backup_canonical(self, canonical: pd.DataFrame, uri: str, **kwargs) -> bool:
         """ creates a backup of the canonical to an alternative URI
