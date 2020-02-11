@@ -123,12 +123,12 @@ class FeatureCatalog(AbstractComponent):
         connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
         return self.load_canonical(connector_name=connector_name)
 
-    def load_canonical(self, connector_name: str) -> pd.DataFrame:
+    def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
 
         :param connector_name: the name or label to identify and reference the connector
         """
-        canonical = super().load_canonical(connector_name=connector_name)
+        canonical = super().load_canonical(connector_name=connector_name, **kwargs)
         if isinstance(canonical, dict):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
@@ -247,4 +247,3 @@ class FeatureCatalog(AbstractComponent):
             _ = df_style.set_properties(subset=['label', 'section'], **{'font-size': "120%"})
             return df_style
         return df
-

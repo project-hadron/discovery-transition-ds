@@ -115,12 +115,12 @@ class Transition(AbstractComponent):
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
         return self.load_canonical(self.CONNECTOR_PERSIST)
 
-    def load_canonical(self, connector_name: str) -> pd.DataFrame:
+    def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
 
         :param connector_name: the name or label to identify and reference the connector
         """
-        canonical = super().load_canonical(connector_name=connector_name)
+        canonical = super().load_canonical(connector_name=connector_name, **kwargs)
         if isinstance(canonical, dict):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical

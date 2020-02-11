@@ -30,7 +30,8 @@ class TransitionIntentModel(AbstractIntentModel):
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical']
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
-                         default_save_intent=default_save_intent, default_intent_level=default_intent_level)
+                         default_save_intent=default_save_intent, default_intent_level=default_intent_level,
+                         default_replace=True)
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, run_book: [int, str, list]=None, inplace: bool=False,
                             **kwargs):
