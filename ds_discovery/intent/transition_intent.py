@@ -31,7 +31,7 @@ class TransitionIntentModel(AbstractIntentModel):
         intent_param_exclude = ['df', 'inplace', 'canonical']
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
-                         default_replace=True)
+                         default_replace_intent=True)
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, run_book: [int, str, list]=None, inplace: bool=False,
                             **kwargs):
