@@ -7,6 +7,8 @@ from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
+from ds_connectors.handlers.aws_s3_handlers import AwsS3PersistHandler
+
 __author__ = 'Darryl Oatridge'
 
 
@@ -49,7 +51,7 @@ class Transition(AbstractComponent):
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
         """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
-        _module_name = 'ds_connectors.handler.aws_s3_handlers'
+        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
         _handler = 'AwsS3PersistHandler'
         return _module_name, _handler
 
