@@ -7,8 +7,6 @@ from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
-from ds_connectors.handlers.aws_s3_handlers import AwsS3PersistHandler
-
 __author__ = 'Darryl Oatridge'
 
 
@@ -77,7 +75,7 @@ class Transition(AbstractComponent):
 
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
-        return self.is_canonical_modified(self.CONNECTOR_SOURCE)
+        return self.pm.is_connector_modified(self.CONNECTOR_SOURCE)
 
     def get_persist_contract(self):
         """ gets the persist connector contract that can be used as the next chain source"""
@@ -90,9 +88,9 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
-        if self.has_connector_contract(self.CONNECTOR_SOURCE):
+        if self.pm.has_connector(self.CONNECTOR_SOURCE):
             self.remove_connector_contract(self.CONNECTOR_SOURCE)
-        self.set_connector_contract(self.CONNECTOR_SOURCE, connector_contract=connector_contract, save=save)
+        self.add_connector_contract(self.CONNECTOR_SOURCE, connector_contract=connector_contract, save=save)
         self.pm_persist(save)
         return
 
@@ -103,9 +101,9 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
-        if self.has_connector_contract(self.CONNECTOR_PERSIST):
+        if self.pm.has_connector(self.CONNECTOR_PERSIST):
             self.remove_connector_contract(self.CONNECTOR_PERSIST)
-        self.set_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
+        self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
         self.pm_persist(save)
         return
 
