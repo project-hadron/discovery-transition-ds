@@ -70,7 +70,7 @@ class FeatureCatalog(AbstractComponent):
 
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
-        return self.is_canonical_modified(connector_name=self.CONNECTOR_SOURCE)
+        return self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE)
 
     def get_frame_contract(self, connector_name: str=None) -> ConnectorContract:
         """ gets the frame connector contract that can be used as the next chain source
@@ -88,10 +88,9 @@ class FeatureCatalog(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
-        if self.has_connector_contract(connector_name=self.CONNECTOR_SOURCE):
+        if self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE):
             self.remove_connector_contract(connector_name=self.CONNECTOR_SOURCE)
-        self.set_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
-                                    save=save)
+        self.pm.set_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract)
         self.pm_persist(save)
         return
 
@@ -104,9 +103,9 @@ class FeatureCatalog(AbstractComponent):
         """
         save = save if isinstance(save, bool) else self._default_save
         connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
-        if self.has_connector_contract(connector_name):
+        if self.pm.has_connector(connector_name):
             self.remove_connector_contract(connector_name)
-        self.set_connector_contract(connector_name=connector_name, connector_contract=connector_contract, save=save)
+        self.pm.set_connector_contract(connector_name=connector_name, connector_contract=connector_contract)
         self.pm_persist(save)
         return
 

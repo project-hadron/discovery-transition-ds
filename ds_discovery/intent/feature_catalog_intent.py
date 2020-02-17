@@ -18,7 +18,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=True,
-                 intent_next_available: bool=None):
+                 intent_next_available: bool=None, default_replace_intent: bool=None, intent_type_additions: list=None):
         """initialisation of the Intent class. The 'intent_param_exclude' is used to exclude commonly used method
          parameters from being included in the intent contract, this is particularly useful if passing a canonical, or
          non relevant parameters to an intent method pattern. Any named parameter in the intent_param_exclude list
@@ -27,14 +27,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager
         :param intent_next_available: (optional) if the default level should be set to next available level or zero
+        :param default_replace_intent: (optional) the default replace strategy for the same intent found at that level
+        :param intent_type_additions: (optional) if additional data types need to be supported as an intent param
         """
         # set all the defaults
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
+        default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
         intent_param_exclude = ['df', 'canonical']
+        intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
+        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
-                         default_replace_intent=True)
+                         default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
     def run_intent_pipeline(self, canonical, intent_level: [int, str, list]=None, **kwargs):
         # test if there is any intent to run
@@ -80,7 +85,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
         headers = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
-                                                        exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
+                                                       exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
         if isinstance(condition, str):
             local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
             if 'canonical' not in local_kwargs:
@@ -118,8 +123,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical.drop(obj_cols, axis=1, inplace=True)
         return canonical
 
-    def remove_outliers(self, canonical: pd.DataFrame, headers: list, lower_quantile: float=None, upper_quantile: float=None,
-                        save_intent: bool=None, intent_level: [int, str]=None):
+    def remove_outliers(self, canonical: pd.DataFrame, headers: list, lower_quantile: float=None,
+                        upper_quantile: float=None, save_intent: bool=None, intent_level: [int, str]=None):
         """ removes outliers by removing the boundary quantiles
 
         :param canonical: the DataFrame to apply
@@ -146,7 +151,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical = canonical[canonical[column_name] < analysis.selection[2][0]]
         return canonical
 
-    def group_features(self, canonical: pd.DataFrame, headers:[str, list], group_by: [str, list], aggregator: str=None,
+    def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting=False, remove_zeros: bool=False,
                        remove_aggregated: bool=True, save_intent: bool=None, intent_level: [int, str]=None):
         """ groups features according to the stategy passed. strategy options are None, 'sum', 'nunique', 'max', 'min'
@@ -172,7 +177,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
         if include_weighting:
             total = df_sub[headers].sum()
-            df_sub['weighting'] = df_sub[headers].apply(lambda x: round((x / total) * 100, 2) if isinstance(x, (int, float)) else 0)
+            df_sub['weighting'] = df_sub[headers].apply(lambda x:
+                                                        round((x/total)*100, 2) if isinstance(x, (int, float)) else 0)
             if remove_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
         if remove_aggregated:
@@ -241,7 +247,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             raise TypeError("the column {} is not of dtype datetime".format(column))
         df_time = canonical.filter([key, column], axis=1)
         df_time['{}_yr'.format(column)] = canonical[column].dt.year
-        df_time['{}_dec'.format(column)] = (canonical[column].dt.year - canonical[column].dt.year % 10).astype('category')
+        df_time['{}_dec'.format(column)] = (canonical[column].dt.year-canonical[column].dt.year % 10).astype('category')
         df_time['{}_mon'.format(column)] = canonical[column].dt.month
         df_time['{}_day'.format(column)] = canonical[column].dt.day
         df_time['{}_dow'.format(column)] = canonical[column].dt.dayofweek
@@ -301,12 +307,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             if size > 0:
                 if is_numeric_dtype(col):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
-                                                      precision=precision)
+                                                          precision=precision)
                     col[col.isna()] = self._get_number(from_value=result.get('lower'), to_value=result.get('upper'),
                                                        weight_pattern=result.get('weighting'), precision=0, size=size)
                 elif is_datetime64_any_dtype(col):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
-                                                    day_first=day_first, year_first=year_first, date_format=date_format)
+                                                        day_first=day_first, year_first=year_first,
+                                                        date_format=date_format)
                     synthetic = self._get_datetime(start=result.get('lower'), until=result.get('upper'),
                                                    weight_pattern=result.get('weighting'), date_format=date_format,
                                                    day_first=day_first, year_first=year_first, size=size)
@@ -314,14 +321,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     col[col.isna()] = self._get_category(selection=result.get('selection'),
-                                                             weight_pattern=result.get('weighting'), size=size)
+                                                         weight_pattern=result.get('weighting'), size=size)
             df[c] = col
         return df
 
-    def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], save_intent: bool=None, intent_level: [int, str]=None, **kwargs):
+    def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], save_intent: bool=None,
+                           intent_level: [int, str]=None, **kwargs):
         """ regular expression substitution of key value pairs to the value string
 
-        :param value: the value to apply the substitution to
+        :param canonical: the value to apply the substitution to
+        :param headers:
         :param kwargs: a set of keys to replace with the values
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -364,6 +373,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return canonical
         return result
 
+    """
+        PRIVATE METHODS SECTION
+    """
     def build_frame(self, canonical_left, canonical_right, on=None, left_on=None, right_on=None, how='left',
                     left_index=False, right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False,
                     validate=None, save_intent: bool=None, intent_level: [int, str]=None):
@@ -386,9 +398,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param sort: Sort the result DataFrame by the join keys in lexicographical order. Defaults to True, setting
                 to False will improve performance substantially in many cases.
         :param suffixes: A tuple of string suffixes to apply to overlapping columns. Defaults to ('_x', '_y').
-        :param in place: Always copy data (default True) from the passed DataFrame objects, even when reindexing is
                 not necessary. Cannot be avoided in many cases but may improve performance / memory usage. The cases
                 where copying can be avoided are somewhat pathological but this option is provided nonetheless.
+        :param indicator:
         :param validate : string, default None. If specified, checks if merge is of specified type.
                     “one_to_one” or “1:1”: checks if merge keys are unique in both left and right datasets.
                     “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
@@ -407,11 +419,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                       indicator=indicator, validate=validate)
         return df
 
-    """
-        PRIVATE METHODS SECTION
-    """
-    def _get_number(self, from_value: [int, float], to_value: [int, float]=None, weight_pattern: list=None, offset: int=None,
-                    precision: int=None, bounded_weighting: bool=True, at_most: int=None,
+    def _get_number(self, from_value: [int, float], to_value: [int, float]=None, weight_pattern: list=None,
+                    offset: int=None, precision: int=None, bounded_weighting: bool=True, at_most: int=None,
                     dominant_values: [float, list]=None, dominant_percent: float=None, dominance_weighting: list=None,
                     size: int = None) -> list:
         """ returns a number in the range from_value to to_value. if only to_value given from_value is zero
@@ -421,7 +430,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param weight_pattern: a weighting pattern or probability that does not have to add to 1
         :param precision: the precision of the returned number. if None then assumes int value else float
         :param offset: an offset multiplier, if None then assume 1
-        :param currency: a currency symbol to prefix the value with. returns string with commas
         :param bounded_weighting: if the weighting pattern should have a soft or hard boundary constraint
         :param at_most: the most times a selection should be chosen
         :param dominant_values: a value or list of values with dominant_percent. if used MUST provide a dominant_percent
@@ -453,9 +461,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             dominance_weighting = [1] if not isinstance(dominance_weighting, list) else dominance_weighting
             if sample_count > 0:
                 if isinstance(dominant_values, list):
-                    dominant_list = self._get_category(selection=dominant_values,
-                                                                  weight_pattern=dominance_weighting,
-                                                                  size=sample_count, bounded_weighting=True)
+                    dominant_list = self._get_category(selection=dominant_values, weight_pattern=dominance_weighting,
+                                                       size=sample_count, bounded_weighting=True)
                 else:
                     dominant_list = [dominant_values] * sample_count
             size -= sample_count
@@ -628,4 +635,3 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         values = pd.to_datetime(dates, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                 yearfirst=year_first)
         return mdates.date2num(pd.Series(values)).tolist()
-

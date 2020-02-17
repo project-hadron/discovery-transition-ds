@@ -19,19 +19,24 @@ class TransitionIntentModel(AbstractIntentModel):
     """A set of methods to help clean columns with a Pandas.DataFrame"""
 
     def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=None,
-                 intent_next_available: bool=None):
+                 intent_next_available: bool=None, default_replace_intent: bool=None, intent_type_additions: list=None):
         """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager
         :param intent_next_available: (optional) if the default level should be set to next available level or zero
+        :param default_replace_intent: (optional) the default replace strategy for the same intent found at that level
+        :param intent_type_additions: (optional) if additional data types need to be supported as an intent param
         """
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
+        default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical']
+        intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
+        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
-                         default_replace_intent=True)
+                         default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, run_book: [int, str, list]=None, inplace: bool=False,
                             **kwargs):
