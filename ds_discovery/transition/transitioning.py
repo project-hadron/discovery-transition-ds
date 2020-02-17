@@ -54,6 +54,13 @@ class Transition(AbstractComponent):
         _handler = 'AwsS3PersistHandler'
         return _module_name, _handler
 
+    @classmethod
+    def _from_remote_redis(cls) -> (str, str):
+        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
+        _module_name = 'ds_connectors.handlers.redis_handlers'
+        _handler = 'RedisPersistHandler'
+        return _module_name, _handler
+
     @property
     def intent_model(self) -> TransitionIntentModel:
         """The intent model instance"""
