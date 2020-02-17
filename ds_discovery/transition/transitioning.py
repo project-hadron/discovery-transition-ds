@@ -28,7 +28,7 @@ class Transition(AbstractComponent):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, default_save=None, **kwargs):
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, default_save=None, **kwargs):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
@@ -38,12 +38,13 @@ class Transition(AbstractComponent):
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param pm_file_type: (optional) defines a specific file type for the property manager
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type, **kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod
