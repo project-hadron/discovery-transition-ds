@@ -612,7 +612,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if not as_num:
             rtn_list = mdates.num2date(rtn_list)
             if isinstance(date_format, str):
-                rtn_list = pd.Series(rtn_list).dt.strftime(date_format).tolist()
+                rtn_list = pd.Series(data=rtn_list).dt.strftime(date_format).tolist()
         return rtn_list
 
     @staticmethod
