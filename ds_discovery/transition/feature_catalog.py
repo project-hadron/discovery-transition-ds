@@ -1,15 +1,18 @@
 import pandas as pd
 
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
+from aistac.handlers.abstract_handlers import ConnectorContract
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_foundation.components.abstract_component import AbstractComponent
+from aistac.components.abstract_component import AbstractComponent
 
 from ds_discovery.transition.discovery import DataDiscovery
 
 
 class FeatureCatalog(AbstractComponent):
 
+    PANDAS_MODULE_NAME = 'ds_discovery.handlers.pandas_handlers'
+    PANDAS_SOURCE_HANDLER = 'PandasSourceHandler'
+    PANDAS_PERSIST_HANDLER = 'PandasPersistHandler'
     CONNECTOR_SOURCE = 'source_connector'
     CONNECTOR_FRAME = 'frame_connector'
 
@@ -23,10 +26,13 @@ class FeatureCatalog(AbstractComponent):
 
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
+        super().__init__(property_manager=property_manager, intent_model=intent_model,
+                         default_module=self.PANDAS_MODULE_NAME, default_source_handler=self.PANDAS_SOURCE_HANDLER,
+                         default_persist_handler=self.PANDAS_PERSIST_HANDLER, default_save=default_save)
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, default_save=None, **kwargs):
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, module_name: str=None,
+                 handler: str=None, default_save=None, **kwargs):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
@@ -36,13 +42,16 @@ class FeatureCatalog(AbstractComponent):
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param pm_file_type: (optional) defines a specific file type for the property manager
+         :param module_name: (optional) the module or package name where the handler can be found
+         :param handler: (optional) the handler for retrieving the resource
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
         _pm = FeatureCatalogPropertyManager(task_name=task_name)
         _intent_model = FeatureCatalogIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type, **kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, module_name=module_name,
+                                 handler=handler, pm_file_type=pm_file_type, **kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod

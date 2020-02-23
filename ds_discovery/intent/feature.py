@@ -5,11 +5,12 @@ from typing import Any
 import pandas as pd
 import numpy as np
 import matplotlib.dates as mdates
-from ds_foundation.intent.abstract_intent import AbstractIntentModel
-from ds_foundation.properties.abstract_properties import AbstractPropertyManager
+from aistac.intent.abstract_intent import AbstractIntentModel
+from aistac.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
+from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
 
 
@@ -66,7 +67,7 @@ class Feature(object):
         _dataset = dataset
         _associations = associations
         if isinstance(_dataset, (str, int, float)):
-            _dataset = AbstractPropertyManager.list_formatter(_dataset)
+            _dataset = Commons.list_formatter(_dataset)
         if isinstance(_dataset, (list, pd.Series)):
             tmp = pd.DataFrame()
             tmp['_default'] = _dataset
@@ -89,7 +90,7 @@ class Feature(object):
                 for header, lookup in associate_dict.items():
                     df_value = _dataset[header].iloc[index]
                     expect = lookup.get('expect')
-                    chk_value = AbstractPropertyManager.list_formatter(lookup.get('value'))
+                    chk_value = Commons.list_formatter(lookup.get('value'))
                     if expect.lower() in ['number', 'n']:
                         if len(chk_value) == 1:
                             [s] = [e] = chk_value

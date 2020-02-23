@@ -5,10 +5,11 @@ from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 import numpy as np
 import matplotlib.dates as mdates
 
-from ds_foundation.intent.abstract_intent import AbstractIntentModel
-from ds_foundation.properties.abstract_properties import AbstractPropertyManager
+from aistac.intent.abstract_intent import AbstractIntentModel
+from aistac.properties.abstract_properties import AbstractPropertyManager
 
 from ds_discovery.intent.transition_intent import TransitionIntentModel
+from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
 
 __author__ = 'Darryl Oatridge'
@@ -36,7 +37,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
         intent_param_exclude = ['df', 'canonical']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
-        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64]
+        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
@@ -46,7 +47,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if self._pm.has_intent():
             # get the list of levels to run
             if isinstance(intent_level, (int, str, list)):
-                intent_level = self._pm.list_formatter(intent_level)
+                intent_level = Commons.list_formatter(intent_level)
             else:
                 intent_level = sorted(self._pm.get_intent().keys())
             for level in intent_level:
@@ -291,7 +292,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
         df = canonical
-        headers = DataDiscovery.list_formatter(df)
+        headers = Commons.list_formatter(df)
         if not isinstance(df, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         if isinstance(nulls_list, bool) and nulls_list:
@@ -340,7 +341,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
-        headers = DataDiscovery.list_formatter(headers)
+        headers = Commons.list_formatter(headers)
         for c in headers:
             for k, v in kwargs.items():
                 canonical[c].replace(k, v)

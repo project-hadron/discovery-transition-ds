@@ -31,21 +31,5 @@ class TestDiscovery(unittest.TestCase):
         """Basic smoke test"""
         Discovery()
 
-    def test_find_file(self):
-        ds = Discovery()
-        df = Transition.from_env('synthetic').load_source_canonical()
-        result = ds.data_dictionary(df)
-        control = ['Attribute', 'dType', '%_Null', '%_Dom', 'Count', 'Unique', 'Observations']
-        self.assertEqual(control, result.columns.to_list())
-        result = ds.data_dictionary(df, inc_next_dom=True)
-        control = ['Attribute', 'dType', '%_Null', '%_Dom', '%_Nxt', 'Count', 'Unique', 'Observations']
-        self.assertEqual(control, result.columns.to_list())
-
-    def test_data_dictionary_filter(self):
-        tr = Transition.from_env('synthetic')
-        df = tr.load_source_canonical()
-        result = tr.canonical_report(df, stylise=False)
-        print(result)
-
 if __name__ == '__main__':
     unittest.main()

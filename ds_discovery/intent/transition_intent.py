@@ -9,10 +9,12 @@ import pandas as pd
 import matplotlib.dates as mdates
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from ds_foundation.properties.abstract_properties import AbstractPropertyManager
-from ds_foundation.intent.abstract_intent import AbstractIntentModel
+from aistac.properties.abstract_properties import AbstractPropertyManager
+from aistac.intent.abstract_intent import AbstractIntentModel
 
 __author__ = 'Darryl Oatridge'
+
+from ds_discovery.transition.commons import Commons
 
 
 class TransitionIntentModel(AbstractIntentModel):
@@ -33,7 +35,7 @@ class TransitionIntentModel(AbstractIntentModel):
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
-        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64]
+        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
@@ -62,7 +64,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     canonical = deepcopy(canonical)
             # get the list of levels to run
             if isinstance(run_book, (int, str, list)):
-                run_book = self._pm.list_formatter(run_book)
+                run_book = Commons.list_formatter(run_book)
             else:
                 run_book = sorted(self._pm.get_intent().keys())
             for level in run_book:
@@ -82,7 +84,8 @@ class TransitionIntentModel(AbstractIntentModel):
         :param df: the Pandas.DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclude. Default None.
+                    example: int, float, bool, 'category', 'object', 'number'. 'datetime', 'datetimetz', 'timedelta'
         :param exclude: to exclude or include the dtypes. Default is False
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
@@ -99,9 +102,9 @@ class TransitionIntentModel(AbstractIntentModel):
 
         if not isinstance(df, pd.DataFrame):
             raise TypeError("The first function attribute must be a pandas 'DataFrame'")
-        _headers = TransitionIntentModel.list_formatter(headers)
-        dtype = TransitionIntentModel.list_formatter(dtype)
-        regex = TransitionIntentModel.list_formatter(regex)
+        _headers = Commons.list_formatter(headers)
+        dtype = Commons.list_formatter(dtype)
+        regex = Commons.list_formatter(regex)
         _obj_cols = df.columns
         _rtn_cols = set()
         unmodified = True
@@ -897,16 +900,3 @@ class TransitionIntentModel(AbstractIntentModel):
         if not inplace:
             return df
         return
-
-    @staticmethod
-    def list_formatter(value) -> [list, None]:
-        """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
-        if isinstance(value, (int, float, str, pd.Timestamp)):
-            return [value]
-        if isinstance(value, (list, tuple, set)):
-            return list(value)
-        if isinstance(value, pd.Series):
-            return value.tolist()
-        if isinstance(value, dict):
-            return list(value.items())
-        return None

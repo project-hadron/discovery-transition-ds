@@ -10,7 +10,7 @@ try:
 except ImportError:
     import pickle
 
-from ds_foundation.handlers.abstract_handlers import AbstractSourceHandler, ConnectorContract, AbstractPersistHandler
+from aistac.handlers.abstract_handlers import AbstractSourceHandler, ConnectorContract, AbstractPersistHandler
 
 __author__ = 'Darryl Oatridge'
 
@@ -81,7 +81,7 @@ class PandasSourceHandler(AbstractSourceHandler):
             raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
         if _cc.schema.startswith('http'):
-            return requests.head(_cc.address).headers['last-modified']
+            return requests.head(_cc.address).headers.get('last-modified', 0)
         return os.path.getmtime(_cc.address) if os.path.exists(_cc.address) else 0
 
     @staticmethod

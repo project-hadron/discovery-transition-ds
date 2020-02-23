@@ -1,10 +1,11 @@
 import pandas as pd
 
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
-from ds_foundation.components.abstract_component import AbstractComponent
+from aistac.handlers.abstract_handlers import ConnectorContract
+from aistac.components.abstract_component import AbstractComponent
 
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
+from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
@@ -12,6 +13,9 @@ __author__ = 'Darryl Oatridge'
 
 class Transition(AbstractComponent):
 
+    PANDAS_MODULE_NAME = 'ds_discovery.handlers.pandas_handlers'
+    PANDAS_SOURCE_HANDLER = 'PandasSourceHandler'
+    PANDAS_PERSIST_HANDLER = 'PandasPersistHandler'
     CONNECTOR_SOURCE = 'source_connector'
     CONNECTOR_PERSIST = 'persist_connector'
 
@@ -24,11 +28,14 @@ class Transition(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
+        super().__init__(property_manager=property_manager, intent_model=intent_model,
+                         default_module=self.PANDAS_MODULE_NAME, default_source_handler=self.PANDAS_SOURCE_HANDLER,
+                         default_persist_handler=self.PANDAS_PERSIST_HANDLER, default_save=default_save)
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, default_save=None, **kwargs):
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, module_name: str=None,
+                 handler: str=None, default_save=None, **kwargs):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
@@ -37,14 +44,17 @@ class Transition(AbstractComponent):
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
-         :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param pm_file_type: (optional) defines a specific file type for the property manager
+         :param module_name: (optional) the module or package name where the handler can be found
+         :param handler: (optional) the handler for retrieving the resource
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type, **kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, module_name=module_name,
+                                 handler=handler, pm_file_type=pm_file_type, **kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod
@@ -92,27 +102,19 @@ class Transition(AbstractComponent):
     def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the source contract
 
-        :param connector_contract: a Connector Contract for the properties persistence
+        :param connector_contract: a Connector Contract for the source data
         :param save: (optional) if True, save to file. Default is True
         """
-        save = save if isinstance(save, bool) else self._default_save
-        if self.pm.has_connector(self.CONNECTOR_SOURCE):
-            self.remove_connector_contract(self.CONNECTOR_SOURCE)
         self.add_connector_contract(self.CONNECTOR_SOURCE, connector_contract=connector_contract, save=save)
-        self.pm_persist(save)
         return
 
     def set_persist_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the persist contract.
 
-        :param connector_contract: a Connector Contract for the properties persistence
+        :param connector_contract: a Connector Contract for the persisted data
         :param save: (optional) if True, save to file. Default is True
         """
-        save = save if isinstance(save, bool) else self._default_save
-        if self.pm.has_connector(self.CONNECTOR_PERSIST):
-            self.remove_connector_contract(self.CONNECTOR_PERSIST)
         self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
-        self.pm_persist(save)
         return
 
     def load_source_canonical(self) -> pd.DataFrame:
@@ -166,16 +168,10 @@ class Transition(AbstractComponent):
         :param stylise: (optional) returns a stylised DataFrame with formatting
         :return: pd.DataFrame
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
         if stylise:
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['connector_name'], **{'font-weight': 'bold'})
-            return df_style
-        else:
-            df.set_index(keys='connector_name', inplace=True)
+            Commons.report(df, index_header='connector_name')
+        df.set_index(keys='connector_name', inplace=True)
         return df
 
     def report_run_book(self, stylise: bool=True):
@@ -184,17 +180,10 @@ class Transition(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
         if stylise:
-            index = df[df['name'].duplicated()].index.to_list()
-            df.loc[index, 'name'] = ''
-            df = df.reset_index(drop=True)
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['name'],  **{'font-weight': 'bold', 'font-size': "120%"})
-            return df_style
+            Commons.report(df, index_header='name')
+        df.set_index(keys='name', inplace=True)
         return df
 
     def report_intent(self, stylise: bool=True):
@@ -203,17 +192,10 @@ class Transition(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=self.pm.report_intent(), orient='columns')
         if stylise:
-            index = df[df['level'].duplicated()].index.to_list()
-            df.loc[index, 'level'] = ''
-            df = df.reset_index(drop=True)
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['level'],  **{'font-weight': 'bold', 'font-size': "120%"})
-            return df_style
+            Commons.report(df, index_header='level')
+        df.set_index(keys='level', inplace=True)
         return df
 
     def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
@@ -228,29 +210,11 @@ class Transition(AbstractComponent):
         :param drop_dates: (optional) excludes the 'date' column from the report
         :return: pd.Dataframe
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        drop_dates = False if not isinstance(drop_dates, bool) else drop_dates
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
                                       drop_dates=drop_dates)
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['section'], **{'font-weight': 'bold'})
-            _ = df_style.set_properties(subset=['label', 'section'], **{'font-size': "120%"})
-            return df_style
+            Commons.report(df, index_header='section', bold='label')
+        df.set_index(keys='section', inplace=True)
         return df
 
-    @staticmethod
-    def list_formatter(value) -> [list, None]:
-        """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
-        if isinstance(value, (int, float, str, pd.Timestamp)):
-            return [value]
-        if isinstance(value, (list, tuple, set)):
-            return list(value)
-        if isinstance(value, pd.Series):
-            return value.tolist()
-        if isinstance(value, dict):
-            return list(value.items())
-        return None

@@ -12,6 +12,7 @@ from ds_foundation.handlers.abstract_handlers import ConnectorContract
 from ds_discovery import Transition
 from ds_discovery.intent.transition_intent import TransitionIntentModel as Cleaner, TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
+from ds_discovery.transition.commons import Commons
 
 
 class CleanerTest(unittest.TestCase):
@@ -152,9 +153,9 @@ class CleanerTest(unittest.TestCase):
         for value in ['', 0, 0.0, pd.Timestamp(2018,1,1), [], (), pd.Series(), list(), tuple(),
                       'name', ['list1', 'list2'], ('tuple1', 'tuple2'), pd.Series(['series1', 'series2']),
                       {'key1': 'value1', 'key2': 'value2'}, {}, dict()]:
-            result = Transition.list_formatter(value)
+            result = Commons.list_formatter(value)
             self.assertTrue(isinstance(result, list), value)
-        self.assertEqual(None, Transition.list_formatter(None))
+        self.assertEqual(None, Commons.list_formatter(None))
 
     def test_to_date(self):
         cleaner = self.clean
