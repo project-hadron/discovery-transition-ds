@@ -13,9 +13,6 @@ __author__ = 'Darryl Oatridge'
 
 class Transition(AbstractComponent):
 
-    PANDAS_MODULE_NAME = 'ds_discovery.handlers.pandas_handlers'
-    PANDAS_SOURCE_HANDLER = 'PandasSourceHandler'
-    PANDAS_PERSIST_HANDLER = 'PandasPersistHandler'
     CONNECTOR_SOURCE = 'source_connector'
     CONNECTOR_PERSIST = 'persist_connector'
 
@@ -28,14 +25,18 @@ class Transition(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
-        super().__init__(property_manager=property_manager, intent_model=intent_model,
-                         default_module=self.PANDAS_MODULE_NAME, default_source_handler=self.PANDAS_SOURCE_HANDLER,
-                         default_persist_handler=self.PANDAS_PERSIST_HANDLER, default_save=default_save)
+        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
+                         default_module='ds_discovery.handlers.pandas_handlers',
+                         default_source_handler='PandasSourceHandler',
+                         default_persist_handler='PandasPersistHandler')
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, module_name: str=None,
-                 handler: str=None, default_save=None, **kwargs):
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
+                 pm_handler: str=None, default_save=None, template_source_path: str=None,
+                 template_persist_path: str=None, template_source_module: str=None,
+                 template_persist_module: str=None, template_source_handler: str=None,
+                 template_persist_handler: str=None, **kwargs):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
@@ -45,16 +46,26 @@ class Transition(AbstractComponent):
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param pm_file_type: (optional) defines a specific file type for the property manager
-         :param module_name: (optional) the module or package name where the handler can be found
-         :param handler: (optional) the handler for retrieving the resource
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param pm_module: (optional) the module or package name where the handler can be found
+         :param pm_handler: (optional) the handler for retrieving the resource
+         :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param template_source_path: (optional) a default source root path for the source canonicals
+         :param template_persist_path: (optional) a default source root path for the persisted canonicals
+         :param template_source_module: (optional) a default module package path for the source handlers
+         :param template_persist_module: (optional) a default module package path for the persist handlers
+         :param template_source_handler: (optional) a default read only source handler
+         :param template_persist_handler: (optional) a default read write persist handler
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, module_name=module_name,
-                                 handler=handler, pm_file_type=pm_file_type, **kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
+        super()._add_templates(property_manager=_pm, source_path=template_source_path, save=default_save,
+                               persist_path=template_persist_path, source_module=template_source_module,
+                               persist_module=template_persist_module, source_handler=template_source_handler,
+                               persist_handler=template_persist_handler)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod
@@ -217,4 +228,3 @@ class Transition(AbstractComponent):
             Commons.report(df, index_header='section', bold='label')
         df.set_index(keys='section', inplace=True)
         return df
-
