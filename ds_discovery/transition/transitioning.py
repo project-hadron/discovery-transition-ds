@@ -141,7 +141,7 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST)
+                                         template_name=self.TEMPLATE_PERSIST, save=save)
 
     def load_source_canonical(self) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """

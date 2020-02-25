@@ -342,7 +342,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         size = 50
         df = tools.create_profiles(size=size, dominance=0.6, seed=31)
         df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
-        df['dates'] = tools._get_datetime('10/10/2000', '31/12/2018', date_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
+        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = [{'gender': {}}, {'numbers': {}}]
         result = Discover.analyse_association(df, columns_list)
         control = control_01()

@@ -109,11 +109,11 @@ class TransitionIntentModel(AbstractIntentModel):
         _rtn_cols = set()
         unmodified = True
 
-        if _headers is not None:
+        if _headers:
             _rtn_cols = set(_obj_cols).difference(_headers) if drop else set(_obj_cols).intersection(_headers)
             unmodified = False
 
-        if regex is not None and regex:
+        if regex and regex:
             re_ignore_case = re.I if re_ignore_case else 0
             _regex_cols = list()
             for exp in regex:
@@ -124,7 +124,7 @@ class TransitionIntentModel(AbstractIntentModel):
         if unmodified:
             _rtn_cols = set(_obj_cols)
 
-        if dtype is not None and len(dtype) > 0:
+        if dtype and len(dtype) > 0:
             _df_selected = df.loc[:, _rtn_cols]
             _rtn_cols = (_df_selected.select_dtypes(exclude=dtype) if exclude
                          else _df_selected.select_dtypes(include=dtype)).columns

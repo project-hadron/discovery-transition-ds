@@ -299,7 +299,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             nulls_list = ['NaN', 'nan', 'null', '', 'None', np.inf, -np.inf]
         elif not isinstance(nulls_list, list):
             nulls_list = None
-        for c in df.columns:
+        for c in headers:
             col = deepcopy(df[c])
             # replace alternative nulls with pd.nan
             if nulls_list is not None:
