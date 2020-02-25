@@ -25,10 +25,7 @@ class Transition(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         default_module='ds_discovery.handlers.pandas_handlers',
-                         default_source_handler='PandasSourceHandler',
-                         default_persist_handler='PandasPersistHandler')
+        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
         self._raw_attribute_list = []
 
     @classmethod
@@ -127,6 +124,24 @@ class Transition(AbstractComponent):
         """
         self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
         return
+
+    def set_source(self, uri_file: str, save: bool=None):
+        """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
+
+        :param uri_file: the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_SOURCE)
+
+    def set_persist(self, uri_file: str, save: bool=None):
+        """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
+
+        :param uri_file: the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_PERSIST)
 
     def load_source_canonical(self) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
