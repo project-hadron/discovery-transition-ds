@@ -363,38 +363,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         columns_list = [{'gender': {}, 'age':  {}}, {'lived': {}}]
         exclude = ['age.lived']
         result = Discover.analyse_association(df, columns_list, exclude)
-        control = {'age': {'analysis': {'dropped': [0],'dtype': 'number',
-                                        'granularity': 3,
-                                        'lower': 24,
-                                        'null_values': [0.0],
-                                        'sample': [50],
-                                        'selection': [(24.0, 41.333),
-                                                      (41.333, 58.667),
-                                                      (58.667, 76.0)],
-                                        'upper': 76,
-                                        'weighting': [42.0, 44.0, 14.0]},
-                           'associate': 'age'},
-                   'gender': {'analysis': {'dtype': 'category',
-                                           'null_values': [14.0],
-                                           'sample': [43],
-                                           'selection': ['F', 'M'],
-                                           'weighting': [30.23, 69.77]},
-                              'associate': 'gender',
-                              'sub_category': {'F': {'lived': {'analysis': {'dtype': 'category',
-                                                                            'null_values': [7.69],
-                                                                            'sample': [12],
-                                                                            'selection': ['no'],
-                                                                            'weighting': [100.0]},
-                                                               'associate': 'gender.lived'}},
-                                               'M': {'lived': {'analysis': {'dtype': 'category',
-                                                                            'null_values': [6.67],
-                                                                            'sample': [28],
-                                                                            'selection': ['yes',
-                                                                                          'no'],
-                                                                            'weighting': [78.57,
-                                                                                          21.43]},
-                                                               'associate': 'gender.lived'}}}}}
-        self.assertEqual(control, result)
+        self.assertCountEqual(['age', 'gender'], list(result.keys()))
+        self.assertNotIn('sub_category', result.get('age').keys())
+        self.assertIn('sub_category', result.get('gender').keys())
+        self.assertCountEqual(['M', 'F'], list(result.get('gender').get('sub_category').keys()))
+        self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('M').keys()))
+        self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('F').keys()))
 
     def get_weights(self, df, columns: list, index: int, weighting: dict):
         col = columns[index]
