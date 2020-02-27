@@ -337,23 +337,21 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                              'associate': 'dates'}}
         self.assertEqual(control, result)
 
-    def test_multi_analyse_associate(self):
+    def test_analyse_associate_multi(self):
         tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
         size = 50
-        df = tools.create_profiles(size=size, dominance=0.6, seed=31)
+        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        size = 50
+        df = tools.create_profiles(dominance=0.6, seed=31, size=size)
+        df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, seed=31, size=size)
+        df['age'] = tools.get_number(from_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], seed=31, size=size)
+        df['fare'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
-        columns_list = [{'gender': {}}, {'numbers': {}}]
+        columns_list = ['numbers']
         result = Discover.analyse_association(df, columns_list)
-        control = control_01()
-        self.assertEqual(control, result)
-        df = sns.load_dataset('titanic')
-        columns_list = [{'sex': {}}, {'age': {}}, {'survived': {'dtype': 'category'}}]
-        result = Discover.analyse_association(df, columns_list)
-        control = control_02()
-        self.assertEqual(control, result)
 
-    def test_levels_analyse_associate(self):
+    def test_analyse_associate_levels(self):
         tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
         size = 50
         df = tools.create_profiles(dominance=0.6, seed=31, size=size)
@@ -387,97 +385,3 @@ if __name__ == '__main__':
     unittest.main()
 
 
-def control_01():
-    return {'gender': {'analysis': {'dtype': 'category',
-                                    'null_values': [14.0],
-                                    'sample': [43],
-                                    'selection': ['F', 'M'],
-                                    'weighting': [30.23, 69.77]},
-                       'associate': 'gender',
-                       'sub_category': {'F': {'numbers': {'analysis': {'dropped': [0],'dtype': 'number',
-                                                                       'granularity': 3,
-                                                                       'lower': 14.0,
-                                                                       'null_values': [0.0],
-                                                                       'sample': [13],
-                                                                       'selection': [(14.0,
-                                                                                      328.333),
-                                                                                     (328.333,
-                                                                                      642.667),
-                                                                                     (642.667,
-                                                                                      957.0)],
-                                                                       'upper': 957.0,
-                                                                       'weighting': [15.38,
-                                                                                     0.0,
-                                                                                     84.62]},
-                                                          'associate': 'gender.numbers'}},
-                                        'M': {'numbers': {'analysis': {'dropped': [0],'dtype': 'number',
-                                                                       'granularity': 3,
-                                                                       'lower': 10.0,
-                                                                       'null_values': [0.0],
-                                                                       'sample': [30],
-                                                                       'selection': [(10.0,
-                                                                                      114.667),
-                                                                                     (114.667,
-                                                                                      219.333),
-                                                                                     (219.333,
-                                                                                      324.0)],
-                                                                       'upper': 324.0,
-                                                                       'weighting': [26.67,
-                                                                                     30.0,
-                                                                                     43.33]},
-                                                          'associate': 'gender.numbers'}}}}}
-
-
-def control_02():
-    return {'sex': {'associate': 'sex',
-                    'analysis': {'selection': ['male', 'female'], 'weighting': [64.76, 35.24], 'dtype': 'category',
-                                 'null_values': [0.0], 'sample': [891]},
-                    'sub_category': {
-                        'male': {'age': {'associate': 'sex.age',
-                                         'analysis': {'selection': [(0.42, 26.947), (26.947, 53.473), (53.473, 80.0)],
-                                                      'weighting': [33.28, 38.82, 6.41], 'lower': 0.42, 'upper': 80.0,
-                                                      'granularity': 3, 'dtype': 'number', 'null_values': [21.49],
-                                                      'sample': [453],
-                                                      'dropped': [0]},
-                                         'sub_category': {(0.42, 26.947): {
-                                             'survived': {'associate': 'sex.age.survived',
-                                                          'analysis': {'selection': [0, 1], 'weighting': [79.58, 20.42],
-                                                                       'dtype': 'category',
-                                                                       'null_values': [0.0], 'sample': [191]}}},
-                                             (26.947, 53.473): {
-                                                 'survived': {'associate': 'sex.age.survived',
-                                                              'analysis': {'selection': [0, 1],
-                                                                           'weighting': [78.12, 21.88],
-                                                                           'dtype': 'category',
-                                                                           'null_values': [0.0], 'sample': [224]}}},
-                                             (53.473, 80.0): {
-                                                 'survived': {'associate': 'sex.age.survived',
-                                                              'analysis': {'selection': [0, 1],
-                                                                           'weighting': [89.19, 10.81],
-                                                                           'dtype': 'category',
-                                                                           'null_values': [0.0], 'sample': [37]}}}}}},
-                        'female': {'age': {'associate': 'sex.age',
-                                           'analysis': {'selection': [(0.75, 21.5), (21.5, 42.25), (42.25, 63.0)],
-                                                        'weighting': [26.75, 43.31, 13.06], 'lower': 0.75,
-                                                        'upper': 63.0,
-                                                        'granularity': 3, 'dtype': 'number', 'null_values': [16.88],
-                                                        'sample': [261], 'dropped': [0]},
-                                           'sub_category': {(0.75, 21.5): {
-                                               'survived': {'associate': 'sex.age.survived',
-                                                            'analysis': {'selection': [1, 0],
-                                                                         'weighting': [67.07, 32.93],
-                                                                         'dtype': 'category',
-                                                                         'null_values': [0.0], 'sample': [82]}}},
-                                               (21.5, 42.25): {
-                                                   'survived': {'associate': 'sex.age.survived',
-                                                                'analysis': {'selection': [1, 0],
-                                                                             'weighting': [79.41, 20.59],
-                                                                             'dtype': 'category',
-                                                                             'null_values': [0.0], 'sample': [136]}}},
-                                               (42.25, 63.0): {
-                                                   'survived': {'associate': 'sex.age.survived',
-                                                                'analysis': {'selection': [1, 0],
-                                                                             'weighting': [78.05, 21.95],
-                                                                             'dtype': 'category',
-                                                                             'null_values': [0.0],
-                                                                             'sample': [41]}}}}}}}}}

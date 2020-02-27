@@ -163,7 +163,7 @@ class Transition(AbstractComponent):
 
     def save_clean_canonical(self, df):
         """Saves the pandas.DataFrame to the clean files folder"""
-        self.persist_canonical(self.CONNECTOR_PERSIST, df)
+        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df)
 
     def run_transition_pipeline(self):
         """Runs the transition pipeline from source to persist"""
