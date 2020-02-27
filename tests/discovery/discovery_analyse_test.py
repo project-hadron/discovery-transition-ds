@@ -350,6 +350,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = ['numbers']
         result = Discover.analyse_association(df, columns_list)
+        print(result)
 
     def test_analyse_associate_levels(self):
         tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
