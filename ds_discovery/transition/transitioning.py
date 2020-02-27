@@ -134,12 +134,13 @@ class Transition(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE)
 
-    def set_persist(self, uri_file: str, save: bool=None):
+    def set_persist(self, uri_file: str=None, save: bool=None):
         """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
 
-        :param uri_file: the uri_file is appended to the template path
+        :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
+        uri_file = uri_file if isinstance(uri_file, str) else self.pm.file_pattern(connector_name=self.CONNECTOR_PERSIST)
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save)
 

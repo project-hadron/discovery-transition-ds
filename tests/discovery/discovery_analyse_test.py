@@ -350,7 +350,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = ['numbers']
         result = Discover.analyse_association(df, columns_list)
-        print(result)
+        self.assertCountEqual(['numbers'], list(result.keys()))
+        self.assertNotIn('sub_category', result.get('numbers').keys())
+        data_analysis = DataAnalytics(result)
+        # self.assertCountEqual(['M', 'F'], list(result.get('numbers').get('analysis').get('intent').get(dtype)))
+        # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('M').keys()))
+        # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('F').keys()))
 
     def test_analyse_associate_levels(self):
         tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
