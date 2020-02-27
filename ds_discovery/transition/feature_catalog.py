@@ -111,7 +111,7 @@ class FeatureCatalog(AbstractComponent):
         self.pm_persist(save)
         return
 
-    def set_frame_contract(self, connector_contract: ConnectorContract, connector_name: str=None, save: bool=None):
+    def set_persist_contract(self, connector_contract: ConnectorContract, connector_name: str=None, save: bool=None):
         """ Sets the persist contract.
 
         :param connector_contract: a Connector Contract for the properties persistence
@@ -125,6 +125,25 @@ class FeatureCatalog(AbstractComponent):
         self.pm.set_connector_contract(connector_name=connector_name, connector_contract=connector_contract)
         self.pm_persist(save)
         return
+
+    def set_source(self, uri_file: str, save: bool=None):
+        """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
+
+        :param uri_file: the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_SOURCE, save=save)
+
+    def set_persist(self, uri_file: str=None, save: bool=None):
+        """sets the persist frame contract CONNECTOR_FRAME using the TEMPLATE_PERSIST connector contract
+
+        :param uri_file: (optional) the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        uri_file = uri_file if isinstance(uri_file, str) else self.pm.file_pattern(connector_name=self.CONNECTOR_FRAME)
+        self.add_connector_from_template(connector_name=self.CONNECTOR_FRAME, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_PERSIST, save=save)
 
     def load_source_canonical(self) -> [pd.DataFrame]:
         """returns the contracted source data as a DataFrame """
