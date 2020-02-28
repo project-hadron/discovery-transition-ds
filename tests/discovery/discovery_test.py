@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-from ds_foundation.properties.property_manager import PropertyManager
+from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Transition
 

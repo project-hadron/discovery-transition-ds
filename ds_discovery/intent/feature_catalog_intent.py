@@ -35,7 +35,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
-        intent_param_exclude = ['df', 'canonical']
+        intent_param_exclude = ['df', 'canonical', 'canonical_left', 'canonical_right']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
         intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
@@ -374,9 +374,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return canonical
         return result
 
-    """
-        PRIVATE METHODS SECTION
-    """
     def build_frame(self, canonical_left, canonical_right, on=None, left_on=None, right_on=None, how='left',
                     left_index=False, right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False,
                     validate=None, save_intent: bool=None, intent_level: [int, str]=None):
@@ -420,6 +417,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                       indicator=indicator, validate=validate)
         return df
 
+    """
+        PRIVATE METHODS SECTION
+    """
     def _get_number(self, from_value: [int, float], to_value: [int, float]=None, weight_pattern: list=None,
                     offset: int=None, precision: int=None, bounded_weighting: bool=True, at_most: int=None,
                     dominant_values: [float, list]=None, dominant_percent: float=None, dominance_weighting: list=None,

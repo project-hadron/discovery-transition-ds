@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 import unittest
 
-from ds_foundation.properties.property_manager import PropertyManager
+from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Transition
 from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics

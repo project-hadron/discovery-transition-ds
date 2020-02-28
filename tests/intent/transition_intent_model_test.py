@@ -7,7 +7,7 @@ import pandas as pd
 
 from ds_behavioral import DataBuilderTools as tools
 from ds_behavioral.sample.sample_data import ProfileSample
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
+from aistac.handlers.abstract_handlers import ConnectorContract
 
 from ds_discovery import Transition
 from ds_discovery.intent.transition_intent import TransitionIntentModel as Cleaner, TransitionIntentModel
@@ -21,7 +21,7 @@ class CleanerTest(unittest.TestCase):
     def setUp(self):
         property_manager = TransitionPropertyManager('test')
         property_manager.set_property_connector(ConnectorContract(uri='', handler='DummyPersistHandler',
-                                                                  module_name='ds_foundation.handlers.dummy_handlers'))
+                                                                  module_name='aistac.handlers.dummy_handlers'))
         property_manager.remove_intent()
         self.clean = TransitionIntentModel(property_manager=property_manager)
         try:

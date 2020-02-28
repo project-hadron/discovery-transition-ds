@@ -10,7 +10,7 @@ from ds_behavioral.sample.sample_data import ProfileSample
 
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
+from aistac.handlers.abstract_handlers import ConnectorContract
 
 
 
@@ -19,8 +19,8 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def setUp(self):
         property_manager = FeatureCatalogPropertyManager('test')
-        property_manager.set_property_connector(ConnectorContract(uri='', handler='DummyPersistHandler',
-                                                                  module_name='ds_foundation.handlers.dummy_handlers'))
+        property_manager.set_property_connector(ConnectorContract(uri='data/dummyfile.pickle', handler='DummyPersistHandler',
+                                                                  module_name='aistac.handlers.dummy_handlers'))
         property_manager.remove_intent()
         self.clean = FeatureCatalogIntentModel(property_manager=property_manager)
         try:

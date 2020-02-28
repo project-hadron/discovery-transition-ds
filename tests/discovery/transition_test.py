@@ -5,15 +5,15 @@ import numpy as np
 
 from pathlib import Path
 
-from ds_behavioral import DataBuilderComponent
+from ds_behavioral.component import DataBuilderComponent
 from ds_behavioral.sample.sample_data import ProfileSample
-from ds_foundation.aistac.abstract_component import AbstractComponent
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
-from ds_foundation.intent.python_cleaners_intent import PythonCleanersIntentModel
-from ds_foundation.properties.abstract_properties import AbstractPropertyManager
+from aistac.components.abstract_component import AbstractComponent
+from aistac.handlers.abstract_handlers import ConnectorContract
+from aistac.intent.python_cleaners_intent import PythonCleanersIntentModel
+from aistac.properties.abstract_properties import AbstractPropertyManager
 
 from ds_discovery import Transition
-from ds_foundation.properties.property_manager import PropertyManager
+from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
