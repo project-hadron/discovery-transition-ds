@@ -153,8 +153,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return canonical
 
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
-                       drop_group_by: bool=False, include_weighting=False, remove_zeros: bool=False,
-                       remove_aggregated: bool=True, save_intent: bool=None, intent_level: [int, str]=None):
+                       drop_group_by: bool=False, include_weighting=False, weighting_precision: int=None,
+                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, save_intent: bool=None,
+                       intent_level: [int, str]=None):
         """ groups features according to the stategy passed. strategy options are None, 'sum', 'nunique', 'max', 'min'
 
         :param canonical: the pd.DataFrame to group
@@ -162,9 +163,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param group_by: the headers to group by
         :param aggregator: the aggregator function
         :param drop_group_by: drops the group by headers
+        :param include_weighting: include a percentage weighting column for each
+        :param weighting_precision: a precision for the weighting values
         :param remove_aggregated: if used in conjunction with the weighting then drops the aggrigator column
-        :param remove_zeros: removes zero values
-        :param include_weighting: include a percentage weighting column
+        :param remove_weighting_zeros: removes zero values
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: pd.DataFrame
@@ -173,20 +175,25 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
-        df_sub = canonical[headers].groupby(group_by).agg(aggregator)
-        df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
+        headers = Commons.list_formatter(headers)
+        group_by = Commons.list_formatter(group_by)
+        df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
+        df_sub = df_sub.groupby(group_by).agg(aggregator)
+        # df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
         if include_weighting:
-            total = df_sub[headers].sum()
-            df_sub['weighting'] = df_sub[headers].apply(lambda x:
-                                                        round((x/total)*100, 2) if isinstance(x, (int, float)) else 0)
-            if remove_zeros:
+            df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
+            total = df_sub['sum'].sum()
+            df_sub['weighting'] = df_sub['sum'].apply(lambda x:
+                                                       round((x / total), weighting_precision)
+                                                       if isinstance(x, (int, float)) else 0)
+            df_sub = df_sub.drop(columns='sum')
+            if remove_weighting_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
+            df_sub = df_sub.sort_values(by='weighting', ascending=False)
         if remove_aggregated:
             df_sub = df_sub.drop(headers, axis=1)
-        else:
-            if not include_weighting and remove_zeros:
-                df_sub = df_sub[df_sub[headers] > 0]
         return df_sub
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,

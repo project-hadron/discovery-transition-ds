@@ -40,7 +40,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def test_apply_condition(self):
         df = pd.DataFrame()
-        df['gendre'] = self.tools.get_category( selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
+        df['genre'] = self.tools.get_category( selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
         df['EndType'] = self.tools.get_category(selection=['Ad End', 'Ad Start', 'Undefined', 'Video End', 'Video Start'],
                                            weight_pattern=[1, 3, 1, 6, 2], size=20)
         result = self.intent.apply_condition(df, headers='EndType', condition='== value', value='Video End')
@@ -48,8 +48,13 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def test_group_features(self):
         df = pd.DataFrame()
-        df['gendre'] = ['Comedy', 'Drama', 'Drama', 'Drama', 'Undefined']
-        df['spend'] = [1, 3, 2, 4, 20]
+        df['genre'] = ['Comedy', 'Drama', 'Drama', 'Drama', 'Undefined']
+        df['end_type'] = ['Ad End', 'Ad Start', 'Ad End', 'Ad Start', 'Ad End']
+        df['spend'] = [1, 3, 2, 4, 0]
+        df['viewed'] = [1, 2, 1, 3, 1]
+        result = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='sum', group_by=['genre', 'end_type'], include_weighting=True, remove_aggregated=False, remove_weighting_zeros=False)
+
+        print(result)
 
 
 
