@@ -348,11 +348,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         df['fare'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
-        columns_list = ['numbers']
+        columns_list = ['numbers', 'age', 'fare']
         result = Discover.analyse_association(df, columns_list)
-        self.assertCountEqual(['numbers'], list(result.keys()))
-        self.assertNotIn('sub_category', result.get('numbers').keys())
-        data_analysis = DataAnalytics(result)
+        pprint(result)
+        # self.assertCountEqual(['numbers'], list(result.keys()))
+        # self.assertNotIn('sub_category', result.get('numbers').keys())
+        # data_analysis = DataAnalytics(result)
         # self.assertCountEqual(['M', 'F'], list(result.get('numbers').get('analysis').get('intent').get(dtype)))
         # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('M').keys()))
         # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('F').keys()))
