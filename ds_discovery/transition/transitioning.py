@@ -56,9 +56,13 @@ class Transition(AbstractComponent):
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
+        pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
+        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
+                                 pm_module=pm_module, pm_handler=pm_handler, **kwargs)
         super()._add_templates(property_manager=_pm, save=default_save,
                                source_path=template_source_path, persist_path=template_persist_path,
                                source_module=template_source_module, persist_module=template_persist_module,
@@ -125,16 +129,16 @@ class Transition(AbstractComponent):
         self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
         return
 
-    def set_source(self, uri_file: str, save: bool=None):
+    def set_source(self, uri_file: str, save: bool=None, **kwargs):
         """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
 
         :param uri_file: the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_SOURCE)
+                                         template_name=self.TEMPLATE_SOURCE, save=save, **kwargs)
 
-    def set_persist(self, uri_file: str=None, save: bool=None):
+    def set_persist(self, uri_file: str=None, save: bool=None, **kwargs):
         """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
 
         :param uri_file: (optional) the uri_file is appended to the template path
@@ -142,7 +146,7 @@ class Transition(AbstractComponent):
         """
         uri_file = uri_file if isinstance(uri_file, str) else self.pm.file_pattern(connector_name=self.CONNECTOR_PERSIST)
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST, save=save)
+                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
     def load_source_canonical(self) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """

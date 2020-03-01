@@ -12,13 +12,12 @@ from ds_discovery import Transition
 from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics
 from ds_behavioral.component.synthetic_component import SyntheticBuilder
 
-
 class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def setUp(self):
         # set environment variables
         os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
-        os.environ['AISTAC_DATA_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
+        os.environ['AISTAC_DEFAULT_SOURCE_PATH'] = os.path.join(os.environ['HOME'], 'code', 'projects', 'prod', 'data', 'raw')
         PropertyManager._remove_all()
         try:
             shutil.rmtree('work')
@@ -40,9 +39,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         Discover()
 
     def test_filter_univariate_roc_auc(self):
-        data = pd.read_csv('../../../data/raw/paribas.csv', nrows=50000)
+        tr = Transition.from_env('test')
+        tr.set_source('paribas.csv', nrows=50000)
+        data = tr.load_source_canonical()
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55)
         self.assertCountEqual(['v10', 'v129', 'v14', 'v62', 'v50'], result)
+        # Custome classifier
         classifier_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55, package='catboost' ,
                                                     model='CatBoostClassifier', classifier_kwargs=classifier_kwargs,
@@ -54,6 +56,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         data = pd.read_csv('../../../data/raw/ames_housing.csv', nrows=50000)
         result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, )
         print(result)
+        #customer
         regressor_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
         result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, package='catboost', model='CatBoostRegressor',
                                                 regressor_kwargs=regressor_kwargs, fit_kwargs={'verbose': False})
