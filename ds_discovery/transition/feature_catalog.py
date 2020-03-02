@@ -177,10 +177,10 @@ class FeatureCatalog(AbstractComponent):
         connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
         self.persist_canonical(connector_name=connector_name, canonical=canonical)
 
-    def run_feature_pipeline(self):
+    def run_feature_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the feature pipeline from source to persist"""
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical)
+        result = self.intent_model.run_intent_pipeline(canonical, intent_level=intent_levels)
         self.save_frame_canonical(result)
 
     @staticmethod

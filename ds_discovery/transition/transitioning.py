@@ -170,10 +170,10 @@ class Transition(AbstractComponent):
         """Saves the pandas.DataFrame to the clean files folder"""
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df)
 
-    def run_transition_pipeline(self):
+    def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical)
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_clean_canonical(result)
 
     def canonical_report(self, df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
