@@ -52,7 +52,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['end_type'] = ['Ad End', 'Ad Start', 'Ad End', 'Ad Start', 'Ad End']
         df['spend'] = [1, 3, 2, 4, 0]
         df['viewed'] = [1, 2, 1, 3, 1]
-        result = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='size', group_by=['genre'])
+        result = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='sum', group_by=['genre'], drop_group_by=True)
         print(result)
 
 

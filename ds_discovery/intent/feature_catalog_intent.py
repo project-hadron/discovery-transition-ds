@@ -196,6 +196,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_sub = df_sub.sort_values(by='weighting', ascending=False)
         if remove_aggregated:
             df_sub = df_sub.drop(headers, axis=1)
+        if drop_group_by:
+            df_sub = df_sub.reset_index()
+            df_sub = df_sub.drop(group_by, axis=1)
         return df_sub
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
