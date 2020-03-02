@@ -179,6 +179,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
+        if drop_group_by and str(aggregator).startswith('nunique'):
+            raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
         headers = Commons.list_formatter(headers)
         group_by = Commons.list_formatter(group_by)
         df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
