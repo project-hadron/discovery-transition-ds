@@ -40,8 +40,7 @@ class TransitionIntentModel(AbstractIntentModel):
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, inplace: bool=False,
-                            **kwargs):
+    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -50,18 +49,11 @@ class TransitionIntentModel(AbstractIntentModel):
 
         :param canonical: this is the iterative value all intent are applied to and returned.
         :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
-        :param inplace: (optional) change data in place or to return a deep copy. default False
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied or None if inplace is True
         """
-        inplace = inplace if isinstance(inplace, bool) else False
-
         # test if there is any intent to run
-        if self._pm.has_intent() and not inplace:
-            # create the copy and use this for all the operations
-            if not inplace:
-                with threading.Lock():
-                    canonical = deepcopy(canonical)
+        if self._pm.has_intent():
             # get the list of levels to run
             if isinstance(intent_levels, (int, str, list)):
                 intent_levels = Commons.list_formatter(intent_levels)
@@ -73,8 +65,7 @@ class TransitionIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         canonical = eval(f"self.{method}(canonical, inplace=False, save_intent=False, **{params})")
-        if not inplace:
-            return canonical
+        return canonical
 
     @staticmethod
     def filter_headers(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
