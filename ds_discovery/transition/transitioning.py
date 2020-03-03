@@ -13,8 +13,9 @@ __author__ = 'Darryl Oatridge'
 
 class Transition(AbstractComponent):
 
-    CONNECTOR_SOURCE = 'source_connector'
-    CONNECTOR_PERSIST = 'persist_connector'
+    CONNECTOR_SOURCE = 'primary_source'
+    CONNECTOR_PERSIST = 'primary_persist'
+    CONNECTOR_DICTIONARY = 'dictionary'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None):
@@ -67,7 +68,9 @@ class Transition(AbstractComponent):
                                source_path=template_source_path, persist_path=template_persist_path,
                                source_module=template_source_module, persist_module=template_persist_module,
                                source_handler=template_source_handler, persist_handler=template_persist_handler)
-        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
+        instance = cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
+        instance.modify_connector_from_template(connector_names=instance.pm.connector_contract_list)
+        return instance
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
@@ -129,6 +132,15 @@ class Transition(AbstractComponent):
         self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
         return
 
+    def set_dictionary_contract(self, connector_contract: ConnectorContract, save: bool=None):
+        """ Sets the dictionary contract
+
+        :param connector_contract: a Connector Contract for the persisted data
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_contract(self.CONNECTOR_DICTIONARY, connector_contract=connector_contract, save=save)
+        return
+
     def set_source(self, uri_file: str, save: bool=None, **kwargs):
         """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
 
@@ -144,8 +156,20 @@ class Transition(AbstractComponent):
         :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
-        uri_file = uri_file if isinstance(uri_file, str) else self.pm.file_pattern(connector_name=self.CONNECTOR_PERSIST)
+        file_pattern = self.pm.file_pattern(connector_name=self.CONNECTOR_PERSIST)
+        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
+
+    def set_dictionary(self, uri_file: str=None, save: bool=None, **kwargs):
+        """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
+
+        :param uri_file: (optional) the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        file_pattern = self.pm.file_pattern(connector_name=self.CONNECTOR_DICTIONARY, file_type='csv', versioned=True)
+        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
+        self.add_connector_from_template(connector_name=self.CONNECTOR_DICTIONARY, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
     def load_source_canonical(self) -> pd.DataFrame:
@@ -155,6 +179,10 @@ class Transition(AbstractComponent):
     def load_clean_canonical(self) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
         return self.load_canonical(self.CONNECTOR_PERSIST)
+
+    def load_dictionary(self) -> pd.DataFrame:
+        """loads the clean pandas.DataFrame from the dictionary folder for this contract"""
+        return self.load_canonical(self.CONNECTOR_DICTIONARY)
 
     def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
@@ -169,6 +197,10 @@ class Transition(AbstractComponent):
     def save_clean_canonical(self, df):
         """Saves the pandas.DataFrame to the clean files folder"""
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df)
+
+    def save_dictionary(self, df):
+        """Saves the pandas.DataFrame to the dictionary folder"""
+        self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""

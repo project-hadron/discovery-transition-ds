@@ -52,14 +52,20 @@ class FeatureCatalog(AbstractComponent):
          :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
+        pm_module = pm_module if isinstance(pm_module, str) else 'aistac.handlers.python_handlers'
+        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PythonPersistHandler'
         _pm = FeatureCatalogPropertyManager(task_name=task_name)
         _intent_model = FeatureCatalogIntentModel(property_manager=_pm)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, **kwargs)
-        super()._add_templates(property_manager=_pm, source_path=template_source_path, save=default_save,
-                               persist_path=template_persist_path, source_module=template_source_module,
-                               persist_module=template_persist_module, source_handler=template_source_handler,
-                               persist_handler=template_persist_handler)
-        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
+                                 pm_module=pm_module, pm_handler=pm_handler, **kwargs)
+        super()._add_templates(property_manager=_pm, save=default_save,
+                               source_path=template_source_path, persist_path=template_persist_path,
+                               source_module=template_source_module, persist_module=template_persist_module,
+                               source_handler=template_source_handler, persist_handler=template_persist_handler)
+        instance = cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
+        instance.modify_connector_from_template(connector_names=instance.pm.connector_contract_list)
+        return instance
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
@@ -98,16 +104,18 @@ class FeatureCatalog(AbstractComponent):
         connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
         return self.pm.get_connector_contract(connector_name=connector_name)
 
-    def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
+    def set_source_contract(self, connector_contract: ConnectorContract, template_aligned: bool=None, save: bool=None):
         """ Sets the source contract
 
         :param connector_contract: a Connector Contract for the properties persistence
+        :param
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
         if self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE):
             self.remove_connector_contract(connector_name=self.CONNECTOR_SOURCE)
-        self.pm.set_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract)
+        self.pm.set_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
+                                       aligned=template_aligned)
         self.pm_persist(save)
         return
 
