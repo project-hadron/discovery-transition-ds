@@ -188,7 +188,7 @@ class FeatureCatalog(AbstractComponent):
     def run_feature_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the feature pipeline from source to persist"""
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_level=intent_levels)
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels)
         self.save_frame_canonical(result)
 
     @staticmethod

@@ -42,15 +42,15 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical, intent_level: [int, str, list]=None, **kwargs):
+    def run_intent_pipeline(self, canonical, intent_levels: [int, str, list]=None, **kwargs):
         # test if there is any intent to run
         if self._pm.has_intent():
             # get the list of levels to run
-            if isinstance(intent_level, (int, str, list)):
-                intent_level = Commons.list_formatter(intent_level)
+            if isinstance(intent_levels, (int, str, list)):
+                intent_levels = Commons.list_formatter(intent_levels)
             else:
-                intent_level = sorted(self._pm.get_intent().keys())
-            for level in intent_level:
+                intent_levels = sorted(self._pm.get_intent().keys())
+            for level in intent_levels:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):
