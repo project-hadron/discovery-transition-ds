@@ -43,8 +43,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, event_book: PandasEventBook, intent_levels: [int, str, list]=None,
-                            event_type: str=None, **kwargs):
+    def run_intent_pipeline(self, canonical: pd.DataFrame, event_book: PandasEventBook, event_type: str=None,
+                            intent_levels: [int, str, list]=None, **kwargs):
         event_type = event_type if isinstance(event_type, str) else 'add'
         # test if there is any intent to run
         if self._pm.has_intent():
@@ -60,8 +60,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
-                        canonical = eval(f"self.{method}(canonical, save_intent=False, **{params})")
-                        _ = eval(f"event_book.{event_type}_event({canonical})")
+                        result = eval(f"self.{method}(canonical, save_intent=False, **{params})")
+                        _ = eval(f"event_book.{event_type}_event({result})")
 
         return event_book.current_state[1]
 

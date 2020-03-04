@@ -25,7 +25,6 @@ class TransitionTest(unittest.TestCase):
     def setUp(self):
         # set environment variables
         os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
-        os.environ['DTU_ORIGIN_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
         try:
             shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
         except:
@@ -55,6 +54,29 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(connector.module_name, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).module_name)
         self.assertEqual(connector.handler, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).handler)
         self.assertDictEqual(connector.kwargs, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).kwargs)
+
+    def test_from_env(self):
+        os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'contracts').as_posix()
+        os.environ['AISTAC_PM_TYPE'] = 'yaml'
+        os.environ['AISTAC_PM_MODULE'] = 'aistac.handlers.python_handlers'
+        os.environ['AISTAC_PM_HANDLER'] = 'PythonPersistHandler'
+        tr = Transition.from_env('task')
+        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.yaml", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
+        self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
+
+        os.environ['AISTAC_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
+        os.environ['AISTAC_PM_HANDLER'] = 'PandasPersistHandler'
+        tr = Transition.from_env('task')
+        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.yaml", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
+        self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
+
+        os.unsetenv('AISTAC_PM_PATH')
+        os.unsetenv('AISTAC_PM_TYPE')
+        os.unsetenv('AISTAC_PM_MODULE')
+        os.unsetenv('AISTAC_PM_HANDLER')
+
 
     def test_report_connectors(self):
         pm = TransitionPropertyManager('task')
