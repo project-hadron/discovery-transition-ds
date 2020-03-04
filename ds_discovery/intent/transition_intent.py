@@ -187,8 +187,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def auto_to_category(self, df, unique_max: int=None, null_max: float=None, inplace: bool=False,
-                         save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+    def auto_to_category(self, df, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
+                         nulls_list: [bool, list]=None,inplace: bool=False, save_intent: bool=None,
+                         intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ auto categorises columns that have a max number of uniqueness with a min number of nulls
         and are object dtype
 
@@ -210,12 +211,12 @@ class TransitionIntentModel(AbstractIntentModel):
         unique_max = 20 if not isinstance(unique_max, int) else unique_max
         null_max = 0.7 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
-        obj_cols = self.filter_headers(df, dtype=['object', 'string'])
         col_cat = []
-        for c in obj_cols:
+        for c in df.columns:
             if df[c].nunique() < unique_max and round(df[c].isnull().sum() / df_len, 2) < null_max:
                 col_cat.append(c)
-        result = self.to_category_type(df, headers=col_cat, inplace=inplace, save_intent=False)
+        result = self.to_category_type(df, headers=col_cat, fill_nulls=fill_nulls, nulls_list=nulls_list,
+                                       inplace=inplace, save_intent=False)
         if not inplace:
             return result
         return
