@@ -210,7 +210,7 @@ class TransitionIntentModel(AbstractIntentModel):
         unique_max = 20 if not isinstance(unique_max, int) else unique_max
         null_max = 0.7 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
-        obj_cols = self.filter_headers(df, dtype='object')
+        obj_cols = self.filter_headers(df, dtype=['object', 'string'])
         col_cat = []
         for c in obj_cols:
             if df[c].nunique() < unique_max and round(df[c].isnull().sum() / df_len, 2) < null_max:
@@ -359,7 +359,7 @@ class TransitionIntentModel(AbstractIntentModel):
             for col in self.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
         if inc_str:
-            for col in self.filter_columns(df, dtype=['object'], exclude=False):
+            for col in self.filter_columns(df, dtype=['object', 'string'], exclude=False):
 
                 label_encoder = LabelEncoder().fit(df[col])
                 df_filter[col] = label_encoder.transform(df[col])
