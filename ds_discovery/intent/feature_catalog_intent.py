@@ -61,7 +61,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         result = eval(f"self.{method}(canonical, save_intent=False, **{params})")
-                        _ = eval(f"event_book.{event_type}_event({result})")
+                        _ = eval(f"event_book.{event_type}_event(result)")
 
         return event_book.current_state[1]
 
