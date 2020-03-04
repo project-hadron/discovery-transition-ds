@@ -62,6 +62,12 @@ class Transition(AbstractComponent):
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
+        if not isinstance(template_source_module, str) or template_source_module.startswith('aistac.'):
+            template_source_module = 'ds_discovery.handlers.pandas_handlers'
+            template_source_handler = 'PandasSourceHandler'
+        if not isinstance(template_persist_module, str) or template_persist_module.startswith('aistac.'):
+            template_persist_module = 'ds_discovery.handlers.pandas_handlers'
+            template_source_module = 'PandasPersistHandler'
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
                                  pm_module=pm_module, pm_handler=pm_handler, **kwargs)
         super()._add_templates(property_manager=_pm, save=default_save,
