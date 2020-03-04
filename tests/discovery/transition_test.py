@@ -5,7 +5,7 @@ import numpy as np
 
 from pathlib import Path
 
-from ds_behavioral.component import DataBuilderComponent
+from ds_behavioral import SyntheticBuilder
 from ds_behavioral.sample.sample_data import ProfileSample
 from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
@@ -312,7 +312,7 @@ class Customer(object):
 
     @staticmethod
     def generate(noise: bool=False, extra: bool=False, sample_size: int=None):
-        builder = DataBuilderComponent('synthetic_data_customer')
+        builder = SyntheticBuilder.from_env('synthetic_data_customer')
         tools = builder.tools
 
         # main build
