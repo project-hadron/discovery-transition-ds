@@ -164,7 +164,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, save_intent: bool=None,
-                       intent_level: [int, str]=None, group_by_kwargs: dict=None):
+                       intent_level: [int, str]=None):
         """ groups features according to the aggrigator passed. The list of aggrigators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
@@ -179,7 +179,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param remove_weighting_zeros: removes zero values
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
-        :param group_by_kwargs: additional parameters to pass to the Pandas DataFrame groupby function
         :return: pd.DataFrame
         """
         # resolve intent persist options
@@ -188,21 +187,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
-        if not isinstance(group_by_kwargs, dict):
-            group_by_kwargs = {}
         if drop_group_by and str(aggregator).startswith('nunique'):
             raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
         headers = Commons.list_formatter(headers)
         group_by = Commons.list_formatter(group_by)
         df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
-        df_sub = df_sub.groupby(group_by, **group_by_kwargs).agg(aggregator)
+        df_sub = df_sub.groupby(group_by).agg(aggregator)
         # df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
         if include_weighting:
             df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
             total = df_sub['sum'].sum()
-            df_sub['weighting'] = df_sub['sum'].apply(lambda x:
-                                                       round((x / total), weighting_precision)
-                                                       if isinstance(x, (int, float)) else 0)
+            df_sub['weighting'] = df_sub['sum'].apply(lambda x: round((x / total), weighting_precision) if isinstance(x, (int, float)) else 0)
             df_sub = df_sub.drop(columns='sum')
             if remove_weighting_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
