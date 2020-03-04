@@ -20,9 +20,9 @@ class CleanerTest(unittest.TestCase):
 
     def setUp(self):
         property_manager = TransitionPropertyManager('test')
-        property_manager.set_property_connector(ConnectorContract(uri='', handler='DummyPersistHandler',
+        property_manager.set_property_connector(ConnectorContract(uri='data', handler='DummyPersistHandler',
                                                                   module_name='aistac.handlers.dummy_handlers'))
-        property_manager.remove_intent()
+        property_manager.reset_intents()
         self.clean = TransitionIntentModel(property_manager=property_manager)
         try:
             os.makedirs('data')
@@ -149,13 +149,21 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual(control.iloc[0,0], result.iloc[0,0])
         self.assertEqual(control.iloc[3,0], result.iloc[3,0])
 
+    def test_to_str_type(self):
+        clean = self.clean
+        df = pd.DataFrame()
+        df['X'] = [1,2,3,4]
+        print(df['X'])
+        df['X'] = clean.to_str_type(df, headers='X')
+        print(df['X'])
+
     def test_make_list(self):
-        for value in ['', 0, 0.0, pd.Timestamp(2018,1,1), [], (), pd.Series(), list(), tuple(),
+        for value in ['', 0, 0.0, pd.Timestamp(2018,1,1), [], (), pd.Series(dtype=str), list(), tuple(),
                       'name', ['list1', 'list2'], ('tuple1', 'tuple2'), pd.Series(['series1', 'series2']),
                       {'key1': 'value1', 'key2': 'value2'}, {}, dict()]:
             result = Commons.list_formatter(value)
             self.assertTrue(isinstance(result, list), value)
-        self.assertEqual(None, Commons.list_formatter(None))
+        self.assertEqual([], Commons.list_formatter(None))
 
     def test_to_date(self):
         cleaner = self.clean

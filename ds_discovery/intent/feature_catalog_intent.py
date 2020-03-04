@@ -1,6 +1,7 @@
 import inspect
 from copy import deepcopy
 import pandas as pd
+from ds_engines.engines.event_books.pandas_event_book import PandasEventBook
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 import numpy as np
 import matplotlib.dates as mdates
@@ -42,9 +43,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_save_intent=default_save_intent, default_intent_level=default_intent_level,
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical, intent_levels: [int, str, list]=None, **kwargs):
+    def run_intent_pipeline(self, event_book: PandasEventBook, intent_levels: [int, str, list]=None,
+                            event_type: str=None, **kwargs):
+        event_type = event_type if isinstance(event_type, str) else 'add'
         # test if there is any intent to run
         if self._pm.has_intent():
+            if event_type not in ['add', 'increment', 'decrement']:
+                raise ValueError(f"The event type '{event_type}' is not one of 'add', 'increment' or 'decrement' ")
             # get the list of levels to run
             if isinstance(intent_levels, (int, str, list)):
                 intent_levels = Commons.list_formatter(intent_levels)
@@ -56,7 +61,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         canonical = eval(f"self.{method}(canonical, save_intent=False, **{params})")
-        return canonical
+                        _ = eval(f"event_book.{event_type}_event({canonical})")
+
+        return event_book.current_state[1]
 
     def apply_condition(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
                         dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,

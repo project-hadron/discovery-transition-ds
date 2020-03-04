@@ -325,7 +325,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drops highly correlated columns
     def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
-                             inc_str: bool=True, test_size: float=None, random_state: int=None, inplace: bool=False,
+                             inc_str: bool=False, test_size: float=None, random_state: int=None, inplace: bool=False,
                              save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
@@ -359,7 +359,8 @@ class TransitionIntentModel(AbstractIntentModel):
             for col in self.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
         if inc_str:
-            for col in self.filter_columns(df, dtype=[str], exclude=False):
+            for col in self.filter_columns(df, dtype=['object'], exclude=False):
+
                 label_encoder = LabelEncoder().fit(df[col])
                 df_filter[col] = label_encoder.transform(df[col])
         col_corr = set()
@@ -555,7 +556,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     precision = df[c].dropna().apply(str).str.extract('\.(.*)')[0].map(len).max()
                 except (ValueError, TypeError, IndexError, KeyError, ReferenceError, NameError, RecursionError):
                     precision = 15
-            df[c] = pd.to_numeric(df[c].astype(str).str.replace('[$£€, ]', ''), errors=errors)
+            df[c] = pd.to_numeric(df[c].apply(str).str.replace('[$£€, ]', ''), errors=errors)
             if fillna is None:
                 df[c] = df[c].fillna(np.nan)
             elif str(fillna).lower() == 'mean':
@@ -776,7 +777,7 @@ class TransitionIntentModel(AbstractIntentModel):
         if isinstance(nulls_list, bool) and nulls_list:
             nulls_list = ['NaN', 'nan', 'null', 'NULL', ' ', '', 'None']
         elif not isinstance(nulls_list, list):
-            nulls_list = None
+            nulls_list = ['nan']
 
         if not inplace:
             with threading.Lock():
@@ -784,7 +785,7 @@ class TransitionIntentModel(AbstractIntentModel):
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
         for c in obj_cols:
-            df[c] = df[c].astype(str)
+            df[c] = df[c].apply(str).astype('string', errors='ignore')
             if nulls_list is not None:
                 df[c] = df[c].replace(nulls_list, np.nan)
             if as_num:
