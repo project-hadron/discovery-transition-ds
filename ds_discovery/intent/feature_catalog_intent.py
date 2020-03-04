@@ -46,6 +46,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def run_intent_pipeline(self, canonical: pd.DataFrame, event_book: PandasEventBook, event_type: str=None,
                             intent_levels: [int, str, list]=None, **kwargs):
         event_type = event_type if isinstance(event_type, str) else 'add'
+        if not isinstance(kwargs, dict):
+            kwargs = {}
         # test if there is any intent to run
         if self._pm.has_intent():
             if event_type not in ['add', 'increment', 'decrement']:
@@ -186,6 +188,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
+        if not isinstance(kwargs, dict):
+            kwargs = {}
         if drop_group_by and str(aggregator).startswith('nunique'):
             raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
         headers = Commons.list_formatter(headers)
