@@ -42,8 +42,22 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         Transition.from_env('TestAgent')
 
+    def test_set_persist_contract(self):
+        """Basic smoke test"""
+        tr = Transition.from_env('test', default_save=False)
+        connector = ConnectorContract(uri="c12emc:///csx/data/",
+                                      module_name="custom_connectors.ManagedContentHandlers",
+                                      handler="ManagedContentPersistHandler",
+                                      token="i9nRzL3NlY3JldN1cnJlbnQtdXNlci1kZXRhaWxzIjpbIlJFQUQiXS2dyYXBoLy4qI_XyiEd0e4",
+                                      api_endpoint="https://api.hotfix.accelerators-dci.insights.ai")
+        tr.set_persist_contract(connector_contract=connector, save=True)
+        self.assertEqual(connector.uri, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).uri)
+        self.assertEqual(connector.module_name, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).module_name)
+        self.assertEqual(connector.handler, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).handler)
+        self.assertDictEqual(connector.kwargs, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).kwargs)
+
     def test_report_connectors(self):
-        pm = TransitionPropertyManager('task', root_keys=[], knowledge_keys=[])
+        pm = TransitionPropertyManager('task')
         im = TransitionIntentModel(pm)
         instance = Transition(pm, im)
         instance._init_properties(pm, os.environ['AISTAC_PM_PATH'])
@@ -159,7 +173,7 @@ class TransitionTest(unittest.TestCase):
     def test_load_clean_remove(self):
         tr = Transition.from_env('Example01')
         tr.set_version('0.01')
-        tr.set_source_contract('example01.csv', sep=',', encoding='latin1', load=False)
+        tr.set_source('example01.csv', sep=',', encoding='latin1')
         df = tr.load_source_canonical()
 
         tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True), level=0)

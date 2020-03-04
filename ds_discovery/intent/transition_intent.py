@@ -524,6 +524,8 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         if isinstance(nulls_list, bool) or not isinstance(nulls_list, list):
             nulls_list = ['NaN', 'nan', 'null', 'NULL', ' ', '', 'None', np.nan, None]
+        if fill_nulls is None:
+            fill_nulls = np.nan
 
         if not inplace:
             with threading.Lock():
