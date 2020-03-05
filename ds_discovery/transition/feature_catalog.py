@@ -5,7 +5,7 @@ from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from aistac.components.abstract_component import AbstractComponent
 
-from ds_discovery.transition.discovery import DataDiscovery
+from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 
 class FeatureCatalog(AbstractComponent):
@@ -96,6 +96,16 @@ class FeatureCatalog(AbstractComponent):
     def pm(self) -> FeatureCatalogPropertyManager:
         """The properties manager instance"""
         return self._component_pm
+
+    @property
+    def discover(self) -> DataDiscovery:
+        """The discovery instance"""
+        return DataDiscovery()
+
+    @property
+    def visual(self) -> Visualisation:
+        """The visualisation instance"""
+        return Visualisation()
 
     def is_source_modified(self):
         """Test if the source file is modified since last load"""

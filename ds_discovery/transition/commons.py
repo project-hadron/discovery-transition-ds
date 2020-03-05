@@ -1,10 +1,15 @@
+import re
+import threading
+from copy import deepcopy
+
+
 import pandas as pd
 
 
 __author__ = 'Darryl Oatridge'
 
 
-class Commons():
+class Commons(object):
 
     @staticmethod
     def report(canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):
@@ -17,7 +22,7 @@ class Commons():
         :return: stylised report DataFrame
         """
         bold = Commons.list_formatter(bold).append(index_header)
-        large_font= Commons.list_formatter(large_font).append(index_header)
+        large_font = Commons.list_formatter(large_font).append(index_header)
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         index = canonical[canonical[index_header].duplicated()].index.to_list()
@@ -44,3 +49,79 @@ class Commons():
             return list(value.items())
         return None
 
+    @staticmethod
+    def filter_headers(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                       exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None) -> list:
+        """ returns a list of headers based on the filter criteria
+
+        :param df: the Pandas.DataFrame to get the column headers from
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None.
+                    example: int, float, bool, 'category', 'object', 'number'. 'datetime', 'datetimetz', 'timedelta'
+        :param exclude: to exclude or include the dtypes. Default is False
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :return: a filtered list of headers
+
+        :raise: TypeError if any of the types are not as expected
+        """
+        if drop is None or not isinstance(drop, bool):
+            drop = False
+        if exclude is None or not isinstance(exclude, bool):
+            exclude = False
+        if re_ignore_case is None or not isinstance(re_ignore_case, bool):
+            re_ignore_case = False
+
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("The first function attribute must be a pandas 'DataFrame'")
+        _headers = Commons.list_formatter(headers)
+        dtype = Commons.list_formatter(dtype)
+        regex = Commons.list_formatter(regex)
+        _obj_cols = df.columns
+        _rtn_cols = set()
+        unmodified = True
+
+        if _headers:
+            _rtn_cols = set(_obj_cols).difference(_headers) if drop else set(_obj_cols).intersection(_headers)
+            unmodified = False
+
+        if regex and regex:
+            re_ignore_case = re.I if re_ignore_case else 0
+            _regex_cols = list()
+            for exp in regex:
+                _regex_cols += [s for s in _obj_cols if re.search(exp, s, re_ignore_case)]
+            _rtn_cols = _rtn_cols.union(set(_regex_cols))
+            unmodified = False
+
+        if unmodified:
+            _rtn_cols = set(_obj_cols)
+
+        if dtype and len(dtype) > 0:
+            _df_selected = df.loc[:, _rtn_cols]
+            _rtn_cols = (_df_selected.select_dtypes(exclude=dtype) if exclude
+                         else _df_selected.select_dtypes(include=dtype)).columns
+
+        return [c for c in _rtn_cols]
+
+    @staticmethod
+    def filter_columns(df, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
+                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> [dict, pd.DataFrame]:
+        """ Returns a subset of columns based on the filter criteria
+
+        :param df: the Pandas.DataFrame to get the column headers from
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :return:
+        """
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+                                          regex=regex, re_ignore_case=re_ignore_case)
+        return df.loc[:, obj_cols]

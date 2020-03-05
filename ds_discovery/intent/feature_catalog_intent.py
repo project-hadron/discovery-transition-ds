@@ -60,8 +60,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
+                        params.update({'save_intent': False})
                         intent_param = {'self': self, 'canonical': canonical, 'params': params}
-                        result = eval(f"self.{method}(canonical, save_intent=False, **params)", globals(), intent_param)
+                        result = eval(f"self.{method}(canonical, **params)", globals(), intent_param)
                         eb_params = {'event': result, 'event_book': event_book}
                         _ = eval(f"event_book.{event_type}_event(event)", globals(), eb_params)
         return event_book.current_state[1]
@@ -80,8 +81,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param condition: (optional) the condition to apply to the header. Header must exist. examples:
-                 example:  'condition=' > value', value=0.98'
-                 or:       '.str.contains(name)", name=shed'
+                 example:  'condition= > 0.98'
+                 or:       '.str.contains('shed')"'
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
                         If None: default's 0 unless the global intent_next_available is true then -1
@@ -217,7 +218,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param column: the category type column break into the category columns
         :param prefix: a prefix for the category columns
         :param index_key: set the key as the index. Default to True
-        :param dups: id duplicates should be removed from the origional canonical
+        :param dups: id duplicates should be removed from the original canonical
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: a pd.Dataframe of the flattened categorical

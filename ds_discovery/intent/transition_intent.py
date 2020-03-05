@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from aistac.properties.abstract_properties import AbstractPropertyManager
 from aistac.intent.abstract_intent import AbstractIntentModel
 
@@ -65,8 +64,9 @@ class TransitionIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         method_params = {'self': self, 'canonical': canonical, 'params': params}
-                        canonical = eval(f"self.{method}(canonical, inplace=False, save_intent=False, **params)",
-                                         globals(), method_params)
+                        method_params.update({'inplace': False})
+                        method_params.update({'save_intent': False})
+                        canonical = eval(f"self.{method}(canonical, **params)", globals(), method_params)
         return canonical
 
     @staticmethod
@@ -190,7 +190,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def auto_to_category(self, df, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
-                         nulls_list: [bool, list]=None,inplace: bool=False, save_intent: bool=None,
+                         nulls_list: list=None, inplace: bool=False, save_intent: bool=None,
                          intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ auto categorises columns that have a max number of uniqueness with a min number of nulls
         and are object dtype
@@ -198,6 +198,8 @@ class TransitionIntentModel(AbstractIntentModel):
         :param df: the pandas.DataFrame to auto categorise
         :param unique_max: the max number of unique values in the column. default to 20
         :param null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
+        :param fill_nulls: a value to fill nulls that then can be identified as a category type
+        :param nulls_list:  potential null values to replace.
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
@@ -226,7 +228,7 @@ class TransitionIntentModel(AbstractIntentModel):
     # drop column that only have 1 value in them
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
                             auto_contract: bool=True, test_size: float=None, random_state: int=None,
-                            inplace: bool=False, save_intent: bool=None,
+                            drop_empty_row: bool=None, inplace: bool=False, save_intent: bool=None,
                             intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
@@ -239,6 +241,7 @@ class TransitionIntentModel(AbstractIntentModel):
         :param auto_contract: if the auto_category or to_category should be returned
         :param test_size: a test percentage split from the df to avoid over-fitting. Default is 0 for no split
         :param random_state: a random state should be applied to the test train split. Default is None
+        :param drop_empty_row: also drop any rows where all the values are empty
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
@@ -274,61 +277,15 @@ class TransitionIntentModel(AbstractIntentModel):
                     ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
+        if isinstance(drop_empty_row, bool) and drop_empty_row:
+            result = result.dropna(axis=0, how='all')
         if not inplace:
             return result
         return
 
-    # drop duplicate columns
-    def auto_drop_duplicates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
-                             dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                             re_ignore_case: bool=False, test_size: float=None, random_state: int=None,
-                             inplace: bool=False, save_intent: bool=None,
-                             intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
-        """ drops duplicate columns from the pd.DataFrame.
-
-        :param df: the pandas.DataFrame to drop duplicates from
-        :param headers: a list of headers to drop or filter on type
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
-        :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param test_size: a test percentage split from the df to avoid over-fitting. Default is 0 for no split
-        :param random_state: a random state should be applied to the test train split. Default is None
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
-        # Intent task
-        if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
-        df_filter = self.filter_columns(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                        re_ignore_case=re_ignore_case)
-        if isinstance(test_size, float) and 0 < test_size < 1:
-            df_filter, _ = train_test_split(df_filter, test_size=test_size, random_state=random_state)
-        duplicated_col = []
-        for i in range(0, len(df_filter)):
-            col_1 = df_filter.columns[i]
-
-            for col_2 in df_filter.columns[i + 1:]:
-                if df_filter[col_1].equals(df_filter[col_2]):
-                    duplicated_col.append(col_2)
-        df.drop(labels=duplicated_col, axis=1, inplace=True)
-        if not inplace:
-            return df
-        return
-
     # drops highly correlated columns
     def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
-                             inc_str: bool=False, test_size: float=None, random_state: int=None, inplace: bool=False,
+                             sample_percent: float=None, random_state: int=None, inplace: bool=False,
                              save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
@@ -336,8 +293,7 @@ class TransitionIntentModel(AbstractIntentModel):
         :param df: data: the Canonical data to drop duplicates from
         :param threshold: (optional) threshold correlation between columns. default 0.998
         :param inc_category: (optional) if category type columns should be converted to numeric representations
-        :param inc_str: (optional) if str type columns should be converted to numeric representations
-        :param test_size: a test percentage split from the df to avoid over-fitting. Default is 0 for no split
+        :param sample_percent: a sample percentage between 0.5 and 1 to avoid over-fitting. Default is 0.85
         :param random_state: a random state should be applied to the test train split. Default is None
         :param inplace: if the passed Canonical, should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -355,17 +311,12 @@ class TransitionIntentModel(AbstractIntentModel):
             with threading.Lock():
                 df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
+        sample_percent = sample_percent if isinstance(sample_percent, int) and 0.5 < sample_percent < 1 else 0.85
         df_filter = self.filter_columns(df, dtype=['number'], exclude=False)
-        if isinstance(test_size, float) and 0 < test_size < 1:
-            df_filter, _ = train_test_split(df_filter, test_size=test_size, random_state=random_state)
+        df_filter, _ = train_test_split(df_filter, test_size=1-sample_percent, random_state=random_state)
         if inc_category:
             for col in self.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
-        if inc_str:
-            for col in self.filter_columns(df, dtype=['object', 'string'], exclude=False):
-
-                label_encoder = LabelEncoder().fit(df[col])
-                df_filter[col] = label_encoder.transform(df[col])
         col_corr = set()
         corr_matrix = df_filter.corr()
         for i in range(len(corr_matrix.columns)):
@@ -497,7 +448,7 @@ class TransitionIntentModel(AbstractIntentModel):
     # convert objects to categories
     def to_category_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                          exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                         as_num: bool=False, fill_nulls: str=None, nulls_list: [bool, list]=None,
+                         as_num: bool=False, fill_nulls: str=None, nulls_list: list=None,
                          save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to categories
 
@@ -509,10 +460,8 @@ class TransitionIntentModel(AbstractIntentModel):
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param as_num: if true returns the category as a category code
-        :param fill_nulls: a string value to fill nullsthat then can be idenfied as a category type
-        :param nulls_list: can be boolean or a list:
-                    if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None'. np.nan, None]
-                    if list then this is considered potential null values.
+        :param fill_nulls: a value to fill nulls that then can be identified as a category type
+        :param nulls_list:  potential null values to replace.
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
@@ -525,10 +474,8 @@ class TransitionIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
-        if isinstance(nulls_list, bool) or not isinstance(nulls_list, list):
-            nulls_list = ['NaN', 'nan', 'null', 'NULL', ' ', '', 'None', np.nan, None]
-        if fill_nulls is None:
-            fill_nulls = np.nan
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
+        fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
             with threading.Lock():
@@ -536,8 +483,8 @@ class TransitionIntentModel(AbstractIntentModel):
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
         for c in obj_cols:
-            if isinstance(fill_nulls, str):
-                df[c] = df[c].replace(nulls_list, fill_nulls)
+            for item in nulls_list:
+                df[c] = df[c].replace(item, fill_nulls)
             df[c] = df[c].astype('category')
             if as_num:
                 df[c] = df[c].cat.codes
@@ -751,8 +698,8 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                    exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                    nulls_list: [bool, list]=None, as_num: bool=False,
+                    exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
+                    use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=False,
                     save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to object type
 
@@ -763,10 +710,12 @@ class TransitionIntentModel(AbstractIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param use_string_type: if the dtype 'string' should be used or keep as object type
+        :param fill_nulls: a value to fill nulls that then can be identified as a category type
+        :param nulls_list:  potential null values to replace.
         :param nulls_list: can be boolean or a list:
                     if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None'. np.nan, None]
                     if list then this is considered potential null values.
-        :param as_num: if true returns the string as a number using Scikit-learn LabelEncoder
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
@@ -779,10 +728,8 @@ class TransitionIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
-        if isinstance(nulls_list, bool) and nulls_list:
-            nulls_list = ['NaN', 'nan', 'null', 'NULL', ' ', '', 'None']
-        elif not isinstance(nulls_list, list):
-            nulls_list = ['nan']
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
+        fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
             with threading.Lock():
@@ -790,12 +737,11 @@ class TransitionIntentModel(AbstractIntentModel):
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
         for c in obj_cols:
-            df[c] = df[c].apply(str).astype('string', errors='ignore')
-            if nulls_list is not None:
-                df[c] = df[c].replace(nulls_list, np.nan)
-            if as_num:
-                label_encoder = LabelEncoder().fit(df[c])
-                df[c] = label_encoder.transform(df[c])
+            df[c] = df[c].apply(str)
+            for item in nulls_list:
+                df[c] = df[c].replace(item, fill_nulls)
+            if isinstance(use_string_type, bool) and use_string_type:
+                df[c] = df[c].astype('string', errors='ignore')
         if not inplace:
             return df
         return
