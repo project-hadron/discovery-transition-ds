@@ -214,6 +214,9 @@ class TransitionIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
         unique_max = 20 if not isinstance(unique_max, int) else unique_max
         null_max = 0.7 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
@@ -256,6 +259,9 @@ class TransitionIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         if isinstance(nulls_list, bool) and nulls_list:
@@ -498,10 +504,11 @@ class TransitionIntentModel(AbstractIntentModel):
                     drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                     re_ignore_case: bool=False, precision=None, inplace=False) -> [dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
-        if not inplace:
-            df = deepcopy(df)
         obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                        re_ignore_case=re_ignore_case)
         for c in obj_cols:

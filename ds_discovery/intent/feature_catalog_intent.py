@@ -1,4 +1,5 @@
 import inspect
+import threading
 from copy import deepcopy
 import pandas as pd
 from ds_engines.engines.event_books.pandas_event_book import PandasEventBook
@@ -36,7 +37,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
-        intent_param_exclude = ['df', 'canonical', 'canonical_left', 'canonical_right']
+        intent_param_exclude = ['df', 'canonical', 'canonical_left', 'canonical_right', 'inplace']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
         intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
@@ -45,6 +46,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, event_book: PandasEventBook, event_type: str=None,
                             intent_levels: [int, str, list]=None, **kwargs):
+        """ Collectively runs all parameterised intent taken from the property manager against the code base as
+        defined by the intent_contract.
+
+        :param canonical: this is the iterative value all intent are applied to and returned.
+        :param event_book: the event book to pass the resulting events into
+        :param event_type: the method of how to add the evetns
+        :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
+        :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
+        :return Canonical with parameterised intent applied or None if inplace is True
+        """
         event_type = event_type if isinstance(event_type, str) else 'add'
         # test if there is any intent to run
         if self._pm.has_intent():
@@ -63,14 +74,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         params.update({'save_intent': False})
-                        intent_param = {'self': self, 'canonical': canonical, 'params': params}
+                        intent_param = {'self': self, 'canonical': canonical, 'params': params, 'inplace': False}
                         result = eval(f"self.{method}(canonical, **params)", globals(), intent_param)
                         eb_params = {'event': result, 'event_book': event_book}
                         _ = eval(f"event_book.{event_type}_event(event)", globals(), eb_params)
         return event_book.current_state[1]
 
     def calc_date_diff(self, canonical: pd.DataFrame, primary: str, secondary: str, units: str=None, label: str=None,
-                       save_intent: bool = None, intent_level: [int, str] = None):
+                       inplace: bool=False, save_intent: bool = None, intent_level: [int, str] = None):
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
@@ -79,6 +90,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param secondary: the secondary or newer date field
         :param units: (optional)
         :param label: (optional)
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional)
         :param intent_level: (optional)
         :return: the DataFrame with the extra column
@@ -87,11 +99,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         units = units if isinstance(units, str) else 'D'
         label = label if isinstance(label, str) else f'{secondary}-{primary}'
 
         result = canonical[secondary].sub(canonical[primary], axis=0) / np.timedelta64(1, units)
         canonical[label] = result.round(0)
+        if inplace:
+            return
         return canonical
 
     def calc_category(self):
@@ -107,7 +124,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def apply_condition(self, canonical: pd.DataFrame, condition: str, outcome: str=None, otherwise: str=None, headers: [str, list]=None, drop: bool=False,
                         dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                        re_ignore_case: bool=False, save_intent: bool=None,
+                        re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
                         intent_level: [int, str]=None, **kwargs) -> pd.DataFrame:
         """applies a condition to the given column labels
 
@@ -125,6 +142,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
                         If None: default's 0 unless the global intent_next_available is true then -1
@@ -136,6 +154,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         headers = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
                                                        exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
         if isinstance(condition, str):
@@ -149,11 +170,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     if isinstance(otherwise, str):
                         str_code = f"{str_code}, {otherwise}"
                 canonical = canonical.where(eval(str_code, globals(), local_kwargs)).dropna()
+        if inplace:
+            return
         return canonical
 
     def drop_columns(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
                      dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
-                     save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                     inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
         """
 
         :param canonical: the Pandas.DataFrame to get the column headers from
@@ -163,6 +186,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
                         If None: default's 0 unless the global intent_next_available is true then -1
@@ -174,12 +198,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         obj_cols = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
                                                         exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
         canonical.drop(obj_cols, axis=1, inplace=True)
+        if inplace:
+            return
         return canonical
 
-    def remove_outliers(self, canonical: pd.DataFrame, headers: list, lower_quantile: float=None,
+    def remove_outliers(self, canonical: pd.DataFrame, headers: list, inplace: bool=False, lower_quantile: float=None,
                         upper_quantile: float=None, save_intent: bool=None, intent_level: [int, str]=None):
         """ removes outliers by removing the boundary quantiles
 
@@ -187,6 +216,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param headers: the header name of the columns to be included
         :param lower_quantile: (optional) the lower quantile in the range 0 < lower_quantile < 1, deafault to 0.001
         :param upper_quantile: (optional) the upper quantile in the range 0 < upper_quantile < 1, deafault to 0.999
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: the revised values
@@ -195,6 +225,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.001
         upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile < 1 else 0.999
 
@@ -205,12 +238,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             analysis = DataAnalytics(result)
             canonical = canonical[canonical[column_name] > analysis.selection[0][1]]
             canonical = canonical[canonical[column_name] < analysis.selection[2][0]]
+        if inplace:
+            return
         return canonical
 
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
-                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, save_intent: bool=None,
-                       intent_level: [int, str]=None):
+                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, inplace: bool=False,
+                       save_intent: bool=None, intent_level: [int, str]=None):
         """ groups features according to the aggrigator passed. The list of aggrigators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
@@ -223,6 +258,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param weighting_precision: a precision for the weighting values
         :param remove_aggregated: if used in conjunction with the weighting then drops the aggrigator column
         :param remove_weighting_zeros: removes zero values
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: pd.DataFrame
@@ -231,6 +267,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         if drop_group_by and str(aggregator).startswith('nunique'):
@@ -254,10 +293,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if drop_group_by:
             df_sub = df_sub.reset_index()
             df_sub = df_sub.drop(group_by, axis=1)
+        if inplace:
+            return
         return df_sub
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
-                            save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                            inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
         """ flattens a categorical as a sum of one-hot
 
         :param canonical: the Dataframe to reference
@@ -266,6 +307,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param prefix: a prefix for the category columns
         :param index_key: set the key as the index. Default to True
         :param dups: id duplicates should be removed from the original canonical
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: a pd.Dataframe of the flattened categorical
@@ -274,6 +316,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         if key not in canonical:
             raise NameError("The key {} can't be found in the DataFrame".format(key))
         if column not in canonical:
@@ -289,16 +334,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         dummy_df = dummy_df.groupby([pd.Grouper(key=key)])[dummy_cols].sum()
         if index_key:
             dummy_df = dummy_df.set_index(key)
+        if inplace:
+            return
         return dummy_df
 
-    def date_matrix(self, canonical: pd.DataFrame, key, column, index_key=True, save_intent: bool=None,
-                    intent_level: [int, str]=None) -> pd.DataFrame:
+    def date_matrix(self, canonical: pd.DataFrame, key, column, index_key=True, inplace: bool=False,
+                    save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
         """ returns a pandas.Dataframe of the datetime broken down
 
         :param canonical: the pandas.Dataframe to take the columns from
         :param key: the key column
         :param column: the date column
         :param index_key: if to index the key. Default to True
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: a pandas.DataFrame of the datetime breakdown
@@ -307,6 +355,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         if key not in canonical:
             raise NameError("The key {} can't be found in the DataFrame".format(key))
         if column not in canonical:
@@ -327,12 +378,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
         if index_key:
             df_time = df_time.set_index(key)
+        if inplace:
+            return
         return df_time
 
     def replace_missing(self, canonical: pd.DataFrame, headers: [str, list], granularity: [int, float]=None,
                         lower: [int, float]=None, upper: [int, float]=None, nulls_list: [bool, list]=None,
                         replace_zero: [int, float]=None, precision: int=None, day_first: bool=False,
-                        year_first: bool=False, date_format: str = None, save_intent: bool=None,
+                        year_first: bool=False, date_format: str = None, inplace: bool=False, save_intent: bool=None,
                         intent_level: [int, str]=None):
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
@@ -350,6 +403,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param day_first: if the date provided has day first
         :param year_first: if the date provided has year first
         :param date_format: the format of the output dates, if None then pd.Timestamp
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return:
@@ -358,6 +412,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         df = canonical
         headers = Commons.list_formatter(df)
         if not isinstance(df, pd.DataFrame):
@@ -391,15 +448,18 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     col[col.isna()] = self._get_category(selection=result.get('selection'),
                                                          weight_pattern=result.get('weighting'), size=size)
             df[c] = col
+        if inplace:
+            return
         return df
 
-    def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], save_intent: bool=None,
-                           intent_level: [int, str]=None, **kwargs):
+    def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
+                           save_intent: bool=None, intent_level: [int, str]=None, **kwargs):
         """ regular expression substitution of key value pairs to the value string
 
         :param canonical: the value to apply the substitution to
         :param headers:
         :param kwargs: a set of keys to replace with the values
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: the amended value
@@ -408,14 +468,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         headers = Commons.list_formatter(headers)
         for c in headers:
             for k, v in kwargs.items():
                 canonical[c].replace(k, v)
+        if inplace:
+            return
         return canonical
 
-    def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False, save_intent: bool=None,
-                       intent_level: [int, str]=None, **kwargs):
+    def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False, inplace: bool=False,
+                       save_intent: bool=None, intent_level: [int, str]=None, **kwargs):
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your code_str, it is internally
         referenced as it's parameter name 'canonical'.
@@ -423,20 +488,26 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: a pd.DataFrame used in the action
         :param code_str: an action on those column values
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
-        :param kwargs: a set of kwargs to include in any executable function
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
+        :param kwargs: a set of kwargs to include in any executable function
         :return: a list or pandas.DataFrame
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(canonical)
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
         if 'canonical' not in local_kwargs:
             local_kwargs['canonical'] = canonical
 
         result = exec(code_str, globals(), local_kwargs) if use_exec else eval(code_str, globals(), local_kwargs)
+        if inplace:
+            return
         if result is None:
             return canonical
         return result
