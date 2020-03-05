@@ -7,6 +7,7 @@ import pandas as pd
 
 from ds_behavioral import SyntheticBuilder
 from ds_behavioral.sample.sample_data import ProfileSample
+from ds_engines.engines.event_books.pandas_event_book import PandasEventBook
 
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
@@ -43,8 +44,13 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['genre'] = self.tools.get_category( selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
         df['EndType'] = self.tools.get_category(selection=['Ad End', 'Ad Start', 'Undefined', 'Video End', 'Video Start'],
                                            weight_pattern=[1, 3, 1, 6, 2], size=20)
-        result = self.intent.apply_condition(df, headers='EndType', condition='== value', value='Video End')
-        self.assertEqual(1, result['EndType'].nunique())
+        result1 = self.intent.apply_condition(df, headers='EndType', condition="== 'Video End'")
+        self.assertEqual(1, result1['EndType'].nunique())
+        eb = PandasEventBook('test_book')
+        result2 = self.intent.run_intent_pipeline(df, event_book=eb)
+        self.assertEqual(1, result2['EndType'].nunique())
+        self.assertEqual(result1.shape, result2.shape)
+        self.assertCountEqual(result1['genre'], result2['genre'])
 
     def test_group_features(self):
         df = pd.DataFrame()
@@ -52,8 +58,14 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['end_type'] = ['Ad End', 'Ad Start', 'Ad End', 'Ad Start', 'Ad End']
         df['spend'] = [1, 3, 2, 4, 0]
         df['viewed'] = [1, 2, 1, 3, 1]
-        result = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='sum', group_by=['genre'], drop_group_by=True)
-        print(result)
+        result1 = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='sum', group_by=['genre'])
+        eb = PandasEventBook('test_book')
+        result2 = self.intent.run_intent_pipeline(df, event_book=eb)
+        self.assertCountEqual(['Comedy', 'Drama', 'Undefined'], list(result1.index))
+        self.assertCountEqual(['Comedy', 'Drama', 'Undefined'], list(result2.index))
+        self.assertEqual(result1.shape, result2.shape)
+
+
 
 
 

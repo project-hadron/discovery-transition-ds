@@ -64,7 +64,9 @@ class TransitionIntentModel(AbstractIntentModel):
                     if method in self.__dir__():
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
-                        canonical = eval(f"self.{method}(canonical, inplace=False, save_intent=False, **{params})")
+                        method_params = {'self': self, 'canonical': canonical, 'params': params}
+                        canonical = eval(f"self.{method}(canonical, inplace=False, save_intent=False, **params)",
+                                         globals(), method_params)
         return canonical
 
     @staticmethod

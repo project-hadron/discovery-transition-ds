@@ -58,9 +58,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             for level in intent_levels:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
-                        result = eval(f"self.{method}(canonical, save_intent=False, **{params})")
-                        _ = eval(f"event_book.{event_type}_event(result)")
-
+                        if isinstance(kwargs, dict):
+                            params.update(kwargs)
+                        intent_param = {'self': self, 'canonical': canonical, 'params': params}
+                        result = eval(f"self.{method}(canonical, save_intent=False, **params)", globals(), intent_param)
+                        eb_params = {'event': result, 'event_book': event_book}
+                        _ = eval(f"event_book.{event_type}_event(event)", globals(), eb_params)
         return event_book.current_state[1]
 
     def apply_condition(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
@@ -97,7 +100,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             if 'canonical' not in local_kwargs:
                 local_kwargs['canonical'] = canonical
             for label in headers:
-                str_code = "canonical['{}']{}".format(label, condition)
+                str_code = f"canonical['{label}']{condition}"
                 canonical = canonical.where(eval(str_code, globals(), local_kwargs)).dropna()
         return canonical
 
