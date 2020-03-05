@@ -67,9 +67,34 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         _ = eval(f"event_book.{event_type}_event(event)", globals(), eb_params)
         return event_book.current_state[1]
 
-    def apply_condition(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
+    def calc_date_diff(self, canonical: pd.DataFrame, primary: str, secondary: str, units: str=None, label: str=None,
+                       save_intent: bool = None, intent_level: [int, str] = None):
+        """ adds a column for the difference between a primary and secondary date where the primary is an early date
+        than the secondary.
+
+        :param canonical: the DataFrame containing the column headers
+        :param primary: the primary or older date field
+        :param secondary: the secondary or newer date field
+        :param units: (optional)
+        :param label: (optional)
+        :param save_intent: (optional)
+        :param intent_level: (optional)
+        :return: the DataFrame with the extra column
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # Code block for intent
+        units = units if isinstance(units, str) else 'D'
+        label = label if isinstance(label, str) else f'{secondary}-{primary}'
+
+        result = canonical[secondary].sub(canonical[primary], axis=0) / np.timedelta64(1, units)
+        canonical[label] = result.round(0)
+        return canonical
+
+    def apply_condition(self, canonical: pd.DataFrame, condition: str, headers: [str, list]=None, drop: bool=False,
                         dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                        re_ignore_case: bool=False, condition: str=None, save_intent: bool=None,
+                        re_ignore_case: bool=False, save_intent: bool=None,
                         intent_level: [int, str]=None, **kwargs) -> pd.DataFrame:
         """applies a condition to the given column labels
 
@@ -197,7 +222,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if include_weighting:
             df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
             total = df_sub['sum'].sum()
-            df_sub['weighting'] = df_sub['sum'].apply(lambda x: round((x / total), weighting_precision) if isinstance(x, (int, float)) else 0)
+            df_sub['weighting'] = df_sub['sum'].\
+                apply(lambda x: round((x / total), weighting_precision) if isinstance(x, (int, float)) else 0)
             df_sub = df_sub.drop(columns='sum')
             if remove_weighting_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
