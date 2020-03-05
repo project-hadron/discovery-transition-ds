@@ -81,7 +81,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return event_book.current_state[1]
 
     def calc_date_diff(self, canonical: pd.DataFrame, primary: str, secondary: str, units: str=None, label: str=None,
-                       inplace: bool=False, save_intent: bool = None, intent_level: [int, str] = None):
+                       inplace: bool=False, save_intent: bool = None,
+                       intent_level: [int, str] = None) -> [None, pd.DataFrame]:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
@@ -111,21 +112,27 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return
         return canonical
 
-    def calc_category(self):
+    def calc_category(self, canonical: pd.DataFrame, inplace: bool=False, save_intent: bool = None,
+                      intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+        """"""
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # Code block for intent
         # TODO: this is for creating categories from numbers using the data analysis
         df = pd.DataFrame({'Type': list('ABBC'), 'Set': list('ZZXY')})
-        conditions = [
-            (df['Set'] == 'Z') & (df['Type'] == 'A'),
-            (df['Set'] == 'Z') & (df['Type'] == 'B'),
-            (df['Type'] == 'B')]
-        choices = ['yellow', 'blue', 'purple']
-        df['color'] = np.select(conditions, choices, default='black')
+        # conditions = [
+        #     (df['Set'] == 'Z') & (df['Type'] == 'A'),
+        #     (df['Set'] == 'Z') & (df['Type'] == 'B'),
+        #     (df['Type'] == 'B')]
+        # choices = ['yellow', 'blue', 'purple']
+        # df['color'] = np.select(conditions, choices, default='black')
         return df
 
-    def apply_condition(self, canonical: pd.DataFrame, condition: str, outcome: str=None, otherwise: str=None, headers: [str, list]=None, drop: bool=False,
-                        dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                        re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
-                        intent_level: [int, str]=None, **kwargs) -> pd.DataFrame:
+    def apply_condition(self, canonical: pd.DataFrame, condition: str, outcome: str=None, otherwise: str=None,
+                        headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
+                        regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+                        save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
         """applies a condition to the given column labels
 
         :param canonical: the Pandas.DataFrame to get the column headers from
@@ -176,7 +183,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def drop_columns(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
                      dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
-                     inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                     inplace: bool=False, save_intent: bool=None,
+                     intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """
 
         :param canonical: the Pandas.DataFrame to get the column headers from
@@ -208,8 +216,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return
         return canonical
 
-    def remove_outliers(self, canonical: pd.DataFrame, headers: list, inplace: bool=False, lower_quantile: float=None,
-                        upper_quantile: float=None, save_intent: bool=None, intent_level: [int, str]=None):
+    def remove_outliers(self, canonical: pd.DataFrame, headers: list, lower_quantile: float=None,
+                        upper_quantile: float=None, inplace: bool=False, save_intent: bool=None,
+                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ removes outliers by removing the boundary quantiles
 
         :param canonical: the DataFrame to apply
@@ -245,7 +254,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, inplace: bool=False,
-                       save_intent: bool=None, intent_level: [int, str]=None):
+                       save_intent: bool=None, intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ groups features according to the aggrigator passed. The list of aggrigators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
@@ -298,7 +307,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_sub
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
-                            inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                            inplace: bool=False, save_intent: bool=None,
+                            intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ flattens a categorical as a sum of one-hot
 
         :param canonical: the Dataframe to reference
@@ -339,7 +349,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return dummy_df
 
     def date_matrix(self, canonical: pd.DataFrame, key, column, index_key=True, inplace: bool=False,
-                    save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                    save_intent: bool=None, intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ returns a pandas.Dataframe of the datetime broken down
 
         :param canonical: the pandas.Dataframe to take the columns from
@@ -386,7 +396,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         lower: [int, float]=None, upper: [int, float]=None, nulls_list: [bool, list]=None,
                         replace_zero: [int, float]=None, precision: int=None, day_first: bool=False,
                         year_first: bool=False, date_format: str = None, inplace: bool=False, save_intent: bool=None,
-                        intent_level: [int, str]=None):
+                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
@@ -453,7 +463,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df
 
     def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
-                           save_intent: bool=None, intent_level: [int, str]=None, **kwargs):
+                           save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
         """ regular expression substitution of key value pairs to the value string
 
         :param canonical: the value to apply the substitution to
@@ -480,7 +490,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return canonical
 
     def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False, inplace: bool=False,
-                       save_intent: bool=None, intent_level: [int, str]=None, **kwargs):
+                       save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your code_str, it is internally
         referenced as it's parameter name 'canonical'.
