@@ -58,6 +58,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             for level in intent_levels:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
+                        param_kwargs = params.pop('kwargs', {})
+                        params.update(param_kwargs)
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
                         params.update({'save_intent': False})
@@ -92,22 +94,37 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical[label] = result.round(0)
         return canonical
 
-    def apply_condition(self, canonical: pd.DataFrame, condition: str, headers: [str, list]=None, drop: bool=False,
+    def calc_category(self):
+        # TODO: this is for creating categories from numbers using the data analysis
+        df = pd.DataFrame({'Type': list('ABBC'), 'Set': list('ZZXY')})
+        conditions = [
+            (df['Set'] == 'Z') & (df['Type'] == 'A'),
+            (df['Set'] == 'Z') & (df['Type'] == 'B'),
+            (df['Type'] == 'B')]
+        choices = ['yellow', 'blue', 'purple']
+        df['color'] = np.select(conditions, choices, default='black')
+        return df
+
+    def apply_condition(self, canonical: pd.DataFrame, condition: str, outcome: str=None, otherwise: str=None, headers: [str, list]=None, drop: bool=False,
                         dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                         re_ignore_case: bool=False, save_intent: bool=None,
                         intent_level: [int, str]=None, **kwargs) -> pd.DataFrame:
         """applies a condition to the given column labels
 
         :param canonical: the Pandas.DataFrame to get the column headers from
+        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
+                 example:  "condition= > 0.98"
+                 or:       ".str.contains('shed')"
+        :param outcome: an optional outcome if the condition is true
+                 example: "'red'"
+                 or       "canonical['alt']"
+        :param otherwise an alternative to the outcome condition
         :param headers: a list of headers to apply condition to
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
-                 example:  'condition= > 0.98'
-                 or:       '.str.contains('shed')"'
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
                         If None: default's 0 unless the global intent_next_available is true then -1
@@ -127,6 +144,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 local_kwargs['canonical'] = canonical
             for label in headers:
                 str_code = f"canonical['{label}']{condition}"
+                if isinstance(outcome, str):
+                    str_code = f"{str_code}, {outcome}"
+                    if isinstance(otherwise, str):
+                        str_code = f"{str_code}, {otherwise}"
                 canonical = canonical.where(eval(str_code, globals(), local_kwargs)).dropna()
         return canonical
 
