@@ -35,6 +35,22 @@ class Commons(object):
         return df_style
 
     @staticmethod
+    def fillna(df: pd.DataFrame):
+        """replaces NaN values - 0 for int, float, datetime, <NA> for category, False for bool, '' for objects """
+        for col in df.columns:
+            if df[col].dtype.name.lower().startswith('int') or df[col].dtype.name.startswith('float'):
+                df[col].fillna(0, inplace=True)
+            elif df[col].dtype.name.lower().startswith('date') or df[col].dtype.name.lower().startswith('time'):
+                df[col].fillna(0, inplace=True)
+            elif df[col].dtype.name.lower().startswith('bool'):
+                df[col].fillna(False, inplace=True)
+            elif df[col].dtype.name.lower().startswith('category'):
+                df[col] = df[col].cat.add_categories("<NA>").fillna('<NA>')
+            else:
+                df[col].fillna('', inplace=True)
+        return df
+
+    @staticmethod
     def list_formatter(value) -> [list, None]:
         """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
         if value is None:
