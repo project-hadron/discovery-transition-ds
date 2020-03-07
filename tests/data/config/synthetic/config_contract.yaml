@@ -72,7 +72,7 @@ contract:
       kwargs:
         encoding: latin1
         sep: ','
-      location: /Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/data/0_raw
+      location: /Users/doatridge/code/projects/prod/transition-transition-ds/tests/transition/work/data/0_raw
       module: ds_discovery.handlers.pandas_handlers
       resource: synthetic.csv
       type: csv

@@ -1,3 +1,4 @@
+import decimal
 import os
 import shutil
 import unittest
@@ -39,11 +40,18 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         """Basic smoke test"""
         FeatureCatalogIntentModel(property_manager=FeatureCatalogPropertyManager('test'), default_save_intent=False)
 
+    def test_interval_categorical(self):
+        df = pd.DataFrame()
+        df['age'] = self.tools.get_number(20, 90, weight_pattern=[1,2,4,3,2,0.5,0.1], size=1000)
+        df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[30,5,0.5,0.1,0.05], size=1000)
+        result = self.intent.interval_categorical(df, headers='salary', granularity=3)
+        print(result)
+
     def test_apply_condition(self):
         df = pd.DataFrame()
         df['genre'] = self.tools.get_category( selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
         df['EndType'] = self.tools.get_category(selection=['Ad End', 'Ad Start', 'Undefined', 'Video End', 'Video Start'],
-                                           weight_pattern=[1, 3, 1, 6, 2], size=20)
+                                                weight_pattern=[1, 3, 1, 6, 2], size=20)
         result1 = self.intent.apply_condition(df, headers='EndType', condition="== 'Video End'")
         self.assertEqual(1, result1['EndType'].nunique())
         eb = PandasEventBook('test_book')
@@ -69,16 +77,16 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df = pd.DataFrame()
         df['primary'] = self.tools.get_datetime(start='2000/01/01', until='2000/01/2', year_first=True, size=1000)
         df['secondary'] = self.tools.get_datetime(start='2000/02/01', until='2000/02/2', year_first=True, size=1000)
-        result = self.intent.calc_date_diff(df, primary='primary', secondary='secondary', units='D', save_intent=False)
+        result = self.intent.flatten_date_diff(df, first_date='primary', second_date='secondary', units='D', save_intent=False)
         self.assertEqual(30, result.min())
         self.assertEqual(32, result.max())
-        result = self.intent.calc_date_diff(df, primary='primary', secondary='secondary', units='W', save_intent=False)
+        result = self.intent.flatten_date_diff(df, first_date='primary', second_date='secondary', units='W', save_intent=False)
         self.assertEqual(4, result.min())
         self.assertEqual(5, result.max())
         # check nulls work
         df['primary'] = self.tools.get_datetime(start='2000/01/01', until='2000/01/2', year_first=True, quantity=0.1, size=1000)
         df['secondary'] = self.tools.get_datetime(start='2000/02/01', until='2000/02/2', year_first=True, quantity=0.5, size=1000)
-        result = self.intent.calc_date_diff(df, primary='primary', secondary='secondary', units='D', save_intent=False)
+        result = self.intent.flatten_date_diff(df, first_date='primary', second_date='secondary', units='D', save_intent=False)
 
 
 

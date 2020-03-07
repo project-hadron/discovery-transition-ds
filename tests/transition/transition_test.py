@@ -56,7 +56,7 @@ class TransitionTest(unittest.TestCase):
         self.assertDictEqual(connector.kwargs, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).kwargs)
 
     def test_from_env(self):
-        os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'contracts').as_posix()
+        os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()
         os.environ['AISTAC_PM_TYPE'] = 'yaml'
         os.environ['AISTAC_PM_MODULE'] = 'aistac.handlers.python_handlers'
         os.environ['AISTAC_PM_HANDLER'] = 'PythonPersistHandler'
@@ -96,8 +96,8 @@ class TransitionTest(unittest.TestCase):
 
     def test_factory_remote(self):
         tr = Transition.from_env('test_factory')
-        tr.set_persist_contract(uri="s3://aistac-discovery-persist/persist/transition/test.pkl")
-        tr.set_source_contract(uri='s3://aistac-discovery-persist/data/synthetic/synthetic_customer.csv',
+        tr.set_persist_contract(uri="s3://aistac-transition-persist/persist/transition/test.pkl")
+        tr.set_source_contract(uri='s3://aistac-transition-persist/data/synthetic/synthetic_customer.csv',
                                module_name=tr.MODULE_NAME, handler=tr.HANDLER_SOURCE)
         df = tr.load_source_canonical()
         self.assertEqual((500, 16), df.shape)
@@ -270,7 +270,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(structure, tr.pm.get(tr.pm.KEY.contract_key))
         control = {'cleaners': {}, 'snapshot': {}, 'connectors':
                    {'pm_data_control': {'handler': 'PandasPersistHandler',
-                                 'location': '/Users/doatridge/code/projects/prod/discovery-transition-ds/tests/discovery/work/config/control',
+                                 'location': '/Users/doatridge/code/projects/prod/transition-transition-ds/tests/transition/work/config/control',
                                  'modified': 0,
                                  'module_name': 'ds_discovery.handlers.pandas_handlers',
                                  'resource': 'config_data_control.yaml',

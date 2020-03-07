@@ -1,13 +1,14 @@
-Accelerated Machine Learning
-#############################
+Augmented Intent - Single Task Adaptive Components (AI-STAC)
+############################################################
 
-Accelerated Machine Learning is a unique approach around machine learning that innovates the data science discovery
-vertical and productization of the data science delivery model. More specifically, it is an incubator project that
-shadowed a team of Ph.D. data scientists in connection with the development and delivery of machine learning
-initiatives to define measurable benefit propositions for customer success. To accomplish this, the project developed
-specific and unique knowledge regarding transition and preparation of data sets for algorithmic execution and
-augmented knowledge, which is at the core of the projects services offerings. From this the project developed a new
-approach to data science discovery and productization dubbed “Accelerated Machine Learning”.
+Augmented Intent - Single Task Adaptive Components (AI-STAC) is a unique approach to data recovery, discovery and
+modeling that innovates the approach to data science and it's transition to productionisation. it's origins care from
+an incubator project that shadowed a team of Ph.D. data scientists in connection with the development and delivery
+of machine learning initiatives to define measurable benefit propositions for customer success. From this, a number of
+observable 'capabilities' were identified as unique and separate concerns. The challenges of the data scientist were
+effectively leveraging that separation of concern and distribute and loosely couple the specialist capability needs
+to the appropriate skills set. In addition the need to separate data from 'intent' (data), and intent from the
+parametrisation of that intent.
 
 .. class:: no-web no-pdf
 
@@ -22,32 +23,14 @@ Main features
 =============
 
 * Machine Learning Capability Mapping
-* Parametrized Intent
+* Parametrised Intent
 * Discovery Transitioning
-* Machine Learning Feature Cataloguing
+* Feature Cataloguing
 * Augmented Knowledge
-
-Installation
-============
-
-package install
----------------
-
-The best way to install this package is directly from the Python Package Index repository using pip
-
-.. code-block:: bash
-
-    $ pip install discovery-transition-ds
-
-if you want to upgrade your current version then using pip
-
-.. code-block:: bash
-
-    $ pip install --upgrade discovery-transition-ds
 
 Overview
 ========
-The Accelerated Machine Learning project is a change of approach in terms of improving productivity of the data
+AI-STAC is a change of approach in terms of improving productivity of the data
 scientists. This approach deconstructs the machine learning discovery vertical into a set of capabilities, ideas and
 knowledge.  It presents a completely novel approach to the traditional process automation and model wrapping that is
 broadly offered as a solution to solve the considerable challenges that currently restrict the effectiveness of
@@ -79,7 +62,7 @@ more generally offers powerful visual discovery tools and artefact generation fo
 business SME's, Stakeholders and is the initiator of Augmented Knowledge for an enriched and transparent shared view of
 the extended data knowledge.
 
-4. Machine Learning Feature Cataloguing – With cross over skills within machine learning and advanced data heuristics,
+4. Feature Cataloguing – With cross over skills within machine learning and advanced data heuristics,
 investigation identified commonality and separation across customer engagements that particularly challenged our
 Ph.D data scientists in their effective delivery of customer success. As a result the project designed and developed
 Feature Cataloguing, a machine learning technique of extracting and engineering features and their characteristics
@@ -109,12 +92,12 @@ that, by their nature, are familiar tools to the various reliant people and proc
 Data dictionaries for SME's, Visual representations for clients and stakeholders and configuration
 contracts for architects, tool builders and data ingestion.
 
-ML Discovery
-------------
-ML Discovery is first and key part of an end to end process of discovery, productization and tooling. It defines
+Discovery Transition
+--------------------
+Discovery Transition is first and key part of an end to end process of discovery, productization and tooling. It defines
 the ‘intelligence’ and business differentiators of everything downstream.
 
-To become effective in the ML discovery phase, the ability to be able to micro-iterate within distinct layers
+To become effective in the Discovery Transition phase, the ability to be able to micro-iterate within distinct layers
 enables the needed adaptive delivery and quicker returns on ML use case.
 
 The building and discovery of an ML model can be broken down into three Separation of Concerns (SoC)
@@ -129,21 +112,19 @@ eight distinct disciplines
 
 Conceptuasl Eight stages of Model preparation
 ---------------------------------------------
-
-#. Data Loading (fit-for-purpose, quality, quantity, veracity, connectivity)
-#. Data Preparation (predictor selection, typing, cleaning, valuing, validating)
+#. Connectivity (data sourcing and persisting, fit-for-purpose, quality, quantity, veracity, connectivity)
+#. Data Discovery (filter, selection, typing, cleaning, valuing, validating)
 #. Augmented Knowledge (observation, visualisation, knowledge, value scale)
-#. Feature Attribution (attribute mapping, quantitative attribute characterisation. predictor selection)
+#. Data Attribution (attribute mapping, quantitative attribute characterisation. predictor selection)
 #. Feature Engineering (feature modelling, dirty clustering, time series, qualitative feature characterisation)
 #. Feature Framing (hypothesis function, specialisation, custom model framing, model/feature selection)
-#. Modelling (selection, optimisation, testing, training)
-#. Training (learning, feedback loops, opacity testing, insight, profiling, stabilization)
+#. Model Train (selection, optimisation, testing, training)
+#. Model Predict (learning, feedback loops, opacity testing, insight, profiling, stabilization)
 
 Though conceptual they do represent a set of needed disciplines and the complexity of the journey to quality output.
 
-Layered approach to ML
-----------------------
-
+Layered approach and Capability Mapping
+---------------------------------------
 The idea behind the conceptual eight stages of Machine Learning is to layer the preparation and reuse of the activities
 undertaken by the ML Data Engineer and ML Modeller. To provide a platform for micro iterations rather than a
 constant repetition of repeatable tasks through the stack. It also facilitates contractual definitions between
@@ -156,154 +137,384 @@ the next layer to iterate against. this micro-iteration approach allows for quic
 
 Getting Started
 ===============
+The ``discovery-transition-ds`` package is a python/pandas implementation of the AI-STAC Transition component,
+specifically aimed at Python, Numpy and Pandas based Data Science activities. It is build to be very light weight
+in terms of package dependencies requiring nothing beyond what would be found in an basic Data Science environment.
+Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
+
+Installation
+============
+
+package install
+---------------
+The best way to install AI-STAC component packages is directly from the Python Package Index repository using pip.
+All AI-STAC components are based on a pure python foundation package ``aistac-foundation``
+
+.. code-block:: bash
+
+    $ pip install aistac-foundation
+
+The AI-STAC component package for the Transition is ``discovery-transition-ds`` and pip installed with:
+
+.. code-block:: bash
+
+    $ pip install discovery-transition-ds
+
+if you want to upgrade your current version then using pip install upgrade with:
+
+.. code-block:: bash
+
+    $ pip install --upgrade discovery-transition-ds
 
 First Time Env Setup
 --------------------
+In order to ease the startup of tasks a number of environment variables are available to pre-assign where and how
+configuration and data can be collected. This can considerable improve the burden of setup and help in the migration
+of the outcome contracts between environments.
 
-When you create a new project, or set up your default master notebook you import the Transition class
+In this section we will look at a couple of primary environment variables and demonstrate later how these are used
+in the Component. In the following example we are assuming a local file reference but this is not the limit of how one
+can use the environment variables to locate date from multiple different connection mediums. Examples of other
+connectors include AWS S3, Hive, Redis, MongoDB, Azure Blob Storage, or specific connectors can be created very
+quickly using the AS-STAC foundation abstracts.
+
+If you are on linux or MacOS:
+
+1. Open the current user's profile into a text editor.
+
+.. code-block:: bash
+
+    $> vi ~/.bash_profile.
+
+2. Add the export command for each environment variable
+
+.. code-block:: bash
+
+    # where to find the properties contracts
+    export AISTAC_PM_PATH=~/projects/demo/contracts
+
+    # The default path for the source and the persisted data
+    export AISTAC_DEFAULT_PATH=~/projects/demo/data
+
+3. In addition to the default environment variables you can set specific component environment variables. This is
+particularly useful with the Transition component as source data tends to sit separate from our interim storage.
+For Transition you replace the ``DEFAULT`` with ``TRANSITION``, and in this case specify this is the ``SOURCE`` path
+
+.. code-block:: bash
+
+    # specific to te transition component source path
+    export AISTAC_TRANSITION_SOURCE_PATH=/tmp/data/sftp
+
+4. save your changes
+5. re-run your bash_profile and check the variables have been set
+
+.. code-block:: bash
+
+    $> source ~/.bash_profile.
+    $> env
+
+Transition Task - Setup
+=======================
+The Transition Component is a 'Capability' component and a 'Separation of Concern' dealing specifically with the
+transition of data from connectivity of data source to the persistence of 'data-of-interest' that has been prepared
+appropriate for the language canonical, in this case 'Pandas DataFrame'.
+
+In the following example we are assuming a local file reference and are using the default AI-STAC Connector Contracts
+for Data Sourcing and Persisting, but this is not the limit of how one can use connect to data retrieval and storage.
+Examples of other connectors include AWS S3, Hive, Redis, MongoDB, Azure Blob Storage, or specific connectors can be
+created very quickly using the AS-STAC foundation abstracts.
+
+Instantiation
+-------------
+The ``Transition`` class is the encapsulating class for the Transitioning Capability, providing a wrapper for
+transitioning functionality. and imported as:
 
 .. code-block:: python
 
     from ds_discovery import Transition
 
+The easiest way to instantiate the ``Transition`` class is to use Factory Instantiation method ``.from_env(...)``
+that takes advantage of our environment variables set up in the previous section. in order to differentiate each
+instance of the Transition Component, we assign it a ``Task`` name that we can use going forward to retrieve
+or re-create our Transition instance with all its 'Intent'
 
-We now have all the appropriate imports.
+.. code-block:: python
 
-Transitioning: Data Sourcing
+    tr = Transition.from_env(task_name='demo')
+
+Augmented Knowledge
+-------------------
+Once you have instantiated the Transition Task it is important to add a description of the task as a future remind,
+for others using this task and when using the MasterLedger component (not covered in this tutorial) it allows for a
+quick reference overview of all the tasks in the ledger.
+
+.. code-block:: python
+
+    tr.set_description("A Demo task used as an example for the Transitioning tutorial")
+
+Note: the description should be a short summary of the task. If we need to be more verbose, and as good practice,
+we can also add notes, that are timestamped and cataloged, to help augment knowledge about this
+task that is carried as part of the Property Contract.
+
+in the Transition Component notes are cataloged within five named sections:
+* source - notes about the source data that help in what it is, where it came from and any SME knowledge of interest
+* schema - data schemas to capture and report on the outcome data set
+* observations - observations of interest or enhancement of the understanding of the task
+* actions - actions needed, to be taken or have been taken within the task
+
+each ``catalog`` can have multiple ``labels`` whick in tern can have multiple text entries, each text keyed by
+timestamp. through the catalog set is fixed, ``labels`` can be any reference label
+
+the following example adds a description to the source catalogue
+
+.. code-block:: python
+
+    tr.add_notes(catalog='source', label='describe', text="The source of this demo is a synthetic data set"
+
+To retrieve the list of allowed ``catalog`` sections we use the property method:
+
+.. code-block:: python
+
+    tr.notes_catalog
+
+
+We now have our Transition instance and had we previoulsy set it up it will contain all the previoulsy set
+Property Contract
+
+One-Time Connectors Settings
 ----------------------------
+With each component task we need to set up its connectivity defining three ``Connector Contract`` which control the
+loose coupling of where data is sourced and persisted to the code that uses it. Though we can define up each Connect
+Contract, it is easier to take advantage of template connectors set up as part of the Factory initialisation method.
 
-As part of the Accelerated ML Discovery Vertical, Transitioning is a
-foundation base truth, facilitating a **transparent** transition of the
-raw canonical dataset, to a **fit-for-purpose** canonical dataset, to
-enable the optimisation of discovery analysis and the identification of
-**features-of-interest**. The meaning of cononical is to convert formats
-into common data language, not just bringing over the dataset but
-bringing the construct of that dataset ie: type, format, structure, and
-functionally, in our case because we are Python centric we use Pandas
-Data Frames as our canonical.
+Though we can define as many Connector Contract as we like, by its nature, the Transition task has three key connectors
+that need to be set up as a 'one-off' task. Once these are set they are stored in the Property Contract and thus do not
+need to be set again.
 
-With reference to the diagram, this notebook deals with the Sourcing
-Contract and the raw canonical dataset as a prerequisite of the Sourcing
-Contract: 1. Sourcing Notebooks 2. Sourcing Contract 3. Source
-Connectivity and the Raw Canonical
-
-.. figure:: https://raw.githubusercontent.com/Gigas64/discovery-transition-ds/master/docs/images/Transition.png
-   :alt: transition
-
-Creating a Transition instance
-------------------------------
-In this instance we are going to use a Factory Method to instantiate
-the Transition Class
--  Creating an instance of the Transitioning Class, passing a unique reference name to the factory method.
--  The reference name identifies the unique transitioning contract.
+Source Contract
+~~~~~~~~~~~~~~~
+Firstly we need to set up the 'Source Contract' that specifies the data to be sourced. Because we are taking advantage
+of the environment variable ``AISTAC_TRANSITION_SOURCE_PATH`` we only need to pass the source file name. In this
+example we are also going to pass two 'optional' extra parameters that get passed directly to the Source reader,
+``sep=`` and ``encoding=``
 
 .. code-block:: python
 
-    tr = Transition.from_uri('synthetic_customer')
-
-This initialisation
-
-Reset the Source Contract
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Reset the source contract so we start afresh. Printing the source report
-validates that our values are empty.
-
-.. code-block:: python
-
-    # reset the contract and set the source contract
-    tr.reset_contract()
-    tr.report_source()
+    tr.set_source(uri_file='demo_data.txt', sep='\t', encoding='Latin1')
 
 
-Build the Source Contract
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Source Contract is a set of attributes that define the resource, its
-type and its location for retrieval and convertion to the raw canonical
-for transitioning. The Source Contract additionally defines the module
-and handler that is dynamically loaded at runtime.
-
-By default the source contract requires
-- resource: a local file, connector, URI or URL
-- source_type a reference to the type ofresource. if None then extension of resource assumed
-- location: a path, region or uri reference that can be used to identify location of resource
-- module_name: a module name with full package path e.g ``ds_discovery.handlers.pandas_handlers``
-- handler: the name os the handler class
-- kwargs: additional arguments the handler might require
-
-In this example, because we are using the standard Pandas data frame,
-file handlers and the localized Transitioning default path locations, as
-such we only need to provide the resource name and any other Key Word
-Argument that the specific file handler may need. As our file is csv we
-have defined the file separator and encoding.
+Persist Contract
+~~~~~~~~~~~~~~~~
+Secondly we need to specify where we are going to persist our data once we have transitioned it. Again we are going
+to take advantage of what our Factory Initialisation method set up for us and allow the Transition task to define our
+output based on constructed template Connector Contracts.
 
 .. code-block:: python
 
-    tr.set_source_contract(uri='synthetic_customer.csv', sep=',', encoding='latin1', load=False)
+    tr.set_persist()
 
-Other Connectivity
-^^^^^^^^^^^^^^^^^^
+Dictionary Contract
+~~~~~~~~~~~~~~~~~~~
+Finally, and optionally, we set up a Data Dictionary Connector that allows us to output a data dictionary of the source
+or persist schema to a persisted state that can be shared with other parties of interest.
+.. code-block:: python
 
-As a comparison, in the following example we utilize the vast array of
-other connectivity options. Here we are looking to connect to an AWS S3
-containing csv files .
+    tr.set_dictionary()
+
+Now we have set up the Connector Contracts we no longer need to reference this code again as the information as been
+stored in the Property Contract. We will look later how we can report on these connectors and observe their settings
+
+We are ready to go. The Transition task is ready to use.
+
+Transition Task - Intent
+========================
+
+Instantiate the Task
+--------------------
+
+The easiest way to instantiate the ``Transition`` class is to use Factory Instantiation method ``.from_env(...)``
+that takes advantage of our environment variables set up in the previous section. in order to differentiate each
+instance of the Transition Component, we assign it a ``Task`` name that we can use going forward to retrieve
+or re-create our Transition instance with all its 'Intent'
 
 .. code-block:: python
 
-    tr.set_source_contract(uri="s3://aistac-discovery-cortex-dev/data/synthetic_customer.csv",
-                           sep=',', encoding='latin1', load=False)
+    tr = Transition.from_env(task_name='demo')
 
 
-Source Separation of Concerns
------------------------------
-
-The source details have now been recoreded in the contract pipeline
-
-This Source separation of concerns means: \* New Notebooks are no longer
-tied to the name or location of the data source \* File governance and
-naming convention is managed automatically \* Connectivity can be
-updated or reallocated independantly of the data science activities \*
-Data location and infrastructure, through the delivery lifecycle, can be
-hardened without effecting the Machine Learning discovery process
-
-Loading the Canonical
-~~~~~~~~~~~~~~~~~~~~~
-
-Now we have recored the file information, we no longer need to reference
-these details again To load the contract data we use the transitioning
-method ``load_source_canonical()``  and then we can use the canonical
-dictionary report to examine the data set.
+Loading the Source Canonical
+----------------------------
 
 .. code-block:: python
 
     df = tr.load_source_canonical()
+
+
+Canonical Reporting
+-------------------
+
+.. code-block:: python
+
     tr.canonical_report(df)
 
+Parameterised Intent
+--------------------
 
-Observations
+.. code-block:: python
+
+    tr.intent_model.__dir__()
+
+.. autoclass:: ds_discovery.intent.transition_intent.TransitionIntentModel
+    :members:
+
+auto_clean_header
+~~~~~~~~~~~~~~~~~
+
+auto_drop_correlated
+~~~~~~~~~~~~~~~~~~~~
+
+auto_remove_columns
+~~~~~~~~~~~~~~~~~~~
+
+auto_to_category
+~~~~~~~~~~~~~~~~
+
+filter_columns
+~~~~~~~~~~~~~~
+
+filter_headers
+~~~~~~~~~~~~~~
+
+run_intent_pipeline
+~~~~~~~~~~~~~~~~~~~
+
+to_bool_type
 ~~~~~~~~~~~~
 
-The report presents our attribute summary as a stylised data frame,
-highlighting data points of interest. We will see more of this in the
-next tutorial.
+to_category_type
+~~~~~~~~~~~~~~~~
 
-Next Steps
+to_date_from_excel_type
+~~~~~~~~~~~~~~~~~~~~~~~
+
+to_date_type
+~~~~~~~~~~~~
+
+to_float_type
+~~~~~~~~~~~~~
+
+to_int_type
+~~~~~~~~~~~
+
+to_normalised
+~~~~~~~~~~~~~
+
+to_numeric_type
+~~~~~~~~~~~~~~~
+
+to_remove
+~~~~~~~~~
+
+to_select
+~~~~~~~~~
+
+to_str_type
+~~~~~~~~~~~
+
+Persist the Transitioned Canonical
+----------------------------------
+
+Save Clean Canonical
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    tr.canonical_report(df_clean)
+
+Save Data Dictionary
+~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    tr.save_dictionary(tr.canonical_report(df, stylise=False))
+
+Run Pipeline
+------------
+
+Locally
+~~~~~~~
+
+.. code-block:: python
+
+    df_clean = tr.intent_model.run_intent_pipeline(df)
+
+End-to-End
 ~~~~~~~~~~
 
-Now we have our raw canonical data extracted and convereted to the
-canonical from the source we can start the transitioning…
+.. code-block:: python
+
+    tr.run_transition_pipeline()
+
+Transparency and Traceability
+=============================
+
+Environ Report
+------------------
+
+.. code-block:: python
+
+    tr.report_environ()
+
+Connectors Report
+-----------------
+
+.. code-block:: python
+
+    tr.report_connectors()
+
+Intent Report
+-------------
+
+.. code-block:: python
+
+    tr.report_Intent()
+
+Run Book Report
+---------------
+
+.. code-block:: python
+
+    tr.report_run_book()
+
+Notes Report
+------------
+
+.. code-block:: python
+
+    tr.report_Notes()
+
+Schema Report
+-------------
+
+
+Reference
+=========
 
 Python version
 --------------
 
-Python 2.6 and 2.7 are not supported. Although Python 3.5 is supported, it is recommended to install
-``discovery-transition-ds`` against the latest Python 3.7.x whenever possible.
-Python 3 is the default for Homebrew installations starting with version 0.9.4.
+Python 2.6,  2.7 or 3.5 are not supported. Although Python 3.6 is supported, it is recommended to install
+``discovery-transition-ds`` against the latest Python 3.8.x whenever possible.
+
+Pandas version
+--------------
+
+Pandas 0.25.x and above are supported but It is highly recommended to use the latest 1.0.x release as the first
+major release of Pandas.
 
 GitHub Project
 --------------
-Discovery-Transitioning-Utils: `<https://github.com/Gigas64/discovery-transition-ds>`_.
+discovery-transition-ds: `<https://github.com/Gigas64/discovery-transition-ds>`_.
 
 Change log
 ----------

@@ -61,14 +61,11 @@ class TransitionIntentModel(AbstractIntentModel):
             for level in intent_levels:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
-                        param_kwargs = params.pop('kwargs', {})
-                        params.update(param_kwargs)
+                        params.update(params.pop('kwargs', {}))
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
-                        method_params = {'self': self, 'canonical': canonical, 'params': params}
-                        method_params.update({'inplace': False})
-                        method_params.update({'save_intent': False})
-                        canonical = eval(f"self.{method}(canonical, **params)", globals(), method_params)
+                        params.update({'inplace': False, 'save_intent': False})
+                        canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
     @staticmethod

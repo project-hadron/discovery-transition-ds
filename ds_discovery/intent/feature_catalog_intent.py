@@ -45,18 +45,20 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, event_book: PandasEventBook, event_type: str=None,
-                            intent_levels: [int, str, list]=None, **kwargs):
+                            fillna: bool=None, intent_levels: [int, str, list]=None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
         :param canonical: this is the iterative value all intent are applied to and returned.
         :param event_book: the event book to pass the resulting events into
-        :param event_type: the method of how to add the evetns
-        :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
+        :param event_type: the method of how to add the events
+        :param fillna: if the resulting DataFrame should have any NaN values replaced with default values. Default True
+        :param intent_levels: an single or list of levels to run, if list, run in order given
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied or None if inplace is True
         """
         event_type = event_type if isinstance(event_type, str) else 'add'
+        fillna = fillna if isinstance(fillna, bool) else True
         # test if there is any intent to run
         if self._pm.has_intent():
             if event_type not in ['add', 'increment', 'decrement']:
@@ -69,122 +71,107 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             for level in intent_levels:
                 for method, params in self._pm.get_intent(level=level).items():
                     if method in self.__dir__():
-                        param_kwargs = params.pop('kwargs', {})
-                        params.update(param_kwargs)
+                        params.update(params.pop('kwargs', {}))
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
-                        params.update({'save_intent': False})
-                        intent_param = {'self': self, 'canonical': canonical, 'params': params, 'inplace': False}
-                        result = eval(f"self.{method}(canonical, **params)", globals(), intent_param)
-                        eb_params = {'event': result, 'event_book': event_book}
-                        _ = eval(f"event_book.{event_type}_event(event)", globals(), eb_params)
-        return event_book.current_state[1]
+                        params.update({'inplace': False, 'save_intent': False})
+                        event = eval(f"self.{method}(canonical, **params)", globals(), locals())
+                        _ = eval(f"event_book.{event_type}_event(event)", globals(), locals())
+        return event_book.current_state(fillna=fillna)
 
-    def calc_date_diff(self, canonical: pd.DataFrame, primary: str, secondary: str, units: str=None, label: str=None,
-                       inplace: bool=False, save_intent: bool = None,
-                       intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+    def flatten_date_diff(self, canonical: pd.DataFrame, target: [str, list], first_date: str, second_date: str,
+                          aggregator: str=None, units: str=None, label: str=None, inplace: bool=None,
+                          save_intent: bool=None, intent_level: [int, str] = None) -> [None, pd.DataFrame]:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
         :param canonical: the DataFrame containing the column headers
-        :param primary: the primary or older date field
-        :param secondary: the secondary or newer date field
-        :param units: (optional)
-        :param label: (optional)
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :param save_intent: (optional)
-        :param intent_level: (optional)
+        :param target: the target label to group by and index on
+        :param first_date: the primary or older date field
+        :param second_date: the secondary or newer date field
+        :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
+        :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
+        :param label: (optional) a label for the new column.
+        :param inplace: adds the calculated column to the canonical before flattening
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level of the intent,
         :return: the DataFrame with the extra column
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
-        if not inplace:
-            with threading.Lock():
-                df = deepcopy(canonical)
         units = units if isinstance(units, str) else 'D'
-        label = label if isinstance(label, str) else f'{secondary}-{primary}'
-
-        result = canonical[secondary].sub(canonical[primary], axis=0) / np.timedelta64(1, units)
-        canonical[label] = result.round(0)
+        label = label if isinstance(label, str) else f'{second_date}-{first_date}'
+        inplace = inplace if isinstance(inplace, bool) else False
+        result = canonical[second_date].sub(canonical[first_date], axis=0) / np.timedelta64(1, units)
         if inplace:
-            return
-        return canonical
+            canonical[label] = result.round(1)
+        df_diff = pd.DataFrame()
+        for col in Commons.list_formatter(target):
+            df_diff[col] = canonical[col].copy()
+        df_diff[label] = canonical[label].copy()
+        return self.group_features(df_diff, headers=label, group_by=target, aggregator=aggregator)
 
-    def calc_category(self, canonical: pd.DataFrame, inplace: bool=False, save_intent: bool = None,
-                      intent_level: [int, str] = None) -> [None, pd.DataFrame]:
-        """"""
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
-        # Code block for intent
-        # TODO: this is for creating categories from numbers using the data analysis
-        df = pd.DataFrame({'Type': list('ABBC'), 'Set': list('ZZXY')})
-        # conditions = [
-        #     (df['Set'] == 'Z') & (df['Type'] == 'A'),
-        #     (df['Set'] == 'Z') & (df['Type'] == 'B'),
-        #     (df['Type'] == 'B')]
-        # choices = ['yellow', 'blue', 'purple']
-        # df['color'] = np.select(conditions, choices, default='black')
-        return df
+    # def calc_category(self, canonical: pd.DataFrame, inplace: bool=False, save_intent: bool = None,
+    #                   intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+    #     """"""
+    #     # resolve intent persist options
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                intent_level=intent_level, save_intent=save_intent)
+    #     # Code block for intent
+    #     # TODO: this is for creating categories from numbers using the data analysis
+    #     df = pd.DataFrame({'Type': list('ABBC'), 'Set': list('ZZXY')})
+    #     # conditions = [
+    #     #     (df['Set'] == 'Z') & (df['Type'] == 'A'),
+    #     #     (df['Set'] == 'Z') & (df['Type'] == 'B'),
+    #     #     (df['Type'] == 'B')]
+    #     # choices = ['yellow', 'blue', 'purple']
+    #     # df['color'] = np.select(conditions, choices, default='black')
+    #     return df
 
-    def apply_condition(self, canonical: pd.DataFrame, condition: str, outcome: str=None, otherwise: str=None,
-                        headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
-                        regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                        save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
+    def apply_condition(self, canonical: pd.DataFrame, target: [str, list], headers: list, condition: str,
+                        include_headers: list=None, outcome: str=None, otherwise: str=None, save_intent: bool=None,
+                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """applies a condition to the given column labels
 
         :param canonical: the Pandas.DataFrame to get the column headers from
+        :param target: the target label to index on
+        :param headers: a list of headers to apply the condition on,
+        :param include_headers: any additional headers to include in the returning DataFrame
         :param condition: (optional) the condition to apply to the header. Header must exist. examples:
                  example:  "condition= > 0.98"
                  or:       ".str.contains('shed')"
         :param outcome: an optional outcome if the condition is true
                  example: "'red'"
                  or       "canonical['alt']"
-        :param otherwise an alternative to the outcome condition
+        :param otherwise an alternative to the outcome condition and has the same examples as outcome
         :param headers: a list of headers to apply condition to
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
-        :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
         :return:
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
-        if not inplace:
-            with threading.Lock():
-                df = deepcopy(canonical)
-        headers = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
-                                                       exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
+        headers = Commons.list_formatter(headers)
+        include_headers = Commons.list_formatter(include_headers)
+        target = Commons.list_formatter(target)
+        result_df = Commons.filter_columns(canonical.copy(), headers=set(headers + target + include_headers))
         if isinstance(condition, str):
-            local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
-            if 'canonical' not in local_kwargs:
-                local_kwargs['canonical'] = canonical
             for label in headers:
-                str_code = f"canonical['{label}']{condition}"
+                str_code = f"result_df['{label}']{condition}"
                 if isinstance(outcome, str):
                     str_code = f"{str_code}, {outcome}"
                     if isinstance(otherwise, str):
                         str_code = f"{str_code}, {otherwise}"
-                canonical = canonical.where(eval(str_code, globals(), local_kwargs)).dropna()
-        if inplace:
-            return
-        return canonical
+                result_df[label] = result_df.where(eval(str_code, globals(), locals()))
+        return result_df
 
     def drop_columns(self, canonical: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
                      dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
-                     inplace: bool=False, save_intent: bool=None,
-                     intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                     inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """
 
         :param canonical: the Pandas.DataFrame to get the column headers from
@@ -208,7 +195,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # Code block for intent
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         obj_cols = TransitionIntentModel.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype,
                                                         exclude=exclude, regex=regex, re_ignore_case=re_ignore_case)
         canonical.drop(obj_cols, axis=1, inplace=True)
@@ -236,7 +223,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.001
         upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile < 1 else 0.999
 
@@ -255,7 +242,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, inplace: bool=False,
                        save_intent: bool=None, intent_level: [int, str]=None) -> [None, pd.DataFrame]:
-        """ groups features according to the aggrigator passed. The list of aggrigators are mean, sum, size, count,
+        """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
         :param canonical: the pd.DataFrame to group
@@ -278,7 +265,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         if drop_group_by and str(aggregator).startswith('nunique'):
@@ -306,6 +293,89 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return
         return df_sub
 
+    def interval_categorical(self, canonical: pd.DataFrame, headers: [str, list], granularity: [int, float, list]=None,
+                             lower: [int, float]=None, upper: [int, float]=None, header_suffix: str=None,
+                             category_labels: list=None, precision: int=None, inplace: bool=False,
+                             save_intent: bool = None, intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+        """
+
+        :param canonical: The DataFrame to use
+        :param headers: a header or list of headers to make catagorical
+        :param granularity: (optional) the granularity of the analysis across the range. Default is 1
+                int passed - represents the number of periods
+                float passed - the length of each interval
+                list[tuple] - specific interval periods e.g []
+                list[float] - the percentile or quantities, All should fall between 0 and 1
+        :param lower: (optional) the lower limit of the number value. Default min()
+        :param upper: (optional) the upper limit of the number value. Default max()
+        :param precision: (optional) The precision of the range and boundary values. by default set to 3.
+        :param header_suffix: a suffix to
+        :param category_labels: a set of labels the same length as the intervals to rename
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) a level to place the intent
+        :return: the converted fields
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # intend code block on the canonical
+        if not inplace:
+            with threading.Lock():
+                canonical = deepcopy(canonical)
+        granularity = 3 if not isinstance(granularity, (int, float, list)) or granularity == 0 else granularity
+        precision = precision if isinstance(precision, int) else 5
+        header_suffix = header_suffix if isinstance(header_suffix, str) else '_cat'
+        headers = Commons.list_formatter(headers)
+        # limits
+        for c in headers:
+            # firstly get the granularity
+            values = canonical[c]
+            lower = values.min() if not isinstance(lower, (int, float)) else lower
+            upper = values.max() if not isinstance(upper, (int, float)) else upper
+            if lower >= upper:
+                upper = lower
+                granularity = [(lower, upper, 'both')]
+            if isinstance(granularity, (int, float)):
+                # if granularity float then convert frequency to intervals
+                if isinstance(granularity, float):
+                    # make sure frequency goes beyond the upper
+                    _end = upper + granularity - (upper % granularity)
+                    periods = pd.interval_range(start=lower, end=_end, freq=granularity).drop_duplicates()
+                    periods = periods.to_tuples().to_list()
+                    granularity = []
+                    while len(periods) > 0:
+                        period = periods.pop(0)
+                        if len(periods) == 0:
+                            granularity += [(period[0], period[1], 'both')]
+                        else:
+                            granularity += [(period[0], period[1], 'left')]
+                # if granularity int then convert periods to intervals
+                else:
+                    periods = pd.interval_range(start=lower, end=upper, periods=granularity).drop_duplicates()
+                    granularity = periods.to_tuples().to_list()
+            if isinstance(granularity, list):
+                if all(isinstance(value, tuple) for value in granularity):
+                    if len(granularity[0]) == 2:
+                        granularity[0] = (granularity[0][0], granularity[0][1], 'both')
+                    granularity = [(t[0], t[1], 'right') if len(t) == 2 else t for t in granularity]
+                elif all(isinstance(value, float) and 0 < value < 1 for value in granularity):
+                    quantiles = list(set(granularity + [0, 1.0]))
+                    boundaries = values.quantile(quantiles).values
+                    boundaries.sort()
+                    granularity = [(boundaries[0], boundaries[1], 'both')]
+                    granularity += [(boundaries[i - 1], boundaries[i], 'right') for i in range(2, boundaries.size)]
+                else:
+                    granularity = (lower, upper, 'both')
+
+            granularity = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in granularity]
+            # now create the categories
+            return granularity
+
+        if inplace:
+            return
+        return canonical
+
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
                             inplace: bool=False, save_intent: bool=None,
                             intent_level: [int, str]=None) -> [None, pd.DataFrame]:
@@ -328,7 +398,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         if key not in canonical:
             raise NameError("The key {} can't be found in the DataFrame".format(key))
         if column not in canonical:
@@ -367,7 +437,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         if key not in canonical:
             raise NameError("The key {} can't be found in the DataFrame".format(key))
         if column not in canonical:
@@ -424,17 +494,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
-        df = canonical
-        headers = Commons.list_formatter(df)
-        if not isinstance(df, pd.DataFrame):
+                canonical = deepcopy(canonical)
+        headers = Commons.list_formatter(canonical)
+        if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         if isinstance(nulls_list, bool) and nulls_list:
             nulls_list = ['NaN', 'nan', 'null', '', 'None', np.inf, -np.inf]
         elif not isinstance(nulls_list, list):
             nulls_list = None
         for c in headers:
-            col = deepcopy(df[c])
+            col = deepcopy(canonical[c])
             # replace alternative nulls with pd.nan
             if nulls_list is not None:
                 col.replace(nulls_list, np.nan, inplace=True)
@@ -457,10 +526,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     col[col.isna()] = self._get_category(selection=result.get('selection'),
                                                          weight_pattern=result.get('weighting'), size=size)
-            df[c] = col
+            canonical[c] = col
         if inplace:
             return
-        return df
+        return canonical
 
     def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
                            save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
@@ -480,7 +549,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         headers = Commons.list_formatter(headers)
         for c in headers:
             for k, v in kwargs.items():
@@ -510,7 +579,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
-                df = deepcopy(canonical)
+                canonical = deepcopy(canonical)
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
         if 'canonical' not in local_kwargs:
             local_kwargs['canonical'] = canonical

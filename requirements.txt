@@ -4,19 +4,13 @@
 
 ###### Requirements without Version Specifiers ######
 setuptools
-discovery-foundation
+aistac-foundation
 pyyaml
 pandas
 numpy
 matplotlib
 scikit-learn
 seaborn
-xlsxwriter
-xlrd
-pyarrow
-boto3
-botocore
-requests
 
 # SQl and HTML libs
 #sqlalchemy

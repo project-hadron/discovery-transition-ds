@@ -1,3 +1,4 @@
+import decimal
 import re
 import threading
 from copy import deepcopy
@@ -141,3 +142,17 @@ class Commons(object):
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                           regex=regex, re_ignore_case=re_ignore_case)
         return df.loc[:, obj_cols]
+
+    @staticmethod
+    def col_width(df, column, as_value=False) -> tuple:
+        """ gets the max and min length or values of a column as a (max, min) tuple
+
+        :param df: the pandas.DataFrame
+        :param column: the column to find the max and min for
+        :param as_value: if the return should be a length or the values. Default is False
+        :return: returns a tuple with the (max, min) length or values
+        """
+        if as_value:
+            field_length = df[column].apply(str).str.len()
+            return df.loc[field_length.argmax(), column], df.loc[field_length.argmin(), column]
+        return df[column].apply(str).str.len().max(), df[column].apply(str).str.len().min()

@@ -19,7 +19,7 @@ class Transition(AbstractComponent):
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None):
-        """ Encapsulation class for the discovery set of classes
+        """ Encapsulation class for the transition set of classes
 
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
@@ -104,7 +104,7 @@ class Transition(AbstractComponent):
 
     @property
     def discover(self) -> DataDiscovery:
-        """The discovery instance"""
+        """The transition instance"""
         return DataDiscovery()
 
     @property
