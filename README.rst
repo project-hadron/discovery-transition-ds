@@ -186,7 +186,8 @@ If you are on linux or MacOS:
 
     $> vi ~/.bash_profile.
 
-2. Add the export command for each environment variable
+2. Add the export command for each environment variable setting your preferred paths in this example I am setting
+them to a demo projects folder
 
 .. code-block:: bash
 
