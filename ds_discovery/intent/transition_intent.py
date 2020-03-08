@@ -373,7 +373,7 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_select(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                   exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
                   save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
-        """ remove columns from the pandas.DataFrame
+        """ selects columns from the pandas.DataFrame
 
         :param df: the Pandas.DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type

@@ -359,70 +359,332 @@ Canonical Reporting
 
 Parameterised Intent
 --------------------
+Parameterised intent is a core concept and represents the intended action and defining functions of the component.
+Each method is known as a component intent and the parameters the task parameterisation of that intent. The intent
+and its parameters are saved and can be replayed using the ``run_intent_pipeline(canonical)`` method
+
+The following sections are a brief description of the intent and its parameters. To retrieve the list of available
+intent methods in code run:
 
 .. code-block:: python
 
     tr.intent_model.__dir__()
 
-.. autoclass:: ds_discovery.intent.transition_intent.TransitionIntentModel
-    :members:
-
 auto_clean_header
 ~~~~~~~~~~~~~~~~~
+clean the headers of a pandas DataFrame replacing space with underscore
+
+        :df: the pandas.DataFrame to drop duplicates from
+        :rename_map: a from: to dictionary of headers to rename
+        :case: changes the headers to lower, upper, title, snake. if none of these then no change
+        :replace_spaces: character to replace spaces with. Default is '_' (underscore)
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 auto_drop_correlated
 ~~~~~~~~~~~~~~~~~~~~
+uses 'brute force' techniques to removes highly correlated columns based on the threshold,
+        set by default to 0.998.
+
+        :df: data: the Canonical data to drop duplicates from
+        :threshold: (optional) threshold correlation between columns. default 0.998
+        :inc_category: (optional) if category type columns should be converted to numeric representations
+        :sample_percent: a sample percentage between 0.5 and 1 to avoid over-fitting. Default is 0.85
+        :random_state: a random state should be applied to the test train split. Default is None
+        :inplace: if the passed Canonical, should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy Canonical,.
 
 auto_remove_columns
 ~~~~~~~~~~~~~~~~~~~
+auto removes columns that are np.NaN, a single value or have a predominant value greater than.
+
+        :df: the pandas.DataFrame to auto remove
+        :null_min: the minimum number of null values default to 0.998 (99.8%) nulls
+        :predominant_max: the percentage max a single field predominates default is 0.998
+        :nulls_list: can be boolean or a list:
+                    if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None', ' ']
+                    if list then this is considered potential null values.
+        :auto_contract: if the auto_category or to_category should be returned
+        :test_size: a test percentage split from the df to avoid over-fitting. Default is 0 for no split
+        :random_state: a random state should be applied to the test train split. Default is None
+        :drop_empty_row: also drop any rows where all the values are empty
+        :inplace: if to change the passed pandas.DataFrame or return a copy (see return)
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 auto_to_category
 ~~~~~~~~~~~~~~~~
+auto categorises columns that have a max number of uniqueness with a min number of nulls
+        and are object dtype
 
-filter_columns
-~~~~~~~~~~~~~~
-
-filter_headers
-~~~~~~~~~~~~~~
-
-run_intent_pipeline
-~~~~~~~~~~~~~~~~~~~
+        :df: the pandas.DataFrame to auto categorise
+        :unique_max: the max number of unique values in the column. default to 20
+        :null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
+        :fill_nulls: a value to fill nulls that then can be identified as a category type
+        :nulls_list:  potential null values to replace.
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_bool_type
 ~~~~~~~~~~~~
+converts column to bool based on the map
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :bool_map: a mapping of what to make True and False
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_category_type
 ~~~~~~~~~~~~~~~~
+converts columns to categories
 
-to_date_from_excel_type
-~~~~~~~~~~~~~~~~~~~~~~~
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :as_num: if true returns the category as a category code
+        :fill_nulls: a value to fill nulls that then can be identified as a category type
+        :nulls_list:  potential null values to replace.
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_date_type
 ~~~~~~~~~~~~
+converts columns to date types
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :as_num: if true returns number of days since 0001-01-01 00:00:00 with fraction being hours/mins/secs
+        :year_first: specifies if to parse with the year first
+                If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
+                If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
+        :day_first: specifies if to parse with the day first
+                If True, parses dates with the day first, eg %d-%m-%Y.
+                If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+        :date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_float_type
 ~~~~~~~~~~~~~
+converts columns to float type
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :precision: how many decimal places to set the return values. if None then the number is unchanged
+        :fillna: { num_value, 'mean', 'mode', 'median' }. Default to np.nan
+                    - If num_value, then replaces NaN with this number value
+                    - If 'mean', then replaces NaN with the mean of the column
+                    - If 'mode', then replaces NaN with a mode of the column. random sample if more than 1
+                    - If 'median', then replaces NaN with the median of the column
+        :errors: {'ignore', 'raise', 'coerce'}, default 'coerce' }. Default to 'coerce'
+                    - If 'raise', then invalid parsing will raise an exception
+                    - If 'coerce', then invalid parsing will be set as NaN
+                    - If 'ignore', then invalid parsing will return the input
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_int_type
 ~~~~~~~~~~~
+converts columns to int type
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :fillna: { num_value, 'mean', 'mode', 'median' }. Default to 0
+                    - If num_value, then replaces NaN with this number value
+                    - If 'mean', then replaces NaN with the mean of the column
+                    - If 'mode', then replaces NaN with a mode of the column. random sample if more than 1
+                    - If 'median', then replaces NaN with the median of the column
+        :errors: {'ignore', 'raise', 'coerce'}, default 'coerce'
+                    - If 'raise', then invalid parsing will raise an exception
+                    - If 'coerce', then invalid parsing will be set as NaN
+                    - If 'ignore', then invalid parsing will return the input
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_normalised
 ~~~~~~~~~~~~~
+converts columns to float type
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :precision: how many decimal places to set the return values. if None then the number is unchanged
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_numeric_type
 ~~~~~~~~~~~~~~~
+converts columns to int type
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :precision: how many decimal places to set the return values. if None then the number is unchanged
+        :fillna: { num_value, 'mean', 'mode', 'median' }. Default to np.nan
+                    - If num_value, then replaces NaN with this number value. Must be a value not a string
+                    - If 'mean', then replaces NaN with the mean of the column
+                    - If 'mode', then replaces NaN with a mode of the column. random sample if more than 1
+                    - If 'median', then replaces NaN with the median of the column
+        :errors: {'ignore', 'raise', 'coerce'}, default 'coerce'
+                    - If 'raise', then invalid parsing will raise an exception
+                    - If 'coerce', then invalid parsing will be set as NaN
+                    - If 'ignore', then invalid parsing will return the input
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_remove
 ~~~~~~~~~
+remove columns from the pandas.DataFrame
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_select
 ~~~~~~~~~
+selects columns from the pandas.DataFrame
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 to_str_type
 ~~~~~~~~~~~
+converts columns to object type
+
+        :df: the Pandas.DataFrame to get the column headers from
+        :headers: a list of headers to drop or filter on type
+        :drop: to drop or not drop the headers
+        :dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :exclude: to exclude or include the dtypes
+        :regex: a regular expression to search the headers
+        :re_ignore_case: true if the regex should ignore case. Default is False
+        :use_string_type: if the dtype 'string' should be used or keep as object type
+        :fill_nulls: a value to fill nulls that then can be identified as a category type
+        :nulls_list:  potential null values to replace.
+        :nulls_list: can be boolean or a list:
+                    if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None'. np.nan, None]
+                    if list then this is considered potential null values.
+        :inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :save_intent: (optional) if the intent contract should be saved to the property manager
+        :intent_level: (optional) the level of the intent,
+                        If None: default's 0 unless the global intent_next_available is true then -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
 
 Persist the Transitioned Canonical
 ----------------------------------
+
 
 Save Clean Canonical
 ~~~~~~~~~~~~~~~~~~~~
