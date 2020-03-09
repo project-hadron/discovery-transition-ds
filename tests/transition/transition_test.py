@@ -50,7 +50,7 @@ class TransitionTest(unittest.TestCase):
                                       handler="ManagedContentPersistHandler",
                                       token="i9nRzL3NlY3JldN1cnJlbnQtdXNlci1kZXRhaWxzIjpbIlJFQUQiXS2dyYXBoLy4qI_XyiEd0e4",
                                       api_endpoint="https://api.hotfix.accelerators-dci.insights.ai")
-        tr.set_persist_contract(connector_contract=connector, save=True)
+        tr.set_feature_contract(connector_contract=connector, save=True)
         self.assertEqual(connector.uri, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).uri)
         self.assertEqual(connector.module_name, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).module_name)
         self.assertEqual(connector.handler, tr.pm.get_connector_contract(tr.CONNECTOR_PERSIST).handler)
@@ -101,7 +101,7 @@ class TransitionTest(unittest.TestCase):
 
     def test_factory_remote(self):
         tr = Transition.from_env('test_factory')
-        tr.set_persist_contract(uri="s3://aistac-transition-persist/persist/transition/test.pkl")
+        tr.set_feature_contract(uri="s3://aistac-transition-persist/persist/transition/test.pkl")
         tr.set_source_contract(uri='s3://aistac-transition-persist/data/synthetic/synthetic_customer.csv',
                                module_name=tr.MODULE_NAME, handler=tr.HANDLER_SOURCE)
         df = tr.load_source_canonical()
@@ -259,7 +259,7 @@ class TransitionTest(unittest.TestCase):
     def test_refresh_canonical(self):
         tr = Transition.from_env('synthetic')
         df = tr.set_source_contract(uri='synthetic.csv', sep=',', encoding='latin1', load=True)
-        tr.set_persist_contract()
+        tr.set_feature_contract()
         self.assertEqual((5000, 14), df.shape)
         tr.set_cleaner(tr.clean.auto_clean_header(df, rename_map={'start': 'start_date'}, inplace=True))
         tr.set_cleaner(tr.clean.auto_remove_columns(df, null_min=0.99, predominant_max=0.90, inplace=True, nulls_list=['']))
@@ -315,7 +315,7 @@ class TransitionTest(unittest.TestCase):
         self.assertTrue("The connector 'origin_connector' has not been set" in str(context.exception))
         tr.set_source_contract(resource='synthetic.csv', connector_type='csv', location=os.environ['DTU_ORIGIN_PATH'],
                                     module_name=tr.MODULE_NAME, handler=tr.SOURCE_HANDLER, sep=',', encoding='latin1', load=False)
-        tr.set_persist_contract()
+        tr.set_feature_contract()
         tr.load_source_canonical()
         self.assertFalse(tr.is_source_modified())
         connector_contract = tr.pm.get_connector_contract(tr.ORIGIN_CONNECTOR)
@@ -326,7 +326,7 @@ class TransitionTest(unittest.TestCase):
     def test_source_load_change(self):
         tr = Transition.from_env('synthetic')
         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
-        tr.set_persist_contract()
+        tr.set_feature_contract()
         df = tr.load_source_canonical()
         self.assertEqual((5000, 14), df.shape)
         Customer.generate(extra=True)
@@ -337,7 +337,7 @@ class TransitionTest(unittest.TestCase):
     def test_reload_instance(self):
         control = Transition.from_env('synthetic_test')
         control.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
-        control.set_persist_contract()
+        control.set_feature_contract()
         control.set_version('v_test')
         control.persist_contract()
         contract = control.pm.get(control.pm.KEY.contract_key)

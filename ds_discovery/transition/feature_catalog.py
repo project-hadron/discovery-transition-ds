@@ -11,7 +11,6 @@ from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 class FeatureCatalog(AbstractComponent):
 
     CONNECTOR_SOURCE = 'source_connector'
-    CONNECTOR_FRAME = 'frame_connector'
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
                  default_save=None):
@@ -111,20 +110,19 @@ class FeatureCatalog(AbstractComponent):
         """Test if the source file is modified since last load"""
         return self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE)
 
-    def get_frame_contract(self, connector_name: str=None) -> ConnectorContract:
-        """ gets the frame connector contract that can be used as the next chain source
+    def get_feature_contract(self, feature_name: str=None) -> ConnectorContract:
+        """ gets the feature connector contract
 
-        :param connector_name: (optional) a connector name if not using the default
+        :param feature_name: The unique name of the feature
         :return: connector contract
         """
-        connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
-        return self.pm.get_connector_contract(connector_name=connector_name)
+        return self.pm.get_connector_contract(connector_name=feature_name)
 
     def set_source_contract(self, connector_contract: ConnectorContract, template_aligned: bool=None, save: bool=None):
         """ Sets the source contract
 
         :param connector_contract: a Connector Contract for the properties persistence
-        :param
+        :param template_aligned: if the source contact should align with the template changes
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
@@ -135,18 +133,20 @@ class FeatureCatalog(AbstractComponent):
         self.pm_persist(save)
         return
 
-    def set_persist_contract(self, connector_contract: ConnectorContract, connector_name: str=None, save: bool=None):
+    def set_feature_contract(self, feature_name: str, connector_contract: ConnectorContract,
+                             template_aligned: bool=None, save: bool=None):
         """ Sets the persist contract.
 
+        :param feature_name: the unique name of the feature
         :param connector_contract: a Connector Contract for the properties persistence
-        :param connector_name: (optional) a connector name if not using the default
+        :param template_aligned: if the source contact should align with the template changes
         :param save: (optional) if True, save to file. Default is True
         """
         save = save if isinstance(save, bool) else self._default_save
-        connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
-        if self.pm.has_connector(connector_name):
-            self.remove_connector_contract(connector_name)
-        self.pm.set_connector_contract(connector_name=connector_name, connector_contract=connector_contract)
+        if self.pm.has_connector(feature_name):
+            self.remove_connector_contract(feature_name)
+        self.pm.set_connector_contract(connector_name=feature_name, connector_contract=connector_contract,
+                                       aligned=template_aligned)
         self.pm_persist(save)
         return
 
@@ -159,28 +159,27 @@ class FeatureCatalog(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE, save=save)
 
-    def set_persist(self, uri_file: str=None, save: bool=None):
-        """sets the persist frame contract CONNECTOR_FRAME using the TEMPLATE_PERSIST connector contract
+    def set_persist(self, feature_name: str, save: bool=None):
+        """sets the persist feature contract using the TEMPLATE_PERSIST connector contract
 
-        :param uri_file: (optional) the uri_file is appended to the template path
+        :param feature_name: the unique name of the feature
         :param save: (optional) if True, save to file. Default is True
         """
-        uri_file = uri_file if isinstance(uri_file, str) else self.pm.file_pattern(connector_name=self.CONNECTOR_FRAME)
-        self.add_connector_from_template(connector_name=self.CONNECTOR_FRAME, uri_file=uri_file,
+        uri_file = self.pm.file_pattern(connector_name=feature_name)
+        self.add_connector_from_template(connector_name=feature_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save)
 
     def load_source_canonical(self) -> [pd.DataFrame]:
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(connector_name=self.CONNECTOR_SOURCE)
 
-    def load_frame_canonical(self, connector_name: str=None) -> pd.DataFrame:
-        """returns the contracted source data as a DataFrame
+    def load_feature_canonical(self, feature_name: str) -> pd.DataFrame:
+        """returns the feature data as a DataFrame
 
-        :param connector_name: (optional) a connector name if not using the default
+        :param feature_name: a unique feature name
         :return: pandas DataFrame
         """
-        connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
-        return self.load_canonical(connector_name=connector_name)
+        return self.load_canonical(connector_name=feature_name)
 
     def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
@@ -192,20 +191,19 @@ class FeatureCatalog(AbstractComponent):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
 
-    def save_frame_canonical(self, canonical, connector_name: str=None):
-        """Saves the pandas.DataFrame to the clean files folder
+    def save_feature_canonical(self, canonical, feature_name: str):
+        """Saves the pandas.DataFrame to the feature catalog
 
         :param canonical: the pandas DataFrame
-        :param connector_name: (optional) a connector name if not using the default
+        :param feature_name: a unique feature name
         """
-        connector_name = connector_name if isinstance(connector_name, str) else self.CONNECTOR_FRAME
-        self.persist_canonical(connector_name=connector_name, canonical=canonical)
+        self.persist_canonical(connector_name=feature_name, canonical=canonical)
 
     def run_feature_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the feature pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels)
-        self.save_frame_canonical(result)
+        self.save_feature_canonical(result)
 
     @staticmethod
     def canonical_report(df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
@@ -223,6 +221,30 @@ class FeatureCatalog(AbstractComponent):
         """
         return DataDiscovery.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
+
+    def report_feature_catalog(self, connector_filter: [str, list]=None, stylise: bool=True):
+        """ generates a report on the source contract
+
+        :param connector_filter: (optional) filters on the connector name.
+        :param stylise: (optional) returns a stylised DataFrame with formatting
+        :return: pd.DataFrame
+        """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+        connector_filter = self.pm.list_formatter(connector_filter)
+        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
+        df.rename(columns={'connector_name': 'feature_name'}, inplace=True)
+        df.set_index(keys='feature_name', inplace=True)
+        df.drop(labels=[self.CONNECTOR_SOURCE, self.TEMPLATE_PERSIST,  self.TEMPLATE_SOURCE,
+                        self.pm.CONNECTOR_PM_CONTRACT], inplace=True, errors='ignore')
+
+        if stylise:
+            df.reset_index(inplace=True)
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['feature_name'], **{'font-weight': 'bold'})
+            return df_style
+        return df
 
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract
