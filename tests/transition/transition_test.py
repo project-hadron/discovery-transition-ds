@@ -2,6 +2,7 @@ import os
 import shutil
 import unittest
 import numpy as np
+import pandas as pd
 
 from pathlib import Path
 
@@ -77,6 +78,10 @@ class TransitionTest(unittest.TestCase):
         os.unsetenv('AISTAC_PM_MODULE')
         os.unsetenv('AISTAC_PM_HANDLER')
 
+
+    """
+        OLD STUFF BELLOW
+    """
 
     def test_report_connectors(self):
         pm = TransitionPropertyManager('task')

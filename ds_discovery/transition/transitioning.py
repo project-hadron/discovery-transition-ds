@@ -286,3 +286,18 @@ class Transition(AbstractComponent):
             Commons.report(df, index_header='section', bold='label')
         df.set_index(keys='section', inplace=True)
         return df
+
+    def upload_notes(self, canonical: pd.DataFrame, catalog: str, label_key: str, text_key: str, constraints: list=None,
+                     save=None):
+        """ Allows bulk upload of notes. Assumes a dictionary of key value pairs where the key is the
+        label and the value the text
+
+        :param canonical: a DataFrame of where the key is the label and value is the text
+        :param catalog: the section these notes should be put in
+        :param label_key: the dictionary key name for the labels
+        :param text_key: the dictionary key name for the text
+        :param constraints: (optional) the limited list of acceptable labels. If not in list then ignored
+        :param save: if True, save to file. Default is True
+        """
+        super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key, text_key=text_key,
+                             constraints=constraints, save=save)
