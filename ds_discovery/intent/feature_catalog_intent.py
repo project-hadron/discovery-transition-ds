@@ -624,6 +624,49 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return canonical
         return result
 
+    def merge_features(self, canonical_left, canonical_right, on=None, left_on=None, right_on=None, how='left',
+                       left_index=False, right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False,
+                       validate=None, save_intent: bool=None, intent_level: [int, str]=None):
+        """ converts columns to object type
+
+        :param canonical_left: A DataFrame object.
+        :param canonical_right: Another DataFrame object.
+        :param on: Column or index level names to join on. Must be found in both the left and right DataFrame objects.
+                If not passed and left_index and right_index are False, the intersection of the columns in the
+                DataFrames will be inferred to be the join keys.
+        :param left_on: Columns or index levels from the left DataFrame to use as keys. Can either be column names,
+                index level names, or arrays with length equal to the length of the DataFrame.
+        :param right_on: Columns or index levels from the right DataFrame to use as keys. Can either be column names,
+                index level names, or arrays with length equal to the length of the DataFrame.
+        :param left_index: If True, use the index (row labels) from the left DataFrame as its join key(s). In the case
+                of a DataFrame with a MultiIndex (hierarchical), the number of levels must match the number of join
+                keys from the right DataFrame.
+        :param right_index: Same usage as left_index for the right DataFrame
+        :param how: One of 'left', 'right', 'outer', 'inner'. Defaults to inner.
+        :param sort: Sort the result DataFrame by the join keys in lexicographical order. Defaults to True, setting
+                to False will improve performance substantially in many cases.
+        :param suffixes: A tuple of string suffixes to apply to overlapping columns. Defaults to ('_x', '_y').
+                not necessary. Cannot be avoided in many cases but may improve performance / memory usage. The cases
+                where copying can be avoided are somewhat pathological but this option is provided nonetheless.
+        :param indicator:
+        :param validate : string, default None. If specified, checks if merge is of specified type.
+                    “one_to_one” or “1:1”: checks if merge keys are unique in both left and right datasets.
+                    “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
+                    “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
+                    “many_to_many” or “m:m”: allowed, but does not result in checks.
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) a level to place the intent
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # intend code block on the canonical
+        df = pd.merge(left=canonical_left, right=canonical_right, how=how, on=on, left_on=left_on, right_on=right_on,
+                      left_index=left_index, right_index=right_index, copy=True, sort=sort, suffixes=suffixes,
+                      indicator=indicator, validate=validate)
+        return df
+
     """
         PRIVATE METHODS SECTION
     """
