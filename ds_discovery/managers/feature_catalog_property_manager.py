@@ -1,7 +1,8 @@
-import re
 from aistac.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
+
+from ds_discovery.transition.commons import Commons
 
 
 class FeatureCatalogPropertyManager(AbstractPropertyManager):
@@ -11,3 +12,9 @@ class FeatureCatalogPropertyManager(AbstractPropertyManager):
         root_keys = []
         knowledge_keys = ['features', 'observations', 'actions', 'frames']
         super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys)
+
+    @staticmethod
+    def list_formatter(value) -> list:
+        """override of the list_formatter to include Pandas types"""
+        return Commons.list_formatter(value=value)
+
