@@ -159,7 +159,7 @@ class FeatureCatalog(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE, save=save)
 
-    def set_persist(self, feature_name: str, save: bool=None):
+    def set_catalog_feature(self, feature_name: str, save: bool=None):
         """sets the persist feature contract using the TEMPLATE_PERSIST connector contract
 
         :param feature_name: the unique name of the feature
@@ -173,7 +173,7 @@ class FeatureCatalog(AbstractComponent):
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(connector_name=self.CONNECTOR_SOURCE)
 
-    def load_feature_canonical(self, feature_name: str) -> pd.DataFrame:
+    def load_catalog_feature(self, feature_name: str) -> pd.DataFrame:
         """returns the feature data as a DataFrame
 
         :param feature_name: a unique feature name
@@ -191,7 +191,7 @@ class FeatureCatalog(AbstractComponent):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
 
-    def save_feature_canonical(self, canonical, feature_name: str):
+    def save_catalog_feature(self, canonical, feature_name: str):
         """Saves the pandas.DataFrame to the feature catalog
 
         :param canonical: the pandas DataFrame
@@ -203,7 +203,7 @@ class FeatureCatalog(AbstractComponent):
         """Runs the feature pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels)
-        self.save_feature_canonical(result)
+        self.save_catalog_feature(result)
 
     @staticmethod
     def canonical_report(df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
@@ -238,6 +238,7 @@ class FeatureCatalog(AbstractComponent):
         df.set_index(keys='feature_name', inplace=True)
         df.drop(labels=[self.CONNECTOR_SOURCE, self.TEMPLATE_PERSIST,  self.TEMPLATE_SOURCE,
                         self.pm.CONNECTOR_PM_CONTRACT], inplace=True, errors='ignore')
+        df.drop(columns=['module_name', 'handler', 'kwargs', 'query', 'aligned'], inplace=True, errors='ignore')
 
         if stylise:
             df.reset_index(inplace=True)
