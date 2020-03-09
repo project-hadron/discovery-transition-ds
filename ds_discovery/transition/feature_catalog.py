@@ -173,13 +173,17 @@ class FeatureCatalog(AbstractComponent):
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(connector_name=self.CONNECTOR_SOURCE)
 
-    def load_catalog_feature(self, feature_name: str) -> pd.DataFrame:
+    def load_catalog_feature(self, feature_name: str, reset_index: bool=None) -> pd.DataFrame:
         """returns the feature data as a DataFrame
 
         :param feature_name: a unique feature name
+        :param reset_index: if the index should be reset bringing the key into the columns
         :return: pandas DataFrame
         """
-        return self.load_canonical(connector_name=feature_name)
+        canonical = self.load_canonical(connector_name=feature_name)
+        if isinstance(reset_index, bool) and reset_index:
+            canonical.reset_index(inplace=True)
+        return canonical
 
     def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
