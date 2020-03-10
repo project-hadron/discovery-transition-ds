@@ -159,13 +159,19 @@ class FeatureCatalog(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE, save=save)
 
-    def set_catalog_feature(self, feature_name: str, save: bool=None):
+    def set_catalog_feature(self, feature_name: str, versioned: bool=None, stamped: bool=None, file_type: str=None,
+                            save: bool=None):
         """sets the persist feature contract using the TEMPLATE_PERSIST connector contract
 
         :param feature_name: the unique name of the feature
+        :param versioned: (optional) if the component version should be included as part of the pattern
+        :param stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
+        :param file_type: (optional) a connector supported file extension type different from the default e.g. 'csv'
         :param save: (optional) if True, save to file. Default is True
         """
-        uri_file = self.pm.file_pattern(connector_name=feature_name)
+        versioned = versioned if isinstance(versioned, bool) else True
+        uri_file = self.pm.file_pattern(connector_name=feature_name, versioned=versioned, stamped=stamped,
+                                        file_type=file_type)
         self.add_connector_from_template(connector_name=feature_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save)
 
@@ -202,12 +208,6 @@ class FeatureCatalog(AbstractComponent):
         :param feature_name: a unique feature name
         """
         self.persist_canonical(connector_name=feature_name, canonical=canonical)
-
-    def run_feature_pipeline(self, intent_levels: [str, int, list]=None):
-        """Runs the feature pipeline from source to persist"""
-        canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels)
-        self.save_catalog_feature(result)
 
     @staticmethod
     def canonical_report(df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
