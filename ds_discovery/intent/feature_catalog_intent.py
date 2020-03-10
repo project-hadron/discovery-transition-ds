@@ -37,7 +37,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
-        intent_param_exclude = ['df', 'canonical', 'canonical_left', 'canonical_right', 'inplace']
+        intent_param_exclude = ['df', 'canonical', 'feature', 'inplace']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
         intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
         super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
@@ -242,8 +242,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
-                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, inplace: bool=False,
-                       save_intent: bool=None, intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, drop_dup_index: str=None,
+                       inplace: bool=False, save_intent: bool=None,
+                       intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
@@ -256,6 +257,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param weighting_precision: a precision for the weighting values
         :param remove_aggregated: if used in conjunction with the weighting then drops the aggrigator column
         :param remove_weighting_zeros: removes zero values
+        :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -276,7 +278,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         group_by = self._pm.list_formatter(group_by)
         df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
         df_sub = df_sub.groupby(group_by).agg(aggregator)
-        # df_sub = df_sub.sort_values(by=group_by, ascending=False).reset_index()
         if include_weighting:
             df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
             total = df_sub['sum'].sum()
@@ -286,6 +287,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             if remove_weighting_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
             df_sub = df_sub.sort_values(by='weighting', ascending=False)
+        if isinstance(drop_dup_index, str) and drop_dup_index.lower() in ['first', 'last']:
+            df_sub = df_sub.loc[~df_sub.index.duplicated(keep=drop_dup_index)]
         if remove_aggregated:
             df_sub = df_sub.drop(headers, axis=1)
         if drop_group_by:
@@ -623,49 +626,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if result is None:
             return canonical
         return result
-
-    def merge_features(self, canonical_left, canonical_right, on=None, left_on=None, right_on=None, how='left',
-                       left_index=False, right_index=False, sort=True, suffixes=('_x', '_y'), indicator=False,
-                       validate=None, save_intent: bool=None, intent_level: [int, str]=None):
-        """ converts columns to object type
-
-        :param canonical_left: A DataFrame object.
-        :param canonical_right: Another DataFrame object.
-        :param on: Column or index level names to join on. Must be found in both the left and right DataFrame objects.
-                If not passed and left_index and right_index are False, the intersection of the columns in the
-                DataFrames will be inferred to be the join keys.
-        :param left_on: Columns or index levels from the left DataFrame to use as keys. Can either be column names,
-                index level names, or arrays with length equal to the length of the DataFrame.
-        :param right_on: Columns or index levels from the right DataFrame to use as keys. Can either be column names,
-                index level names, or arrays with length equal to the length of the DataFrame.
-        :param left_index: If True, use the index (row labels) from the left DataFrame as its join key(s). In the case
-                of a DataFrame with a MultiIndex (hierarchical), the number of levels must match the number of join
-                keys from the right DataFrame.
-        :param right_index: Same usage as left_index for the right DataFrame
-        :param how: One of 'left', 'right', 'outer', 'inner'. Defaults to inner.
-        :param sort: Sort the result DataFrame by the join keys in lexicographical order. Defaults to True, setting
-                to False will improve performance substantially in many cases.
-        :param suffixes: A tuple of string suffixes to apply to overlapping columns. Defaults to ('_x', '_y').
-                not necessary. Cannot be avoided in many cases but may improve performance / memory usage. The cases
-                where copying can be avoided are somewhat pathological but this option is provided nonetheless.
-        :param indicator:
-        :param validate : string, default None. If specified, checks if merge is of specified type.
-                    “one_to_one” or “1:1”: checks if merge keys are unique in both left and right datasets.
-                    “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
-                    “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
-                    “many_to_many” or “m:m”: allowed, but does not result in checks.
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
-        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
-        # intend code block on the canonical
-        df = pd.merge(left=canonical_left, right=canonical_right, how=how, on=on, left_on=left_on, right_on=right_on,
-                      left_index=left_index, right_index=right_index, copy=True, sort=sort, suffixes=suffixes,
-                      indicator=indicator, validate=validate)
-        return df
 
     """
         PRIVATE METHODS SECTION
