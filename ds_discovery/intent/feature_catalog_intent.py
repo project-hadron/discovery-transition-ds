@@ -21,7 +21,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=True,
-                 intent_next_available: bool=None, default_replace_intent: bool=None, intent_type_additions: list=None):
+                 default_intent_level: [int, float, str]=None, default_replace_intent: bool=None,
+                 intent_type_additions: list=None):
         """initialisation of the Intent class. The 'intent_param_exclude' is used to exclude commonly used method
          parameters from being included in the intent contract, this is particularly useful if passing a canonical, or
          non relevant parameters to an intent method pattern. Any named parameter in the intent_param_exclude list
@@ -29,14 +30,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager
-        :param intent_next_available: (optional) if the default level should be set to next available level or zero
+        :param default_intent_level: (optional) The default intent level
         :param default_replace_intent: (optional) the default replace strategy for the same intent found at that level
         :param intent_type_additions: (optional) if additional data types need to be supported as an intent param
         """
         # set all the defaults
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
-        default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
+        default_intent_level = default_intent_level if isinstance(default_intent_level, (int, float, str)) else -1
         intent_param_exclude = ['df', 'canonical', 'feature', 'inplace']
         intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
         intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
