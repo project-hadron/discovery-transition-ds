@@ -61,7 +61,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['genre'] = self.tools.get_category( selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
         df['EndType'] = self.tools.get_category(selection=['Ad End', 'Ad Start', 'Undefined', 'Video End', 'Video Start'],
                                                 weight_pattern=[1, 3, 1, 6, 2], size=20)
-        result1 = self.intent.apply_condition(df, key='cu_id', column='EndType', condition="== 'Video End'")
+        result1 = self.intent.apply_where(df, key='cu_id', column='EndType', condition="== 'Video End'")
         self.assertEqual(1, result1['EndType'].nunique())
         eb = PandasEventBook('test_book')
         result2 = self.intent.run_intent_pipeline(df, event_book=eb)
@@ -121,7 +121,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['key'] = [1,2,3,4,5,6,3,5,1]
         df['values'] = [10, 3, 1, 5, 6, 10, 2, 4, 5]
         conditions = [('< 5',  '-1'), ('> 5',  '1')]
-        result = self.intent.apply_selection(df, key='key', column='values', conditions=conditions, default=0)
+        result = self.intent.apply_condition(df, key='key', column='values', conditions=conditions, default=0)
         print(result['values'].to_list())
 
 

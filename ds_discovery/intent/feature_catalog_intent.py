@@ -114,7 +114,39 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_diff[label] = canonical[label].copy()
         return self.group_features(df_diff, headers=label, group_by=key, aggregator=aggregator)
 
-    def apply_selection(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
+    def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
+                       drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
+                       re_ignore_case: bool=False, drop_dup_index: str=None, save_intent: bool=None,
+                       intent_level: [int, str]=None) -> pd.DataFrame:
+        """ used for feature attribution allowing columns to be selected directly from the canonical attributes
+
+        :param canonical: the Pandas.DataFrame to get the selection from
+        :param key: the key column to index on
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) a level to place the intent
+        :return: selected list of headers indexed on key
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, save_intent=save_intent)
+        # Code block for intent
+        filter_headers = Commons.filter_headers(df=canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+                                                regex=regex, re_ignore_case=re_ignore_case)
+
+        filter_headers += self._pm.list_formatter(key)
+        df_rtn = Commons.filter_columns(canonical, headers=filter_headers, inplace=False)
+        if isinstance(drop_dup_index, str) and drop_dup_index.lower() in ['first', 'last']:
+            df_rtn = df_rtn.loc[~df_rtn.index.duplicated(keep=drop_dup_index)]
+        return df_rtn.set_index(key)
+
+    def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
                         default: [int, float, str]=None, label: str=None, save_intent: bool=None,
                         intent_level: [int, str]=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
@@ -174,9 +206,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     #     # choices = ['yellow', 'blue', 'purple']
     #     # df['color'] = np.select(conditions, choices, default='black')
 
-    def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: [str, list], condition: str,
-                        outcome: str=None, otherwise: str=None, save_intent: bool=None,
-                        intent_level: [int, str]=None) -> pd.DataFrame:
+    def apply_where(self, canonical: pd.DataFrame, key: [str, list], column: [str, list], condition: str,
+                    outcome: str=None, otherwise: str=None, save_intent: bool=None,
+                    intent_level: [int, str]=None) -> pd.DataFrame:
         """applies a condition to the given column label returning the result with the key as index. For the
         'condition', 'outcome' or 'otherwise' parameters that reference the original DataFrame, use 'canonical' as
         the DataFrame name e.g "canonical['ref_column'] > 23"
