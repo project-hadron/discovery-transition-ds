@@ -170,12 +170,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # Code block for intent
         key = self._pm.list_formatter(key)
         label = label if isinstance(label, str) else column
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         df_rtn = Commons.filter_columns(canonical, headers=key)
         str_code = ''
         if isinstance(conditions, tuple):
             conditions = [conditions]
-        if isinstance(unindex, bool) and unindex:
-            canonical.reset_index(inplace=True)
         choices = []
         str_code = []
         for item, choice in conditions:
