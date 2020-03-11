@@ -18,6 +18,7 @@ import re
 
 here = path.abspath(path.dirname(__file__))
 
+
 def read(*parts):
     filename = path.join(here, *parts)
     with open(filename, encoding='utf-8') as fp:
@@ -65,7 +66,7 @@ setup(
     install_requires=[
         'aistac-foundation',
         'pyyaml',
-        'pandas>1.0',
+        'pandas>0.25',
         'numpy',
         'matplotlib',
         'seaborn',

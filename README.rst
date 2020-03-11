@@ -1,23 +1,31 @@
-Augmented Intent - Single Task Adaptive Components (AI-STAC)
-############################################################
-
-Augmented Intent - Single Task Adaptive Components (AI-STAC) is a unique approach to data recovery, discovery and
-modeling that innovates the approach to data science and it's transition to productionisation. it's origins care from
-an incubator project that shadowed a team of Ph.D. data scientists in connection with the development and delivery
-of machine learning initiatives to define measurable benefit propositions for customer success. From this, a number of
-observable 'capabilities' were identified as unique and separate concerns. The challenges of the data scientist were
-effectively leveraging that separation of concern and distribute and loosely couple the specialist capability needs
-to the appropriate skills set. In addition the need to separate data from 'intent' (data), and intent from the
-parametrisation of that intent.
+AI-STAC Discovery Transition and Feature Catalog
+################################################
 
 .. class:: no-web no-pdf
 
-|pypi| |rdt| |license| |wheel|
+|pypi| |license| |wheel|
 
 
 .. contents::
 
 .. section-numbering::
+
+What is AI-STAC
+===============
+
+Augmented Intent - Single Task Adaptive Components (AI-STAC) is a unique approach to data recovery, discovery, synthesis
+and modeling that innovates the approach to data science and it's transition to production. it's origins came
+from an incubator project that shadowed a team of Ph.D. data scientists in connection with the development and delivery
+of machine learning initiatives to define measurable benefit propositions for customer success. From this, a number of
+observable 'capabilities' were identified as unique and separate concerns. The challenges of the data scientist, and in
+turn the production teams, were to effectively leveraging that separation of concern and distribute and loosely couple
+the specialist capability needs to the appropriate skills set.
+
+In addition the need to remove the opaque nature of the machine learning end-to-end required better transparency and
+traceability, to better inform to the broadest of interested parties and be able to adapt without leaving being the
+code 'sludge' of redundant ideas. AI-STAC is a disruptive innovation, changing the way we approach the challenges of
+Machine Learning and Augmented Inelegance, introduces the ideas of 'Single Task Adaptive Component' around the
+core concept of 'Parameterised Intent'
 
 Main features
 =============
@@ -279,7 +287,7 @@ To retrieve the list of allowed ``catalog`` sections we use the property method:
     tr.notes_catalog
 
 
-We now have our Transition instance and had we previoulsy set it up it will contain all the previoulsy set
+We now have our Transition instance and had we previously set it up it will contain all the previously set
 Property Contract
 
 One-Time Connectors Settings
@@ -373,15 +381,20 @@ intent methods in code run:
 
 auto_clean_header
 ~~~~~~~~~~~~~~~~~
-clean the headers of a pandas DataFrame replacing space with underscore
+.. parsed-literal::
 
-        :df: the pandas.DataFrame to drop duplicates from
-        :rename_map: a from: to dictionary of headers to rename
-        :case: changes the headers to lower, upper, title, snake. if none of these then no change
-        :replace_spaces: character to replace spaces with. Default is '_' (underscore)
-        :inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :save_intent: (optional) if the intent contract should be saved to the property manager
-        :intent_level: (optional) the level of the intent,
+    def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=False,
+                          save_intent: bool=None, intent_level: [int, str]=None):
+
+        clean the headers of a pandas DataFrame replacing space with underscore
+
+        :param df: the pandas.DataFrame to drop duplicates from
+        :param rename_map: a from: to dictionary of headers to rename
+        :param case: changes the headers to lower, upper, title, snake. if none of these then no change
+        :param replace_spaces: character to replace spaces with. Default is '_' (underscore)
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level of the intent,
                         If None: default's 0 unless the global intent_next_available is true then -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist

@@ -305,8 +305,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 canonical = deepcopy(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
-        if drop_group_by and str(aggregator).startswith('nunique'):
-            raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
+        # if drop_group_by and str(aggregator).startswith('nunique'):
+        #     raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
         headers = self._pm.list_formatter(headers)
         group_by = self._pm.list_formatter(group_by)
         df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
@@ -564,7 +564,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if not inplace:
             with threading.Lock():
                 canonical = deepcopy(canonical)
-        headers = self._pm.list_formatter(canonical)
+        headers = self._pm.list_formatter(headers)
         if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         if isinstance(nulls_list, bool) and nulls_list:
