@@ -75,12 +75,9 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['end_type'] = ['Ad End', 'Ad Start', 'Ad End', 'Ad Start', 'Ad End']
         df['spend'] = [1, 3, 2, 4, 0]
         df['viewed'] = [1, 2, 1, 3, 1]
-        result1 = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='sum', group_by=['genre'])
-        eb = PandasEventBook('test_book')
-        result2 = self.intent.run_intent_pipeline(df, event_book=eb)
-        self.assertCountEqual(['Comedy', 'Drama', 'Undefined'], list(result1.index))
-        self.assertCountEqual(['Comedy', 'Drama', 'Undefined'], list(result2.index))
-        self.assertEqual(result1.shape, result2.shape)
+        result = self.intent.group_features(df, headers=['viewed', 'spend'], aggregator='nunique', group_by=['genre'], drop_group_by=True)
+        print(result)
+
 
     def test_date_diff(self):
         df = pd.DataFrame()

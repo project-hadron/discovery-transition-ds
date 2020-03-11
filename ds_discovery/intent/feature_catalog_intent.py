@@ -325,6 +325,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if remove_aggregated:
             df_sub = df_sub.drop(headers, axis=1)
         if drop_group_by:
+            df_sub = self.select_feature(df_sub, key=group_by, headers=group_by, drop=True)
             df_sub = df_sub.reset_index()
             df_sub = df_sub.drop(group_by, axis=1)
         if inplace:
