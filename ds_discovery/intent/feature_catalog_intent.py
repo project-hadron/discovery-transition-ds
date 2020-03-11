@@ -147,7 +147,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn.set_index(key)
 
     def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
-                        default: [int, float, str]=None, label: str=None, save_intent: bool=None,
+                        default: [int, float, str]=None, label: str=None, unindex: bool=None, save_intent: bool=None,
                         intent_level: [int, str]=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
         Example: conditions = tuple('< 5',  'red')
@@ -156,6 +156,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: the Pandas.DataFrame to get the column headers from
         :param key: the key column to index on
         :param column: a list of headers to apply the condition on,
+        :param unindex: if the passed canonical should be un-index before processing
         :param conditions: a tuple or list of tuple conditions
         :param default: (optional) a value if no condition is met. 0 if not set
         :param label: (optional) a label for the new column
@@ -173,6 +174,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         str_code = ''
         if isinstance(conditions, tuple):
             conditions = [conditions]
+        if isinstance(unindex, bool) and unindex:
+            canonical = canonical.reset_index()
         choices = []
         str_code = []
         for item, choice in conditions:
