@@ -305,8 +305,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 canonical = deepcopy(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
-        # if drop_group_by and str(aggregator).startswith('nunique'):
-        #     raise ValueError(f"drop_group_by must be False when aggregator is 'nunique'")
         headers = self._pm.list_formatter(headers)
         group_by = self._pm.list_formatter(group_by)
         df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
@@ -325,9 +323,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if remove_aggregated:
             df_sub = df_sub.drop(headers, axis=1)
         if drop_group_by:
-            df_sub = self.select_feature(df_sub, key=group_by, headers=group_by, drop=True)
-            df_sub = df_sub.reset_index()
-            df_sub = df_sub.drop(group_by, axis=1)
+            df_sub = df_sub.drop(columns=group_by, errors='ignore')
         if inplace:
             return
         return df_sub
