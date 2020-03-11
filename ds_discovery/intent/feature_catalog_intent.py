@@ -175,7 +175,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if isinstance(conditions, tuple):
             conditions = [conditions]
         if isinstance(unindex, bool) and unindex:
-            canonical = canonical.reset_index()
+            canonical.reset_index(inplace=True)
         choices = []
         str_code = []
         for item, choice in conditions:
