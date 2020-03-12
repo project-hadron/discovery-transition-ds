@@ -84,7 +84,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def flatten_date_diff(self, canonical: pd.DataFrame, key: [str, list], first_date: str, second_date: str,
                           aggregator: str=None, units: str=None, label: str=None, inplace: bool=None,
-                          save_intent: bool=None, intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+                          unindex: bool=None, save_intent: bool=None, intent_level: [int, str] = None) -> pd.DataFrame:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
@@ -95,6 +95,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
         :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
         :param label: (optional) a label for the new column.
+        :param unindex: if the passed canonical should be un-index before processing
         :param inplace: adds the calculated column to the canonical before flattening
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
@@ -104,6 +105,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         units = units if isinstance(units, str) else 'D'
         label = label if isinstance(label, str) else f'{second_date}-{first_date}'
         inplace = inplace if isinstance(inplace, bool) else False
@@ -118,8 +121,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
                        drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                       re_ignore_case: bool=False, drop_dup_index: str=None, save_intent: bool=None,
-                       intent_level: [int, str]=None) -> pd.DataFrame:
+                       re_ignore_case: bool=False, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
+                       save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
         """ used for feature attribution allowing columns to be selected directly from the canonical attributes
 
         :param canonical: the Pandas.DataFrame to get the selection from
@@ -131,6 +134,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
+        :param rename: a dictionary of headers to rename
+        :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
         :return: selected list of headers indexed on key
@@ -139,6 +144,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         filter_headers = Commons.filter_headers(df=canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                                 regex=regex, re_ignore_case=re_ignore_case)
 
@@ -146,6 +153,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_rtn = Commons.filter_columns(canonical, headers=filter_headers, inplace=False)
         if isinstance(drop_dup_index, str) and drop_dup_index.lower() in ['first', 'last']:
             df_rtn = df_rtn.loc[~df_rtn.index.duplicated(keep=drop_dup_index)]
+        if isinstance(rename, dict):
+            df_rtn.rename(columns=rename, inplace=True)
         return df_rtn.set_index(key)
 
     def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
@@ -170,10 +179,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
-        key = self._pm.list_formatter(key)
-        label = label if isinstance(label, str) else column
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
+        key = self._pm.list_formatter(key)
+        label = label if isinstance(label, str) else column
         df_rtn = Commons.filter_columns(canonical, headers=key)
         str_code = ''
         if isinstance(conditions, tuple):
@@ -203,16 +212,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn[label] = np.select(selection, choices)
         return df_rtn.set_index(key)
 
-    #     df = pd.DataFrame({'Type': list('ABBC'), 'Set': list('ZZXY')})
-    #     # conditions = [
-    #     #     (df['Set'] == 'Z') & (df['Type'] == 'A'),
-    #     #     (df['Set'] == 'Z') & (df['Type'] == 'B'),
-    #     #     (df['Type'] == 'B')]
-    #     # choices = ['yellow', 'blue', 'purple']
-    #     # df['color'] = np.select(conditions, choices, default='black')
-
     def apply_where(self, canonical: pd.DataFrame, key: [str, list], column: [str, list], condition: str,
-                    outcome: str=None, otherwise: str=None, save_intent: bool=None,
+                    outcome: str=None, otherwise: str=None, unindex: bool=None, save_intent: bool=None,
                     intent_level: [int, str]=None) -> pd.DataFrame:
         """applies a condition to the given column label returning the result with the key as index. For the
         'condition', 'outcome' or 'otherwise' parameters that reference the original DataFrame, use 'canonical' as
@@ -228,6 +229,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                  example: "'red'"
                  or       "canonical['alt']"
         :param otherwise an alternative to the outcome condition and has the same examples as outcome
+        :param unindex: if the passed canonical should be un-index before processing
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level of the intent,
         :return:
@@ -236,6 +238,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # Code block for intent
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         column = self._pm.list_formatter(column)
         key = self._pm.list_formatter(key)
         result_df = Commons.filter_columns(canonical, headers=set(column + key))
@@ -250,7 +254,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return result_df
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
-                        upper_quantile: float=None, inplace: bool=False, save_intent: bool=None,
+                        upper_quantile: float=None, unindex: bool=None, inplace: bool=False, save_intent: bool=None,
                         intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ removes outliers by removing the boundary quantiles
 
@@ -259,6 +263,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param column: the column name to remove outliers
         :param lower_quantile: (optional) the lower quantile in the range 0 < lower_quantile < 1, deafault to 0.001
         :param upper_quantile: (optional) the upper quantile in the range 0 < upper_quantile < 1, deafault to 0.999
+        :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -268,6 +273,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         key = self._pm.list_formatter(key)
         df_rtn = Commons.filter_columns(canonical, headers=key + [column])
         lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.001
@@ -281,7 +288,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, drop_dup_index: str=None,
-                       inplace: bool=False, save_intent: bool=None,
+                       unindex: bool=None, inplace: bool=False, save_intent: bool=None,
                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
@@ -296,6 +303,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param remove_aggregated: if used in conjunction with the weighting then drops the aggrigator column
         :param remove_weighting_zeros: removes zero values
         :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
+        :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -305,6 +313,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         if not inplace:
             with threading.Lock():
                 canonical = deepcopy(canonical)
@@ -335,7 +345,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def interval_categorical(self, canonical: pd.DataFrame, key: str, column: str, granularity: [int, float, list]=None,
                              lower: [int, float]=None, upper: [int, float]=None, label: str=None, categories: list=None,
-                             precision: int=None, inplace: bool=False, save_intent: bool = None,
+                             precision: int=None, unindex: bool=None, inplace: bool=False, save_intent: bool = None,
                              intent_level: [int, str] = None) -> [None, pd.DataFrame]:
         """ converts continuous representation into discrete representation through interval categorisation
 
@@ -352,6 +362,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param precision: (optional) The precision of the range and boundary values. by default set to 5.
         :param label: (optional) a label to give the new column
         :param categories:(optional)  a set of labels the same length as the intervals to name the categories
+        :param unindex: if the passed canonical should be un-index before processing
         :param inplace: (optional) if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -361,6 +372,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         if key not in canonical.columns:
             raise ValueError(f"The key value '{key}' is not a column name in the canonica passed")
         if column not in canonical.columns:
@@ -436,7 +449,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
-                            inplace: bool=False, save_intent: bool=None,
+                            unindex: bool=None, inplace: bool=False, save_intent: bool=None,
                             intent_level: [int, str]=None) -> [None, pd.DataFrame]:
         """ flattens a categorical as a sum of one-hot
 
@@ -446,6 +459,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param prefix: a prefix for the category columns
         :param index_key: set the key as the index. Default to True
         :param dups: id duplicates should be removed from the original canonical
+        :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) a level to place the intent
@@ -455,6 +469,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, save_intent=save_intent)
         # intend code block on the canonical
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         if not inplace:
             with threading.Lock():
                 canonical = deepcopy(canonical)
