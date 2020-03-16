@@ -1,6 +1,9 @@
+import collections
 import re
 import threading
 from copy import deepcopy
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 
@@ -52,17 +55,15 @@ class Commons(object):
     @staticmethod
     def list_formatter(value) -> [list, None]:
         """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
-        if value is None:
-            return list()
-        if isinstance(value, (int, float, str, pd.Timestamp)):
+        if isinstance(value, (int, float, str, pd.Timestamp, datetime)):
             return [value]
-        if isinstance(value, (list, tuple, set)):
+        if isinstance(value, (list, tuple, set, collections.abc.KeysView)):
             return list(value)
         if isinstance(value, pd.Series):
             return value.tolist()
         if isinstance(value, dict):
             return list(value.items())
-        return None
+        return list()
 
     @staticmethod
     def filter_headers(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,

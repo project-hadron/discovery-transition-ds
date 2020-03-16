@@ -2,7 +2,6 @@ import pandas as pd
 
 from aistac.handlers.abstract_handlers import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
-
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.commons import Commons
@@ -18,23 +17,23 @@ class Transition(AbstractComponent):
     CONNECTOR_DICTIONARY = 'dictionary'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
-                 default_save=None):
+                 default_save=None, reset_templates: bool=None, align_connectors: bool=None):
         """ Encapsulation class for the transition set of classes
 
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
+        :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
+        :param align_connectors: (optional) resets aligned connectors to the template
         """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save)
+        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
+                         reset_templates=reset_templates, align_connectors=align_connectors)
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
-                 pm_handler: str=None, default_save=None, template_source_path: str=None,
-                 template_persist_path: str=None, template_source_module: str=None,
-                 template_persist_module: str=None, template_source_handler: str=None,
-                 template_persist_handler: str=None, **kwargs):
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str = None, pm_module: str = None,
+                 pm_handler: str = None, pm_kwargs: dict = None, default_save=None):
         """ Class Factory Method to instantiates the component application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
 
@@ -47,14 +46,8 @@ class Transition(AbstractComponent):
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
+         :param pm_kwargs: (optional) a dictionary of kwargs to pass to the property manager
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
-         :param template_source_path: (optional) a default source root path for the source canonicals
-         :param template_persist_path: (optional) a default source root path for the persisted canonicals
-         :param template_source_module: (optional) a default module package path for the source handlers
-         :param template_persist_module: (optional) a default module package path for the persist handlers
-         :param template_source_handler: (optional) a default read only source handler
-         :param template_persist_handler: (optional) a default read write persist handler
-         :param kwargs: to pass to the connector contract
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
@@ -62,21 +55,9 @@ class Transition(AbstractComponent):
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = TransitionPropertyManager(task_name=task_name)
         _intent_model = TransitionIntentModel(property_manager=_pm)
-        if not isinstance(template_source_module, str) or template_source_module.startswith('aistac.'):
-            template_source_module = 'ds_discovery.handlers.pandas_handlers'
-            template_source_handler = 'PandasSourceHandler'
-        if not isinstance(template_persist_module, str) or template_persist_module.startswith('aistac.'):
-            template_persist_module = 'ds_discovery.handlers.pandas_handlers'
-            template_persist_handler = 'PandasPersistHandler'
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
-                                 pm_module=pm_module, pm_handler=pm_handler, **kwargs)
-        super()._add_templates(property_manager=_pm, save=default_save,
-                               source_path=template_source_path, persist_path=template_persist_path,
-                               source_module=template_source_module, persist_module=template_persist_module,
-                               source_handler=template_source_handler, persist_handler=template_persist_handler)
-        instance = cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
-        instance.modify_connector_from_template(connector_names=instance.pm.connector_contract_list)
-        return instance
+                                 pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
+        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
@@ -299,5 +280,5 @@ class Transition(AbstractComponent):
         :param constraints: (optional) the limited list of acceptable labels. If not in list then ignored
         :param save: if True, save to file. Default is True
         """
-        super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key, text_key=text_key,
-                             constraints=constraints, save=save)
+        super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key,
+                             text_key=text_key, constraints=constraints, save=save)
