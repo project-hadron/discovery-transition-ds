@@ -1,6 +1,5 @@
 import inspect
 import threading
-import re
 from builtins import staticmethod
 from copy import deepcopy
 import datetime
@@ -8,36 +7,38 @@ import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 from sklearn.model_selection import train_test_split
-from aistac.properties.abstract_properties import AbstractPropertyManager
+
 from aistac.intent.abstract_intent import AbstractIntentModel
 
-__author__ = 'Darryl Oatridge'
-
 from ds_discovery.transition.commons import Commons
+from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
+
+__author__ = 'Darryl Oatridge'
 
 
 class TransitionIntentModel(AbstractIntentModel):
     """A set of methods to help clean columns with a Pandas.DataFrame"""
 
-    def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=None,
-                 intent_next_available: bool=None, default_replace_intent: bool=None, intent_type_additions: list=None):
+    def __init__(self, property_manager: TransitionPropertyManager, default_save_intent: bool=None,
+                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
         """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager
-        :param intent_next_available: (optional) if the default level should be set to next available level or zero
-        :param default_replace_intent: (optional) the default replace strategy for the same intent found at that level
-        :param intent_type_additions: (optional) if additional data types need to be supported as an intent param
+        :param default_intent_level: (optional) the default level intent should be saved at
+        :param order_next_available: (optional) if the default behaviour for the order should be next available order
+        :param default_replace_intent: (optional) the default replace existing intent behaviour
         """
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
-        default_intent_level = -1 if isinstance(intent_next_available, bool) and intent_next_available else 0
+        default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
+        default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical']
-        intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
-        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
-        super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
-                         default_save_intent=default_save_intent, default_intent_level=default_intent_level,
-                         default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
+        intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
+        super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
+                         intent_param_exclude=intent_param_exclude, default_intent_level=default_intent_level,
+                         default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
+                         intent_type_additions=intent_type_additions)
 
     def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
@@ -59,94 +60,23 @@ class TransitionIntentModel(AbstractIntentModel):
             else:
                 intent_levels = sorted(self._pm.get_intent().keys())
             for level in intent_levels:
-                for method, params in self._pm.get_intent(level=level).items():
-                    if method in self.__dir__():
-                        params.update(params.pop('kwargs', {}))
-                        if isinstance(kwargs, dict):
-                            params.update(kwargs)
-                        params.update({'inplace': False, 'save_intent': False})
-                        canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
+                level_key = self._pm.join(self._pm.KEY.intent_key, level)
+                for order in sorted(self._pm.get(level_key, {})):
+                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                        if method in self.__dir__():
+                            # fail safe in case kwargs was sored as the reference
+                            params.update(params.pop('kwargs', {}))
+                            # add method kwargs to the params
+                            if isinstance(kwargs, dict):
+                                params.update(kwargs)
+                            # add excluded params and set to False
+                            params.update({'inplace': False, 'save_intent': False})
+                            canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    @staticmethod
-    def filter_headers(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                       exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None) -> list:
-        """ returns a list of headers based on the filter criteria
-
-        :param df: the Pandas.DataFrame to get the column headers from
-        :param headers: a list of headers to drop or filter on type
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None.
-                    example: int, float, bool, 'category', 'object', 'number'. 'datetime', 'datetimetz', 'timedelta'
-        :param exclude: to exclude or include the dtypes. Default is False
-        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' headers
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :return: a filtered list of headers
-
-        :raise: TypeError if any of the types are not as expected
-        """
-        if drop is None or not isinstance(drop, bool):
-            drop = False
-        if exclude is None or not isinstance(exclude, bool):
-            exclude = False
-        if re_ignore_case is None or not isinstance(re_ignore_case, bool):
-            re_ignore_case = False
-
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError("The first function attribute must be a pandas 'DataFrame'")
-        _headers = Commons.list_formatter(headers)
-        dtype = Commons.list_formatter(dtype)
-        regex = Commons.list_formatter(regex)
-        _obj_cols = df.columns
-        _rtn_cols = set()
-        unmodified = True
-
-        if _headers:
-            _rtn_cols = set(_obj_cols).difference(_headers) if drop else set(_obj_cols).intersection(_headers)
-            unmodified = False
-
-        if regex and regex:
-            re_ignore_case = re.I if re_ignore_case else 0
-            _regex_cols = list()
-            for exp in regex:
-                _regex_cols += [s for s in _obj_cols if re.search(exp, s, re_ignore_case)]
-            _rtn_cols = _rtn_cols.union(set(_regex_cols))
-            unmodified = False
-
-        if unmodified:
-            _rtn_cols = set(_obj_cols)
-
-        if dtype and len(dtype) > 0:
-            _df_selected = df.loc[:, _rtn_cols]
-            _rtn_cols = (_df_selected.select_dtypes(exclude=dtype) if exclude
-                         else _df_selected.select_dtypes(include=dtype)).columns
-
-        return [c for c in _rtn_cols]
-
-    @staticmethod
-    def filter_columns(df, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
-                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> [dict, pd.DataFrame]:
-        """ Returns a subset of columns based on the filter criteria
-
-        :param df: the Pandas.DataFrame to get the column headers from
-        :param headers: a list of headers to drop or filter on type
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
-        :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :return:
-        """
-        if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
-        obj_cols = TransitionIntentModel.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
-                                                        regex=regex, re_ignore_case=re_ignore_case)
-        return df.loc[:, obj_cols]
-
     def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=False,
-                          save_intent: bool=None, intent_level: [int, str]=None):
+                          save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None):
         """ clean the headers of a pandas DataFrame replacing space with underscore
 
         :param df: the pandas.DataFrame to drop duplicates from
@@ -155,15 +85,21 @@ class TransitionIntentModel(AbstractIntentModel):
         :param replace_spaces: character to replace spaces with. Default is '_' (underscore)
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
@@ -190,7 +126,8 @@ class TransitionIntentModel(AbstractIntentModel):
 
     def auto_to_category(self, df, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
                          nulls_list: list=None, inplace: bool=False, save_intent: bool=None,
-                         intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                         intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto categorises columns that have a max number of uniqueness with a min number of nulls
         and are object dtype
 
@@ -201,15 +138,21 @@ class TransitionIntentModel(AbstractIntentModel):
         :param nulls_list:  potential null values to replace.
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
@@ -231,7 +174,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
                             auto_contract: bool=True, test_size: float=None, random_state: int=None,
                             drop_empty_row: bool=None, inplace: bool=False, save_intent: bool=None,
-                            intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                            intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                            remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
         :param df: the pandas.DataFrame to auto remove
@@ -246,15 +190,21 @@ class TransitionIntentModel(AbstractIntentModel):
         :param drop_empty_row: also drop any rows where all the values are empty
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
@@ -291,7 +241,8 @@ class TransitionIntentModel(AbstractIntentModel):
     # drops highly correlated columns
     def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
                              sample_percent: float=None, random_state: int=None, inplace: bool=False,
-                             save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
+                             save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                             replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
 
@@ -302,25 +253,31 @@ class TransitionIntentModel(AbstractIntentModel):
         :param random_state: a random state should be applied to the test train split. Default is None
         :param inplace: if the passed Canonical, should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy Canonical,.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
         sample_percent = sample_percent if isinstance(sample_percent, int) and 0.5 < sample_percent < 1 else 0.85
-        df_filter = self.filter_columns(df, dtype=['number'], exclude=False)
+        df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
         df_filter, _ = train_test_split(df_filter, test_size=1-sample_percent, random_state=random_state)
         if inc_category:
-            for col in self.filter_columns(df, dtype=['category'], exclude=False):
+            for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
         col_corr = set()
         corr_matrix = df_filter.corr()
@@ -337,7 +294,8 @@ class TransitionIntentModel(AbstractIntentModel):
     # drop unwanted
     def to_remove(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                   exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                  save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                  save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                  replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ remove columns from the pandas.DataFrame
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -349,21 +307,27 @@ class TransitionIntentModel(AbstractIntentModel):
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         df.drop(obj_cols, axis=1, inplace=True)
         if not inplace:
             return df
@@ -372,7 +336,8 @@ class TransitionIntentModel(AbstractIntentModel):
     # drop unwanted
     def to_select(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                   exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                  save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                  save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                  replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ selects columns from the pandas.DataFrame
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -384,21 +349,27 @@ class TransitionIntentModel(AbstractIntentModel):
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
 
         self.to_remove(df, headers=obj_cols, drop=True, inplace=True, save_intent=False)
         if not inplace:
@@ -409,7 +380,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_bool_type(self, df: pd.DataFrame, bool_map, headers: [str, list]=None, drop: bool=False,
                      dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                      re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
-                     intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                     intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts column to bool based on the map
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -422,15 +394,21 @@ class TransitionIntentModel(AbstractIntentModel):
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not isinstance(bool_map, dict):
             raise TypeError("The map attribute must be of type 'dict'")
@@ -439,8 +417,8 @@ class TransitionIntentModel(AbstractIntentModel):
                 df = deepcopy(df)
         if not bool_map:  # map is empty so nothing to map
             return df
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             if df[c].dtype.name != 'bool':
                 df[c] = df[c].map(bool_map)
@@ -454,7 +432,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_category_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                          exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
                          as_num: bool=False, fill_nulls: str=None, nulls_list: list=None,
-                         save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                         save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                         replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to categories
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -469,15 +448,21 @@ class TransitionIntentModel(AbstractIntentModel):
         :param nulls_list:  potential null values to replace.
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
@@ -485,8 +470,8 @@ class TransitionIntentModel(AbstractIntentModel):
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             for item in nulls_list:
                 df[c] = df[c].replace(item, fill_nulls)
@@ -497,7 +482,8 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def _to_numeric(self, df: pd.DataFrame, numeric_type, fillna, errors=None, headers: [str, list]=None,
+    @staticmethod
+    def _to_numeric(df: pd.DataFrame, numeric_type, fillna, errors=None, headers: [str, list]=None,
                     drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                     re_ignore_case: bool=False, precision=None, inplace=False) -> [dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
@@ -506,8 +492,8 @@ class TransitionIntentModel(AbstractIntentModel):
                 df = deepcopy(df)
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             if not isinstance(precision, int):
                 try:
@@ -538,7 +524,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_numeric_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                         exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
                         fillna=None, errors=None, inplace: bool=False,
-                        save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -560,15 +547,21 @@ class TransitionIntentModel(AbstractIntentModel):
                     - If 'ignore', then invalid parsing will return the input
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if fillna is None or not fillna:
             fillna = np.nan
@@ -582,7 +575,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_int_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                     exclude: bool=False,  regex: [str, list]=None, re_ignore_case: bool=False, fillna=None,
                     errors=None, inplace: bool=False, save_intent: bool=None,
-                    intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                    intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                    remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -603,15 +597,21 @@ class TransitionIntentModel(AbstractIntentModel):
                     - If 'ignore', then invalid parsing will return the input
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if fillna is None or not fillna:
             fillna = 0
@@ -624,7 +624,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_float_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                       exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
                       fillna=None, errors=None, inplace: bool=False, save_intent: bool=None,
-                      intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                      intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                      remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to float type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -646,15 +647,21 @@ class TransitionIntentModel(AbstractIntentModel):
                     - If 'ignore', then invalid parsing will return the input
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if fillna is None or not fillna:
             fillna = np.nan
@@ -667,7 +674,8 @@ class TransitionIntentModel(AbstractIntentModel):
 
     def to_normalised(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                       exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                      inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None):
+                      inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None,
+                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ converts columns to float type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -680,21 +688,27 @@ class TransitionIntentModel(AbstractIntentModel):
         :param precision: how many decimal places to set the return values. if None then the number is unchanged
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
         self.to_numeric_type(df, dtype='number', fillna=0, inplace=True, save_intent=False)
-        obj_cols = self.filter_headers(df, dtype=['number'], exclude=False)
+        obj_cols = Commons.filter_headers(df, dtype=['number'], exclude=False)
         for c in obj_cols:
             df[c] = df[c] / np.linalg.norm(df[c])
             if isinstance(precision, int):
@@ -706,7 +720,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                     exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
                     use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=False,
-                    save_intent: bool=None, intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                    save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                    replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to object type
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -724,15 +739,21 @@ class TransitionIntentModel(AbstractIntentModel):
                     if list then this is considered potential null values.
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
        """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
@@ -740,8 +761,8 @@ class TransitionIntentModel(AbstractIntentModel):
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].apply(str)
             for item in nulls_list:
@@ -755,7 +776,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
                      exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, as_num=False,
                      day_first=False, year_first=False, date_format=None, inplace: bool=False, save_intent: bool=None,
-                     intent_level: [int, str]=None) -> [dict, pd.DataFrame]:
+                     intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -775,22 +797,28 @@ class TransitionIntentModel(AbstractIntentModel):
                 If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
         :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         infer_datetime_format = date_format is None
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
             df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
@@ -815,7 +843,8 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_date_from_excel_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
                                 dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                                 re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
-                                intent_level: [int, str]=None) -> [dict, pd.DataFrame, None]:
+                                intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                                remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """converts excel date formats into datetime
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -827,23 +856,29 @@ class TransitionIntentModel(AbstractIntentModel):
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
-                        If None: default's 0 unless the global intent_next_available is true then -1
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
                         if -1: added to a level above any current instance of the intent section, level 0 if not found
                         if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
        """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
         if dtype is None:
             dtype = ['float64']
-        obj_cols = self.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                       re_ignore_case=re_ignore_case)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = [self._excel_date_converter(d) for d in df[c]]
         if not inplace:

@@ -2,15 +2,13 @@ import inspect
 import threading
 from copy import deepcopy
 import pandas as pd
-from ds_engines.engines.event_books.pandas_event_book import PandasEventBook
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 import numpy as np
 import matplotlib.dates as mdates
 
 from aistac.intent.abstract_intent import AbstractIntentModel
-from aistac.properties.abstract_properties import AbstractPropertyManager
 
-from ds_discovery.intent.transition_intent import TransitionIntentModel
+from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
 
@@ -22,69 +20,72 @@ __author__ = 'Darryl Oatridge'
 class FeatureCatalogIntentModel(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
-    def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=True,
-                 default_intent_level: [int, float, str]=None, default_replace_intent: bool=None,
-                 intent_type_additions: list=None):
-        """initialisation of the Intent class. The 'intent_param_exclude' is used to exclude commonly used method
-         parameters from being included in the intent contract, this is particularly useful if passing a canonical, or
-         non relevant parameters to an intent method pattern. Any named parameter in the intent_param_exclude list
-         will not be included in the recorded intent contract for that method
+    def __init__(self, property_manager: FeatureCatalogPropertyManager, default_save_intent: bool=None,
+                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
+        """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.
         :param default_save_intent: (optional) The default action for saving intent in the property manager
-        :param default_intent_level: (optional) The default intent level
-        :param default_replace_intent: (optional) the default replace strategy for the same intent found at that level
-        :param intent_type_additions: (optional) if additional data types need to be supported as an intent param
+        :param default_intent_level: (optional) the default level intent should be saved at
+        :param order_next_available: (optional) if the default behaviour for the order should be next available order
+        :param default_replace_intent: (optional) the default replace existing intent behaviour
         """
-        # set all the defaults
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
-        default_intent_level = default_intent_level if isinstance(default_intent_level, (int, float, str)) else -1
-        intent_param_exclude = ['df', 'canonical', 'feature', 'inplace']
-        intent_type_additions = intent_type_additions if isinstance(intent_type_additions, list) else list()
-        intent_type_additions += [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
-        super().__init__(property_manager=property_manager, intent_param_exclude=intent_param_exclude,
-                         default_save_intent=default_save_intent, default_intent_level=default_intent_level,
-                         default_replace_intent=default_replace_intent, intent_type_additions=intent_type_additions)
+        default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
+        default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
+        intent_param_exclude = ['df', 'inplace', 'canonical', 'feature']
+        intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
+        super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
+                         intent_param_exclude=intent_param_exclude, default_intent_level=default_intent_level,
+                         default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
+                         intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, event_book: PandasEventBook, event_type: str=None,
-                            fillna: bool=None, intent_levels: [int, str, list]=None, **kwargs):
+    def run_intent_pipeline(self, canonical, feature_names: [int, str, list] = None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
+        It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
+        and will contain 'inplace' and 'save_intent' as parameters.
+
         :param canonical: this is the iterative value all intent are applied to and returned.
-        :param event_book: the event book to pass the resulting events into
-        :param event_type: the method of how to add the events
-        :param fillna: if the resulting DataFrame should have any NaN values replaced with default values. Default True
-        :param intent_levels: an single or list of levels to run, if list, run in order given
+        :param feature_names: (optional) an single or list of features to run, if list, run in order given
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied or None if inplace is True
         """
-        event_type = event_type if isinstance(event_type, str) else 'add'
-        fillna = fillna if isinstance(fillna, bool) else True
         # test if there is any intent to run
         if self._pm.has_intent():
-            if event_type not in ['add', 'increment', 'decrement']:
-                raise ValueError(f"The event type '{event_type}' is not one of 'add', 'increment' or 'decrement' ")
             # get the list of levels to run
-            if isinstance(intent_levels, (int, str, list)):
-                intent_levels = self._pm.list_formatter(intent_levels)
+            if isinstance(feature_names, (int, str, list)):
+                feature_names = self._pm.list_formatter(feature_names)
             else:
-                intent_levels = sorted(self._pm.get_intent().keys())
-            for level in intent_levels:
-                for method, params in self._pm.get_intent(level=level).items():
-                    if method in self.__dir__():
-                        params.update(params.pop('kwargs', {}))
-                        if isinstance(kwargs, dict):
-                            params.update(kwargs)
-                        params.update({'inplace': False, 'save_intent': False})
-                        event = eval(f"self.{method}(canonical, **params)", globals(), locals())
-                        _ = eval(f"event_book.{event_type}_event(event)", globals(), locals())
-        return event_book.current_state(fillna=fillna)
+                feature_names = sorted(self._pm.get_intent().keys())
+            for _feature_name in feature_names:
+                df_feature = canonical
+                level_key = self._pm.join(self._pm.KEY.intent_key, _feature_name)
+                for order in sorted(self._pm.get(level_key, {})):
+                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                        if method in self.__dir__():
+                            # fail safe in case kwargs was sored as the reference
+                            params.update(params.pop('kwargs', {}))
+                            # add method kwargs to the params
+                            if isinstance(kwargs, dict):
+                                params.update(kwargs)
+                            # add excluded params and set to False
+                            params.update({'inplace': False, 'save_intent': False})
+                            df_feature = eval(f"self.{method}({df_feature}, **{params})", globals(), locals())
+                if self._pm.has_connector(_feature_name):
+                    handler = self._pm.get_connector_handler(_feature_name)
+                    handler.persist_canonical(df_feature)
+                else:
+                    raise ConnectionError(f"The feature name {_feature_name} has no connector contract set.")
+        return
 
     def flatten_date_diff(self, canonical: pd.DataFrame, key: [str, list], first_date: str, second_date: str,
                           aggregator: str=None, units: str=None, label: str=None, inplace: bool=None,
-                          unindex: bool=None, save_intent: bool=None, intent_level: [int, str] = None) -> pd.DataFrame:
+                          unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
+                          intent_order: int=None, replace_intent: bool=None,
+                          remove_duplicates: bool=None) -> pd.DataFrame:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
@@ -98,12 +99,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param inplace: adds the calculated column to the canonical before flattening
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: the DataFrame with the extra column
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -122,7 +132,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
                        drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
                        re_ignore_case: bool=False, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
-                       save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                       save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ used for feature attribution allowing columns to be selected directly from the canonical attributes
 
         :param canonical: the Pandas.DataFrame to get the selection from
@@ -137,12 +148,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param rename: a dictionary of headers to rename
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: selected list of headers indexed on key
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -159,7 +179,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
                         default: [int, float, str]=None, label: str=None, unindex: bool=None, save_intent: bool=None,
-                        intent_level: [int, str]=None) -> pd.DataFrame:
+                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                        remove_duplicates: bool=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
         Example: conditions = tuple('< 5',  'red')
              or: conditions = [('< 5',  'green'), ('> 5 & < 10',  'red')]
@@ -172,12 +193,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param default: (optional) a value if no condition is met. 0 if not set
         :param label: (optional) a label for the new column
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return:
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -214,7 +244,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def apply_where(self, canonical: pd.DataFrame, key: [str, list], column: [str, list], condition: str,
                     outcome: str=None, otherwise: str=None, unindex: bool=None, save_intent: bool=None,
-                    intent_level: [int, str]=None) -> pd.DataFrame:
+                    feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                    remove_duplicates: bool=None) -> pd.DataFrame:
         """applies a condition to the given column label returning the result with the key as index. For the
         'condition', 'outcome' or 'otherwise' parameters that reference the original DataFrame, use 'canonical' as
         the DataFrame name e.g "canonical['ref_column'] > 23"
@@ -231,12 +262,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param otherwise an alternative to the outcome condition and has the same examples as outcome
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level of the intent,
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return:
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -255,7 +295,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, inplace: bool=False, save_intent: bool=None,
-                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                        remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ removes outliers by removing the boundary quantiles
 
         :param canonical: the DataFrame to apply
@@ -266,12 +307,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: the revised values
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -289,7 +339,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, drop_dup_index: str=None,
                        unindex: bool=None, inplace: bool=False, save_intent: bool=None,
-                       intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                       feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                       remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
         nunique, first, last, min, max, std var, describe.
 
@@ -306,12 +357,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd.DataFrame
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -322,7 +382,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         headers = self._pm.list_formatter(headers)
         group_by = self._pm.list_formatter(group_by)
-        df_sub = TransitionIntentModel.filter_columns(canonical, headers=headers + group_by).dropna()
+        df_sub = Commons.filter_columns(canonical, headers=headers + group_by).dropna()
         df_sub = df_sub.groupby(group_by).agg(aggregator)
         if include_weighting:
             df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
@@ -346,7 +406,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def interval_categorical(self, canonical: pd.DataFrame, key: str, column: str, granularity: [int, float, list]=None,
                              lower: [int, float]=None, upper: [int, float]=None, label: str=None, categories: list=None,
                              precision: int=None, unindex: bool=None, inplace: bool=False, save_intent: bool = None,
-                             intent_level: [int, str] = None) -> [None, pd.DataFrame]:
+                             feature_name: [int, str] = None, intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ converts continuous representation into discrete representation through interval categorisation
 
         :param canonical: the dataset where the column and target can be found
@@ -365,12 +426,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param inplace: (optional) if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: the converted fields
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -450,7 +520,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
                             unindex: bool=None, inplace: bool=False, save_intent: bool=None,
-                            intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                            feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                            remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ flattens a categorical as a sum of one-hot
 
         :param canonical: the Dataframe to reference
@@ -462,12 +533,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.Dataframe of the flattened categorical
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -494,7 +574,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return dummy_df
 
     def date_categorical(self, canonical: pd.DataFrame, key: [str, list], column: str, matrix: [str, list]=None,
-                         label: str=None, save_intent: bool=None, intent_level: [int, str]=None) -> pd.DataFrame:
+                         label: str=None, save_intent: bool=None, feature_name: [int, str]=None,
+                         intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None) -> pd.DataFrame:
         """ breaks a date down into value representations of the various parts that date.
 
         :param canonical: the DataFrame to take the columns from
@@ -503,7 +585,15 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param matrix: the matrix options (see below)
         :param label: (optional) a label alternative to the column name
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pandas.DataFrame of the datetime breakdown
 
         Matrix options are:
@@ -520,7 +610,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if key not in canonical:
             raise NameError(f"The key {key} can't be found in the DataFrame")
@@ -553,7 +644,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                         replace_zero: [int, float]=None, precision: int=None, day_first: bool=False,
                         year_first: bool=False, date_format: str = None, inplace: bool=False, save_intent: bool=None,
-                        intent_level: [int, str]=None) -> [None, pd.DataFrame]:
+                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                        remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
@@ -572,12 +664,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param date_format: the format of the output dates, if None then pd.Timestamp
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return:
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         sim = SyntheticIntentModel(self._pm, default_save_intent=False)
         if not inplace:
@@ -618,7 +719,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return canonical
 
     def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
-                           save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
+                           save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                           replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
         """ regular expression substitution of key value pairs to the value string
 
         :param canonical: the value to apply the substitution to
@@ -626,12 +728,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param kwargs: a set of keys to replace with the values
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: the amended value
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():
@@ -645,7 +756,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return canonical
 
     def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False, inplace: bool=False,
-                       save_intent: bool=None, intent_level: [int, str]=None, **kwargs) -> [None, pd.DataFrame]:
+                       save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                       replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your code_str, it is internally
         referenced as it's parameter name 'canonical'.
@@ -655,13 +767,22 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) a level to place the intent
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :param kwargs: a set of kwargs to include in any executable function
         :return: a list or pandas.DataFrame
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, save_intent=save_intent)
+                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if not inplace:
             with threading.Lock():

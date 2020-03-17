@@ -3,15 +3,13 @@ import re
 import threading
 from copy import deepcopy
 from datetime import datetime
-
-import numpy as np
 import pandas as pd
-
+from aistac.components.aistac_commons import AistacCommons
 
 __author__ = 'Darryl Oatridge'
 
 
-class Commons(object):
+class Commons(AistacCommons):
 
     @staticmethod
     def report(canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):
@@ -122,7 +120,7 @@ class Commons(object):
 
     @staticmethod
     def filter_columns(df, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
-                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> [dict, pd.DataFrame]:
+                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> pd.DataFrame:
         """ Returns a subset of columns based on the filter criteria
 
         :param df: the Pandas.DataFrame to get the column headers from
