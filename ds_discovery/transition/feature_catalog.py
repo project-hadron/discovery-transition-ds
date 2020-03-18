@@ -27,22 +27,23 @@ class FeatureCatalog(AbstractComponent):
                          reset_templates=reset_templates, align_connectors=align_connectors)
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str = None, pm_module: str = None,
-                 pm_handler: str = None, pm_kwargs: dict = None, default_save=None):
-        """ Class Factory Method to instantiates the component application. The Factory Method handles the
+    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
+                 pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
+                 align_connectors: bool=None):
+        """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
-
-        by default the handler is local Pandas but also supports remote AWS S3 and Redis. It use these Factory
-        instantiations ensure that the schema is s3:// or redis:// and the handler will be automatically redirected
+        See class inline docs for an example method
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param pm_file_type: (optional) defines a specific file type for the property manager
-         :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
          :param pm_kwargs: (optional) a dictionary of kwargs to pass to the property manager
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
+         :param reset_templates: (optional) reset connector templates from environ variables. Default True
+                                (see `report_environ()`)
+         :param align_connectors: (optional) resets aligned connectors to the template. default Default True
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
@@ -52,7 +53,8 @@ class FeatureCatalog(AbstractComponent):
         _intent_model = FeatureCatalogIntentModel(property_manager=_pm)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
                                  pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
-        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save)
+        return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
+                   reset_templates=reset_templates, align_connectors=align_connectors)
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
