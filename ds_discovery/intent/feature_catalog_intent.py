@@ -8,6 +8,7 @@ import matplotlib.dates as mdates
 
 from aistac.intent.abstract_intent import AbstractIntentModel
 
+from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
@@ -35,7 +36,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
         default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical', 'feature']
-        intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]
+        intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64,
+                                 pd.Timestamp]
         super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
                          intent_param_exclude=intent_param_exclude, default_intent_level=default_intent_level,
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
@@ -81,8 +83,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     raise ConnectionError(f"The feature name {_feature_name} has no connector contract set.")
         return
 
-    def flatten_date_diff(self, canonical: pd.DataFrame, key: [str, list], first_date: str, second_date: str,
-                          aggregator: str=None, units: str=None, label: str=None, inplace: bool=None,
+    def flatten_date_diff(self, canonical: pd.DataFrame, key: str, first_date: str, second_date: str,
+                          aggregator: str=None, units: str=None, label: str=None, precision: int=None,
                           unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
                           intent_order: int=None, replace_intent: bool=None,
                           remove_duplicates: bool=None) -> pd.DataFrame:
@@ -96,8 +98,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
         :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
         :param label: (optional) a label for the new column.
+        :param precision: the precision of the result
         :param unindex: if the passed canonical should be un-index before processing
-        :param inplace: adds the calculated column to the canonical before flattening
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -117,16 +119,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
+        precision = precision if isinstance(precision, int) else 0
         units = units if isinstance(units, str) else 'D'
         label = label if isinstance(label, str) else f'{second_date}-{first_date}'
-        inplace = inplace if isinstance(inplace, bool) else False
-        result = canonical[second_date].sub(canonical[first_date], axis=0) / np.timedelta64(1, units)
-        if inplace:
-            canonical[label] = result.round(1)
+        df = deepcopy(Commons.filter_columns(canonical, headers=[key, first_date, second_date])).dropna()
         df_diff = pd.DataFrame()
-        for col in self._pm.list_formatter(key):
-            df_diff[col] = canonical[col].copy()
-        df_diff[label] = canonical[label].copy()
+        df_diff[key] = df[key]
+        result = df[second_date].sub(df[first_date], axis=0) / np.timedelta64(1, units)
+        df_diff[label] = [np.round(v, precision) for v in result]
         return self.group_features(df_diff, headers=label, group_by=key, aggregator=aggregator)
 
     def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
@@ -327,8 +327,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = self._pm.list_formatter(key)
         df_rtn = Commons.filter_columns(canonical, headers=key + [column])
-        lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.001
-        upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile < 1 else 0.999
+        lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.00001
+        upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile < 1 else 0.99999
 
         result = DataDiscovery.analyse_number(df_rtn[column], granularity=[lower_quantile, upper_quantile])
         analysis = DataAnalytics(result)
@@ -640,16 +640,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_time = Commons.filter_columns(df_time, headers=headers)
         return df_time.set_index(key)
 
-    def replace_missing(self, canonical: pd.DataFrame, headers: [str, list], granularity: [int, float]=None,
-                        lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
-                        replace_zero: [int, float]=None, precision: int=None, day_first: bool=False,
-                        year_first: bool=False, date_format: str = None, inplace: bool=False, save_intent: bool=None,
+    def replace_missing(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list],
+                        granularity: [int, float]=None, lower: [int, float]=None, upper: [int, float]=None,
+                        nulls_list: list=None, replace_zero: [int, float]=None, precision: int=None, unindex: bool=None,
+                        day_first: bool=False, year_first: bool=False, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
         :param canonical: the pd.DataFrame to replace missing values in
+        :param key: the key column
         :param headers: the headers in the pd.DataFrame to apply the substitution too
         :param granularity: (optional) the granularity of the analysis across the range.
                 int passed - the number of sections to break the value range into
@@ -659,10 +660,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param nulls_list: (optional) a list of nulls other than np.nan that should be considered null
         :param replace_zero: (optional) if zero what to replace the weighting value with to avoid zero probability
         :param precision: (optional) by default set to 3.
+        :param unindex:
         :param day_first: if the date provided has day first
         :param year_first: if the date provided has year first
         :param date_format: the format of the output dates, if None then pd.Timestamp
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -680,14 +681,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
         sim = SyntheticIntentModel(self._pm, default_save_intent=False)
-        if not inplace:
-            with threading.Lock():
-                canonical = deepcopy(canonical)
+        tr = TransitionIntentModel(self._pm, default_save_intent=False)
         headers = self._pm.list_formatter(headers)
         if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['nan', '']
+        df_rtn = pd.DataFrame()
+        df_rtn[key] = canonical[key].copy()
         for c in headers:
             col = deepcopy(canonical[c])
             # replace alternative nulls with pd.nan
@@ -699,24 +702,24 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 if is_numeric_dtype(col):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
                                                           precision=precision)
-                    col[col.isna()] = sim.get_number(from_value=result.get('lower'), to_value=result.get('upper'),
-                                                     weight_pattern=result.get('weighting'), precision=0, size=size)
+                    result = DataAnalytics(result)
+                    col[col.isna()] = sim.get_number(from_value=result.lower, to_value=result.upper,
+                                                     weight_pattern=result.weight_pattern, precision=0, size=size,
+                                                     save_intent=False)
                 elif is_datetime64_any_dtype(col):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
-                                                        day_first=day_first, year_first=year_first,
-                                                        date_format=date_format)
-                    synthetic = sim.get_datetime(start=result.get('lower'), until=result.get('upper'),
-                                                 weight_pattern=result.get('weighting'), date_format=date_format,
-                                                 day_first=day_first, year_first=year_first, size=size)
-                    col = col.apply(lambda x: synthetic.pop() if x is pd.NaT else x)
+                                                        day_first=day_first, year_first=year_first)
+                    synthetic = sim.associate_analysis(result, size=size, save_intent=False)
+                    col = col.apply(lambda x:  synthetic.pop() if x is pd.NaT else x)
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
-                    col[col.isna()] = sim.get_category(selection=result.get('selection'),
-                                                       weight_pattern=result.get('weighting'), size=size)
-            canonical[c] = col
-        if inplace:
-            return
-        return canonical
+                    result = DataAnalytics(result)
+                    col[col.isna()] = sim.get_category(selection=result.selection,
+                                                       weight_pattern=result.weight_pattern, size=size,
+                                                       save_intent=False)
+                    col = col.astype('category')
+            df_rtn[c] = col
+        return df_rtn.set_index(key)
 
     def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
                            save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
