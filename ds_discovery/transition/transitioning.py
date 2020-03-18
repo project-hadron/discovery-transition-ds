@@ -234,6 +234,7 @@ class Transition(AbstractComponent):
                      {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
             df_style = df_dd.style.set_table_styles(style)
             _ = df_style.applymap(self._dtype_color, subset=['dType'])
+            _ = df_style.set_properties(subset=['Description'],  **{"text-align": "left"})
             _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
             return df_style
