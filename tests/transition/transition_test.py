@@ -44,6 +44,16 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         Transition.from_env('TestAgent')
 
+    def test_report_attributes(self):
+        df = pd.DataFrame({'A': [1,2,3], 'B': [1,2,3], 'C': [1,2,3], 'D': [1,2,3]})
+        notes = pd.DataFrame()
+        notes['label'] = ['A', 'B', 'D', 'F']
+        notes['text'] = ['This is the Alpha', 'Beta follows it closely', 'D is the last', 'F is out of place']
+        cp = Transition.from_env('task')
+        cp.upload_attributes(canonical=notes, label_key='label', text_key='text')
+        result = cp.report_attributes(df, stylise=False)
+        self.assertEqual((3, 4), df.shape)
+
     def test_from_remote(self):
         os.environ['AISTAC_PM_PATH'] = "c12s3://aistac-discovery-persist/contracts"
         os.environ['AISTAC_PM_TYPE'] = 'pickle'
@@ -51,20 +61,13 @@ class TransitionTest(unittest.TestCase):
         os.environ['AISTAC_PM_HANDLER'] = "ManagedContentPersistHandler"
         instance = Transition.from_env('task', default_save=False)
         cc = instance.pm.get_connector_contract(connector_name=instance.pm.CONNECTOR_PM_CONTRACT)
-        pprint(cc.to_raw_dict())
+        self.assertTrue(cc.uri.startswith("c12s3://aistac-discovery-persist/contracts"))
+        self.assertEqual("tests.handlers.managed_content_handlers", cc.module_name)
+        self.assertEqual("ManagedContentPersistHandler", cc.handler)
         os.environ.pop('AISTAC_PM_PATH')
         os.environ.pop('AISTAC_PM_TYPE')
         os.environ.pop('AISTAC_PM_MODULE')
         os.environ.pop('AISTAC_PM_HANDLER')
-
-    def test_set_persist_contract(self):
-        """Basic smoke test"""
-        tr = Transition.from_env('test', default_save=False)
-        connector = ConnectorContract(uri=":c12s3///csx/data/",
-                                      module_name="custom_connectors.ManagedContentHandlers",
-                                      handler="ManagedContentPersistHandler",
-                                      token="i9nRzL3NlY3JldN1cnJlbnQtdXNlci1kZXRhaWxzIjpbIlJFQUQiXS2dyYXBoLy4qI_XyiEd0e4",
-                                      api_endpoint="https://api.hotfix.accelerators-dci.insights.ai")
 
     def test_from_env(self):
         os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()

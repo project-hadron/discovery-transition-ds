@@ -221,6 +221,25 @@ class Transition(AbstractComponent):
         return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
+    def description_report(self, df, stylise: bool=True):
+        labels = [f'Attributes ({len(df.columns)})', 'dType', 'Description']
+        file = []
+        for c in df.columns.sort_values().values:
+            line = [c, str(df[c].dtype),
+                    ". ".join(self.pm.report_notes(catalog='attributes', labels=c, drop_dates=True).get('text', []))]
+            file.append(line)
+        df_dd = pd.DataFrame(file, columns=labels)
+        if stylise:
+            style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                     {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+            df_style = df_dd.style.set_table_styles(style)
+            _ = df_style.applymap(self._dtype_color, subset=['dType'])
+            _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
+                                                                                        'font-size': "120%"})
+            return df_style
+        df_dd.set_index(keys=f'Attributes ({len(df.columns)})', inplace=True)
+        return df_dd
+
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract
 
@@ -278,6 +297,20 @@ class Transition(AbstractComponent):
         df.set_index(keys='section', inplace=True)
         return df
 
+    def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,
+                          save=None):
+        """ Allows bulk upload of notes. Assumes a dictionary of key value pairs where the key is the
+        label and the value the text
+
+        :param canonical: a DataFrame of where the key is the label and value is the text
+        :param label_key: the dictionary key name for the labels
+        :param text_key: the dictionary key name for the text
+        :param constraints: (optional) the limited list of acceptable labels. If not in list then ignored
+        :param save: if True, save to file. Default is True
+        """
+        super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog='attributes', label_key=label_key,
+                             text_key=text_key, constraints=constraints, save=save)
+
     def upload_notes(self, canonical: pd.DataFrame, catalog: str, label_key: str, text_key: str, constraints: list=None,
                      save=None):
         """ Allows bulk upload of notes. Assumes a dictionary of key value pairs where the key is the
@@ -292,3 +325,22 @@ class Transition(AbstractComponent):
         """
         super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key,
                              text_key=text_key, constraints=constraints, save=save)
+
+    @staticmethod
+    def _dtype_color(dtype: str):
+        """Apply color to types"""
+        if str(dtype).startswith('cat'):
+            color = '#208a0f'
+        elif str(dtype).startswith('int'):
+            color = '#0f398a'
+        elif str(dtype).startswith('float'):
+            color = '#2f0f8a'
+        elif str(dtype).startswith('date'):
+            color = '#790f8a'
+        elif str(dtype).startswith('bool'):
+            color = '#08488e'
+        elif str(dtype).startswith('str'):
+            color = '#761d38'
+        else:
+            return ''
+        return 'color: %s' % color
