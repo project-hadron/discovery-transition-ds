@@ -29,7 +29,8 @@ class FeatureCatalog(AbstractComponent):
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
                  pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
-                 align_connectors: bool=None):
+                 align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
+                 order_next_available: bool=None, default_replace_intent: bool=None):
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -44,13 +45,20 @@ class FeatureCatalog(AbstractComponent):
          :param reset_templates: (optional) reset connector templates from environ variables. Default True
                                 (see `report_environ()`)
          :param align_connectors: (optional) resets aligned connectors to the template. default Default True
+         :param default_save_intent: (optional) The default action for saving intent in the property manager
+         :param default_intent_level: (optional) the default level intent should be saved at
+         :param order_next_available: (optional) if the default behaviour for the order should be next available order
+         :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = FeatureCatalogPropertyManager(task_name=task_name)
-        _intent_model = FeatureCatalogIntentModel(property_manager=_pm)
+        _intent_model = FeatureCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                                  default_intent_level=default_intent_level,
+                                                  order_next_available=order_next_available,
+                                                  default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
                                  pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
