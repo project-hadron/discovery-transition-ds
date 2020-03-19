@@ -48,12 +48,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         defined by the intent_contract.
 
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
-        and will contain 'inplace' and 'save_intent' as parameters.
+        and will contain 'save_intent' as parameters. It is also assumed that all features have a feature contract to
+        save the feature outcome to
 
         :param canonical: this is the iterative value all intent are applied to and returned.
         :param feature_names: (optional) an single or list of features to run, if list, run in order given
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
-        :return Canonical with parameterised intent applied or None if inplace is True
         """
         # test if there is any intent to run
         if self._pm.has_intent():
@@ -74,7 +74,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                             if isinstance(kwargs, dict):
                                 params.update(kwargs)
                             # add excluded params and set to False
-                            params.update({'inplace': False, 'save_intent': False})
+                            params.update({'save_intent': False})
                             df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())
                 if self._pm.has_connector(_feature_name):
                     handler = self._pm.get_connector_handler(_feature_name)
@@ -294,7 +294,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return result_df
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
-                        upper_quantile: float=None, unindex: bool=None, inplace: bool=False, save_intent: bool=None,
+                        upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ removes outliers by removing the boundary quantiles
@@ -305,7 +305,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param lower_quantile: (optional) the lower quantile in the range 0 < lower_quantile < 1, deafault to 0.001
         :param upper_quantile: (optional) the upper quantile in the range 0 < upper_quantile < 1, deafault to 0.999
         :param unindex: if the passed canonical should be un-index before processing
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -338,7 +337,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                        drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
                        remove_weighting_zeros: bool=False, remove_aggregated: bool=False, drop_dup_index: str=None,
-                       unindex: bool=None, inplace: bool=False, save_intent: bool=None,
+                       unindex: bool=None, save_intent: bool=None,
                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                        remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
@@ -355,7 +354,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param remove_weighting_zeros: removes zero values
         :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
         :param unindex: if the passed canonical should be un-index before processing
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -375,9 +373,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
-        if not inplace:
-            with threading.Lock():
-                canonical = deepcopy(canonical)
+        canonical = deepcopy(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         headers = self._pm.list_formatter(headers)
@@ -399,13 +395,11 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_sub = df_sub.drop(headers, axis=1)
         if drop_group_by:
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
-        if inplace:
-            return
         return df_sub
 
     def interval_categorical(self, canonical: pd.DataFrame, key: str, column: str, granularity: [int, float, list]=None,
                              lower: [int, float]=None, upper: [int, float]=None, label: str=None, categories: list=None,
-                             precision: int=None, unindex: bool=None, inplace: bool=False, save_intent: bool = None,
+                             precision: int=None, unindex: bool=None, save_intent: bool = None,
                              feature_name: [int, str] = None, intent_order: int=None, replace_intent: bool=None,
                              remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ converts continuous representation into discrete representation through interval categorisation
@@ -424,7 +418,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param label: (optional) a label to give the new column
         :param categories:(optional)  a set of labels the same length as the intervals to name the categories
         :param unindex: if the passed canonical should be un-index before processing
-        :param inplace: (optional) if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -514,12 +507,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_rtn[label] = np.select(conditions, choices, default="<NA>")
         df_rtn[label] = df_rtn[label].astype('category', copy=False)
         df_rtn = df_rtn.drop(column, axis=1).set_index(key)
-        if inplace:
-            canonical[label] = df_rtn[label].copy()
         return df_rtn
 
     def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
-                            unindex: bool=None, inplace: bool=False, save_intent: bool=None,
+                            unindex: bool=None, save_intent: bool=None,
                             feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                             remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ flattens a categorical as a sum of one-hot
@@ -531,7 +522,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param index_key: set the key as the index. Default to True
         :param dups: id duplicates should be removed from the original canonical
         :param unindex: if the passed canonical should be un-index before processing
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -551,9 +541,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
-        if not inplace:
-            with threading.Lock():
-                canonical = deepcopy(canonical)
+        canonical = deepcopy(canonical)
         if key not in canonical:
             raise NameError("The key {} can't be found in the DataFrame".format(key))
         if column not in canonical:
@@ -569,8 +557,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         dummy_df = dummy_df.groupby([pd.Grouper(key=key)])[dummy_cols].sum()
         if index_key:
             dummy_df = dummy_df.set_index(key)
-        if inplace:
-            return
         return dummy_df
 
     def date_categorical(self, canonical: pd.DataFrame, key: [str, list], column: str, matrix: [str, list]=None,
@@ -720,15 +706,15 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn[c] = col
         return df_rtn.set_index(key)
 
-    def apply_substitution(self, canonical: pd.DataFrame, headers: [str, list], inplace: bool=False,
+    def apply_substitution(self, canonical: pd.DataFrame, key: str, headers: [str, list],
                            save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
-                           replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
+                           replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> pd.DataFrame:
         """ regular expression substitution of key value pairs to the value string
 
         :param canonical: the value to apply the substitution to
+        :param keys:
         :param headers:
         :param kwargs: a set of keys to replace with the values
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -746,18 +732,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        if not inplace:
-            with threading.Lock():
-                canonical = deepcopy(canonical)
-        headers = self._pm.list_formatter(headers)
+        headers = self._pm.list_formatter(headers, headers)
+        df_rtn = Commons.filter_columns(canonical, headers=headers + [key])
         for c in headers:
             for k, v in kwargs.items():
-                canonical[c].replace(k, v)
-        if inplace:
-            return
-        return canonical
+                df_rtn[c].replace(k, v)
+        return df_rtn
 
-    def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False, inplace: bool=False,
+    def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
@@ -767,7 +749,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: a pd.DataFrame used in the action
         :param code_str: an action on those column values
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -786,16 +767,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        if not inplace:
-            with threading.Lock():
-                canonical = deepcopy(canonical)
+        canonical = deepcopy(canonical)
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
         if 'canonical' not in local_kwargs:
             local_kwargs['canonical'] = canonical
 
         result = exec(code_str, globals(), local_kwargs) if use_exec else eval(code_str, globals(), local_kwargs)
-        if inplace:
-            return
         if result is None:
             return canonical
         return result
