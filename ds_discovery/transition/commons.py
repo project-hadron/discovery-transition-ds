@@ -51,17 +51,13 @@ class Commons(AistacCommons):
         return df
 
     @staticmethod
-    def list_formatter(value) -> [list, None]:
-        """ Useful utility method to convert any type of str, list, tuple or pd.Series into a list"""
-        if isinstance(value, (int, float, str, pd.Timestamp, datetime)):
+    def list_formatter(value) -> list:
+        """ Useful utility method to convert any type of str, list, tuple or pd.Series keys() etc into a list"""
+        if isinstance(value, pd.Timestamp):
             return [value]
-        if isinstance(value, (list, tuple, set, collections.abc.KeysView)):
-            return list(value)
         if isinstance(value, pd.Series):
             return value.tolist()
-        if isinstance(value, dict):
-            return list(value.items())
-        return list()
+        return AistacCommons.list_formatter(value=value)
 
     @staticmethod
     def filter_headers(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,

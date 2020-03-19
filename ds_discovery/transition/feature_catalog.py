@@ -201,6 +201,23 @@ class FeatureCatalog(AbstractComponent):
         """
         self.persist_canonical(connector_name=feature_name, canonical=canonical)
 
+    def add_feature_description(self, feature_name: str, text: str, save: bool=None):
+        """ adds a description note that is included in with the 'report_features'"""
+        if isinstance(text, str) and text:
+            self.pm.set_knowledge(catalog='features', label=feature_name, text=text)
+        self.pm_persist(save)
+        return
+
+    def remove_feature(self, feature_name: str, save: bool=None):
+        """completely removes a feature including connector, intent and description"""
+        if self.pm.has_connector(connector_name=feature_name):
+            self.remove_connector_contract(connector_name=feature_name, save=save)
+        if self.pm.has_intent(level=feature_name):
+            self.remove_intent(level=feature_name)
+        if self.pm.has_knowledge(catalog='features', label=feature_name):
+            self.remove_notes(catalog='features', label=feature_name)
+        return
+
     @staticmethod
     def canonical_report(df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):

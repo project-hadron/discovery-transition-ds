@@ -63,7 +63,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             else:
                 feature_names = sorted(self._pm.get_intent().keys())
             for _feature_name in feature_names:
-                df_feature = canonical
+                df_feature = canonical.copy()
                 level_key = self._pm.join(self._pm.KEY.intent_key, _feature_name)
                 for order in sorted(self._pm.get(level_key, {})):
                     for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
@@ -75,7 +75,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                 params.update(kwargs)
                             # add excluded params and set to False
                             params.update({'inplace': False, 'save_intent': False})
-                            df_feature = eval(f"self.{method}({df_feature}, **{params})", globals(), locals())
+                            df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())
                 if self._pm.has_connector(_feature_name):
                     handler = self._pm.get_connector_handler(_feature_name)
                     handler.persist_canonical(df_feature)
@@ -663,7 +663,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex:
         :param day_first: if the date provided has day first
         :param year_first: if the date provided has year first
-        :param date_format: the format of the output dates, if None then pd.Timestamp
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -710,7 +709,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
                                                         day_first=day_first, year_first=year_first)
                     synthetic = sim.associate_analysis(result, size=size, save_intent=False)
-                    col = col.apply(lambda x:  synthetic.pop() if x is pd.NaT else x)
+                    col = col.apply(lambda x:  synthetic.pop(0) if x is pd.NaT else x)
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     result = DataAnalytics(result)
