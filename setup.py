@@ -70,8 +70,8 @@ setup(
         'numpy',
 
     ],
-    extras_require={'feature_catalog': ['matplotlib', 'seaborn', 'scikit-learn'],
-                    'discovery': ['matplotlib'],
+    extras_require={'feature_catalog': ['matplotlib'],
+                    'discovery': ['matplotlib', 'seaborn', 'scikit-learn'],
                     },
     test_suite='tests',
 )

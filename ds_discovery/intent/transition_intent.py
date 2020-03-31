@@ -6,7 +6,6 @@ import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
-from sklearn.model_selection import train_test_split
 
 from aistac.intent.abstract_intent import AbstractIntentModel
 
@@ -211,7 +210,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drop column that only have 1 value in them
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                            auto_contract: bool=True, test_size: float=None, random_state: int=None,
+                            auto_contract: bool=True,
                             drop_empty_row: bool=None, inplace: bool=False, save_intent: bool=None,
                             intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                             remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
@@ -224,8 +223,6 @@ class TransitionIntentModel(AbstractIntentModel):
                     if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None', ' ']
                     if list then this is considered potential null values.
         :param auto_contract: if the auto_category or to_category should be returned
-        :param test_size: a test percentage split from the df to avoid over-fitting. Default is 0 for no split
-        :param random_state: a random state should be applied to the test train split. Default is None
         :param drop_empty_row: also drop any rows where all the values are empty
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -254,10 +251,7 @@ class TransitionIntentModel(AbstractIntentModel):
             nulls_list = ['NaN', 'nan', 'null', '', 'None', ' ']
         elif not isinstance(nulls_list, list):
             nulls_list = None
-        if isinstance(test_size, float) and 0 < test_size < 1:
-            df_filter, _ = train_test_split(deepcopy(df), test_size=test_size, random_state=random_state)
-        else:
-            df_filter = deepcopy(df)
+        df_filter = deepcopy(df)
         df_len = len(df_filter)
         col_drop = []
         for c in df_filter.columns:
@@ -279,17 +273,15 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drops highly correlated columns
     def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
-                             sample_percent: float=None, random_state: int=None, inplace: bool=False,
-                             save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                             replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+                             inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None,
+                             intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
 
         :param df: data: the Canonical data to drop duplicates from
         :param threshold: (optional) threshold correlation between columns. default 0.998
         :param inc_category: (optional) if category type columns should be converted to numeric representations
-        :param sample_percent: a sample percentage between 0.5 and 1 to avoid over-fitting. Default is 0.85
-        :param random_state: a random state should be applied to the test train split. Default is None
         :param inplace: if the passed Canonical, should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -312,9 +304,7 @@ class TransitionIntentModel(AbstractIntentModel):
             with threading.Lock():
                 df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
-        sample_percent = sample_percent if isinstance(sample_percent, int) and 0.5 < sample_percent < 1 else 0.85
         df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        df_filter, _ = train_test_split(df_filter, test_size=1-sample_percent, random_state=random_state)
         if inc_category:
             for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
