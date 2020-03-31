@@ -4,8 +4,9 @@ import unittest
 
 import numpy as np
 import pandas as pd
+from aistac.properties.property_manager import PropertyManager
 
-from ds_behavioral import DataBuilderTools as tools
+from ds_behavioral import SyntheticBuilder
 from ds_behavioral.sample.sample_data import ProfileSample
 from aistac.handlers.abstract_handlers import ConnectorContract
 
@@ -19,19 +20,20 @@ class CleanerTest(unittest.TestCase):
     """Test: """
 
     def setUp(self):
-        property_manager = TransitionPropertyManager('test')
-        property_manager.set_property_connector(ConnectorContract(uri='data', handler='DummyPersistHandler',
-                                                                  module_name='aistac.handlers.dummy_handlers'))
-        property_manager.reset_intents()
-        self.clean = TransitionIntentModel(property_manager=property_manager)
+        os.environ['AISTAC_PM_PATH'] = os.path.join('work', 'config')
+        os.environ['AISTAC_DEFAULT_PATH'] = os.path.join('work', 'data')
         try:
-            os.makedirs('data')
+            os.makedirs(os.environ['AISTAC_PM_PATH'])
+            os.makedirs(os.environ['AISTAC_DEFAULT_PATH'])
         except:
             pass
+        PropertyManager._remove_all()
+        self.tools = SyntheticBuilder.scratch_pad()
+        self.clean = Transition.scratch_pad()
 
     def tearDown(self):
         try:
-            shutil.rmtree('data')
+            shutil.rmtree('work')
         except:
             pass
 
@@ -40,6 +42,7 @@ class CleanerTest(unittest.TestCase):
         TransitionIntentModel(property_manager=TransitionPropertyManager('test'), default_save_intent=False)
 
     def test_auto_remove(self):
+        tools = self.tools
         df = pd.DataFrame()
         df['single_num'] = tools.get_number(1, 1, quantity=0.7, size=100)
         df['two_num'] = tools.get_number(2, quantity=0.7, size=100)
@@ -53,6 +56,7 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual(['two_num', 'normal'], df.columns.tolist())
 
     def test_auto_remove_predom(self):
+        tools = self.tools
         df = pd.DataFrame()
         df['single_num'] = tools.get_number(1, 1, size=100)
         df['two_num'] = tools.get_number(2, size=100)
@@ -67,7 +71,8 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual(['two_num', 'normal_num', 'two_cat', 'normal_cat'], df.columns.tolist())
 
     def test_clean_headers(self):
-        df = tools.get_profiles()
+        tools = self.tools
+        df = tools.create_profiles()
         control = ['surname', 'forename', 'gender']
         result = df.columns
         self.assertTrue(control, result)
@@ -79,30 +84,33 @@ class CleanerTest(unittest.TestCase):
         self.assertTrue(control, df.columns)
 
     def test_remove_columns(self):
+        tools = self.tools
         clean = self.clean
-        df = tools.get_profiles(size=10)
+        df = tools.create_profiles(size=10)
         result = clean.to_remove(df, headers=['surname'])
         self.assertNotIn('surname', result.columns.values)
 
-        df = tools.get_profiles(size=10)
+        df = tools.create_profiles(size=10)
         clean.to_remove(df, headers=['surname', 'gender'], inplace=True)
         self.assertNotIn('surname', df.columns.values)
         self.assertNotIn('gender', df.columns.values)
 
     def test_select_columns(self):
+        tools = self.tools
         clean = self.clean
-        df = tools.get_profiles(size=10)
+        df = tools.create_profiles(size=10)
         control = ['surname']
         result = clean.to_select(df, headers=['surname'])
         self.assertEqual(['surname'], result.columns.values)
 
-        df = tools.get_profiles(size=10)
+        df = tools.create_profiles(size=10)
         clean.to_select(df, headers=['surname', 'gender'], inplace=True)
         self.assertIn('surname', df.columns.values)
         self.assertIn('gender', df.columns.values)
         self.assertEqual((10,2), df.shape)
 
     def test_contract_pipeline(self):
+        tools = self.tools
         clean = self.clean
         df = pd.DataFrame()
         df['int'] = tools.get_number(100, size=10)
@@ -124,6 +132,7 @@ class CleanerTest(unittest.TestCase):
         self.assertTrue(result.equals(control))
 
     def test_to_float_with_mode(self):
+        tools = self.tools
         clean = self.clean
         col = 'X'
         df = pd.DataFrame()
@@ -136,6 +145,7 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual(control.iloc[3,0], result.iloc[3,0])
 
     def test_to_float_type(self):
+        tools = self.tools
         clean = self.clean
         col = 'X'
         df = pd.DataFrame()
@@ -166,6 +176,7 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual([], Commons.list_formatter(None))
 
     def test_to_date(self):
+        tools = self.tools
         cleaner = self.clean
         df = pd.DataFrame()
         df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y', seed=101)
@@ -188,6 +199,7 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual(list(df.control), list(df.currency))
 
     def test_get_cols(self):
+        tools = self.tools
         cleaner = self.clean
         df = pd.DataFrame()
         df['int'] = tools.get_number(100, size=10)
@@ -198,18 +210,18 @@ class CleanerTest(unittest.TestCase):
         df = cleaner.to_category_type(df, headers='category')
         df = cleaner.to_date_type(df, headers='date')
         control = ['float', 'object', 'date', 'category', 'int']
-        result = cleaner.filter_headers(df)
+        result = Commons.filter_headers(df)
         self.assertTrue(set(result).intersection(control))
         control = ['object']
-        result = cleaner.filter_headers(df, dtype=[object])
+        result = Commons.filter_headers(df, dtype=[object])
         self.assertEqual(control, result)
-        result = cleaner.filter_headers(df, dtype=['object'])
+        result = Commons.filter_headers(df, dtype=['object'])
         self.assertEqual(control, result)
         control = ['float', 'int']
-        result = cleaner.filter_headers(df, dtype=['number'])
+        result = Commons.filter_headers(df, dtype=['number'])
         self.assertTrue(set(result).intersection(control))
         control = ['date']
-        result = cleaner.filter_headers(df, dtype=['datetime'])
+        result = Commons.filter_headers(df, dtype=['datetime'])
         self.assertEqual(control, result)
 
         # self.assertTrue(set(cleaner.filter_headers(self.df, dtype=['object'])).intersection(df['object']))
@@ -230,25 +242,6 @@ class CleanerTest(unittest.TestCase):
         #                 intersection(['PRODUCT_CATEGORY', 'SYSTEM_NAME']))
         # self.assertTrue(set(cleaner.filter_headers(self.df, dtype=['object'], exclude=True)).
         #                 difference(['Dummy_Policy_Number', 'ACTIVITY_ID']))
-
-    def test_filter(self):
-        cleaner = self.clean
-        sample_size = 1000
-        df = pd.DataFrame()
-        df['normal_num'] = tools.get_number(1, 10, size=sample_size, seed=31)
-        df['single num'] = tools.get_number(1, 1, quantity=0.8, size=sample_size, seed=31)
-        df['weight_num'] = tools.get_number(1, 2, weight_pattern=[90, 1], size=sample_size, seed=31)
-        df['null'] = tools.get_number(1, 100, quantity=0, size=sample_size, seed=31)
-        df['single cat'] = tools.get_category(['A'], quantity=0.6, size=sample_size, seed=31)
-        df['weight_cat'] = tools.get_category(['A', 'B', 'C'], weight_pattern=[80, 1, 1], size=sample_size, seed=31)
-        df['normal_cat'] = tools.get_category(['A', 'B', 'C'], size=sample_size, seed=31)
-        result = cleaner.filter_headers(df, headers=['normal_num', 'single num'])
-        control = ['normal_num', 'single num']
-        self.assertCountEqual(control, result)
-        result = cleaner.filter_headers(df, dtype=['number'])
-        control = ['weight_num', 'normal_num', 'single num']
-        self.assertCountEqual(control, result)
-
 
 
 

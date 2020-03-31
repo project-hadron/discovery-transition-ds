@@ -44,14 +44,14 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         Transition.from_env('TestAgent')
 
-    def test_report_attributes(self):
+    def test_dictionary_report(self):
         df = pd.DataFrame({'A': [1,2,3], 'B': [1,2,3], 'C': [1,2,3], 'D': [1,2,3]})
         notes = pd.DataFrame()
         notes['label'] = ['A', 'B', 'D', 'F']
         notes['text'] = ['This is the Alpha', 'Beta follows it closely', 'D is the last', 'F is out of place']
         cp = Transition.from_env('task')
         cp.upload_attributes(canonical=notes, label_key='label', text_key='text')
-        result = cp.report_attributes(df, stylise=False)
+        result = cp.dictionary_report(df, stylise=False)
         self.assertEqual((3, 4), df.shape)
 
     def test_from_remote(self):
@@ -96,59 +96,50 @@ class TransitionTest(unittest.TestCase):
         OLD STUFF BELLOW
     """
 
-#     def test_report_connectors(self):
-#         pm = TransitionPropertyManager('task')
-#         im = TransitionIntentModel(pm)
-#         instance = Transition(pm, im)
-#         instance._init_properties(pm, os.environ['AISTAC_PM_PATH'])
-#         sc = ConnectorContract(uri='synthetic_customer.csv',
-#                                module_name=instance.PYTHON_MODULE_NAME, handler=instance.PYTHON_HANDLER, sep=',', encoding='latin1')
-#         instance.set_source_contract(connector_contract=sc)
-#         pc = ConnectorContract(uri= instance.file_pattern(),
-#                                module_name=instance.PYTHON_MODULE_NAME,
-#                                handler=instance.PYTHON_HANDLER)
-#         instance.set_persist_contract(connector_contract=pc)
-#         report = instance.report_connectors(stylise=True)
-#         print(report.columns)
-#
-#
-#     def test_factory_remote(self):
-#         tr = Transition.from_env('test_factory')
-#         tr.set_feature_contract(uri="s3://aistac-transition-persist/persist/transition/test.pkl")
-#         tr.set_source_contract(uri='s3://aistac-transition-persist/data/synthetic/synthetic_customer.csv',
-#                                module_name=tr.MODULE_NAME, handler=tr.HANDLER_SOURCE)
-#         df = tr.load_source_canonical()
-#         self.assertEqual((500, 16), df.shape)
-#
-#     def test_keys(self):
-#         tr = Transition.from_env('Example01')
-#         join = tr.pm.join
-#         self.assertEqual('data.Example01.connectors', tr.pm.KEY.connectors_key)
-#         self.assertEqual('data.Example01.cleaners', tr.pm.KEY.cleaners_key)
-#         self.assertEqual('data.Example01.connectors.resource', join(tr.pm.KEY.connectors_key, 'resource'))
-#         self.assertEqual('data.Example01.connectors.type', join(tr.pm.KEY.connectors_key, 'type'))
-#         self.assertEqual('data.Example01.connectors.location', join(tr.pm.KEY.connectors_key, 'location'))
-#         self.assertEqual('data.Example01.connectors.module', join(tr.pm.KEY.connectors_key, 'module'))
-#         self.assertEqual('data.Example01.connectors.handler', join(tr.pm.KEY.connectors_key, 'handler'))
-#         self.assertEqual('data.Example01.connectors.kwargs', join(tr.pm.KEY.connectors_key, 'kwargs'))
-#
-#     def test_is_contract_empty(self):
-#         tr = Transition.from_env('synthetic')
-#         self.assertTrue(tr.is_contract_empty())
-#         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
-#         self.assertFalse(tr.is_contract_empty())
-#         tr.remove_source_contract()
-#         self.assertTrue(tr.is_contract_empty())
-#         section = {'auto_clean_header': {'case': 'title', 'rename_map': {'forename': 'first_name'}, 'replace_spaces': '_'}}
-#         tr.set_cleaner(section)
-#         self.assertFalse(tr.is_contract_empty())
-#         tr.remove_cleaner('auto_clean_header')
-#         self.assertTrue(tr.is_contract_empty())
-#         tr.create_snapshot()
-#         self.assertFalse(tr.is_contract_empty())
-#         tr.delete_snapshot(tr.snapshots[0])
-#         self.assertTrue(tr.is_contract_empty())
-#
+    # def test_report_connectors(self):
+    #     pm = TransitionPropertyManager('task')
+    #     im = TransitionIntentModel(pm)
+    #     instance = Transition(pm, im)
+    #     instance._init_properties(pm, os.environ['AISTAC_PM_PATH'])
+    #     sc = ConnectorContract(uri='synthetic_customer.csv',
+    #                            module_name=instance.PYTHON_MODULE_NAME, handler=instance.PYTHON_HANDLER, sep=',', encoding='latin1')
+    #     instance.set_source_contract(connector_contract=sc)
+    #     pc = ConnectorContract(uri= instance.file_pattern(),
+    #                            module_name=instance.PYTHON_MODULE_NAME,
+    #                            handler=instance.PYTHON_HANDLER)
+    #     instance.set_persist_contract(connector_contract=pc)
+    #     report = instance.report_connectors(stylise=True)
+    #     print(report.columns)
+    #
+    # def test_keys(self):
+    #     tr = Transition.from_env('Example01')
+    #     join = tr.pm.join
+    #     self.assertEqual('data.Example01.connectors', tr.pm.KEY.connectors_key)
+    #     self.assertEqual('data.Example01.cleaners', tr.pm.KEY.cleaners_key)
+    #     self.assertEqual('data.Example01.connectors.resource', join(tr.pm.KEY.connectors_key, 'resource'))
+    #     self.assertEqual('data.Example01.connectors.type', join(tr.pm.KEY.connectors_key, 'type'))
+    #     self.assertEqual('data.Example01.connectors.location', join(tr.pm.KEY.connectors_key, 'location'))
+    #     self.assertEqual('data.Example01.connectors.module', join(tr.pm.KEY.connectors_key, 'module'))
+    #     self.assertEqual('data.Example01.connectors.handler', join(tr.pm.KEY.connectors_key, 'handler'))
+    #     self.assertEqual('data.Example01.connectors.kwargs', join(tr.pm.KEY.connectors_key, 'kwargs'))
+    #
+    # def test_is_contract_empty(self):
+    #     tr = Transition.from_env('synthetic')
+    #     self.assertTrue(tr.is_contract_empty())
+    #     tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
+    #     self.assertFalse(tr.is_contract_empty())
+    #     tr.remove_source_contract()
+    #     self.assertTrue(tr.is_contract_empty())
+    #     section = {'auto_clean_header': {'case': 'title', 'rename_map': {'forename': 'first_name'}, 'replace_spaces': '_'}}
+    #     tr.set_cleaner(section)
+    #     self.assertFalse(tr.is_contract_empty())
+    #     tr.remove_cleaner('auto_clean_header')
+    #     self.assertTrue(tr.is_contract_empty())
+    #     tr.create_snapshot()
+    #     self.assertFalse(tr.is_contract_empty())
+    #     tr.delete_snapshot(tr.snapshots[0])
+    #     self.assertTrue(tr.is_contract_empty())
+    #
 #     def test_source_report(self):
 #         tr = Transition.from_env('synthetic')
 #         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
@@ -178,38 +169,38 @@ class TransitionTest(unittest.TestCase):
 #         tr.persist_contract()
 #         return
 #
-#     def test_load_clean_layers(self):
-#         tr = Transition.from_env('Example01')
-#         tr.set_version('0.01')
-#         tr.set_source_contract('example01.csv', sep=',', encoding='latin1', load=False)
-#         df = tr.load_source_canonical()
-#
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True))
-#         control = {'0': {'auto_clean_header': {'replace_spaces': '_'}}}
-#         self.assertEqual(control, tr.pm.cleaners)
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
-#         control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}}}
-#         self.assertEqual(control, tr.pm.cleaners)
-#
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='#', inplace=True), level=-1)
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='$', inplace=True), level=-1)
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
-#         control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
-#                    '1': {'auto_clean_header': {'replace_spaces': '#'}},
-#                    '2': {'auto_clean_header': {'replace_spaces': '$'}}}
-#         self.assertEqual(control, tr.pm.cleaners)
-#
-#         tr.set_cleaner(tr.clean.auto_clean_header(df, case='lower', inplace=True), level=1)
-#         control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
-#                    '1': {'auto_clean_header': {'case': 'lower', 'replace_spaces': '_'}},
-#                    '2': {'auto_clean_header': {'replace_spaces': '$'}}}
-#         self.assertEqual(control, tr.pm.cleaners)
-#
-#         tr.remove_cleaner()
-#         control = {}
-#         self.assertEqual(control, tr.pm.cleaners)
-#         return
-#
+    def test_load_clean_layers(self):
+        tr = Transition.from_env('Example01')
+        tr.set_version('0.01')
+        tr.set_source('example01.csv', sep=',', encoding='latin1', load=False)
+        df = tr.load_source_canonical()
+
+        tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True))
+        control = {'0': {'auto_clean_header': {'replace_spaces': '_'}}}
+        self.assertEqual(control, tr.pm.cleaners)
+        tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
+        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}}}
+        self.assertEqual(control, tr.pm.cleaners)
+
+        tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='#', inplace=True), level=-1)
+        tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='$', inplace=True), level=-1)
+        tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
+        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
+                   '1': {'auto_clean_header': {'replace_spaces': '#'}},
+                   '2': {'auto_clean_header': {'replace_spaces': '$'}}}
+        self.assertEqual(control, tr.pm.cleaners)
+
+        tr.set_cleaner(tr.clean.auto_clean_header(df, case='lower', inplace=True), level=1)
+        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
+                   '1': {'auto_clean_header': {'case': 'lower', 'replace_spaces': '_'}},
+                   '2': {'auto_clean_header': {'replace_spaces': '$'}}}
+        self.assertEqual(control, tr.pm.cleaners)
+
+        tr.remove_cleaner()
+        control = {}
+        self.assertEqual(control, tr.pm.cleaners)
+        return
+
 #     def test_load_clean_remove(self):
 #         tr = Transition.from_env('Example01')
 #         tr.set_version('0.01')

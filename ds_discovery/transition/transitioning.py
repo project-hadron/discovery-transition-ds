@@ -83,6 +83,16 @@ class Transition(AbstractComponent):
         _handler = 'RedisPersistHandler'
         return _module_name, _handler
 
+    @classmethod
+    def discovery_pad(cls):
+        """ A class method to use the Components discovery methods as a scratch pad"""
+        return DataDiscovery()
+
+    @classmethod
+    def visual_pad(cls):
+        """ A class method to use the Components visualisation methods as a scratch pad"""
+        return Visualisation()
+
     @property
     def intent_model(self) -> TransitionIntentModel:
         """The intent model instance"""
@@ -221,7 +231,7 @@ class Transition(AbstractComponent):
         return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def description_report(self, df, stylise: bool=True):
+    def dictionary_report(self, df, stylise: bool=True):
         labels = [f'Attributes ({len(df.columns)})', 'dType', 'Description']
         file = []
         for c in df.columns.sort_values().values:

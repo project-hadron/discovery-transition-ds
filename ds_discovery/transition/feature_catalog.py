@@ -1,6 +1,8 @@
 import pandas as pd
 
 from aistac.handlers.abstract_handlers import ConnectorContract
+
+from ds_discovery.transition.commons import Commons
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from aistac.components.abstract_component import AbstractComponent
@@ -78,6 +80,16 @@ class FeatureCatalog(AbstractComponent):
         _handler = 'RedisPersistHandler'
         return _module_name, _handler
 
+    @classmethod
+    def discovery_pad(cls):
+        """ A class method to use the Components discovery methods as a scratch pad"""
+        return DataDiscovery()
+
+    @classmethod
+    def visual_pad(cls):
+        """ A class method to use the Components visualisation methods as a scratch pad"""
+        return Visualisation()
+
     @property
     def intent_model(self) -> FeatureCatalogIntentModel:
         """The intent model instance"""
@@ -151,7 +163,7 @@ class FeatureCatalog(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE, save=save)
 
-    def set_catalog_feature(self, feature_name: str, versioned: bool=None, stamped: bool=None, file_type: str=None,
+    def set_catalog_feature(self, feature_name: str, description: str=None, versioned: bool=None, stamped: bool=None, file_type: str=None,
                             save: bool=None):
         """sets the persist feature contract using the TEMPLATE_PERSIST connector contract
 
@@ -166,6 +178,9 @@ class FeatureCatalog(AbstractComponent):
                                         file_type=file_type)
         self.add_connector_from_template(connector_name=feature_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save)
+        if isinstance(description, str):
+            self.pm.set_intent_description(level=feature_name, text=description)
+        return
 
     def load_source_canonical(self) -> [pd.DataFrame]:
         """returns the contracted source data as a DataFrame """
@@ -201,11 +216,11 @@ class FeatureCatalog(AbstractComponent):
         """
         self.persist_canonical(connector_name=feature_name, canonical=canonical)
 
-    def add_feature_description(self, feature_name: str, text: str, save: bool=None):
+    def add_feature_description(self, feature_name: str, description: str, save: bool=None):
         """ adds a description note that is included in with the 'report_features'"""
-        if isinstance(text, str) and text:
-            self.pm.set_knowledge(catalog='features', label=feature_name, text=text)
-        self.pm_persist(save)
+        if isinstance(description, str) and description:
+            self.pm.set_intent_description(level=feature_name, text=description)
+            self.pm_persist(save)
         return
 
     def remove_feature(self, feature_name: str, save: bool=None):
@@ -214,8 +229,29 @@ class FeatureCatalog(AbstractComponent):
             self.remove_connector_contract(connector_name=feature_name, save=save)
         if self.pm.has_intent(level=feature_name):
             self.remove_intent(level=feature_name)
-        if self.pm.has_knowledge(catalog='features', label=feature_name):
-            self.remove_notes(catalog='features', label=feature_name)
+        return
+
+    def run_feature_pipeline(self, canonical: pd.DataFrame, feature_names: [str, list]=None, add_connector: bool=None,
+                             save: bool=None):
+        """runs all features within the feature catalog or an optional set of features
+
+        :param canonical: A canonical reference for the features
+        :param feature_names: (optional) a single or list of features to run
+        :param add_connector: (optional) Adds a versioned feature connector if not yet added. Default to True
+        :param save: (optional) if True, persist changes to property manager. Default is True
+        """
+        add_connector = add_connector if isinstance(add_connector, bool) else True
+        if isinstance(feature_names, (str, list)):
+            feature_names = Commons.list_formatter(feature_names)
+        else:
+            feature_names = Commons.list_formatter(self.pm.get_intent())
+        for feature in feature_names:
+            if not self.pm.has_connector(feature):
+                if not add_connector:
+                    continue
+                self.set_catalog_feature(feature_name=feature, versioned=True, save=save)
+            result = self.intent_model.run_intent_pipeline(canonical, feature)
+            self.save_catalog_feature(feature_name=feature, canonical=result)
         return
 
     @staticmethod
@@ -235,29 +271,24 @@ class FeatureCatalog(AbstractComponent):
         return DataDiscovery.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def report_feature_catalog(self, connector_filter: [str, list]=None, stylise: bool=True):
+    def report_feature_catalog(self, feature_names: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract
 
-        :param connector_filter: (optional) filters on the connector name.
+        :param feature_names: (optional) filters on specific feature names.
         :param stylise: (optional) returns a stylised DataFrame with formatting
         :return: pd.DataFrame
         """
         stylise = True if not isinstance(stylise, bool) else stylise
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        connector_filter = self.pm.list_formatter(connector_filter)
-        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
-        df.rename(columns={'connector_name': 'feature_name'}, inplace=True)
-        df.set_index(keys='feature_name', inplace=True)
-        df.drop(labels=[self.CONNECTOR_SOURCE, self.TEMPLATE_PERSIST,  self.TEMPLATE_SOURCE,
-                        self.pm.CONNECTOR_PM_CONTRACT], inplace=True, errors='ignore')
-        df.drop(columns=['module_name', 'handler', 'kwargs', 'query', 'aligned'], inplace=True, errors='ignore')
-
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=feature_names,as_description=True,
+                                                               level_label='feature_name'), orient='columns')
         if stylise:
-            df.reset_index(inplace=True)
             df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
             _ = df_style.set_properties(subset=['feature_name'], **{'font-weight': 'bold'})
             return df_style
+        else:
+            df.set_index(keys='feature_name', inplace=True)
         return df
 
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):

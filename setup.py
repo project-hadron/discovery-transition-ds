@@ -68,8 +68,10 @@ setup(
         'pyyaml',
         'pandas>0.25',
         'numpy',
-        'matplotlib',
-        'seaborn',
+
     ],
+    extras_require={'feature_catalog': ['matplotlib', 'seaborn', 'scikit-learn'],
+                    'discovery': ['matplotlib'],
+                    },
     test_suite='tests',
 )

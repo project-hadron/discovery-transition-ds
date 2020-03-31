@@ -8,9 +8,6 @@ aistac-foundation
 pyyaml
 pandas
 numpy
-matplotlib
-scikit-learn
-seaborn
 
 # SQl and HTML libs
 #sqlalchemy

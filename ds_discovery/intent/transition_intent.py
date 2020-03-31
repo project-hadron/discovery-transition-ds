@@ -74,6 +74,45 @@ class TransitionIntentModel(AbstractIntentModel):
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
+    def auto_remove_null_rows(self, df, nulls_list: list=None, inplace: bool=False, save_intent: bool=None,
+                              intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                              remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+        """ automatically removes rows where the full row 
+
+        :param df: the pandas DataFrame to remove null rows from
+        :param nulls_list: potential nul values to consider other than just np.nan
+        :param nulls_list:  potential null values to replace.
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
+
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
+        for c in df.columns:
+            for item in nulls_list:
+                df[c] = df[c].replace(item, np.nan)
+        if inplace:
+            df.dropna(axis='index', how='all', inplace=True)
+            return
+        return df.dropna(axis='index', how='all', inplace=False)
+
     def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=False,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):

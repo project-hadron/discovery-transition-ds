@@ -1,5 +1,4 @@
 import inspect
-import threading
 from copy import deepcopy
 import pandas as pd
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
@@ -8,12 +7,12 @@ import matplotlib.dates as mdates
 
 from aistac.intent.abstract_intent import AbstractIntentModel
 
-from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.transition.commons import Commons
 from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
-
-from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
+# scratch_pads
+from ds_discovery.transition.transitioning import Transition
+from ds_behavioral.components.synthetic_builder import SyntheticBuilder
 
 __author__ = 'Darryl Oatridge'
 
@@ -43,7 +42,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical, feature_names: [int, str, list] = None, **kwargs):
+    def run_intent_pipeline(self, canonical, feature_name: [int, str], **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -52,36 +51,28 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         save the feature outcome to
 
         :param canonical: this is the iterative value all intent are applied to and returned.
-        :param feature_names: (optional) an single or list of features to run, if list, run in order given
+        :param feature_name: features to run
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
+        :return
         """
         # test if there is any intent to run
         if self._pm.has_intent():
-            # get the list of levels to run
-            if isinstance(feature_names, (int, str, list)):
-                feature_names = self._pm.list_formatter(feature_names)
-            else:
-                feature_names = sorted(self._pm.get_intent().keys())
-            for _feature_name in feature_names:
-                df_feature = canonical.copy()
-                level_key = self._pm.join(self._pm.KEY.intent_key, _feature_name)
-                for order in sorted(self._pm.get(level_key, {})):
-                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
-                        if method in self.__dir__():
-                            # fail safe in case kwargs was sored as the reference
-                            params.update(params.pop('kwargs', {}))
-                            # add method kwargs to the params
-                            if isinstance(kwargs, dict):
-                                params.update(kwargs)
-                            # add excluded params and set to False
-                            params.update({'save_intent': False})
-                            df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())
-                if self._pm.has_connector(_feature_name):
-                    handler = self._pm.get_connector_handler(_feature_name)
-                    handler.persist_canonical(df_feature)
-                else:
-                    raise ConnectionError(f"The feature name {_feature_name} has no connector contract set.")
-        return
+            # run the feature
+            df_feature = canonical.copy()
+            level_key = self._pm.join(self._pm.KEY.intent_key, feature_name)
+            for order in sorted(self._pm.get(level_key, {})):
+                for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                    if method in self.__dir__():
+                        # fail safe in case kwargs was sored as the reference
+                        params.update(params.pop('kwargs', {}))
+                        # add method kwargs to the params
+                        if isinstance(kwargs, dict):
+                            params.update(kwargs)
+                        # add excluded params and set to False
+                        params.update({'save_intent': False})
+                        df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())
+            return df_feature
+        raise ValueError(f"The feature '{feature_name}, can't be found in the feature catalog")
 
     def flatten_date_diff(self, canonical: pd.DataFrame, key: str, first_date: str, second_date: str,
                           aggregator: str=None, units: str=None, label: str=None, precision: int=None,
@@ -114,7 +105,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
@@ -122,7 +113,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         precision = precision if isinstance(precision, int) else 0
         units = units if isinstance(units, str) else 'D'
         label = label if isinstance(label, str) else f'{second_date}-{first_date}'
-        df = deepcopy(Commons.filter_columns(canonical, headers=[key, first_date, second_date])).dropna()
+        df = Commons.filter_columns(canonical, headers=[key, first_date, second_date]).dropna(axis='index', how='any')
         df_diff = pd.DataFrame()
         df_diff[key] = df[key]
         result = df[second_date].sub(df[first_date], axis=0) / np.timedelta64(1, units)
@@ -161,7 +152,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
@@ -206,7 +197,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
@@ -275,7 +266,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if isinstance(unindex, bool) and unindex:
@@ -291,7 +282,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     if isinstance(otherwise, str):
                         str_code = f"{str_code}, {otherwise}"
                 result_df[label] = result_df.where(eval(str_code, globals(), locals()))
-        return result_df
+        return result_df.dropna(axis='index', how='all', inplace=False)
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
@@ -319,7 +310,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
@@ -368,7 +359,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
@@ -432,7 +423,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
@@ -536,7 +527,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
@@ -596,7 +587,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if key not in canonical:
@@ -663,13 +654,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
-        sim = SyntheticIntentModel(self._pm, default_save_intent=False)
-        tr = TransitionIntentModel(self._pm, default_save_intent=False)
+        sim = SyntheticBuilder.scratch_pad()
+        tr = Transition.scratch_pad()
         headers = self._pm.list_formatter(headers)
         if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
@@ -695,7 +686,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
                                                         day_first=day_first, year_first=year_first)
                     synthetic = sim.associate_analysis(result, size=size, save_intent=False)
-                    col = col.apply(lambda x:  synthetic.pop(0) if x is pd.NaT else x)
+                    col = col.apply(lambda x:  synthetic.pop(0) if x == pd.to_datetime(pd.NaT) else x)
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     result = DataAnalytics(result)
@@ -712,7 +703,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """ regular expression substitution of key value pairs to the value string
 
         :param canonical: the value to apply the substitution to
-        :param keys:
+        :param key:
         :param headers:
         :param kwargs: a set of keys to replace with the values
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -729,7 +720,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         headers = self._pm.list_formatter(headers, headers)
@@ -764,7 +755,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
         canonical = deepcopy(canonical)
@@ -780,3 +771,27 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     """
         PRIVATE METHODS SECTION
     """
+    def _set_intend_signature(self, intent_params: dict, feature_name: [int, str]=None, intent_order: int=None,
+                              replace_intent: bool=None, remove_duplicates: bool=None, save_intent: bool=None):
+        """ sets the intent section in the configuration file. Note: by default any identical intent, e.g.
+        intent with the same intent (name) and the same parameter values, are removed from any level.
+
+        :param intent_params: a dictionary type set of configuration representing a intent section contract
+        :param feature_name: (optional) the feature name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        """
+        if save_intent or (not isinstance(save_intent, bool) and self._default_save_intent):
+            if not isinstance(feature_name, (str, int)) or not feature_name:
+                raise ValueError(f"if the intent is to be saved then a feature name must be provided")
+        super()._set_intend_signature(intent_params=intent_params, intent_level=feature_name, intent_order=intent_order,
+                                      replace_intent=replace_intent, remove_duplicates=remove_duplicates,
+                                      save_intent=save_intent)
+        return
