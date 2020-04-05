@@ -2,7 +2,7 @@ import re
 import threading
 from copy import deepcopy
 import pandas as pd
-from aistac.components.aistac_commons import AistacCommons
+from aistac.components.aistac_commons import AistacCommons, AnalyticsCommons
 
 __author__ = 'Darryl Oatridge'
 
@@ -147,3 +147,21 @@ class Commons(AistacCommons):
             field_length = df[column].apply(str).str.len()
             return df.loc[field_length.argmax(), column], df.loc[field_length.argmin(), column]
         return df[column].apply(str).str.len().max(), df[column].apply(str).str.len().min()
+
+
+class DataAnalytics(AnalyticsCommons):
+
+    @property
+    def weight_map(self):
+        return pd.Series(data=self.patterns.weight_pattern, index=self.intent.selection, copy=True, dtype=float)
+
+    @property
+    def sample_map(self):
+        return pd.Series(data=self.patterns.sample_distribution, index=self.intent.selection, copy=True, dtype=float)
+
+    @property
+    def dominance_map(self):
+        return pd.Series(data=self.patterns.dominance_weighting, index=self.patterns.dominant_values, copy=True,
+                         dtype=float)
+
+

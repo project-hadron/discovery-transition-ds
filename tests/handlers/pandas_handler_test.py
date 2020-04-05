@@ -2,8 +2,8 @@ import unittest
 import os
 import shutil
 
-from ds_behavioral import DataBuilderTools
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
+from ds_behavioral import SyntheticBuilder
+from aistac.handlers.abstract_handlers import ConnectorContract
 
 from ds_discovery.handlers.pandas_handlers import PandasSourceHandler, PandasPersistHandler
 

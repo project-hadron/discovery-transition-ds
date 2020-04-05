@@ -1,9 +1,8 @@
 import os
-import requests
 from contextlib import closing
 import threading
-
 import pandas as pd
+import requests
 import yaml
 try:
     import cPickel as pickle

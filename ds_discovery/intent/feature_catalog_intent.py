@@ -8,8 +8,8 @@ import matplotlib.dates as mdates
 from aistac.intent.abstract_intent import AbstractIntentModel
 
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_discovery.transition.commons import Commons
-from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
+from ds_discovery.transition.commons import Commons, DataAnalytics
+from ds_discovery.transition.discovery import DataDiscovery
 # scratch_pads
 from ds_discovery.transition.transitioning import Transition
 from ds_behavioral.components.synthetic_builder import SyntheticBuilder
@@ -169,7 +169,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn.set_index(key)
 
     def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
-                        default: [int, float, str]=None, label: str=None, unindex: bool=None, save_intent: bool=None,
+                        default: [int, float, str]=None, label: str=None, include: list=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
@@ -203,8 +203,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = self._pm.list_formatter(key)
+        include = self._pm.list_formatter(include)
         label = label if isinstance(label, str) else column
-        df_rtn = Commons.filter_columns(canonical, headers=key)
+        df_rtn = Commons.filter_columns(canonical, headers=set(key + include))
         str_code = ''
         if isinstance(conditions, tuple):
             conditions = [conditions]
@@ -233,24 +234,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn[label] = np.select(selection, choices)
         return df_rtn.set_index(key)
 
-    def apply_where(self, canonical: pd.DataFrame, key: [str, list], column: [str, list], condition: str,
-                    outcome: str=None, otherwise: str=None, unindex: bool=None, save_intent: bool=None,
-                    feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                    remove_duplicates: bool=None) -> pd.DataFrame:
-        """applies a condition to the given column label returning the result with the key as index. For the
-        'condition', 'outcome' or 'otherwise' parameters that reference the original DataFrame, use 'canonical' as
-        the DataFrame name e.g "canonical['ref_column'] > 23"
+    def select_where(self, canonical: pd.DataFrame, key: [str, list], conditions: dict, inc_columns: list=None,
+                     unindex: bool=None, save_intent: bool=None,feature_name: [int, str]=None, intent_order: int=None,
+                     replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ returns a selected result based upon a set of conditions.
 
         :param canonical: the Pandas.DataFrame to get the column headers from
         :param key: the key column to index on
-        :param column: a list of headers to apply the condition on,
-        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
-                 example:  "condition= > 0.98"
-                 or:       ".str.contains('shed')"
-        :param outcome: an optional outcome if the condition is true
-                 example: "'red'"
-                 or       "canonical['alt']"
-        :param otherwise an alternative to the outcome condition and has the same examples as outcome
+        :param conditions: a dictionary of conditions with header as keay and condition as value
+                 example:  {'value': '=>0.98'}
+                 or:       'building': ".str.contains('shed')", 'age': '>50'}
+        :param inc_columns: additional columns to include in the returning DataFrame
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
@@ -269,20 +263,22 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        canonical = deepcopy(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
-        column = self._pm.list_formatter(column)
         key = self._pm.list_formatter(key)
-        result_df = Commons.filter_columns(canonical, headers=set(column + key))
-        if isinstance(condition, str):
-            for label in column:
-                str_code = f"result_df['{label}']{condition}"
-                if isinstance(outcome, str):
-                    str_code = f"{str_code}, {outcome}"
-                    if isinstance(otherwise, str):
-                        str_code = f"{str_code}, {otherwise}"
-                result_df[label] = result_df.where(eval(str_code, globals(), locals()))
-        return result_df.dropna(axis='index', how='all', inplace=False)
+        inc_columns = self._pm.list_formatter(inc_columns)
+        if not inc_columns:
+            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
+        if isinstance(conditions, dict):
+            intersect_idx = canonical.index
+            for header, condition in conditions.items():
+                s_values = canonical[header]
+                idx = eval(f"s_values.where(s_values{condition}).dropna().index", globals(), locals())
+                intersect_idx = intersect_idx.intersection(idx)
+            canonical = canonical.iloc[intersect_idx]
+        canonical = Commons.filter_columns(canonical, headers=list(set(key + inc_columns)))
+        return canonical.set_index(key)
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
@@ -629,11 +625,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: the pd.DataFrame to replace missing values in
         :param key: the key column
         :param headers: the headers in the pd.DataFrame to apply the substitution too
-        :param granularity: (optional) the granularity of the analysis across the range.
-                int passed - the number of sections to break the value range into
-                pd.Timedelta passed - a frequency time delta
-        :param lower: (optional) the lower limit of the number or date value. Takes min() if not set
-        :param upper: (optional) the upper limit of the number or date value. Takes max() if not set
+        :param granularity: (optional) the granularity of the analysis across the range. Default is 3
+                int passed - represents the number of periods
+                float passed - the length of each interval
+                list[tuple] - specific interval periods e.g []
+                list[float] - the percentile or quantities, All should fall between 0 and 1
+        :param lower: (optional) the lower limit of the number value. Default min()
+        :param upper: (optional) the upper limit of the number value. Default max()
         :param nulls_list: (optional) a list of nulls other than np.nan that should be considered null
         :param replace_zero: (optional) if zero what to replace the weighting value with to avoid zero probability
         :param precision: (optional) by default set to 3.

@@ -9,8 +9,10 @@ import unittest
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Transition
-from ds_discovery.transition.discovery import DataDiscovery as Discover, DataAnalytics
-from ds_behavioral.component.synthetic_component import SyntheticBuilder
+from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
+from ds_discovery.transition.commons import DataAnalytics
+from ds_behavioral import SyntheticBuilder
+
 
 class DiscoveryAnalysisMethod(unittest.TestCase):
 
@@ -36,15 +38,15 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        Discover()
+        self.assertEqual(DataDiscovery, type(Discover()))
 
     def test_filter_univariate_roc_auc(self):
         tr = Transition.from_env('test')
-        tr.set_source('paribas.csv', nrows=50000)
+        tr.set_source('paribas.csv', nrows=5000)
         data = tr.load_source_canonical()
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55)
         self.assertCountEqual(['v10', 'v129', 'v14', 'v62', 'v50'], result)
-        # Custome classifier
+        # Custom classifier
         classifier_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55, package='catboost' ,
                                                     model='CatBoostClassifier', classifier_kwargs=classifier_kwargs,
@@ -82,7 +84,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp'], result)
 
     def test_discovery_analytics_class(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         analytics = DataAnalytics(label='tester', analysis=result)
@@ -90,7 +92,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(analytics.sample_distribution, analytics.sample_map.to_list())
 
     def test_analyse_category(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats']
@@ -168,15 +170,16 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
-        result = Discover.analyse_number(dataset)
-        self.assertEqual([50.0], result.get('zero_count'))
-        dataset = [1,0,0,2,5,4,0,4,1,0]
-        result = Discover.analyse_number(dataset, lower=0, granularity=3)
-        self.assertEqual([40.0], result.get('zero_count'))
-        self.assertEqual([10], result.get('sample'))
-        result = Discover.analyse_number(dataset, lower=1, granularity=3)
-        self.assertEqual([40.0], result.get('zero_count'))
-        self.assertEqual([6], result.get('sample'))
+        result = DataAnalytics(analysis=Discover.analyse_number(dataset), label='test')
+        pprint(result.to_dict)
+        # self.assertEqual([50.0], result.get('dominance_weighting'))
+        # dataset = [1,0,0,2,5,4,0,4,1,0]
+        # result = Discover.analyse_number(dataset, lower=0, granularity=3)
+        # self.assertEqual([40.0], result.get('dominance_weighting'))
+        # self.assertEqual([10], result.get('sample'))
+        # result = Discover.analyse_number(dataset, lower=1, granularity=3)
+        # self.assertEqual([40.0], result.get('dominance_weighting'))
+        # self.assertEqual([6], result.get('sample'))
 
     def test_analysis_granularity_list(self):
         dataset = [0,1,2,3]
@@ -211,7 +214,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(8, result.upper)
 
     def test_analyse_date(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
         ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
         result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
@@ -263,9 +266,10 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(control, result)
 
     def test_analyse_associate_single(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         size = 50
-        df = tools.create_profiles(size=size, dominance=0.6, seed=31)
+        df = pd.DataFrame()
+        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
         # category
         columns_list = [{'gender': {}}]
         result = Discover.analyse_association(df, columns_list)
@@ -286,7 +290,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_association(df, columns_list)
         self.assertEqual(control, result)
         # number
-        df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['numbers'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         columns_list = [{'numbers': {'type': 'number', 'granularity': 3}}]
         result = Discover.analyse_association(df, columns_list)
         control = {'numbers': {'analysis': {'intent': {'dtype': 'number',
@@ -341,15 +345,14 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(control, result)
 
     def test_analyse_associate_multi(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         size = 50
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
-        size = 50
-        df = tools.create_profiles(dominance=0.6, seed=31, size=size)
+        df = pd.DataFrame()
+        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
         df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, seed=31, size=size)
-        df['age'] = tools.get_number(from_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], seed=31, size=size)
-        df['fare'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
-        df['numbers'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], seed=31, size=size)
+        df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['numbers'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = ['numbers', 'age', 'fare']
         result = Discover.analyse_association(df, columns_list)
@@ -362,12 +365,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('F').keys()))
 
     def test_analyse_associate_levels(self):
-        tools = SyntheticBuilder.from_env('test', default_save=False).intent_model
+        tools = SyntheticBuilder.scratch_pad()
         size = 50
-        df = tools.create_profiles(dominance=0.6, seed=31, size=size)
-        df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, seed=31, size=size)
-        df['age'] = tools.get_number(from_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], seed=31, size=size)
-        df['fare'] = tools.get_number(from_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
+        df = pd.DataFrame()
+        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
+        df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, size=size)
+        df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], size=size)
+        df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9)
         columns_list = [{'gender': {}, 'age':  {}}, {'lived': {}}]
         exclude = ['age.lived']
         result = Discover.analyse_association(df, columns_list, exclude)

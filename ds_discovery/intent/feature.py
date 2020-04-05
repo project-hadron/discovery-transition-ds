@@ -10,8 +10,8 @@ from aistac.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
-from ds_discovery.transition.commons import Commons
-from ds_discovery.transition.discovery import DataDiscovery, DataAnalytics
+from ds_discovery.transition.commons import Commons, DataAnalytics
+from ds_discovery.transition.discovery import DataDiscovery
 
 
 class Feature(object):

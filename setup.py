@@ -65,13 +65,13 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'aistac-foundation',
-        'pyyaml',
-        'pandas>0.25',
-        'numpy',
-
+        'aistac-foundation[yaml]',
+        'aistac-foundation[aistac-ds]',
+        'matplotlib',
+        'seaborn',
+        'sklearn',
     ],
-    extras_require={'feature_catalog': ['matplotlib'],
-                    'discovery': ['matplotlib', 'seaborn', 'scikit-learn'],
-                    },
+    extras_require={},
+    entry_points={},
     test_suite='tests',
 )
