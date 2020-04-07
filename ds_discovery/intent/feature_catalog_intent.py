@@ -169,9 +169,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn.set_index(key)
 
     def apply_condition(self, canonical: pd.DataFrame, key: [str, list], column: str, conditions: [tuple, list],
-                        default: [int, float, str]=None, label: str=None, include: list=None, unindex: bool=None, save_intent: bool=None,
-                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                        remove_duplicates: bool=None) -> pd.DataFrame:
+                        default: [int, float, str]=None, label: str=None, unindex: bool=None,
+                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
         Example: conditions = tuple('< 5',  'red')
              or: conditions = [('< 5',  'green'), ('> 5 & < 10',  'red')]
@@ -203,9 +203,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = self._pm.list_formatter(key)
-        include = self._pm.list_formatter(include)
         label = label if isinstance(label, str) else column
-        df_rtn = Commons.filter_columns(canonical, headers=set(key + include))
+        df_rtn = Commons.filter_columns(canonical, headers=key)
         str_code = ''
         if isinstance(conditions, tuple):
             conditions = [conditions]
@@ -234,16 +233,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn[label] = np.select(selection, choices)
         return df_rtn.set_index(key)
 
-    def select_where(self, canonical: pd.DataFrame, key: [str, list], conditions: dict, inc_columns: list=None,
-                     unindex: bool=None, save_intent: bool=None,feature_name: [int, str]=None, intent_order: int=None,
+    def select_where(self, canonical: pd.DataFrame, key: [str, list], selection: list, inc_columns: list=None,
+                     unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns a selected result based upon a set of conditions.
 
         :param canonical: the Pandas.DataFrame to get the column headers from
         :param key: the key column to index on
-        :param conditions: a dictionary of conditions with header as keay and condition as value
-                 example:  {'value': '=>0.98'}
-                 or:       'building': ".str.contains('shed')", 'age': '>50'}
+        :param selection: a list of dictionaries of selection where conditions to filter on, executed in list order
+                An example of a selection with the minimum requirements is: (see 'conditions2dict(...)')
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
         :param inc_columns: additional columns to include in the returning DataFrame
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -256,8 +255,27 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         True - replaces the current intent method with the new
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return:
+        :return: apandas DataFrame of the resulting select
+
+        Conditions are a list of dictionaries of conditions and optional additional parameters to filter.
+        To help build conditions there is a static helper method called 'conditions2dict(...)' that has parameter
+        options available to build a condition.
+        An example of a condition with the minimum requirements is
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+
+        an example of using the helper method
+                selection = [self.condition2dict(column='gender', condition="=='M'"),
+                             self.condition2dict(column='age', condition=">65", logic='XOR')]
+
+        Using the 'conditions2dict' method ensure the correct keys are used and the dictionary is properly formed
         """
+        # check parameters
+        if not isinstance(selection, list) or not all(isinstance(x, dict) for x in selection):
+            raise ValueError("The 'selection' parameter must be a 'list' of 'dict' types")
+        for _where in selection:
+            if 'column' not in _where or 'condition' not in _where:
+                raise ValueError("all 'dict' in the 'selection' list must have a 'column' and 'condition' key "
+                                 "as a minimum")
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
@@ -270,15 +288,36 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         inc_columns = self._pm.list_formatter(inc_columns)
         if not inc_columns:
             inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
-        if isinstance(conditions, dict):
-            intersect_idx = canonical.index
-            for header, condition in conditions.items():
-                s_values = canonical[header]
-                idx = eval(f"s_values.where(s_values{condition}).dropna().index", globals(), locals())
-                intersect_idx = intersect_idx.intersection(idx)
-            canonical = canonical.iloc[intersect_idx]
-        canonical = Commons.filter_columns(canonical, headers=list(set(key + inc_columns)))
-        return canonical.set_index(key)
+        intersect_idx = None
+        for _where in selection:
+            if 'column' not in _where or 'condition' not in _where:
+                raise
+            _column = _where.get('column')
+            _condition = _where.get('condition')
+            _operator = _where.get('operator', '')
+            _logic = _where.get('logic', 'and')
+            if _condition == 'date.now':
+                _date_format = _where.get('date_format', "%Y-%m-%dT%H:%M:%S")
+                _offset = _where.get('offset', 0)
+                _condition = f"'{(pd.Timestamp.now() + pd.Timedelta(days=_offset)).strftime(_date_format)}'"
+            s_values = canonical[_column]
+            idx = eval(f"s_values.where(s_values{_operator}{_condition}).dropna().index", globals(), locals())
+            if intersect_idx is None:
+                intersect_idx = idx
+            else:
+                if str(_logic).lower() == 'and':
+                    intersect_idx = intersect_idx.intersection(idx)
+                elif str(_logic).lower() == 'or':
+                    intersect_idx = intersect_idx.union(idx)
+                elif str(_logic).lower() == 'not':
+                    intersect_idx = intersect_idx.difference(idx)
+                elif str(_logic).lower() == 'xor':
+                    intersect_idx = intersect_idx.union(idx).difference(intersect_idx.intersection(idx))
+                else:
+                    raise ValueError(f"The logic '{_logic}' for column '{_column}' is not recognised logic. "
+                                     f"Use 'AND', 'OR', 'NOT', 'XOR'")
+        canonical = canonical.iloc[intersect_idx]
+        return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
     def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
@@ -318,7 +357,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
         result = DataDiscovery.analyse_number(df_rtn[column], granularity=[lower_quantile, upper_quantile])
         analysis = DataAnalytics(result)
-        df_rtn = df_rtn[(df_rtn[column] > analysis.selection[0][1]) & (df_rtn[column] < analysis.selection[2][0])]
+        df_rtn = df_rtn[(df_rtn[column] > analysis.intent.selection[0][1]) & (df_rtn[column] <
+                                                                              analysis.intent.selection[2][0])]
         return df_rtn.set_index(key)
 
     def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
@@ -677,9 +717,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
                                                           precision=precision)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_number(from_value=result.lower, to_value=result.upper,
-                                                     weight_pattern=result.weight_pattern, precision=0, size=size,
-                                                     save_intent=False)
+                    col[col.isna()] = sim.get_number(from_value=result.intent.lower, to_value=result.intent.upper,
+                                                     weight_pattern=result.patterns.weight_pattern, precision=0,
+                                                     size=size, save_intent=False)
                 elif is_datetime64_any_dtype(col):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
                                                         day_first=day_first, year_first=year_first)
@@ -688,8 +728,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_category(selection=result.selection,
-                                                       weight_pattern=result.weight_pattern, size=size,
+                    col[col.isna()] = sim.get_category(selection=result.intent.selection,
+                                                       weight_pattern=result.patterns.weight_pattern, size=size,
                                                        save_intent=False)
                     col = col.astype('category')
             df_rtn[c] = col
@@ -765,6 +805,28 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if result is None:
             return canonical
         return result
+
+    @staticmethod
+    def condition2dict(column: str, condition: str, operator: str=None, logic: bool=None, date_format: str=None,
+                       offset: int=None):
+        """ a utility method to help build feature conditions by aligning method parameters with dictionary format.
+
+        :param column: the column name to apply the condition to
+        :param condition: the condition string (special conditions are 'date.now' for current date
+        :param operator: (optional) an operator to place before the condition if not included in the condition
+        :param logic: (optional) the logic to provide, options are 'and', 'or', 'not', 'xor'
+        :param date_format: (optional) a format of the date if only a specific part of the date and time is required
+        :param offset: (optional) a time delta in days (+/-) from the current date and time (minutes not supported)
+        :return: dictionary of the parameters
+
+        logic:
+            and: the intersect of the left and the right (common to both)
+            or: the union of the left and the right (everything in both)
+            diff: the left minus the intersect of the right (only things in the left excluding common to both)
+
+
+        """
+        return Commons.param2dict(**locals())
 
     """
         PRIVATE METHODS SECTION

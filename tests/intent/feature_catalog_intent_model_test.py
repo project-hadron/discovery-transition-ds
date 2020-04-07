@@ -91,20 +91,42 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def test_select_where(self):
         df = pd.DataFrame()
-        df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=20)
-        df['genre'] = self.tools.get_category(
-            selection=['Comedy', 'Drama', 'News and Information', 'Reality and Game Show', 'Undefined'], size=20)
-        df['EndType'] = self.tools.get_category(
-            selection=['Ad End', 'Ad Start', 'Undefined', 'Video End', 'Video Start'],
-            weight_pattern=[1, 3, 1, 6, 2], size=20)
-        result = self.fc.intent_model.select_where(df, key='cu_id', conditions={'EndType': "== 'Video End'"}, inc_columns=['genre'], save_intent=False)
-        print(result)
-        # self.assertEqual(1, result1['EndType'].nunique())
-        # eb = PandasEventBook('test_book')
-        # result2 = self.fc.intent_model.run_intent_pipeline(df, event_book=eb)
-        # self.assertEqual(1, result2['EndType'].nunique())
-        # self.assertEqual(result1.shape, result2.shape)
-        # self.assertCountEqual(result1['genre'], result2['genre'])
+        df['cid'] = [1,2,3,4,5,6]
+        df['starts'] = list('ABABCD')
+        df['ends'] = list("XZZXYZ")
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='==')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([2,4], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='=='),
+                           self.fc.intent_model.condition2dict(column='ends', condition=".str.contains('Z')")]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([2], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='=='),
+                           self.fc.intent_model.condition2dict(column='ends', condition=".str.contains('Z')", logic='AND')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([2], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='=='),
+                           self.fc.intent_model.condition2dict(column='ends', condition=".str.contains('Z')", logic='NOT')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([4], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='=='),
+                           self.fc.intent_model.condition2dict(column='ends', condition=".str.contains('Z')", logic='OR')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([2,3,4,6], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='starts', condition="'B'", operator='=='),
+                           self.fc.intent_model.condition2dict(column='ends', condition=".str.contains('Z')", logic='XOR')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([3,4,6], result.index.tolist())
+        dates = []
+        for offset in range (-2, 4):
+            dates.append(pd.Timestamp.now()-pd.Timedelta(days=offset))
+        df['dates'] = dates
+        conditions_list = [self.fc.intent_model.condition2dict(column='dates', condition="date.now", operator='>')]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([1,2,3], result.index.tolist())
+        conditions_list = [self.fc.intent_model.condition2dict(column='dates', condition="date.now", operator='<=', offset=-2)]
+        result = self.fc.intent_model.select_where(df, key='cid', selection=conditions_list, save_intent=False)
+        self.assertEqual([6], result.index.tolist())
 
     def test_group_features(self):
         df = pd.DataFrame()
