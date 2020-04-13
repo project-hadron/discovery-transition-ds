@@ -88,8 +88,8 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         analytics = DataAnalytics(label='tester', analysis=result)
-        self.assertEqual(analytics.selection, analytics.sample_map.index.to_list())
-        self.assertEqual(analytics.sample_distribution, analytics.sample_map.to_list())
+        self.assertEqual(analytics.intent.selection, analytics.sample_map.index.to_list())
+        self.assertEqual(analytics.patterns.sample_distribution, analytics.sample_map.to_list())
 
     def test_analyse_category(self):
         tools = SyntheticBuilder.scratch_pad()
@@ -128,45 +128,42 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(50, result.get('stats').get('outlier_percent'))
         self.assertEqual(10, result.get('stats').get('sample'))
 
-    def test_analyse_number_empty(self):
-         dataset = []
-         result = Discover.analyse_number(dataset)
+    def test_analyse_number(self):
+        dataset = []
+        result = Discover.analyse_number(dataset)
+        control = [100.0]
+        self.assertEqual(control, result.get('weighting'))
+        self.assertEqual((1,1,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
+        self.assertEqual([10], result.get('sample'))
+        dataset = [1,2,3,4,5,6,7,8,9,10]
 
-         pprint(result)
+        result = Discover.analyse_number(dataset, granularity=2)
+        control = [50.0, 50.0]
+        self.assertEqual(control, result.get('weighting'))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
+        self.assertEqual(control, result.get('granularity'))
 
-         # control = [100.0]
-        # self.assertEqual(control, result.get('weighting'))
-        # self.assertEqual((1,1,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
-        # self.assertEqual([10], result.get('sample'))
-        # dataset = [1,2,3,4,5,6,7,8,9,10]
+        result = Discover.analyse_number(dataset, granularity=3.0)
+        control = [30.0, 30.0, 40.0]
+        self.assertEqual(control, result.get('weighting'))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
 
-        # result = Discover.analyse_number(dataset, granularity=2)
-        # control = [50.0, 50.0]
-        # self.assertEqual(control, result.get('weighting'))
-        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        # control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
-        # self.assertEqual(control, result.get('granularity'))
-        #
-        # result = Discover.analyse_number(dataset, granularity=3.0)
-        # control = [30.0, 30.0, 40.0]
-        # self.assertEqual(control, result.get('weighting'))
-        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        # control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
-        # self.assertEqual(control, result.get('granularity'))
-        #
-        # result = Discover.analyse_number(dataset, granularity=2.0)
-        # control = [20.0, 20.0, 20.0, 20.0, 20.0]
-        # self.assertEqual(control, result.get('weighting'))
-        # self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
-        # control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
-        # self.assertEqual(control, result.get('granularity'))
-        #
-        # result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
-        # control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
-        # self.assertEqual(control, result.get('weighting'))
-        # self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
-        # control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
-        # self.assertEqual(control, result.get('granularity'))
+        result = Discover.analyse_number(dataset, granularity=2.0)
+        control = [20.0, 20.0, 20.0, 20.0, 20.0]
+        self.assertEqual(control, result.get('weighting'))
+        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
+
+        result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
+        control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
+        self.assertEqual(control, result.get('weighting'))
+        self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
+        control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
+        self.assertEqual(control, result.get('granularity'))
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
@@ -186,32 +183,32 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         intervals = [(0,1,'both'),(1,2),(2,3)]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=intervals))
         control = [50.0, 25.0, 25.0]
-        self.assertEqual(control, result.weight_pattern)
+        self.assertEqual(control, result.patterns.weight_pattern)
         intervals = [(0,1,'both'),(1,2,'both'),(2,3)]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=intervals))
         control = [50.0, 50.0, 25.0]
-        self.assertEqual(control, result.weight_pattern)
+        self.assertEqual(control, result.patterns.weight_pattern)
         # percentile
         dataset = [0, 0, 2, 2, 1, 2, 3]
         percentile = [.25, .5, .75]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=percentile))
         control = [28.57, 57.14, 0.0, 14.29]
-        self.assertEqual(control, result.weight_pattern)
+        self.assertEqual(control, result.patterns.weight_pattern)
 
     def test_analyse_number_lower_upper(self):
         # Default
         dataset = list(range(1,10))
         result = DataAnalytics(Discover.analyse_number(dataset))
-        self.assertEqual(1, result.lower)
-        self.assertEqual(9, result.upper)
+        self.assertEqual(1, result.intent.lower)
+        self.assertEqual(9, result.intent.upper)
         # Outer Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=0, upper=10))
-        self.assertEqual(0, result.lower)
-        self.assertEqual(10, result.upper)
+        self.assertEqual(0, result.intent.lower)
+        self.assertEqual(10, result.intent.upper)
         # Inner Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=2, upper=8))
-        self.assertEqual(2, result.lower)
-        self.assertEqual(8, result.upper)
+        self.assertEqual(2, result.intent.lower)
+        self.assertEqual(8, result.intent.upper)
 
     def test_analyse_date(self):
         tools = SyntheticBuilder.scratch_pad()

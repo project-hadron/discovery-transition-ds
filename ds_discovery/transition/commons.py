@@ -1,6 +1,8 @@
 import re
 import threading
 from copy import deepcopy
+from typing import Any
+
 import pandas as pd
 from aistac.components.aistac_commons import AistacCommons, AnalyticsCommons
 
@@ -33,20 +35,30 @@ class Commons(AistacCommons):
         return df_style
 
     @staticmethod
-    def fillna(df: pd.DataFrame):
+    def fillna(values: pd.Series):
         """replaces NaN values - 0 for int, float, datetime, <NA> for category, False for bool, '' for objects """
-        for col in df.columns:
-            if df[col].dtype.name.lower().startswith('int') or df[col].dtype.name.startswith('float'):
-                df[col].fillna(0, inplace=True)
-            elif df[col].dtype.name.lower().startswith('date') or df[col].dtype.name.lower().startswith('time'):
-                df[col].fillna(0, inplace=True)
-            elif df[col].dtype.name.lower().startswith('bool'):
-                df[col].fillna(False, inplace=True)
-            elif df[col].dtype.name.lower().startswith('category'):
-                df[col] = df[col].cat.add_categories("<NA>").fillna('<NA>')
-            else:
-                df[col].fillna('', inplace=True)
-        return df
+        if values.dtype.name.lower().startswith('int') or values.dtype.name.startswith('float'):
+            values.fillna(0, inplace=True)
+        elif values.dtype.name.lower().startswith('date') or values.dtype.name.lower().startswith('time'):
+            values.fillna(0, inplace=True)
+        elif values.dtype.name.lower().startswith('bool'):
+            values.fillna(False, inplace=True)
+        elif values.dtype.name.lower().startswith('category'):
+            values = values.cat.add_categories("<NA>").fillna('<NA>')
+        else:
+            values.fillna('', inplace=True)
+        return values
+
+    @staticmethod
+    def dict_with_missing(base: dict, default: Any):
+        """returns a dictionary wih defining  __missing__() which returns the default value"""
+
+        class DictMissing(dict):
+
+            def __missing__(self, x):
+                return default
+
+        return DictMissing(base)
 
     @staticmethod
     def list_formatter(value) -> list:

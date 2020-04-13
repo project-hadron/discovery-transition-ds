@@ -49,7 +49,7 @@ class PandasSourceHandler(AbstractSourceHandler):
         with threading.Lock():
             if file_type.lower() in ['parquet', 'pq']:
                 rtn_data = pd.read_parquet(_cc.address, **load_params)
-            elif file_type.lower() in ['csv', 'tsv', 'txt']:
+            elif file_type.lower() in ['zip', 'csv', 'tsv', 'txt']:
                 rtn_data = pd.read_csv(_cc.address, **load_params)
             elif file_type.lower() in ['json']:
                 rtn_data = pd.read_json(_cc.address, **load_params)
