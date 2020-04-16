@@ -44,7 +44,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical, feature_name: [int, str], **kwargs):
+    def run_intent_pipeline(self, canonical, feature_name: [int, str], train_size: [float, int]=None,
+                            seed: int=None, shuffle: bool=None, **kwargs) -> [pd.DataFrame, pd.Series]:
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -53,7 +54,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         save the feature outcome to
 
         :param canonical: this is the iterative value all intent are applied to and returned.
-        :param feature_name: features to run
+        :param feature_name: feature to run
+        :param train_size: (optional) If float, should be between 0.0 and 1.0 and represent the proportion of the
+                            dataset to include in the train split. If int, represents the absolute number of train
+                            samples. If None, then not used
+        :param seed: (optional) if shuffle is True a seed value for the choice
+        :param shuffle: (optional) Whether or not to shuffle the data before splitting or just split on train size.
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return
         """
@@ -61,6 +67,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if self._pm.has_intent():
             # run the feature
             df_feature = canonical.copy()
+            if isinstance(train_size, (float, int)):
+                canonical = self.canonical_sampler(canonical, sample_size=train_size, shuffle=shuffle, seed=seed)
             level_key = self._pm.join(self._pm.KEY.intent_key, feature_name)
             for order in sorted(self._pm.get(level_key, {})):
                 for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
@@ -886,6 +894,41 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
         """
         return Commons.param2dict(**locals())
+
+    @staticmethod
+    def canonical_sampler(canonical: [pd.DataFrame, pd.Series], sample_size: [int, float], shuffle: bool=None,
+                          seed: int=None) -> tuple:
+        """ returns a tuple of the canonical split of sample size and the remaining
+
+        :param canonical: a canonical to take the sampler from
+        :param sample_size: If float, should be between 0.0 and 1.0 and represent the proportion of the
+                            data set to return as a sample. If int, represents the absolute number of samples.
+        :param shuffle: (optional) if the canonical should be shuffled
+        :param seed: (optional) if shuffle is not None a seed value for the sample_size
+        :return: a (sample, remaining) tuple
+        """
+        if not isinstance(canonical, (pd.DataFrame, pd.Series)):
+            raise ValueError(f"The canonical must be a pandas DataFrame or Series")
+        shuffle = shuffle if isinstance(shuffle, bool) else False
+        if isinstance(sample_size, float):
+            if not 0 < sample_size < 1:
+                raise ValueError(f"if passing a test_size as a float the number must be tween 0 and 1")
+            if shuffle:
+                train = canonical.sample(frac=sample_size, random_state=seed)
+            else:
+                train = canonical.iloc[:int(canonical.shape[0] * sample_size)]
+        elif isinstance(sample_size, int):
+            if sample_size > canonical.shape[0]:
+                raise ValueError(f"The sample size '{sample_size}' can't be greater than the canonical "
+                                 f"number the rows '{canonical.shape[0]}'")
+            if shuffle:
+                train = canonical.sample(n=sample_size, random_state=seed)
+            else:
+                train = canonical.iloc[:sample_size]
+        else:
+            raise ValueError(f"sample_size must be an int less than the number of rows or a float between 0 and 1")
+        test = canonical.loc[~canonical.index.isin(train.index), :]
+        return train, test
 
     """
         PRIVATE METHODS SECTION
