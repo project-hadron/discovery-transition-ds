@@ -49,8 +49,12 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         _ = local_fc.intent_model.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)], precision=2, feature_name='First')
         local_fc.intent_model.group_features(df, headers=['age', 'salary'], aggregator='sum', group_by=['cu_id'], feature_name='First', unindex= True, intent_order=1)
         _ = local_fc.intent_model.interval_categorical(df, key='cu_id', column='age', granularity=[0.9, 0.1], categories=['younger', 'average', 'older'], precision=0, feature_name='Second')
-        result = local_fc.intent_model.run_intent_pipeline(df, feature_name='First')
-        result = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second')
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='First')
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second')
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=0.75)
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=750)
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=0.75, shuffle=True)
+        _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=750, shuffle=True)
 
     def test_date_diff(self):
         df = pd.DataFrame()
