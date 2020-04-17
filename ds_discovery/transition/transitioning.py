@@ -179,17 +179,17 @@ class Transition(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_DICTIONARY, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
-    def load_source_canonical(self) -> pd.DataFrame:
+    def load_source_canonical(self, **kwargs) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
-        return self.load_canonical(self.CONNECTOR_SOURCE)
+        return self.load_canonical(self.CONNECTOR_SOURCE, **kwargs)
 
-    def load_clean_canonical(self) -> pd.DataFrame:
+    def load_clean_canonical(self, **kwargs) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_PERSIST)
+        return self.load_canonical(self.CONNECTOR_PERSIST, **kwargs)
 
-    def load_dictionary(self) -> pd.DataFrame:
+    def load_dictionary(self, **kwargs) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the dictionary folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_DICTIONARY)
+        return self.load_canonical(self.CONNECTOR_DICTIONARY, **kwargs)
 
     def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
@@ -201,13 +201,13 @@ class Transition(AbstractComponent):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
 
-    def save_clean_canonical(self, df):
+    def save_clean_canonical(self, df, **kwargs):
         """Saves the pandas.DataFrame to the clean files folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df)
+        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df, **kwargs)
 
-    def save_dictionary(self, df):
+    def save_dictionary(self, df, **kwargs):
         """Saves the pandas.DataFrame to the dictionary folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df)
+        self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
