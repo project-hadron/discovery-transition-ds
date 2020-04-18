@@ -41,6 +41,24 @@ class CleanerTest(unittest.TestCase):
         """Basic smoke test"""
         TransitionIntentModel(property_manager=TransitionPropertyManager('test'), default_save_intent=False)
 
+    def test_to_sample(self):
+        tools = self.tools
+        df = pd.DataFrame(tools.model_us_zip(size=1000))
+        result = self.clean.to_sample(df, sample_size=100)
+        self.assertEqual((100, 3), result.shape)
+        self.assertCountEqual(df.iloc[0], result.iloc[0])
+        result = self.clean.to_sample(df, sample_size=100, shuffle=True)
+        self.assertEqual((100, 3), result.shape)
+        self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
+
+        result = self.clean.to_sample(df, sample_size=0.2)
+        self.assertEqual((200, 3), result.shape)
+        self.assertCountEqual(df.iloc[0], result.iloc[0])
+        result = self.clean.to_sample(df, sample_size=0.2, shuffle=True)
+        self.assertEqual((200, 3), result.shape)
+        self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
+
+
     def test_auto_remove(self):
         tools = self.tools
         df = pd.DataFrame()
@@ -72,41 +90,41 @@ class CleanerTest(unittest.TestCase):
 
     def test_clean_headers(self):
         tools = self.tools
-        df = tools.create_profiles()
-        control = ['surname', 'forename', 'gender']
+        df = pd.DataFrame(tools.model_us_zip(size=10))
+        control = ['City', 'State', 'Zipcode']
         result = df.columns
         self.assertTrue(control, result)
-        rename = {'forename': 'first_name'}
-        control = {'clean_header': {'case': 'title', 'rename': {'surname: last_name'}}}
+        rename = {'City': 'town'}
+        control = {'clean_header': {'case': 'title', 'rename': {'City': 'town'}}}
         result = self.clean.auto_clean_header(df, rename_map=rename, case='title', inplace=True)
         self.assertTrue(control, result)
-        control = ['Surname', 'First_Name', 'Gender']
+        control = ['town', 'State', 'Zipcode']
         self.assertTrue(control, df.columns)
 
     def test_remove_columns(self):
         tools = self.tools
         clean = self.clean
-        df = tools.create_profiles(size=10)
-        result = clean.to_remove(df, headers=['surname'])
-        self.assertNotIn('surname', result.columns.values)
+        df = pd.DataFrame(tools.model_us_zip(size=10))
+        result = clean.to_remove(df, headers=['City'])
+        self.assertNotIn('City', result.columns.values)
 
-        df = tools.create_profiles(size=10)
-        clean.to_remove(df, headers=['surname', 'gender'], inplace=True)
-        self.assertNotIn('surname', df.columns.values)
-        self.assertNotIn('gender', df.columns.values)
+        df = pd.DataFrame(tools.model_us_zip(size=10))
+        clean.to_remove(df, headers=['City', 'State'], inplace=True)
+        self.assertNotIn('City', df.columns.values)
+        self.assertNotIn('State', df.columns.values)
 
     def test_select_columns(self):
         tools = self.tools
         clean = self.clean
-        df = tools.create_profiles(size=10)
-        control = ['surname']
-        result = clean.to_select(df, headers=['surname'])
-        self.assertEqual(['surname'], result.columns.values)
+        df = pd.DataFrame(tools.model_us_zip(size=10))
+        control = ['City']
+        result = clean.to_select(df, headers=['City'])
+        self.assertEqual(['City'], result.columns.values)
 
-        df = tools.create_profiles(size=10)
-        clean.to_select(df, headers=['surname', 'gender'], inplace=True)
-        self.assertIn('surname', df.columns.values)
-        self.assertIn('gender', df.columns.values)
+        df = pd.DataFrame(tools.model_us_zip(size=10))
+        clean.to_select(df, headers=['City', 'State'], inplace=True)
+        self.assertIn('City', df.columns.values)
+        self.assertIn('State', df.columns.values)
         self.assertEqual((10,2), df.shape)
 
     def test_contract_pipeline(self):
