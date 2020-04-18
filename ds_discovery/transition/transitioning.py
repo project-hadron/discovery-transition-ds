@@ -71,16 +71,23 @@ class Transition(AbstractComponent):
 
     @classmethod
     def _from_remote_s3(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
+        """ Class Factory Method that builds the connector handlers for Amazon AWS S3 """
         _module_name = 'ds_connectors.handlers.aws_s3_handlers'
         _handler = 'AwsS3PersistHandler'
         return _module_name, _handler
 
     @classmethod
     def _from_remote_redis(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
+        """ Class Factory Method that builds the connector handlers for Redis."""
         _module_name = 'ds_connectors.handlers.redis_handlers'
         _handler = 'RedisPersistHandler'
+        return _module_name, _handler
+
+    @classmethod
+    def _from_remote_c12emc(cls) -> (str, str):
+        """ Class Factory Method that builds the connector handlers for Cognitive Scale Managed Content."""
+        _module_name = 'ds_connectors.handlers.managed_content_handlers'
+        _handler = 'ManagedContentPersistHandler'
         return _module_name, _handler
 
     @classmethod
