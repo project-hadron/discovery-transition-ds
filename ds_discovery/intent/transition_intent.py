@@ -73,7 +73,7 @@ class TransitionIntentModel(AbstractIntentModel):
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def auto_remove_null_rows(self, df, nulls_list: list=None, inplace: bool=False, save_intent: bool=None,
+    def auto_remove_null_rows(self, df, nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                               intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                               remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ automatically removes rows where the full row 
@@ -100,7 +100,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
-
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -112,7 +112,7 @@ class TransitionIntentModel(AbstractIntentModel):
             return
         return df.dropna(axis='index', how='all', inplace=False)
 
-    def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=False,
+    def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=None,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """ clean the headers of a pandas DataFrame replacing space with underscore
@@ -139,6 +139,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -163,7 +164,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def auto_to_category(self, df, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
-                         nulls_list: list=None, inplace: bool=False, save_intent: bool=None,
+                         nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                          intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                          remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto categorises columns that have a max number of uniqueness with a min number of nulls
@@ -192,6 +193,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -210,10 +212,9 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drop column that only have 1 value in them
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                            auto_contract: bool=True,
-                            drop_empty_row: bool=None, inplace: bool=False, save_intent: bool=None,
-                            intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                            remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+                            auto_contract: bool=None, drop_empty_row: bool=None, inplace: bool=None,
+                            save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                            replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
         :param df: the pandas.DataFrame to auto remove
@@ -242,9 +243,11 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
+        auto_contract = auto_contract if isinstance(auto_contract, bool) else True
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         if isinstance(nulls_list, bool) and nulls_list:
@@ -272,8 +275,8 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drops highly correlated columns
-    def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=False,
-                             inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None,
+    def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=None,
+                             inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None,
                              remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
@@ -300,12 +303,13 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
         df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        if inc_category:
+        if isinstance(inc_category, bool) and inc_category:
             for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
                 df_filter[col] = df[col].cat.codes
         col_corr = set()
@@ -321,8 +325,8 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drop unwanted
-    def to_remove(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                  exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+    def to_remove(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                  exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, inplace: bool=None,
                   save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                   replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ remove columns from the pandas.DataFrame
@@ -352,6 +356,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -363,8 +371,8 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # select wanted
-    def to_select(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                  exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
+    def to_select(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                  exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, inplace: bool=None,
                   save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                   replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ selects columns from the pandas.DataFrame
@@ -394,6 +402,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -405,7 +417,7 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_sample(self, df, sample_size: [int, float], shuffle: bool=None, seed: int=None, inplace: bool=False,
+    def to_sample(self, df, sample_size: [int, float], shuffle: bool=None, seed: int=None, inplace: bool=None,
                   save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                   replace_intent: bool=None, remove_duplicates: bool=None):
         """ clean the headers of a pandas DataFrame replacing space with underscore
@@ -433,6 +445,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -459,9 +472,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # convert boolean
-    def to_bool_type(self, df: pd.DataFrame, bool_map, headers: [str, list]=None, drop: bool=False,
-                     dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                     re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
+    def to_bool_type(self, df: pd.DataFrame, bool_map, headers: [str, list]=None, drop: bool=None,
+                     dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                     re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
                      intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                      remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts column to bool based on the map
@@ -492,6 +505,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not isinstance(bool_map, dict):
             raise TypeError("The map attribute must be of type 'dict'")
         if not inplace:
@@ -511,9 +528,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # convert objects to categories
-    def to_category_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                         exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, inplace: bool=False,
-                         as_num: bool=False, fill_nulls: str=None, nulls_list: list=None,
+    def to_category_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                         exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, inplace: bool=None,
+                         as_num: bool=None, fill_nulls: str=None, nulls_list: list=None,
                          save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to categories
@@ -546,6 +563,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
@@ -566,9 +587,12 @@ class TransitionIntentModel(AbstractIntentModel):
 
     @staticmethod
     def _to_numeric(df: pd.DataFrame, numeric_type, fillna, errors=None, headers: [str, list]=None,
-                    drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                    re_ignore_case: bool=False, precision=None, inplace=False) -> [dict, pd.DataFrame]:
+                    drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                    re_ignore_case: bool=None, precision=None, inplace=False) -> [dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -603,9 +627,9 @@ class TransitionIntentModel(AbstractIntentModel):
                 df[c] = df[c].round(precision).astype(float)
         return df
 
-    def to_numeric_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                        exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                        fillna=None, errors=None, inplace: bool=False,
+    def to_numeric_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                        exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, precision=None,
+                        fillna=None, errors=None, inplace: bool=None,
                         save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
@@ -645,6 +669,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if fillna is None or not fillna:
             fillna = np.nan
         df = self._to_numeric(df, numeric_type='numeric', fillna=fillna, errors=errors, headers=headers, drop=drop,
@@ -654,9 +679,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_int_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                    exclude: bool=False,  regex: [str, list]=None, re_ignore_case: bool=False, fillna=None,
-                    errors=None, inplace: bool=False, save_intent: bool=None,
+    def to_int_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                    exclude: bool=None,  regex: [str, list]=None, re_ignore_case: bool=None, fillna=None,
+                    errors=None, inplace: bool=None, save_intent: bool=None,
                     intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                     remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to int type
@@ -695,6 +720,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if fillna is None or not fillna:
             fillna = 0
         df = self._to_numeric(df, numeric_type='int', fillna=fillna, errors=errors, headers=headers, drop=drop,
@@ -703,9 +729,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_float_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                      exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                      fillna=None, errors=None, inplace: bool=False, save_intent: bool=None,
+    def to_float_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                      exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, precision=None,
+                      fillna=None, errors=None, inplace: bool=None, save_intent: bool=None,
                       intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                       remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to float type
@@ -745,6 +771,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
         if fillna is None or not fillna:
             fillna = np.nan
         df = self._to_numeric(df, numeric_type='float', fillna=fillna, errors=errors, headers=headers, drop=drop,
@@ -754,9 +781,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_normalised(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                      exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, precision=None,
-                      inplace: bool=False, save_intent: bool=None, intent_level: [int, str]=None,
+    def to_normalised(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                      exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, precision=None,
+                      inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ converts columns to float type
 
@@ -786,6 +813,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
@@ -799,9 +830,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                    exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False,
-                    use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=False,
+    def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                    exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                    use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=None,
                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                     replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ converts columns to object type
@@ -837,6 +868,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
@@ -855,11 +890,11 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None,
-                     exclude: bool=False, regex: [str, list]=None, re_ignore_case: bool=False, as_num=False,
-                     day_first=False, year_first=False, date_format=None, inplace: bool=False, save_intent: bool=None,
-                     intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                     remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+    def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, as_num=False,
+                     day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
+                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                     replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -895,6 +930,12 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
+        day_first = day_first if isinstance(day_first, bool) else False
+        year_first = year_first if isinstance(year_first, bool) else False
         infer_datetime_format = date_format is None
         if not inplace:
             with threading.Lock():
@@ -922,9 +963,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return temp + delta
         return date_float
 
-    def to_date_from_excel_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=False,
-                                dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                                re_ignore_case: bool=False, inplace: bool=False, save_intent: bool=None,
+    def to_date_from_excel_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None,
+                                dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                                re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
                                 intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                                 remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """converts excel date formats into datetime
@@ -954,6 +995,10 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
