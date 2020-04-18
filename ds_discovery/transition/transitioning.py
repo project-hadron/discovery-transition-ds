@@ -238,7 +238,7 @@ class Transition(AbstractComponent):
         return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def dictionary_report(self, df, stylise: bool=True):
+    def report_attributes(self, df, stylise: bool=True):
         labels = [f'Attributes ({len(df.columns)})', 'dType', 'Description']
         file = []
         for c in df.columns.sort_values().values:

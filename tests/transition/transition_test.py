@@ -51,7 +51,7 @@ class TransitionTest(unittest.TestCase):
         notes['text'] = ['This is the Alpha', 'Beta follows it closely', 'D is the last', 'F is out of place']
         cp = Transition.from_env('task')
         cp.upload_attributes(canonical=notes, label_key='label', text_key='text')
-        result = cp.dictionary_report(df, stylise=False)
+        result = cp.report_attributes(df, stylise=False)
         self.assertEqual((3, 4), df.shape)
 
     def test_from_remote(self):
