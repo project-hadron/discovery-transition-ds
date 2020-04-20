@@ -71,18 +71,18 @@ class TransitionTest(unittest.TestCase):
 
     def test_from_env(self):
         os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()
-        os.environ['AISTAC_PM_TYPE'] = 'yaml'
+        os.environ['AISTAC_PM_TYPE'] = 'pickle'
         os.environ['AISTAC_PM_MODULE'] = 'aistac.handlers.python_handlers'
         os.environ['AISTAC_PM_HANDLER'] = 'PythonPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.yaml", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
         os.environ['AISTAC_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
         os.environ['AISTAC_PM_HANDLER'] = 'PandasPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.yaml", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 

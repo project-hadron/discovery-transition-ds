@@ -56,7 +56,7 @@ class Transition(AbstractComponent):
          :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = TransitionPropertyManager(task_name=task_name)
@@ -81,13 +81,6 @@ class Transition(AbstractComponent):
         """ Class Factory Method that builds the connector handlers for Redis."""
         _module_name = 'ds_connectors.handlers.redis_handlers'
         _handler = 'RedisPersistHandler'
-        return _module_name, _handler
-
-    @classmethod
-    def _from_remote_c12emc(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers for Cognitive Scale Managed Content."""
-        _module_name = 'ds_connectors.handlers.managed_content_handlers'
-        _handler = 'ManagedContentPersistHandler'
         return _module_name, _handler
 
     @classmethod
