@@ -19,7 +19,8 @@ class TransitionIntentModel(AbstractIntentModel):
     """A set of methods to help clean columns with a Pandas.DataFrame"""
 
     def __init__(self, property_manager: TransitionPropertyManager, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
+                 default_intent_level: [str, int, float]=None, order_next_available: bool=None,
+                 default_replace_intent: bool=None):
         """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.

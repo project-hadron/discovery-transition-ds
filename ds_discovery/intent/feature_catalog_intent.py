@@ -23,7 +23,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
+                 default_intent_level: [str, int, float]=None, order_next_available: bool=None,
+                 default_replace_intent: bool=None):
         """initialisation of the Intent class.
 
         :param property_manager: the property manager class that references the intent contract.
@@ -86,7 +87,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def apply_date_diff(self, canonical: pd.DataFrame, key: [str, list], first_date: str, second_date: str,
                         aggregator: str=None, units: str=None, precision: int=None, rtn_columns: list=None,
-                        rename: str=None, unindex: bool=None,save_intent: bool=None, feature_name: [int, str]=None,
+                        rename: str=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
                         intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> pd.DataFrame:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
