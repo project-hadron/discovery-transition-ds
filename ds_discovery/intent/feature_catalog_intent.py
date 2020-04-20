@@ -753,18 +753,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_time[f"{rename}_ordinal"] = mdates.date2num(canonical[header])
         return df_time.set_index(key)
 
-    def replace_missing(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list],
-                        granularity: [int, float]=None, lower: [int, float]=None, upper: [int, float]=None,
-                        nulls_list: list=None, replace_zero: [int, float]=None, precision: int=None, unindex: bool=None,
-                        day_first: bool=False, year_first: bool=False, save_intent: bool=None,
-                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                        remove_duplicates: bool=None) -> [None, pd.DataFrame]:
+    def apply_missing(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list], rtn_columns: list=None,
+                      granularity: [int, float]=None, lower: [int, float]=None, upper: [int, float]=None,
+                      nulls_list: list=None, replace_zero: [int, float]=None, precision: int=None, unindex: bool=None,
+                      day_first: bool=False, year_first: bool=False, save_intent: bool=None,
+                      feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                      remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
         :param canonical: the pd.DataFrame to replace missing values in
         :param key: the key column
         :param headers: the headers in the pd.DataFrame to apply the substitution too
+        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
         :param granularity: (optional) the granularity of the analysis across the range. Default is 3
                 int passed - represents the number of periods
                 float passed - the length of each interval
@@ -801,11 +802,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         sim = SyntheticBuilder.scratch_pad()
         tr = Transition.scratch_pad()
         headers = self._pm.list_formatter(headers)
+        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else headers
         if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['nan', '']
-        df_rtn = pd.DataFrame()
-        df_rtn[key] = canonical[key].copy()
+
+        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + rtn_columns + headers))).set_index(key)
         for c in headers:
             col = deepcopy(canonical[c])
             # replace alternative nulls with pd.nan
@@ -818,7 +820,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
                                                           precision=precision)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_number(from_value=result.intent.lower, to_value=result.intent.upper,
+                    col[col.isna()] = sim.get_number(range_value=result.intent.lower, to_value=result.intent.upper,
                                                      weight_pattern=result.patterns.weight_pattern, precision=0,
                                                      size=size, save_intent=False)
                 elif is_datetime64_any_dtype(col):

@@ -4,6 +4,7 @@ import unittest
 from pprint import pprint
 
 import pandas as pd
+import numpy as np
 from aistac.properties.property_manager import PropertyManager
 
 from ds_behavioral import SyntheticBuilder
@@ -180,6 +181,15 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['values'] = [1,3,2,5,4,1,3,2,1,6]
         result = self.fc.apply_replace(df, key='key', header='values', to_replace={1: 10, 2: 11})
         self.assertEqual([10, 3, 11, 5, 4, 10, 3, 11, 10, 6], result['values'].to_list())
+
+    def test_apply_missing(self):
+        df = pd.DataFrame()
+        df['key'] = list(range(10))
+        df['values'] = [1,3,np.nan,5,4,1,3,np.nan,1,6]
+        df['cats'] = list('ABCDEFGHIJ')
+        result = self.fc.apply_missing(df, key='key', headers='values')
+        print(result)
+
 
 
 if __name__ == '__main__':

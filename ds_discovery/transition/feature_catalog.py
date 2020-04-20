@@ -231,11 +231,11 @@ class FeatureCatalog(AbstractComponent):
             self.remove_intent(level=feature_name)
         return
 
-    def run_feature_pipeline(self, canonical: pd.DataFrame, feature_names: [str, list]=None, add_connector: bool=None,
-                             save: bool=None):
+    def run_feature_pipeline(self, canonical: pd.DataFrame=None, feature_names: [str, list]=None,
+                             add_connector: bool=None, save: bool=None):
         """runs all features within the feature catalog or an optional set of features
 
-        :param canonical: A canonical reference for the features
+        :param canonical: (optional) A canonical if the source canonical isn't to be used
         :param feature_names: (optional) a single or list of features to run
         :param add_connector: (optional) Adds a versioned feature connector if not yet added. Default to True
         :param save: (optional) if True, persist changes to property manager. Default is True
@@ -245,6 +245,8 @@ class FeatureCatalog(AbstractComponent):
             feature_names = Commons.list_formatter(feature_names)
         else:
             feature_names = Commons.list_formatter(self.pm.get_intent())
+        if not isinstance(canonical, pd.DataFrame):
+            canonical = self.load_source_canonical()
         for feature in feature_names:
             if not self.pm.has_connector(feature):
                 if not add_connector:
