@@ -588,7 +588,7 @@ class TransitionIntentModel(AbstractIntentModel):
     @staticmethod
     def _to_numeric(df: pd.DataFrame, numeric_type, fillna, errors=None, headers: [str, list]=None,
                     drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                    re_ignore_case: bool=None, precision=None, inplace=False) -> [dict, pd.DataFrame]:
+                    re_ignore_case: bool=None, precision=None, inplace=None) -> [dict, pd.DataFrame]:
         """ Code reuse method for all the numeric types. see calling methods for inline docs"""
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
@@ -891,7 +891,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, as_num=False,
+                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, as_num=None,
                      day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
                      save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
@@ -934,6 +934,7 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
+        as_num = as_num if isinstance(as_num, bool) else False
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
         infer_datetime_format = date_format is None
