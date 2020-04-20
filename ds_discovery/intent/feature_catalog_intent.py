@@ -796,6 +796,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
+        canonical = deepcopy(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -807,7 +808,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             raise TypeError("The canonical given is not a pandas DataFrame")
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['nan', '']
 
-        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + rtn_columns + headers))).set_index(key)
+        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + rtn_columns + headers)))
         for c in headers:
             col = deepcopy(canonical[c])
             # replace alternative nulls with pd.nan
