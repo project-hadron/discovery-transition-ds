@@ -4,10 +4,9 @@ import threading
 import pandas as pd
 import requests
 import yaml
-try:
-    import cPickel as pickle
-except ImportError:
-    import pickle
+import pickle
+import json
+
 
 from aistac.handlers.abstract_handlers import AbstractSourceHandler, ConnectorContract, AbstractPersistHandler
 
@@ -52,7 +51,7 @@ class PandasSourceHandler(AbstractSourceHandler):
             elif file_type.lower() in ['zip', 'csv', 'tsv', 'txt']:
                 rtn_data = pd.read_csv(_cc.address, **load_params)
             elif file_type.lower() in ['json']:
-                rtn_data = pd.read_json(_cc.address, **load_params)
+                rtn_data = self._json_load(path_file=_cc.address, **load_params)
             elif file_type.lower() in ['xls', 'xlsx']:
                 rtn_data = pd.read_excel(_cc.address, **load_params)
             elif file_type.lower() in ['pkl ', 'pickle']:
@@ -111,6 +110,13 @@ class PandasSourceHandler(AbstractSourceHandler):
             with closing(open(path_file, mode='rb')) as f:
                 return pickle.load(f, fix_imports=fix_imports, encoding=encoding, errors=errors)
 
+    @staticmethod
+    def _json_load(path_file: str, **kwargs) -> [dict, pd.DataFrame]:
+        """ loads a pickle file """
+        with threading.Lock():
+            with closing(open(path_file, mode='r')) as f:
+                return json.load(f, **kwargs)
+
 
 class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
     """ Pandas read/write Persist Handler. The format of the uri should be as a minimum:
@@ -155,21 +161,19 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
             with threading.Lock():
                 canonical.to_parquet(_address, **write_params)
             return True
-        # json
-        if file_type.lower() in ['json']:
-            with threading.Lock():
-                canonical.to_json(_address, **write_params)
-            return True
         # csv
         if file_type.lower() in ['csv', 'tsv', 'txt']:
             _index = write_params.pop('index', False)
             with threading.Lock():
                 canonical.to_csv(_address, index=_index, **write_params)
             return True
+        # json
+        if file_type.lower() in ['json']:
+            self._json_dump(data=canonical, path_file=_address, **write_params)
+            return True
         # pickle
         if file_type.lower() in ['pkl', 'pickle']:
-            with threading.Lock():
-                self._pickle_dump(data=canonical, path_file=_address, **write_params)
+            self._pickle_dump(data=canonical, path_file=_address, **write_params)
             return True
         # yaml
         if file_type.lower() in ['yml', 'yaml']:
@@ -217,3 +221,10 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         with threading.Lock():
             with closing(open(path_file, mode='wb')) as f:
                 pickle.dump(data, f, protocol=protocol, fix_imports=fix_imports)
+
+    @staticmethod
+    def _json_dump(data, path_file: str, **kwargs) -> None:
+        """ dumps a pickle file"""
+        with threading.Lock():
+            with closing(open(path_file, mode='w')) as f:
+                json.dump(data, f, **kwargs)
