@@ -138,8 +138,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return Commons.filter_columns(canonical, headers=list(set(key + [rename] + rtn_columns))).set_index(key)
 
     def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
-                       drop: bool=False, dtype: [str, list]=None, exclude: bool=False, regex: [str, list]=None,
-                       re_ignore_case: bool=False, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
+                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                       re_ignore_case: bool=None, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ used for feature attribution allowing columns to be selected directly from the canonical attributes
@@ -172,12 +172,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         filter_headers = Commons.filter_headers(df=canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                                 regex=regex, re_ignore_case=re_ignore_case)
-
         filter_headers += self._pm.list_formatter(key)
         df_rtn = Commons.filter_columns(canonical, headers=filter_headers, inplace=False)
         if isinstance(drop_dup_index, str) and drop_dup_index.lower() in ['first', 'last']:
