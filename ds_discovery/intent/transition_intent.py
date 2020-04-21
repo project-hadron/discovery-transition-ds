@@ -954,6 +954,58 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
+    def to_date_from_mpldates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                              exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                              date_format: str=None, inplace: bool=None, save_intent: bool=None,
+                              intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                              remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+        """ converts columns that are matplotlib dates to datetime (see matplotlib.dates num2date(...))
+
+        :param df: the Pandas.DataFrame to get the column headers from
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
+        infer_datetime_format = date_format is None
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
+        for c in obj_cols:
+            df[c] = df[c].fillna(np.nan)
+            df[c] = pd.to_datetime(mdates.num2date(df[c]), errors='coerce', infer_datetime_format=True)
+            if isinstance(date_format, str):
+                df[c] = df[c].dt.strftime(date_format)
+        if not inplace:
+            return df
+        return
+
     # converts excel object to dates
     @staticmethod
     def _excel_date_converter(date_float):

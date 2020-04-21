@@ -4,6 +4,8 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import matplotlib.dates as mdates
+
 from aistac.properties.property_manager import PropertyManager
 
 from ds_behavioral import SyntheticBuilder
@@ -16,7 +18,7 @@ from ds_discovery.managers.transition_property_manager import TransitionProperty
 from ds_discovery.transition.commons import Commons
 
 
-class CleanerTest(unittest.TestCase):
+class IntentModelTest(unittest.TestCase):
     """Test: """
 
     def setUp(self):
@@ -58,6 +60,12 @@ class CleanerTest(unittest.TestCase):
         self.assertEqual((200, 3), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
+    def test_to_date_from_mdates(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['dates'] = tools.get_datetime("01/01/2018", "01/02/2018", day_first=False, as_num=True, size=5)
+        result = self.clean.to_date_from_mpldates(df, headers='dates', date_format="%Y-%m-%d")
+        self.assertEqual(['2018-01-01']*5, result['dates'].to_list())
 
     def test_auto_remove(self):
         tools = self.tools
