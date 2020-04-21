@@ -369,7 +369,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, size=size)
         df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], size=size)
         df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9)
-        columns_list = [{'gender': {}, 'age':  {}}, {'lived': {}}]
+        columns_list = [{'gender': {}, 'age':  {}}, 'lived']
         exclude = ['age.lived']
         result = Discover.analyse_association(df, columns_list, exclude)
         self.assertCountEqual(['age', 'gender'], list(result.keys()))
