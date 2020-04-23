@@ -182,7 +182,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         filter_headers = Commons.filter_headers(df=canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                                 regex=regex, re_ignore_case=re_ignore_case)
         filter_headers += self._pm.list_formatter(key)
-        df_rtn = Commons.filter_columns(canonical, headers=filter_headers, inplace=False)
+        df_rtn = Commons.filter_columns(canonical, headers=filter_headers)
         if isinstance(drop_dup_index, str) and drop_dup_index.lower() in ['first', 'last']:
             df_rtn = df_rtn.loc[~df_rtn.index.duplicated(keep=drop_dup_index)]
         if isinstance(rename, dict):
