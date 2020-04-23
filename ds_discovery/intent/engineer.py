@@ -24,18 +24,6 @@ class FeatureEngineerTools(object):
                 rtn_list.append(m)
         return rtn_list
 
-    @staticmethod
-    def hellinger(p, q):
-        """Hellinger distance between distributions (Hoens et al, 2011)"""
-        # TODO: convert the entries into pd.Series and have a common output with TVD
-        return sum([(np.sqrt(t[0]) - np.sqrt(t[1])) * (np.sqrt(t[0]) - np.sqrt(t[1])) for t in zip(p, q)])/np.sqrt(2.)
-
-    @staticmethod
-    def total_variation_distance(a, b):
-        """Total Variation Distance (Levin et al, 2008)"""
-        # TODO: convert the entries into pd.Series and have a common output with hellinger
-        return sum(abs(a - b)) / 2
-
 
     @staticmethod
     def recommendation(item: [str, int, float], entities: pd.DataFrame, items: pd.DataFrame, recommend: int=None,

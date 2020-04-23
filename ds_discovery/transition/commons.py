@@ -86,13 +86,9 @@ class Commons(AistacCommons):
 
         :raise: TypeError if any of the types are not as expected
         """
-        if drop is None or not isinstance(drop, bool):
-            drop = False
-        if exclude is None or not isinstance(exclude, bool):
-            exclude = False
-        if re_ignore_case is None or not isinstance(re_ignore_case, bool):
-            re_ignore_case = False
-
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not isinstance(df, pd.DataFrame):
             raise TypeError("The first function attribute must be a pandas 'DataFrame'")
         _headers = Commons.list_formatter(headers)
@@ -125,8 +121,9 @@ class Commons(AistacCommons):
         return [c for c in _rtn_cols]
 
     @staticmethod
-    def filter_columns(df, headers: [str, list]=None, drop: bool=False, dtype: [str, list]=None, exclude: bool=False,
-                       regex: [str, list]=None, re_ignore_case: bool=False, inplace=False) -> pd.DataFrame:
+    def filter_columns(df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                       exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                       copy: bool=None) -> pd.DataFrame:
         """ Returns a subset of columns based on the filter criteria
 
         :param df: the Pandas.DataFrame to get the column headers from
@@ -136,10 +133,11 @@ class Commons(AistacCommons):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param copy: if the passed pandas.DataFrame should be used or a deep copy. Default is True
         :return:
         """
-        if not inplace:
+        copy = copy if isinstance(copy, bool) else True
+        if copy:
             with threading.Lock():
                 df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
@@ -175,5 +173,3 @@ class DataAnalytics(AnalyticsCommons):
     def dominance_map(self):
         return pd.Series(data=self.patterns.dominance_weighting, index=self.patterns.dominant_values, copy=True,
                          dtype=float)
-
-

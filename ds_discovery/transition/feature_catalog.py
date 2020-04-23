@@ -163,11 +163,12 @@ class FeatureCatalog(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
                                          template_name=self.TEMPLATE_SOURCE, save=save)
 
-    def set_catalog_feature(self, feature_name: str, description: str=None, versioned: bool=None, stamped: bool=None, file_type: str=None,
-                            save: bool=None):
+    def set_catalog_feature(self, feature_name: str, description: str=None, versioned: bool=None, stamped: bool=None,
+                            file_type: str=None, save: bool=None):
         """sets the persist feature contract using the TEMPLATE_PERSIST connector contract
 
         :param feature_name: the unique name of the feature
+        :param description: an optional description for the feature
         :param versioned: (optional) if the component version should be included as part of the pattern
         :param stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
         :param file_type: (optional) a connector supported file extension type different from the default e.g. 'csv'
@@ -283,7 +284,7 @@ class FeatureCatalog(AbstractComponent):
         stylise = True if not isinstance(stylise, bool) else stylise
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=feature_names,as_description=True,
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=feature_names, as_description=True,
                                                                level_label='feature_name'), orient='columns')
         if stylise:
             df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})

@@ -57,6 +57,21 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=0.75, shuffle=True)
         _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=750, shuffle=True)
 
+    def test_apply_merge(self):
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge')
+        catalog.set_catalog_feature('test')
+        merge_df = pd.DataFrame()
+        merge_df['cu_id'] = [1,2,3,4,5,6]
+        merge_df['age'] = [23, 18, 47, 32, 29, 61]
+        merge_df['gender'] = ['M', 'F', 'M', 'M', 'F', 'M']
+        catalog.save_catalog_feature(feature_name='test', canonical=merge_df)
+        df = pd.DataFrame()
+        df['cu_id'] = [1,2,4,6]
+        df['location'] = ['NY', 'PA', 'TX', 'IL']
+        result = catalog.intent_model.apply_merge(canonical=df, merge_connector='test', key='cu_id', on='cu_id', save_intent=False)
+        self.assertEqual([1, 2, 4, 6], result.index.to_list())
+        self.assertCountEqual(['location', 'age', 'gender'], result.columns.to_list())
+
     def test_date_diff(self):
         df = pd.DataFrame()
         df['key'] = range(1000)

@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Any
 
 import pandas as pd
+from aistac.handlers.abstract_handlers import ConnectorContract
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 import numpy as np
 import matplotlib.dates as mdates
@@ -187,6 +188,72 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if isinstance(rename, dict):
             df_rtn.rename(columns=rename, inplace=True)
         return df_rtn.set_index(key)
+
+    def apply_merge(self, canonical: pd.DataFrame, merge_connector: str, key: [str, list], how: str=None,
+                    on: str=None, left_on: str=None, right_on: str=None, left_index: bool=None, right_index: bool=None,
+                    sort: bool=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
+                    rtn_columns: list=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
+                    intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ merges the canonical with another canonical obtained from a connector contract
+
+        :param canonical: the canonical to merge on the left
+        :param merge_connector: the name of the Connector Contract to load to merge on the right
+        :param key: the key column to index on
+        :param how: (optional) One of 'left', 'right', 'outer', 'inner'. Defaults to inner. See below for more detailed description of each method.
+        :param on: (optional) Column or index level names to join on. Must be found in both the left and right DataFrame and/or Series objects. If not passed and left_index and right_index are False,  the intersection of the columns in the DataFrames and/or Series will be inferred to be the join keys
+        :param left_on: (optional) Columns or index levels from the left DataFrame or Series to use as keys. Can either be column names, index level names, or arrays with length equal to the length of the DataFrame or Series.
+        :param right_on: (optional) Columns or index levels from the right DataFrame or Series to use as keys. Can either be column names, index level names, or arrays with length equal to the length of the DataFrame or Series.
+        :param left_index: (optional) If True, use the index (row labels) from the left DataFrame or Series as its join key(s). In the case of a DataFrame or Series with a MultiIndex (hierarchical), the number of levels must match the number of join keys from the right DataFrame or Series.
+        :param right_index: (optional) Same usage as left_index for the right DataFrame or Series
+        :param sort: (optional) Sort the result DataFrame by the join keys in lexicographical order. Defaults to True, setting to False will improve performance substantially in many cases.
+        :param suffixes: (optional) A tuple of string suffixes to apply to overlapping columns. Defaults to ('', '_dup').
+        :param indicator: (optional) Add a column to the output DataFrame called _merge with information on the source of each row. _merge is Categorical-type and takes on a value of left_only for observations whose merge key only appears in 'left' DataFrame or Series, right_only for observations whose merge key only appears in 'right' DataFrame or Series, and both if the observation’s merge key is found in both.
+        :param validate: (optional) validate : string, default None. If specified, checks if merge is of specified type.
+                            “one_to_one” or “1:1”: checks if merge keys are unique in both left and right datasets.
+                            “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
+                            “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
+                            “many_to_many” or “m:m”: allowed, but does not result in checks.
+        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param unindex: (optional) if the passed canonical should be un-index before processing
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return:
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # intend code block on the canonical
+        canonical = deepcopy(canonical)
+        how = how if isinstance(how, str) and how in ['left', 'right', 'outer', 'inner'] else 'inner'
+        left_index = left_index if isinstance(left_index, bool) else False
+        right_index = right_index if isinstance(right_index, bool) else False
+        sort = sort if isinstance(sort, bool) else True
+        indicator = indicator if isinstance(indicator, bool) else False
+        suffixes = suffixes if isinstance(suffixes, tuple) and len(suffixes) == 2 else ('', '_dup')
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
+        key = Commons.list_formatter(key)
+        if not self._pm.has_connector(connector_name=merge_connector):
+            raise ValueError(f"The connector name '{merge_connector}' is not in the connectors catalog")
+        handler = self._pm.get_connector_handler(merge_connector)
+        other = handler.load_canonical()
+        if isinstance(other, dict):
+            other = pd.DataFrame.from_dict(data=other, orient='columns')
+        self._pm.set_modified(merge_connector, handler.get_modified())
+        df = pd.merge(left=canonical, right=other, how=how, on=on, left_on=left_on, right_on=right_on,
+                      left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, indicator=indicator,
+                      validate=validate)
+        rtn_columns = rtn_columns if isinstance(rtn_columns, list) else df.columns.to_list()
+        return Commons.filter_columns(df, headers=list(set(key + rtn_columns))).set_index(key)
 
     def apply_map(self, canonical: pd.DataFrame, key: [str, list], header: str, value_map: dict, default_to: Any=None,
                   replace_na: bool=None, rtn_columns: list=None, rename: str=None, unindex: bool=None,
