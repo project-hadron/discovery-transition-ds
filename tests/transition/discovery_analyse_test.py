@@ -131,39 +131,43 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
     def test_analyse_number(self):
         dataset = []
         result = Discover.analyse_number(dataset)
-        control = [100.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,1,10), (result.get('lower'), result.get('upper'), result.get('granularity')))
-        self.assertEqual([10], result.get('sample'))
+        control = [1]
+        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual((0,0,3), (result.get('intent').get('lower'), result.get('intent').get('upper'), result.get('intent').get('granularity')))
+        self.assertEqual(0, result.get('stats').get('sample'))
         dataset = [1,2,3,4,5,6,7,8,9,10]
 
         result = Discover.analyse_number(dataset, granularity=2)
         control = [50.0, 50.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
-        self.assertEqual(control, result.get('granularity'))
+        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(2, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=3.0)
         control = [30.0, 30.0, 40.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
+        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(3.0, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=2.0)
         control = [20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((1,10), (result.get('lower'), result.get('upper')))
+        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
+        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(2.0, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
         control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('weighting'))
-        self.assertEqual((0,5), (result.get('lower'), result.get('upper')))
+        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual((0,5), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
-        self.assertEqual(control, result.get('granularity'))
+        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(1.0, result.get('intent').get('granularity'))
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
@@ -266,7 +270,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         size = 50
         df = pd.DataFrame()
-        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
+        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], bounded_weighting=True, size=size)
         # category
         columns_list = [{'gender': {}}]
         result = Discover.analyse_association(df, columns_list)
@@ -391,6 +395,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
             sub_category = weighting.get(col).get('sub_category').get(category)
             self.get_weights(df[df[col] == category], columns, index + 1, sub_category)
         return
+
+    def test_sandbox(self):
+        dates = pd.Series([pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-02"), pd.Timestamp("2020-01-03"),
+                           pd.Timestamp("2020-01-01"), pd.Timestamp("2020-01-02"), pd.Timestamp("2020-01-04")])
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

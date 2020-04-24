@@ -233,15 +233,15 @@ class FeatureCatalog(AbstractComponent):
         return
 
     def run_feature_pipeline(self, canonical: pd.DataFrame=None, feature_names: [str, list]=None,
-                             add_connector: bool=None, save: bool=None):
+                             auto_connectors: bool=None, save: bool=None):
         """runs all features within the feature catalog or an optional set of features
 
         :param canonical: (optional) A canonical if the source canonical isn't to be used
         :param feature_names: (optional) a single or list of features to run
-        :param add_connector: (optional) Adds a versioned feature connector if not yet added. Default to True
+        :param auto_connectors: (optional) Adds a versioned feature connector if not yet added. Default to True
         :param save: (optional) if True, persist changes to property manager. Default is True
         """
-        add_connector = add_connector if isinstance(add_connector, bool) else True
+        auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
         if isinstance(feature_names, (str, list)):
             feature_names = Commons.list_formatter(feature_names)
         else:
@@ -250,7 +250,7 @@ class FeatureCatalog(AbstractComponent):
             canonical = self.load_source_canonical()
         for feature in feature_names:
             if not self.pm.has_connector(feature):
-                if not add_connector:
+                if not auto_connectors:
                     continue
                 self.set_catalog_feature(feature_name=feature, versioned=True, save=save)
             result = self.intent_model.run_intent_pipeline(canonical, feature)
@@ -338,17 +338,10 @@ class FeatureCatalog(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=self.pm.report_intent(), orient='columns')
         if stylise:
-            index = df[df['level'].duplicated()].index.to_list()
-            df.loc[index, 'level'] = ''
-            df = df.reset_index(drop=True)
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['level'],  **{'font-weight': 'bold', 'font-size': "120%"})
-            return df_style
+            Commons.report(df, index_header='level')
+        df.set_index(keys='level', inplace=True)
         return df
 
     def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,

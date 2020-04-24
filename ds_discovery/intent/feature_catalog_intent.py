@@ -38,7 +38,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
         default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
-        intent_param_exclude = ['df', 'inplace', 'canonical', 'feature']
+        intent_param_exclude = ['df', 'canonical', 'feature']
         intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64,
                                  pd.Timestamp]
         super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
@@ -423,7 +423,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: the Pandas.DataFrame to get the column headers from
         :param key: the key column to index on
         :param selection: a list of dictionaries of selection where conditions to filter on, executed in list order
-                An example of a selection with the minimum requirements is: (see 'conditions2dict(...)')
+                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
         :param inc_columns: additional columns to include in the returning DataFrame
         :param unindex: if the passed canonical should be un-index before processing
@@ -449,7 +449,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 selection = [self.select2dict(column='gender', condition="=='M'"),
                              self.select2dict(column='age', condition=">65", logic='XOR')]
 
-        Using the 'conditions2dict' method ensure the correct keys are used and the dictionary is properly formed
+        Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
