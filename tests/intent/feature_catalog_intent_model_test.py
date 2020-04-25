@@ -29,7 +29,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
             pass
         PropertyManager._remove_all()
         self.tools = SyntheticBuilder.scratch_pad()
-        self.fc = FeatureCatalog.scratch_pad()
+        self.fc: FeatureCatalogIntentModel = FeatureCatalog.scratch_pad()
 
     def tearDown(self):
         try:
@@ -205,6 +205,20 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         result = self.fc.apply_missing(df, key='key', headers='values')
         print(result)
 
+    def test_get_canonical(self):
+        df = pd.DataFrame()
+        value = self.fc._get_canonical(df)
+        self.assertIsInstance(value, pd.DataFrame)
+        self.assertEqual([], value.columns.to_list())
+        df['cu_id'] = [1,2,3,4,5,6]
+        df['age'] = [23, 18, 47, 32, 29, 61]
+        df['gender'] = ['M', 'F', 'M', 'M', 'F', 'M']
+        catalog: FeatureCatalog = FeatureCatalog.from_env('tester')
+        catalog.set_catalog_feature('data')
+        catalog.save_catalog_feature(feature_name='data', canonical=df)
+        value = catalog.intent_model._get_canonical('data')
+        self.assertIsInstance(value, pd.DataFrame)
+        self.assertEqual(['cu_id', 'age', 'gender'], value.columns.to_list())
 
 
 if __name__ == '__main__':

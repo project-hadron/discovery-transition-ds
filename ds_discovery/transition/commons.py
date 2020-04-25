@@ -21,6 +21,8 @@ class Commons(AistacCommons):
         :param large_font
         :return: stylised report DataFrame
         """
+        pd.set_option('max_colwidth', 200)
+        pd.set_option('expand_frame_repr', True)
         bold = Commons.list_formatter(bold).append(index_header)
         large_font = Commons.list_formatter(large_font).append(index_header)
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},

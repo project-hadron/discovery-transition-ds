@@ -3,7 +3,6 @@ from copy import deepcopy
 from typing import Any
 
 import pandas as pd
-from aistac.handlers.abstract_handlers import ConnectorContract
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 import numpy as np
 import matplotlib.dates as mdates
@@ -46,8 +45,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical, feature_name: [int, str], train_size: [float, int]=None,
-                            seed: int=None, shuffle: bool=None, **kwargs) -> [pd.DataFrame, pd.Series]:
+    def run_intent_pipeline(self, canonical: [pd.DataFrame, str], feature_name: [int, str],
+                            train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
+                            **kwargs) -> [pd.DataFrame, pd.Series]:
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -66,6 +66,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :return
         """
         # test if there is any intent to run
+        canonical = self._get_canonical(canonical)
         if self._pm.has_intent():
             # run the feature
             df_feature = canonical.copy()
@@ -86,7 +87,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return df_feature
         raise ValueError(f"The feature '{feature_name}, can't be found in the feature catalog")
 
-    def apply_date_diff(self, canonical: pd.DataFrame, key: [str, list], first_date: str, second_date: str,
+    def apply_date_diff(self, canonical: [pd.DataFrame, str], key: [str, list], first_date: str, second_date: str,
                         aggregator: str=None, units: str=None, precision: int=None, rtn_columns: list=None,
                         rename: str=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
                         intent_order: int=None, replace_intent: bool=None,
@@ -125,7 +126,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             raise ValueError(f"The column header '{second_date}' is not in the canonical DataFrame")
         if first_date not in canonical.columns:
             raise ValueError(f"The column header '{first_date}' is not in the canonical DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -138,7 +139,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical[rename] = [np.round(v, precision) for v in canonical[rename]]
         return Commons.filter_columns(canonical, headers=list(set(key + [rename] + rtn_columns))).set_index(key)
 
-    def select_feature(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list]=None,
+    def select_feature(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list]=None,
                        drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                        re_ignore_case: bool=None, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
@@ -173,6 +174,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        canonical = self._get_canonical(canonical)
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
@@ -189,7 +191,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn.rename(columns=rename, inplace=True)
         return df_rtn.set_index(key)
 
-    def apply_merge(self, canonical: pd.DataFrame, merge_connector: str, key: [str, list], how: str=None,
+    def apply_merge(self, canonical: [pd.DataFrame, str], merge_connector: str, key: [str, list], how: str=None,
                     on: str=None, left_on: str=None, right_on: str=None, left_index: bool=None, right_index: bool=None,
                     sort: bool=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
                     rtn_columns: list=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
@@ -199,15 +201,29 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: the canonical to merge on the left
         :param merge_connector: the name of the Connector Contract to load to merge on the right
         :param key: the key column to index on
-        :param how: (optional) One of 'left', 'right', 'outer', 'inner'. Defaults to inner. See below for more detailed description of each method.
-        :param on: (optional) Column or index level names to join on. Must be found in both the left and right DataFrame and/or Series objects. If not passed and left_index and right_index are False,  the intersection of the columns in the DataFrames and/or Series will be inferred to be the join keys
-        :param left_on: (optional) Columns or index levels from the left DataFrame or Series to use as keys. Can either be column names, index level names, or arrays with length equal to the length of the DataFrame or Series.
-        :param right_on: (optional) Columns or index levels from the right DataFrame or Series to use as keys. Can either be column names, index level names, or arrays with length equal to the length of the DataFrame or Series.
-        :param left_index: (optional) If True, use the index (row labels) from the left DataFrame or Series as its join key(s). In the case of a DataFrame or Series with a MultiIndex (hierarchical), the number of levels must match the number of join keys from the right DataFrame or Series.
+        :param how: (optional) One of 'left', 'right', 'outer', 'inner'. Defaults to inner. See below for more detailed
+                    description of each method.
+        :param on: (optional) Column or index level names to join on. Must be found in both the left and right
+                    DataFrame and/or Series objects. If not passed and left_index and right_index are False,  the
+                    intersection of the columns in the DataFrames and/or Series will be inferred to be the join keys
+        :param left_on: (optional) Columns or index levels from the left DataFrame or Series to use as keys. Can either
+                    be column names, index level names, or arrays with length equal to the length of the DataFrame
+                    or Series.
+        :param right_on: (optional) Columns or index levels from the right DataFrame or Series to use as keys. Can
+                    either be column names, index level names, or arrays with length equal to the length of the
+                    DataFrame or Series.
+        :param left_index: (optional) If True, use the index (row labels) from the left DataFrame or Series as its join
+                    key(s). In the case of a DataFrame or Series with a MultiIndex (hierarchical), the number of levels
+                    must match the number of join keys from the right DataFrame or Series.
         :param right_index: (optional) Same usage as left_index for the right DataFrame or Series
-        :param sort: (optional) Sort the result DataFrame by the join keys in lexicographical order. Defaults to True, setting to False will improve performance substantially in many cases.
-        :param suffixes: (optional) A tuple of string suffixes to apply to overlapping columns. Defaults to ('', '_dup').
-        :param indicator: (optional) Add a column to the output DataFrame called _merge with information on the source of each row. _merge is Categorical-type and takes on a value of left_only for observations whose merge key only appears in 'left' DataFrame or Series, right_only for observations whose merge key only appears in 'right' DataFrame or Series, and both if the observation’s merge key is found in both.
+        :param sort: (optional) Sort the result DataFrame by the join keys in lexicographical order. Defaults to True,
+                    setting to False will improve performance substantially in many cases.
+        :param suffixes: (optional) A tuple of string suffixes to apply to overlapping columns. Defaults ('', '_dup').
+        :param indicator: (optional) Add a column to the output DataFrame called _merge with information on the source
+                    of each row. _merge is Categorical-type and takes on a value of left_only for observations whose
+                    merge key only appears in 'left' DataFrame or Series, right_only for observations whose merge key
+                    only appears in 'right' DataFrame or Series, and both if the observation’s merge key is found
+                    in both.
         :param validate: (optional) validate : string, default None. If specified, checks if merge is of specified type.
                             “one_to_one” or “1:1”: checks if merge keys are unique in both left and right datasets.
                             “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
@@ -232,7 +248,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         how = how if isinstance(how, str) and how in ['left', 'right', 'outer', 'inner'] else 'inner'
         left_index = left_index if isinstance(left_index, bool) else False
         right_index = right_index if isinstance(right_index, bool) else False
@@ -255,9 +271,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         rtn_columns = rtn_columns if isinstance(rtn_columns, list) else df.columns.to_list()
         return Commons.filter_columns(df, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_map(self, canonical: pd.DataFrame, key: [str, list], header: str, value_map: dict, default_to: Any=None,
-                  replace_na: bool=None, rtn_columns: list=None, rename: str=None, unindex: bool=None,
-                  save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+    def apply_map(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, value_map: dict,
+                  default_to: Any=None, replace_na: bool=None, rtn_columns: list=None, rename: str=None,
+                  unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                   replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Apply mapping and filtering based on a key value pair of find and replace values
 
@@ -289,7 +305,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -303,10 +319,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical.dropna(axis=0, how='any', subset=[rename], inplace=True)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_replace(self, canonical: pd.DataFrame, key: [str, list], header: str, to_replace: dict, regex: bool=None,
-                      rtn_columns: list=None, unindex: bool=None, rename: str=None, save_intent: bool=None,
-                      feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                      remove_duplicates: bool=None) -> pd.DataFrame:
+    def apply_replace(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, to_replace: dict,
+                      regex: bool=None, rtn_columns: list=None, unindex: bool=None, rename: str=None,
+                      save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Apply replacement based on a key value pair of find and replace values
 
         :param canonical: the value to apply the substitution to
@@ -336,7 +352,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -346,7 +362,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical[rename] = canonical[header].replace(to_replace=to_replace, inplace=False, regex=regex)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_condition(self, canonical: pd.DataFrame, key: [str, list], header: str, conditions: [tuple, list],
+    def apply_condition(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, conditions: [tuple, list],
                         default: [int, float, str]=None, rtn_columns: list=None, rename: str=None, unindex: bool=None,
                         save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -381,7 +397,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # Code block for intent
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -415,7 +431,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical[rename] = np.select(selection, choices)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def select_where(self, canonical: pd.DataFrame, key: [str, list], selection: list, inc_columns: list=None,
+    def select_where(self, canonical: [pd.DataFrame, str], key: [str, list], selection: list, inc_columns: list=None,
                      unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns a selected result based upon a set of conditions.
@@ -462,7 +478,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             if 'column' not in _where or 'condition' not in _where:
                 raise ValueError("all 'dict' in the 'selection' list must have a 'column' and 'condition' key "
                                  "as a minimum")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -475,7 +491,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical = canonical.iloc[select_idx]
         return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
-    def remove_outliers(self, canonical: pd.DataFrame, key: [str, list], column: str, lower_quantile: float=None,
+    def remove_outliers(self, canonical: [pd.DataFrame, str], key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> [None, pd.DataFrame]:
@@ -504,6 +520,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -517,10 +534,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                                                               analysis.intent.selection[2][0])]
         return df_rtn.set_index(key)
 
-    def group_features(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
-                       drop_group_by: bool=False, include_weighting: bool=False, weighting_precision: int=None,
-                       remove_weighting_zeros: bool=False, remove_aggregated: bool=False, drop_dup_index: str=None,
-                       unindex: bool=None, save_intent: bool=None,
+    def group_features(self, canonical: [pd.DataFrame, str], headers: [str, list], group_by: [str, list],
+                       aggregator: str=None, drop_group_by: bool=False, include_weighting: bool=False,
+                       weighting_precision: int=None, remove_weighting_zeros: bool=False, remove_aggregated: bool=False,
+                       drop_dup_index: str=None, unindex: bool=None, save_intent: bool=None,
                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                        remove_duplicates: bool=None) -> pd.DataFrame:
         """ groups features according to the aggregator passed. The list of aggregators are mean, sum, size, count,
@@ -556,7 +573,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         headers = self._pm.list_formatter(headers)
@@ -580,11 +597,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
 
-    def interval_categorical(self, canonical: pd.DataFrame, key: [str, list], column: str, inc_columns: list=None,
-                             granularity: [int, float, list]=None, lower: [int, float]=None, upper: [int, float]=None,
-                             rename: str=None, categories: list=None, precision: int=None, unindex: bool=None,
-                             save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
-                             replace_intent: bool=None, remove_duplicates: bool=None) -> [None, pd.DataFrame]:
+    def interval_categorical(self, canonical: [pd.DataFrame, str], key: [str, list], column: str,
+                             inc_columns: list=None, granularity: [int, float, list]=None, lower: [int, float]=None,
+                             upper: [int, float]=None, rename: str=None, categories: list=None, precision: int=None,
+                             unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
+                             intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ converts continuous representation into discrete representation through interval categorisation
 
         :param canonical: the dataset where the column and target can be found
@@ -615,6 +633,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :return: the converted fields
         """
         # exceptions check
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -696,7 +715,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_rtn = df_rtn.drop(column, axis=1).set_index(key)
         return df_rtn
 
-    def flatten_categorical(self, canonical: pd.DataFrame, key, column, prefix=None, index_key=True, dups=True,
+    def flatten_categorical(self, canonical: [pd.DataFrame, str], key, column, prefix=None, index_key=True, dups=True,
                             unindex: bool=None, save_intent: bool=None,
                             feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                             remove_duplicates: bool=None) -> [None, pd.DataFrame]:
@@ -728,7 +747,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if column not in canonical:
             raise NameError(f"The column {column} can't be found in the DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -745,7 +764,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             dummy_df = dummy_df.set_index(key)
         return dummy_df
 
-    def select_date_elements(self, canonical: pd.DataFrame, key: [str, list], header: str, matrix: [str, list],
+    def select_date_elements(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, matrix: [str, list],
                              rtn_columns: list=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
                              feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                              remove_duplicates: bool=None) -> pd.DataFrame:
@@ -789,7 +808,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         # intend code block on the canonical
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -822,12 +841,12 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_time[f"{rename}_ordinal"] = mdates.date2num(canonical[header])
         return df_time.set_index(key)
 
-    def apply_missing(self, canonical: pd.DataFrame, key: [str, list], headers: [str, list], rtn_columns: list=None,
-                      granularity: [int, float]=None, lower: [int, float]=None, upper: [int, float]=None,
-                      nulls_list: list=None, replace_zero: [int, float]=None, precision: int=None, unindex: bool=None,
-                      day_first: bool=False, year_first: bool=False, save_intent: bool=None,
-                      feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                      remove_duplicates: bool=None) -> [None, pd.DataFrame]:
+    def apply_missing(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list],
+                      rtn_columns: list=None, granularity: [int, float]=None, lower: [int, float]=None,
+                      upper: [int, float]=None, nulls_list: list=None, replace_zero: [int, float]=None,
+                      precision: int=None, unindex: bool=None, day_first: bool=False, year_first: bool=False,
+                      save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                      replace_intent: bool=None, remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
@@ -865,7 +884,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -908,7 +927,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn[c] = col
         return df_rtn.set_index(key)
 
-    def custom_builder(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=False,
+    def custom_builder(self, canonical: [pd.DataFrame, str], code_str: str, use_exec: bool=False,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
@@ -936,7 +955,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        canonical = deepcopy(canonical)
+        canonical = self._get_canonical(canonical)
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
         if 'canonical' not in local_kwargs:
             local_kwargs['canonical'] = canonical
@@ -947,7 +966,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return result
 
     @staticmethod
-    def select2dict(column: str, condition: str, operator: str=None, logic: bool=None, date_format: str=None,
+    def select2dict(column: str, condition: str, operator: str=None, logic: str=None, date_format: str=None,
                     offset: int=None):
         """ a utility method to help build feature conditions by aligning method parameters with dictionary format.
 
@@ -1065,3 +1084,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 raise ValueError(f"The logic '{_logic}' for column '{_column}' is not recognised logic. "
                                  f"Use 'AND', 'OR', 'NOT', 'XOR'")
         return select_idx
+
+    def _get_canonical(self, data: [pd.DataFrame, str]) -> pd.DataFrame:
+        if isinstance(data, pd.DataFrame):
+            return deepcopy(data)
+        if isinstance(data, str):
+            if not self._pm.has_connector(connector_name=data):
+                raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
+            handler = self._pm.get_connector_handler(data)
+            canonical = handler.load_canonical()
+            if isinstance(canonical, dict):
+                canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
+            return canonical
+        raise ValueError(f"The canonical format is not recognised, pd.DataFrame, "
+                         f"ConnectorContract expected, {type(data)} passed")
