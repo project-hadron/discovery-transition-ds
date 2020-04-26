@@ -57,6 +57,22 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=0.75, shuffle=True)
         _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=750, shuffle=True)
 
+    def test_run_pipeline_from_connector(self):
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog.set_catalog_feature('test')
+        df = pd.DataFrame()
+        df['key'] = list(range(10))
+        df['values'] = [1,3,np.nan,5,4,1,3,np.nan,1,6]
+        df['cats'] = list('AAC') + [np.nan] + list('CCBBAA')
+        catalog.save_catalog_feature(feature_name='test', canonical=df)
+        # DataFrame
+        _ = catalog.intent_model.apply_missing(df, key='key', headers='values', feature_name='test')
+        _ = catalog.pm.get_intent(level='test', intent='apply_missing')
+        result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
+        # Connector
+        _ = catalog.intent_model.apply_missing('test', key='key', headers='cats', feature_name='test')
+        result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
+
     def test_apply_merge(self):
         catalog: FeatureCatalog = FeatureCatalog.from_env('merge')
         catalog.set_catalog_feature('test')
@@ -219,6 +235,24 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         value = catalog.intent_model._get_canonical('data')
         self.assertIsInstance(value, pd.DataFrame)
         self.assertEqual(['cu_id', 'age', 'gender'], value.columns.to_list())
+
+    def test_set_intend_signature(self):
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog.set_catalog_feature('test')
+        df = pd.DataFrame()
+        df['key'] = list(range(10))
+        df['values'] = [1,3,np.nan,5,4,1,3,np.nan,1,6]
+        df['cats'] = list('ABCDEFGHIJ')
+        catalog.save_catalog_feature(feature_name='test', canonical=df)
+        # DataFrame
+        _ = catalog.intent_model.apply_missing(df, key='key', headers='values', feature_name='test')
+        result = catalog.pm.get_intent(level='test', intent='apply_missing')
+        self.assertFalse('canonical' in result.get('apply_missing').keys())
+        # Connector
+        _ = catalog.intent_model.apply_missing('test', key='key', headers='values', feature_name='test')
+        result = catalog.pm.get_intent(level='test', intent='apply_missing')
+        self.assertTrue('canonical' in result.get('apply_missing').keys())
+        self.assertEqual('test', result.get('apply_missing').get('canonical'))
 
 
 if __name__ == '__main__':

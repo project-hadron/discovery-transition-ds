@@ -37,7 +37,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
         default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
-        intent_param_exclude = ['df', 'canonical', 'feature']
+        intent_param_exclude = []
         intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64,
                                  pd.Timestamp]
         super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
@@ -66,16 +66,17 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :return
         """
         # test if there is any intent to run
-        canonical = self._get_canonical(canonical)
-        if self._pm.has_intent():
-            # run the feature
-            df_feature = canonical.copy()
+        if self._pm.has_intent(level=feature_name):
+            canonical = self._get_canonical(canonical)
             if isinstance(train_size, (float, int)):
                 canonical = self.canonical_sampler(canonical, sample_size=train_size, shuffle=shuffle, seed=seed)
+            # run the feature
             level_key = self._pm.join(self._pm.KEY.intent_key, feature_name)
+            df_feature = None
             for order in sorted(self._pm.get(level_key, {})):
                 for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
                     if method in self.__dir__():
+                        df_feature = params.pop('canonical', canonical if df_feature is None else df_feature)
                         # fail safe in case kwargs was sored as the reference
                         params.update(params.pop('kwargs', {}))
                         # add method kwargs to the params
@@ -84,6 +85,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         # add excluded params and set to False
                         params.update({'save_intent': False})
                         df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())
+            if df_feature is None:
+                raise ValueError(f"The feature '{feature_name}' pipeline did not run. ")
             return df_feature
         raise ValueError(f"The feature '{feature_name}, can't be found in the feature catalog")
 
@@ -989,13 +992,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     @staticmethod
     def canonical_sampler(canonical: [pd.DataFrame, pd.Series], sample_size: [int, float], shuffle: bool=None,
-                          seed: int=None) -> tuple:
+                          train_only: bool=True, seed: int=None) -> [tuple, pd.DataFrame, pd.Series]:
         """ returns a tuple of the canonical split of sample size and the remaining
 
         :param canonical: a canonical to take the sampler from
         :param sample_size: If float, should be between 0.0 and 1.0 and represent the proportion of the
                             data set to return as a sample. If int, represents the absolute number of samples.
         :param shuffle: (optional) if the canonical should be shuffled
+        :param train_only: (optional) if only the train data-set should be returned rather than the train, test tuple
         :param seed: (optional) if shuffle is not None a seed value for the sample_size
         :return: a (sample, remaining) tuple
         """
@@ -1020,11 +1024,27 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         else:
             raise ValueError(f"sample_size must be an int less than the number of rows or a float between 0 and 1")
         test = canonical.loc[~canonical.index.isin(train.index), :]
+        if isinstance(train_only, bool) and train_only:
+            return train
         return train, test
 
     """
         PRIVATE METHODS SECTION
     """
+    def _intent_builder(self, method: str, params: dict, exclude: list=None) -> dict:
+        """builds the intent_params. Pass the method name and local() parameters
+            Example:
+                self._intent_builder(inspect.currentframe().f_code.co_name, **locals())
+
+        :param method: the name of the method (intent). can use 'inspect.currentframe().f_code.co_name'
+        :param params: the parameters passed to the method. use `locals()` in the caller method
+        :param exclude: (optional) convenience parameter identifying param keys to exclude.
+        :return: dict of the intent
+        """
+        if not isinstance(params.get('canonical', None), str):
+            exclude = ['canonical']
+        return super()._intent_builder(method=method, params=params, exclude=exclude)
+
     def _set_intend_signature(self, intent_params: dict, feature_name: [int, str]=None, intent_order: int=None,
                               replace_intent: bool=None, remove_duplicates: bool=None, save_intent: bool=None):
         """ sets the intent section in the configuration file. Note: by default any identical intent, e.g.
