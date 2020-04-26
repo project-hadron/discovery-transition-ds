@@ -76,7 +76,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             for order in sorted(self._pm.get(level_key, {})):
                 for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
                     if method in self.__dir__():
-                        df_feature = params.pop('canonical', canonical if df_feature is None else df_feature)
+                        if 'canonical' in params.keys():
+                            df_feature = params.pop('canonical')
+                        elif df_feature is None:
+                            df_feature = canonical
                         # fail safe in case kwargs was sored as the reference
                         params.update(params.pop('kwargs', {}))
                         # add method kwargs to the params
