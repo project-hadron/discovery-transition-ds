@@ -221,6 +221,14 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         result = self.fc.apply_missing(df, key='key', headers='values')
         print(result)
 
+    def test_to_category_type(self):
+        df = pd.DataFrame()
+        df['key'] = list(range(10))
+        df['values'] = [1,3,4,5,4,1,3,2,1,6]
+        df['cats'] = list('ABCDEFGHIJ')
+        result = self.fc.to_category_type(df, key='key', headers='cats')
+        print(result['cats'])
+
     def test_get_canonical(self):
         df = pd.DataFrame()
         value = self.fc._get_canonical(df)
