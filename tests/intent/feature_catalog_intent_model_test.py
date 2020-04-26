@@ -185,9 +185,9 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         result = self.fc.select_date_elements(df, key='cu_id', header='primary', matrix=[], inc_columns=['primary'])
         self.assertEqual(1, result.shape[1])
         result = self.fc.select_date_elements(df, key='cu_id', header='primary', matrix=['day', 'dow', 'woy', 'doy'])
-        self.assertCountEqual(['primary_woy', 'primary_doy', 'primary_dow', 'primary_day'], result.columns)
+        self.assertCountEqual(['primary', 'primary_woy', 'primary_doy', 'primary_dow', 'primary_day'], result.columns)
         result = self.fc.select_date_elements(df, key='cu_id', header='primary', matrix=['day', 'dow'], rename='cat')
-        self.assertCountEqual(['cat_dow', 'cat_day'], result.columns)
+        self.assertCountEqual(['primary', 'cat_dow', 'cat_day'], result.columns)
 
     def test_apply_condition(self):
         df = pd.DataFrame()

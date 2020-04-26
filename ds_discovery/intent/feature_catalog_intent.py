@@ -366,7 +366,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
     def apply_condition(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, conditions: [tuple, list],
-                        default: [int, float, str]=None, rtn_columns: list=None, rename: str=None, unindex: bool=None,
+                        default: [int, float, str]=None, inc_columns: list=None, rename: str=None, unindex: bool=None,
                         save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ applies a selections choice based on a set of conditions to a condition to a named column
@@ -379,7 +379,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param unindex: if the passed canonical should be un-index before processing
         :param conditions: a tuple or list of tuple conditions
         :param default: (optional) a value if no condition is met. 0 if not set
-        :param rtn_columns: additional columns to include in the returning DataFrame
+        :param inc_columns: additional columns to include in the returning DataFrame
         :param rename: (optional) if the column should have an alternative name
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
@@ -405,7 +405,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
-        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
+        inc_columns = self._pm.list_formatter(inc_columns)
+        if not inc_columns:
+            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
         str_code = ''
         if isinstance(conditions, tuple):
             conditions = [conditions]
@@ -432,7 +434,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical[rename] = np.select(selection, choices, default=default)
         else:
             canonical[rename] = np.select(selection, choices)
-        return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
+        return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
     def select_where(self, canonical: [pd.DataFrame, str], key: [str, list], selection: list, inc_columns: list=None,
                      unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
@@ -847,7 +849,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_time.set_index(key)
 
     def apply_missing(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list],
-                      rtn_columns: list=None, granularity: [int, float]=None, lower: [int, float]=None,
+                      inc_columns: list=None, granularity: [int, float]=None, lower: [int, float]=None,
                       upper: [int, float]=None, nulls_list: list=None, replace_zero: [int, float]=None,
                       precision: int=None, unindex: bool=None, day_first: bool=False, year_first: bool=False,
                       save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
@@ -858,7 +860,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param canonical: the pd.DataFrame to replace missing values in
         :param key: the key column
         :param headers: the headers in the pd.DataFrame to apply the substitution too
-        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param inc_columns: (optional) return columns, the header must be listed to be included. If None then header
         :param granularity: (optional) the granularity of the analysis across the range. Default is 3
                 int passed - represents the number of periods
                 float passed - the length of each interval
@@ -896,12 +898,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         sim = SyntheticBuilder.scratch_pad()
         tr = Transition.scratch_pad()
         headers = self._pm.list_formatter(headers)
-        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else headers
+        inc_columns = self._pm.list_formatter(inc_columns)
+        if not inc_columns:
+            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
         if not isinstance(canonical, pd.DataFrame):
             raise TypeError("The canonical given is not a pandas DataFrame")
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['nan', '']
 
-        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + rtn_columns + headers)))
+        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + inc_columns + headers)))
         for c in headers:
             col = deepcopy(canonical[c])
             # replace alternative nulls with pd.nan
