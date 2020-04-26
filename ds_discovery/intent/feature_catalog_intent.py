@@ -768,7 +768,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return dummy_df
 
     def select_date_elements(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, matrix: [str, list],
-                             rtn_columns: list=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
+                             inc_columns: list=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
                              feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                              remove_duplicates: bool=None) -> pd.DataFrame:
         """ breaks a date down into value representations of the various parts that date.
@@ -777,7 +777,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param key: the key column header
         :param header: the date column header
         :param matrix: the matrix options (see below)
-        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param inc_columns: (optional) return columns, the header must be listed to be included. If None then header
         :param rename: a new name for the column, else current column header
         :param unindex: (optional) if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -816,12 +816,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
-        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else []
+        inc_columns = self._pm.list_formatter(inc_columns)
+        if not inc_columns:
+            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
         values_type = canonical[header].dtype.name.lower()
         if not values_type.startswith('date'):
             raise TypeError(f"the column {header} is not a date type")
         matrix = Commons.list_formatter(matrix)
-        df_time = Commons.filter_columns(canonical, headers=list(set(key + rtn_columns)))
+        df_time = Commons.filter_columns(canonical, headers=list(set(key + inc_columns)))
         if 'yr' in matrix:
             df_time[f"{rename}_yr"] = canonical[header].dt.year
         if 'dec' in matrix:
