@@ -69,8 +69,26 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         _ = catalog.intent_model.apply_missing(df, key='key', headers='values', feature_name='test')
         _ = catalog.pm.get_intent(level='test', intent='apply_missing')
         result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
+        self.assertEqual((10,2),result.shape)
         # Connector
         _ = catalog.intent_model.apply_missing('test', key='key', headers='cats', feature_name='test')
+        result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
+        self.assertEqual((10,2),result.shape)
+
+    def test_run_pipeline_intent_order(self):
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog.set_catalog_feature('test')
+        df = pd.DataFrame()
+        df['key'] = list(range(6))
+        df['age'] = [23, 18, 47, 32, 29, 61]
+        df['gender'] = ['M', 'F', np.nan, 'M', 'F', 'M']
+        df['values'] = [1,3,5,1,2,3]
+        df['cats'] = list('AACBCA')
+        df['location'] = ['NY', 'PA', 'TX', 'IL', 'TX', 'CA']
+        catalog.save_catalog_feature(feature_name='test', canonical=df)
+        conditions_list = [self.fc.select2dict(column='age', condition="20", operator='>')]
+        _ = catalog.intent_model.select_where(df, key='key', selection=conditions_list, intent_order=0, feature_name='test')
+        _ = catalog.intent_model.apply_missing(df, key='key', headers='gender', unindex=True, intent_order=1, feature_name='test')
         result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
 
     def test_apply_merge(self):

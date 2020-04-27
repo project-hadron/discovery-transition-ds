@@ -246,7 +246,7 @@ class FeatureCatalog(AbstractComponent):
             feature_names = Commons.list_formatter(feature_names)
         else:
             feature_names = Commons.list_formatter(self.pm.get_intent())
-        if not isinstance(canonical, pd.DataFrame):
+        if not isinstance(canonical, (pd.DataFrame, str)):
             canonical = self.load_source_canonical()
         for feature in feature_names:
             if not self.pm.has_connector(feature):
