@@ -31,7 +31,7 @@ class TransitionIntentModel(AbstractIntentModel):
         """
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
-        default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
+        default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'base'
         default_intent_order = -1 if isinstance(order_next_available, bool) and order_next_available else 0
         intent_param_exclude = ['df', 'inplace', 'canonical']
         intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float16, np.float32, np.float64]

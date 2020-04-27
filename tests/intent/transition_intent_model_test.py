@@ -47,17 +47,17 @@ class IntentModelTest(unittest.TestCase):
         tools = self.tools
         df = pd.DataFrame(tools.model_us_zip(size=1000))
         result = self.clean.to_sample(df, sample_size=100)
-        self.assertEqual((100, 3), result.shape)
+        self.assertEqual((100, 5), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=100, shuffle=True)
-        self.assertEqual((100, 3), result.shape)
+        self.assertEqual((100, 5), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
         result = self.clean.to_sample(df, sample_size=0.2)
-        self.assertEqual((200, 3), result.shape)
+        self.assertEqual((200, 5), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=0.2, shuffle=True)
-        self.assertEqual((200, 3), result.shape)
+        self.assertEqual((200, 5), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
     def test_to_date_from_mdates(self):
