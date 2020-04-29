@@ -1,5 +1,6 @@
 import pandas as pd
-
+import uuid
+import ds_discovery
 from aistac.handlers.abstract_handlers import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 from ds_discovery.intent.transition_intent import TransitionIntentModel
@@ -15,6 +16,7 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
     CONNECTOR_DICTIONARY = 'dictionary'
+    CONNECTOR_REPORT = 'report'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
@@ -307,6 +309,49 @@ class Transition(AbstractComponent):
             Commons.report(df, index_header='section', bold='label')
         df.set_index(keys='section', inplace=True)
         return df
+
+    def transition_report(self, df: pd.DataFrame, analytics: dict) -> dict:
+        """A complete report of the transition"""
+        report = {'meta-data': {}, 'transition': {}, 'provenance': {}, 'fields': {}, 'analysis': {}}
+        # meta
+        report['meta-data'].update({'uid': str(uuid.uuid4()),
+                                    'component': self.pm.manager_name(),
+                                    'task': self.pm.task_name,
+                                    'created': str(pd.Timestamp.now()),
+                                    'version': ds_discovery.__version__})
+        # dataset-facts
+        _source_connector = self.pm.get_connector_contract(connector_name=self.CONNECTOR_SOURCE)
+        _source_dict = {}
+        if isinstance(_source_connector, ConnectorContract):
+            kwargs = ''
+            if isinstance(_source_connector.raw_kwargs, dict):
+                for k, v in _source_connector.raw_kwargs.items():
+                    if len(kwargs) > 0:
+                        kwargs += "  "
+                    kwargs += f"{k}='{v}'"
+            query = ''
+            if isinstance(_source_connector.query, dict):
+                for k, v in _source_connector.query.items():
+                    if len(query) > 0:
+                        query += "  "
+                    query += f"{k}='{v}'"
+            _source_dict['uri'].append(_source_connector.raw_uri)
+            _source_dict['version'].append(_source_connector.version)
+            _source_dict['kwargs'].append(kwargs)
+            _source_dict['query'].append(query)
+
+        report['transition'].update({'description': self.pm.description,
+                                     'source': _source_dict,
+                                     'info': {'rows': df.shape[0], 'columns': df.shape[1],
+                                              'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())}})
+        report['provenance'].update(self.pm.get_knowledge(catalog='transition'))
+        report['dictionary'].update(self.discover.data_dictionary(df=df, inc_next_dom=True).to_dict())
+        # field descriptions
+        _fields = {}
+        for c in df.columns.sort_values().values:
+            _fields[c] = self.pm.get_knowledge(catalog='attributes', label=c, as_list=True)
+        report['fields'].update(_fields)
+        return report
 
     def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,
                           save=None):
