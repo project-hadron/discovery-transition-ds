@@ -44,6 +44,25 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         Transition.from_env('TestAgent')
 
+    def test_transition_report(self):
+        tools = SyntheticBuilder.scratch_pad()
+        df = pd.DataFrame()
+        df['single_num'] = tools.get_number(1, 1, size=100)
+        df['two_num'] = tools.get_number(2, size=100)
+        df['weight_num'] = tools.get_number(2, weight_pattern=[98, 1], size=100)
+        df['null_num'] = tools.get_number(1, 100, quantity=0, size=100)
+        df['normal_num'] = tools.get_number(1, 100, size=100)
+        df['single_cat'] = tools.get_category(['A'], size=100)
+        df['two_cat'] = tools.get_category(['A', 'B'], quantity=0.9, size=100)
+        df['weight_cat'] = tools.get_category(['A', 'B'], weight_pattern=[95, 1], size=100)
+        df['normal_cat'] = tools.get_category(list('ABCDE'), size=100)
+        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr.set_source("test.csv")
+        df = tr.intent_model.auto_to_category(df)
+        report = tr.transition_report(df)
+        pprint(report)
+
+
     def test_dictionary_report(self):
         df = pd.DataFrame({'A': [1,2,3], 'B': [1,2,3], 'C': [1,2,3], 'D': [1,2,3]})
         notes = pd.DataFrame()

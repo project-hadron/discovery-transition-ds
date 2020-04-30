@@ -115,6 +115,20 @@ class Transition(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, save: bool=None):
+        """sets some fixed transition knowledge """
+
+        def _set_item(name: str, value: str):
+            value = value if isinstance(value, str) else ""
+            if self.pm.has_knowledge(catalog='transition', label=name):
+                self.pm.remove_knowledge(catalog='transition', label=name)
+            self.pm.set_knowledge(catalog='transition', label=name, text=value)
+
+        _set_item('title', title)
+        _set_item('domain', domain)
+        _set_item('description', description)
+        self.pm_persist(save=save)
+
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
         return self.pm.is_connector_modified(self.CONNECTOR_SOURCE)
@@ -310,9 +324,9 @@ class Transition(AbstractComponent):
         df.set_index(keys='section', inplace=True)
         return df
 
-    def transition_report(self, df: pd.DataFrame, analytics: dict) -> dict:
+    def transition_report(self, df: pd.DataFrame, analytics: dict=None) -> dict:
         """A complete report of the transition"""
-        report = {'meta-data': {}, 'transition': {}, 'provenance': {}, 'fields': {}, 'analysis': {}}
+        report = {'meta-data': {}, 'transition': {}, 'provenance': {}, 'dictionary': {}, 'fields': {}, 'analysis': {}}
         # meta
         report['meta-data'].update({'uid': str(uuid.uuid4()),
                                     'component': self.pm.manager_name(),
@@ -335,10 +349,10 @@ class Transition(AbstractComponent):
                     if len(query) > 0:
                         query += "  "
                     query += f"{k}='{v}'"
-            _source_dict['uri'].append(_source_connector.raw_uri)
-            _source_dict['version'].append(_source_connector.version)
-            _source_dict['kwargs'].append(kwargs)
-            _source_dict['query'].append(query)
+            _source_dict['uri'] = _source_connector.raw_uri
+            _source_dict['version'] = _source_connector.version
+            _source_dict['kwargs'] = kwargs
+            _source_dict['query'] = query
 
         report['transition'].update({'description': self.pm.description,
                                      'source': _source_dict,
@@ -351,6 +365,10 @@ class Transition(AbstractComponent):
         for c in df.columns.sort_values().values:
             _fields[c] = self.pm.get_knowledge(catalog='attributes', label=c, as_list=True)
         report['fields'].update(_fields)
+        # analysis
+        if not isinstance(analytics, dict):
+            analytics = self.discover.analyse_association(df, columns_list=df.columns.to_list())
+        report['analysis'].update(analytics)
         return report
 
     def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,

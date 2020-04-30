@@ -40,48 +40,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         """Basic smoke test"""
         self.assertEqual(DataDiscovery, type(Discover()))
 
-    def test_filter_univariate_roc_auc(self):
-        tr = Transition.from_env('test')
-        tr.set_source('paribas.csv', nrows=5000)
-        data = tr.load_source_canonical()
-        result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55)
-        self.assertCountEqual(['v10', 'v129', 'v14', 'v62', 'v50'], result)
-        # Custom classifier
-        classifier_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
-        result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55, package='catboost' ,
-                                                    model='CatBoostClassifier', classifier_kwargs=classifier_kwargs,
-                                                    fit_kwargs={'verbose': False})
-        self.assertCountEqual(['v50', 'v10', 'v14', 'v12', 'v129', 'v62', 'v21', 'v34'], result)
-
-
-    def test_filter_univariate_mse(self):
-        data = pd.read_csv('../../../data/raw/ames_housing.csv', nrows=50000)
-        result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, )
-        print(result)
-        #customer
-        regressor_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
-        result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, package='catboost', model='CatBoostRegressor',
-                                                regressor_kwargs=regressor_kwargs, fit_kwargs={'verbose': False})
-        print(result)
-
-    def test_filter_fisher_score(self):
-        df = sns.load_dataset('titanic')
-        result = Discover.filter_fisher_score(df, target='survived')
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True)
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age', 'fare'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=3)
-        self.assertEqual(['class', 'pclass', 'deck'], result)
-        result = Discover.filter_fisher_score(df, target='survived', top=0)
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age'], result)
-        result = Discover.filter_fisher_score(df, target='survived', top=20)
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=20)
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age', 'fare'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=0.3)
-        self.assertEqual(['class', 'pclass'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=0.999)
-        self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp'], result)
+    def test_discovery_associate(self):
+        tools = SyntheticBuilder.scratch_pad()
+        df = pd.DataFrame()
+        df['cat'] = tools.get_category(list('AB'), weight_pattern=[1,3], size=1000)
+        df['gender'] = tools.get_category(list('MF'), weight_pattern=[1,3], size=1000)
+        result = Discover.analyse_association(df, columns_list=['cat', 'gender'])
+        self.assertEqual(['cat', 'gender'], list(result))
 
     def test_discovery_analytics_class(self):
         tools = SyntheticBuilder.scratch_pad()
@@ -373,7 +338,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, size=size)
         df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], size=size)
         df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9)
-        columns_list = [{'gender': {}, 'age':  {}}, 'lived']
+        columns_list = [{'gender': {}, 'age':  {}}, {'lived': {}}]
         exclude = ['age.lived']
         result = Discover.analyse_association(df, columns_list, exclude)
         self.assertCountEqual(['age', 'gender'], list(result.keys()))

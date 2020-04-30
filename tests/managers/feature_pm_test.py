@@ -24,7 +24,7 @@ class FeaturePMTest(unittest.TestCase):
     def test_catalog(self):
         pm = FeatureCatalogPropertyManager('test')
         catalog = pm.knowledge_catalog
-        self.assertCountEqual(['features', 'observations', 'actions', 'schema', 'frames'], catalog)
+        self.assertCountEqual(['features', 'observations', 'actions', 'schema', 'intent'], catalog)
 
     def test_manager_name(self):
         pm = FeatureCatalogPropertyManager('test')
