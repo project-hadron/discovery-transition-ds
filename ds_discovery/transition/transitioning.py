@@ -16,7 +16,7 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
     CONNECTOR_DICTIONARY = 'dictionary'
-    CONNECTOR_REPORT = 'report'
+    CONNECTOR_NUTRITION = 'nutrition'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
@@ -164,6 +164,15 @@ class Transition(AbstractComponent):
         self.add_connector_contract(self.CONNECTOR_DICTIONARY, connector_contract=connector_contract, save=save)
         return
 
+    def set_nutrition_contract(self, connector_contract: ConnectorContract, save: bool=None):
+        """ Sets the  contract
+
+        :param connector_contract: a Connector Contract for the persisted data
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_contract(self.CONNECTOR_NUTRITION, connector_contract=connector_contract, save=save)
+        return
+
     def set_source(self, uri_file: str, save: bool=None, **kwargs):
         """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
 
@@ -185,7 +194,7 @@ class Transition(AbstractComponent):
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
     def set_dictionary(self, uri_file: str=None, save: bool=None, **kwargs):
-        """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
+        """sets the persist contract CONNECTOR_DICTIONARY using the TEMPLATE_PERSIST connector contract
 
         :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
@@ -195,6 +204,17 @@ class Transition(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_DICTIONARY, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
+    def set_nutrition(self, uri_file: str=None, save: bool=None, **kwargs):
+        """sets the persist contract CONNECTOR_NUTRITION using the TEMPLATE_PERSIST connector contract
+
+        :param uri_file: (optional) the uri_file is appended to the template path
+        :param save: (optional) if True, save to file. Default is True
+        """
+        file_pattern = self.pm.file_pattern(connector_name=self.CONNECTOR_NUTRITION, file_type='json', versioned=True)
+        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
+        self.add_connector_from_template(connector_name=self.CONNECTOR_NUTRITION, uri_file=uri_file,
+                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
+
     def load_source_canonical(self, **kwargs) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(self.CONNECTOR_SOURCE, **kwargs)
@@ -202,10 +222,6 @@ class Transition(AbstractComponent):
     def load_clean_canonical(self, **kwargs) -> pd.DataFrame:
         """loads the clean pandas.DataFrame from the clean folder for this contract"""
         return self.load_canonical(self.CONNECTOR_PERSIST, **kwargs)
-
-    def load_dictionary(self, **kwargs) -> pd.DataFrame:
-        """loads the clean pandas.DataFrame from the dictionary folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_DICTIONARY, **kwargs)
 
     def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
@@ -224,6 +240,10 @@ class Transition(AbstractComponent):
     def save_dictionary(self, df, **kwargs):
         """Saves the pandas.DataFrame to the dictionary folder"""
         self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df, **kwargs)
+
+    def save_nutrition(self, df, **kwargs):
+        """Saves the pandas.DataFrame to the nutrition folder"""
+        self.persist_canonical(connector_name=self.CONNECTOR_NUTRITION, canonical=df, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
@@ -324,7 +344,7 @@ class Transition(AbstractComponent):
         df.set_index(keys='section', inplace=True)
         return df
 
-    def transition_report(self, df: pd.DataFrame, analytics: dict=None) -> dict:
+    def report_nutrition(self, df: pd.DataFrame, analytics: dict=None) -> dict:
         """A complete report of the transition"""
         report = {'meta-data': {}, 'transition': {}, 'provenance': {}, 'dictionary': {}, 'fields': {}, 'analysis': {}}
         # meta

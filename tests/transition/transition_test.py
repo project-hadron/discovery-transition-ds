@@ -59,7 +59,7 @@ class TransitionTest(unittest.TestCase):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
         tr.set_source("test.csv")
         df = tr.intent_model.auto_to_category(df)
-        report = tr.transition_report(df)
+        report = tr.report_nutrition(df)
         pprint(report)
 
 
