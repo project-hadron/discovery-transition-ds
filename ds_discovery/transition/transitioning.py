@@ -241,9 +241,9 @@ class Transition(AbstractComponent):
         """Saves the pandas.DataFrame to the dictionary folder"""
         self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df, **kwargs)
 
-    def save_nutrition(self, df, **kwargs):
+    def save_nutrition(self, report: dict, **kwargs):
         """Saves the pandas.DataFrame to the nutrition folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_NUTRITION, canonical=df, **kwargs)
+        self.persist_canonical(connector_name=self.CONNECTOR_NUTRITION, canonical=report, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
