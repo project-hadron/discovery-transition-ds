@@ -458,8 +458,8 @@ class Transition(AbstractComponent):
                               'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
                                             'datetime': _date_fields, 'bool': _bool_fields,
                                             'others': _other_fields},
-                              'capability': {'name': self.pm.manager_name(),
-                                             'varions': ds_discovery.__version__},
+                              'component': {'name': self.pm.manager_name(),
+                                            'version': ds_discovery.__version__},
                               'task': {'name': self.pm.task_name,
                                        'version': self.pm.version}}
         # analysis
