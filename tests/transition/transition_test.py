@@ -28,6 +28,7 @@ class TransitionTest(unittest.TestCase):
     def setUp(self):
         # set environment variables
         os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
+        os.environ['AISTAC_DEFAULT_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
         try:
             shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
         except:
@@ -44,24 +45,11 @@ class TransitionTest(unittest.TestCase):
         """Basic smoke test"""
         Transition.from_env('TestAgent')
 
-    def test_transition_report(self):
-        tools = SyntheticBuilder.scratch_pad()
-        df = pd.DataFrame()
-        df['single_num'] = tools.get_number(1, 1, size=100)
-        df['two_num'] = tools.get_number(2, size=100)
-        df['weight_num'] = tools.get_number(2, weight_pattern=[98, 1], size=100)
-        df['null_num'] = tools.get_number(1, 100, quantity=0, size=100)
-        df['normal_num'] = tools.get_number(1, 100, size=100)
-        df['single_cat'] = tools.get_category(['A'], size=100)
-        df['two_cat'] = tools.get_category(['A', 'B'], quantity=0.9, size=100)
-        df['weight_cat'] = tools.get_category(['A', 'B'], weight_pattern=[95, 1], size=100)
-        df['normal_cat'] = tools.get_category(list('ABCDE'), size=100)
+    def test_provenance_report(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
-        tr.set_source("test.csv")
-        df = tr.intent_model.auto_to_category(df)
-        report = tr.report_nutrition(df)
-        pprint(report)
-
+        tr.set_provenance(title='new_title', domain='Healthcare', author_name='Joe Bloggs')
+        result = tr.report_provenance()
+        self.assertCountEqual([['new_title'], ['Healthcare'], ['Joe Bloggs']], result.values.tolist())
 
     def test_dictionary_report(self):
         df = pd.DataFrame({'A': [1,2,3], 'B': [1,2,3], 'C': [1,2,3], 'D': [1,2,3]})
@@ -188,38 +176,38 @@ class TransitionTest(unittest.TestCase):
 #         tr.persist_contract()
 #         return
 #
-    def test_load_clean_layers(self):
-        tr = Transition.from_env('Example01')
-        tr.set_version('0.01')
-        tr.set_source('example01.csv', sep=',', encoding='latin1', load=False)
-        df = tr.load_source_canonical()
-
-        tr.set_cleaner(tr.clean.auto_clean_header(df, inplace=True))
-        control = {'0': {'auto_clean_header': {'replace_spaces': '_'}}}
-        self.assertEqual(control, tr.pm.cleaners)
-        tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
-        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}}}
-        self.assertEqual(control, tr.pm.cleaners)
-
-        tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='#', inplace=True), level=-1)
-        tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='$', inplace=True), level=-1)
-        tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
-        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
-                   '1': {'auto_clean_header': {'replace_spaces': '#'}},
-                   '2': {'auto_clean_header': {'replace_spaces': '$'}}}
-        self.assertEqual(control, tr.pm.cleaners)
-
-        tr.set_cleaner(tr.clean.auto_clean_header(df, case='lower', inplace=True), level=1)
-        control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
-                   '1': {'auto_clean_header': {'case': 'lower', 'replace_spaces': '_'}},
-                   '2': {'auto_clean_header': {'replace_spaces': '$'}}}
-        self.assertEqual(control, tr.pm.cleaners)
-
-        tr.remove_cleaner()
-        control = {}
-        self.assertEqual(control, tr.pm.cleaners)
-        return
-
+    # def test_load_clean_layers(self):
+    #     tr = Transition.from_env('Example01')
+    #     tr.set_version('0.01')
+    #     tr.set_source('example01.csv', sep=',', encoding='latin1', load=False)
+    #     df = tr.load_source_canonical()
+    #
+    #     tr.intent_model.clean.auto_clean_header(df, inplace=True))
+    #     control = {'0': {'auto_clean_header': {'replace_spaces': '_'}}}
+    #     self.assertEqual(control, tr.pm.cleaners)
+    #     tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
+    #     control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}}}
+    #     self.assertEqual(control, tr.pm.cleaners)
+    #
+    #     tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='#', inplace=True), level=-1)
+    #     tr.set_cleaner(tr.clean.auto_clean_header(df, replace_spaces='$', inplace=True), level=-1)
+    #     tr.set_cleaner(tr.clean.auto_clean_header(df, case='Title', inplace=True))
+    #     control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
+    #                '1': {'auto_clean_header': {'replace_spaces': '#'}},
+    #                '2': {'auto_clean_header': {'replace_spaces': '$'}}}
+    #     self.assertEqual(control, tr.pm.cleaners)
+    #
+    #     tr.set_cleaner(tr.clean.auto_clean_header(df, case='lower', inplace=True), level=1)
+    #     control = {'0': {'auto_clean_header': {'case': 'Title', 'replace_spaces': '_'}},
+    #                '1': {'auto_clean_header': {'case': 'lower', 'replace_spaces': '_'}},
+    #                '2': {'auto_clean_header': {'replace_spaces': '$'}}}
+    #     self.assertEqual(control, tr.pm.cleaners)
+    #
+    #     tr.remove_cleaner()
+    #     control = {}
+    #     self.assertEqual(control, tr.pm.cleaners)
+    #     return
+    #
 #     def test_load_clean_remove(self):
 #         tr = Transition.from_env('Example01')
 #         tr.set_version('0.01')

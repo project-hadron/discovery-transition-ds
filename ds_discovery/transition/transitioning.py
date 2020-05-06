@@ -16,6 +16,9 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
     CONNECTOR_DICTIONARY = 'dictionary'
+    CONNECTOR_INSIGHT = 'insight'
+    CONNECTOR_INTENT = 'intent'
+    CONNECTOR_FIELDS = 'field_description'
     CONNECTOR_NUTRITION = 'nutrition'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
@@ -115,19 +118,48 @@ class Transition(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
-    def set_provenance(self, title: str=None, domain: str=None, description: str=None, save: bool=None):
-        """sets some fixed transition knowledge """
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, license: str=None,
+                       provider_name: str=None, provider_uri: str=None, provider_note: str=None,
+                       author_name: str=None, author_uri: str=None, author_contact: str=None,
+                       save: bool=None):
+        """sets the provenance values. Only sets those passed
 
-        def _set_item(name: str, value: str):
-            value = value if isinstance(value, str) else ""
-            if self.pm.has_knowledge(catalog='transition', label=name):
-                self.pm.remove_knowledge(catalog='transition', label=name)
-            self.pm.set_knowledge(catalog='transition', label=name, text=value)
-
-        _set_item('title', title)
-        _set_item('domain', domain)
-        _set_item('description', description)
+        :param title: (optional) the title of the provenance
+        :param domain: (optional) the domain it sits within
+        :param description: (optional) a description of the provenance
+        :param license: (optional) any associated licensing
+        :param provider_name: (optional) the provider system or institution name or title
+        :param provider_uri: (optional) a uri reference that helps identify the provider
+        :param provider_note: (optional) any notes that might be useful
+        :param author_name: (optional) the author of the data
+        :param author_uri: (optional) the author uri
+        :param author_contact: (optional)the the author contact information
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.pm.set_provenance(title=title, domain=domain, description=description, license=license,
+                               provider_name=provider_name, provider_uri=provider_uri, provider_note=provider_note,
+                               author_name=author_name, author_uri=author_uri, author_contact=author_contact)
         self.pm_persist(save=save)
+
+    def reset_provenance(self, save: bool=None):
+        """resets the provenance back to its default values"""
+        self.pm.reset_provenance()
+        self.pm_persist(save)
+
+    def set_insight(self, blueprint: dict, endpoints: list=None, save: bool=None):
+        """sets the insight analysis parameters
+
+        :param blueprint: the analysis blueprint of what to analysis and how
+        :param endpoints: (optional) the endpoints, if any, where the tree ends
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.pm.set_insight(blueprint=blueprint, endpoints=endpoints)
+        self.pm_persist(save)
+
+    def reset_insight(self, save: bool=None):
+        """resets the insight back to its default"""
+        self.pm.reset_insight()
+        self.pm_persist(save)
 
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
@@ -155,24 +187,6 @@ class Transition(AbstractComponent):
         self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
         return
 
-    def set_dictionary_contract(self, connector_contract: ConnectorContract, save: bool=None):
-        """ Sets the dictionary contract
-
-        :param connector_contract: a Connector Contract for the persisted data
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.add_connector_contract(self.CONNECTOR_DICTIONARY, connector_contract=connector_contract, save=save)
-        return
-
-    def set_nutrition_contract(self, connector_contract: ConnectorContract, save: bool=None):
-        """ Sets the  contract
-
-        :param connector_contract: a Connector Contract for the persisted data
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.add_connector_contract(self.CONNECTOR_NUTRITION, connector_contract=connector_contract, save=save)
-        return
-
     def set_source(self, uri_file: str, save: bool=None, **kwargs):
         """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
 
@@ -193,26 +207,20 @@ class Transition(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
-    def set_dictionary(self, uri_file: str=None, save: bool=None, **kwargs):
-        """sets the persist contract CONNECTOR_DICTIONARY using the TEMPLATE_PERSIST connector contract
+    def set_report_persist(self, report_connector_name, uri_file: str=None, save: bool=None, **kwargs):
+        """sets the report persist the TEMPLATE_PERSIST connector contract, there are preset constants that should be
+        used
 
+        :param report_connector_name: the name of the report connector to set (see class CONNECTOR constants)
         :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
-        file_pattern = self.pm.file_pattern(connector_name=self.CONNECTOR_DICTIONARY, file_type='csv', versioned=True)
+        if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
+                                         self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
+            raise ValueError("Report name must be one of the class report constants")
+        file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type='json', versioned=True)
         uri_file = uri_file if isinstance(uri_file, str) else file_pattern
-        self.add_connector_from_template(connector_name=self.CONNECTOR_DICTIONARY, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
-
-    def set_nutrition(self, uri_file: str=None, save: bool=None, **kwargs):
-        """sets the persist contract CONNECTOR_NUTRITION using the TEMPLATE_PERSIST connector contract
-
-        :param uri_file: (optional) the uri_file is appended to the template path
-        :param save: (optional) if True, save to file. Default is True
-        """
-        file_pattern = self.pm.file_pattern(connector_name=self.CONNECTOR_NUTRITION, file_type='json', versioned=True)
-        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
-        self.add_connector_from_template(connector_name=self.CONNECTOR_NUTRITION, uri_file=uri_file,
+        self.add_connector_from_template(connector_name=report_connector_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
     def load_source_canonical(self, **kwargs) -> pd.DataFrame:
@@ -237,13 +245,12 @@ class Transition(AbstractComponent):
         """Saves the pandas.DataFrame to the clean files folder"""
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df, **kwargs)
 
-    def save_dictionary(self, df, **kwargs):
-        """Saves the pandas.DataFrame to the dictionary folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_DICTIONARY, canonical=df, **kwargs)
-
-    def save_nutrition(self, report: dict, **kwargs):
+    def save_report_canonical(self, report_connector_name, report: dict, **kwargs):
         """Saves the pandas.DataFrame to the nutrition folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_NUTRITION, canonical=report, **kwargs)
+        if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
+                                         self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
+            raise ValueError("Report name must be one of the class report constants")
+        self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
@@ -344,51 +351,142 @@ class Transition(AbstractComponent):
         df.set_index(keys='section', inplace=True)
         return df
 
-    def report_nutrition(self, df: pd.DataFrame, analytics: dict=None) -> dict:
-        """A complete report of the transition"""
-        report = {'meta-data': {}, 'transition': {}, 'provenance': {}, 'dictionary': {}, 'fields': {}, 'analysis': {}}
-        # meta
-        report['meta-data'].update({'uid': str(uuid.uuid4()),
-                                    'component': self.pm.manager_name(),
-                                    'task': self.pm.task_name,
-                                    'created': str(pd.Timestamp.now()),
-                                    'version': ds_discovery.__version__})
-        # dataset-facts
-        _source_connector = self.pm.get_connector_contract(connector_name=self.CONNECTOR_SOURCE)
-        _source_dict = {}
-        if isinstance(_source_connector, ConnectorContract):
-            kwargs = ''
-            if isinstance(_source_connector.raw_kwargs, dict):
-                for k, v in _source_connector.raw_kwargs.items():
-                    if len(kwargs) > 0:
-                        kwargs += "  "
-                    kwargs += f"{k}='{v}'"
-            query = ''
-            if isinstance(_source_connector.query, dict):
-                for k, v in _source_connector.query.items():
-                    if len(query) > 0:
-                        query += "  "
-                    query += f"{k}='{v}'"
-            _source_dict['uri'] = _source_connector.raw_uri
-            _source_dict['version'] = _source_connector.version
-            _source_dict['kwargs'] = kwargs
-            _source_dict['query'] = query
+    def report_provenance(self, stylise: bool=True):
+        report = self.pm.report_provenance()
+        df = pd.DataFrame(report, index=['values'])
+        df = df.transpose().reset_index()
+        df.columns = ['provenance', 'values']
+        if stylise:
+            Commons.report(df, index_header='provenance')
+        df.set_index(keys='provenance', inplace=True)
+        return df
 
-        report['transition'].update({'description': self.pm.description,
-                                     'source': _source_dict,
-                                     'info': {'rows': df.shape[0], 'columns': df.shape[1],
-                                              'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())}})
-        report['provenance'].update(self.pm.get_knowledge(catalog='transition'))
-        report['dictionary'].update(self.discover.data_dictionary(df=df, inc_next_dom=True).to_dict())
-        # field descriptions
+    def report_nutrition(self, df: pd.DataFrame, granularity: [int, float, list]=None, top: int=None) -> dict:
+        """A complete report of the transition"""
+        report = {'_meta-data': {}, 'transition': {}, 'provenance': {}, 'dictionary': {}, 'fields': {}, 'insight': {},
+                  'connectors': {}}
+        # meta
+        report['_meta-data'].update({'uid': str(uuid.uuid4()),
+                                     'component': self.pm.manager_name(),
+                                     'task': self.pm.task_name,
+                                     'created': str(pd.Timestamp.now()),
+                                     'component_version': ds_discovery.__version__,
+                                     'task_version': self.pm.version})
+        # connectors
+        _connectors = {}
+        for connector in self.pm.connector_contract_list:
+            if connector.startswith('pm_transition') or connector.startswith('template_'):
+                continue
+            _connector = self.pm.get_connector_contract(connector_name=connector)
+            _connector_dict = {}
+            if isinstance(_connector, ConnectorContract):
+                kwargs = ''
+                if isinstance(_connector.raw_kwargs, dict):
+                    for k, v in _connector.raw_kwargs.items():
+                        if len(kwargs) > 0:
+                            kwargs += "  "
+                        kwargs += f"{k}='{v}'"
+                query = ''
+                if isinstance(_connector.query, dict):
+                    for k, v in _connector.query.items():
+                        if len(query) > 0:
+                            query += "  "
+                        query += f"{k}='{v}'"
+                _connector_dict['uri'] = _connector.raw_uri
+                _connector_dict['version'] = _connector.version
+                if len(kwargs) > 0:
+                    _connector_dict['kwargs'] = kwargs
+                if len(query) > 0:
+                    _connector_dict['query'] = query
+            _connectors[connector] = _connector_dict
+        report['connectors'].update(_connectors)
+        # provenance
+        report['provenance'].update(self.pm.provenance)
+        _provenance_count = 0
+        for item in self.pm.provenance.keys():
+            if item in ['title', 'license', 'domain', 'description', 'provider', 'author']:
+                _provenance_count += 1
+        # fields
+        _field_count = 0
         _fields = {}
-        for c in df.columns.sort_values().values:
-            _fields[c] = self.pm.get_knowledge(catalog='attributes', label=c, as_list=True)
+        for label, items in self.pm.get_knowledge(catalog='attributes').items():
+            _fields[label] = Commons.list_formatter(items.values())
+            if label in df.columns:
+                _field_count += 1
         report['fields'].update(_fields)
+        # dictionary
+        _null_total = 0
+        _dom_fields = 0
+        _numeric_fields = 0
+        _category_fields = 0
+        _date_fields = 0
+        _bool_fields = 0
+        _other_fields = 0
+        _data_dict = {}
+        for _, row in self.canonical_report(df, stylise=False).iterrows():
+            _data_dict[row.iloc[0]] = {}
+            for index in row.index:
+                if index.startswith('Attribute'):
+                    continue
+                if index.startswith('%_Null'):
+                    _null_total += row.loc[index]
+                if index.startswith('%_Dom') and row.loc[index] > 0.98:
+                    _dom_fields += 1
+                if index.startswith('dType'):
+                    if row.loc[index].startswith('int') or row.loc[index].startswith('float'):
+                        _numeric_fields += 1
+                    elif row.loc[index].startswith('category'):
+                        _category_fields += 1
+                    elif row.loc[index].startswith('date'):
+                        _date_fields += 1
+                    elif row.loc[index].startswith('bool'):
+                        _bool_fields += 1
+                    else:
+                        _other_fields += 1
+                _data_dict[row.iloc[0]].update({index: row.loc[index]})
+        report['dictionary'] = _data_dict
+        # notes
+        _notes = {}
+        for label, items in self.pm.get_knowledge(catalog='transition').items():
+            _notes[label] = Commons.list_formatter(items.values())
+
+        report['transition'].update({'purpose': self.pm.description,
+                                     'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
+                                                    'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+                                     'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                                   'datetime': _date_fields, 'bool': _bool_fields,
+                                                   'others': _other_fields},
+                                     'notes': _notes})
+        _null_avg = int(100 - round(_null_total / len(df.columns) * 100, 0))
+        _dom_avg = int(100 - round(_dom_fields / len(df.columns) * 100, 0))
+        _field_avg = int(round(_field_count/len(df.columns)*100, 0))
+        _prov_avg = int(round(_provenance_count/6*100, 0))
+        report['Scores %'] = {'quantity avg': _null_avg, 'quality avg': _dom_avg,
+                              'provenance complete': _prov_avg, 'data described': _field_avg}
         # analysis
-        if not isinstance(analytics, dict):
-            analytics = self.discover.analyse_association(df, columns_list=df.columns.to_list())
-        report['analysis'].update(analytics)
+        _analysis_dict = {}
+        granularity = granularity if isinstance(granularity, (int, float, list)) else [0.9, 0.75, 0.5, 0.25, 0.1]
+        top = top if isinstance(top, int) else 6
+        for _, row in self.discover.analysis_dictionary(df, granularity=granularity, top=top).iterrows():
+            _analysis_dict[row.iloc[0]] = {}
+            for index in row.index:
+                if index.startswith('Attribute') or index.startswith('Unique') or index.startswith('%_Nulls') \
+                        or index.startswith('Sample'):
+                    continue
+                if index.startswith('Upper') or index.startswith('Lower'):
+                    if _analysis_dict[row.iloc[0]].get('Limits') is None:
+                        _analysis_dict[row.iloc[0]].update({'Limits': {index: str(row.loc[index])}})
+                    else:
+                        _analysis_dict[row.iloc[0]].get('Limits').update({index: str(row.loc[index])})
+                    continue
+                _value = row.loc[index]
+                if index.startswith('Selection') and \
+                        isinstance(_value, list) and all(isinstance(x, tuple) for x in _value):
+                    for i in range(len(_value)):
+                        _value[i] = (str(_value[i][0]), str(_value[i][1]), _value[i][2])
+                    _value = [str(x) for x in _value]
+                _analysis_dict[row.iloc[0]].update({index: _value})
+        report['insight'] = _analysis_dict
         return report
 
     def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,

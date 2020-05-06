@@ -31,6 +31,34 @@ class TransitionPMTest(unittest.TestCase):
         result = pm.manager_name()
         self.assertEqual('transition', result)
 
+    def test_provenance_catalog(self):
+        pm = TransitionPropertyManager('test')
+        pm.set(pm.KEY.provenance.title_key, 'my_title')
+        self.assertEqual('my_title', pm.get(pm.KEY.provenance.title_key))
+        pm.set(pm.KEY.provenance.domain_key, 'my_domain')
+        self.assertEqual('my_domain', pm.get(pm.KEY.provenance.domain_key))
+        result = list(pm.provenance)
+        self.assertCountEqual(['title', 'domain'], result)
+        # using methods
+        pm.set_provenance(title='new_title')
+        self.assertEqual('new_title', pm.get(pm.KEY.provenance.title_key))
+        self.assertEqual('my_domain', pm.get(pm.KEY.provenance.domain_key))
+        pm.set_provenance(author_name='joe bloggs')
+        result = pm.report_provenance()
+        control = {'author_name': 'joe bloggs', 'domain': 'my_domain', 'title': 'new_title'}
+        self.assertEqual(control, result)
+
+    def test_insight(self):
+        pm = TransitionPropertyManager('test')
+        pm.set_insight(blueprint={'filed': {}})
+        blueprint, endpoints = pm.insight
+        self.assertEqual({'filed': {}}, blueprint)
+        self.assertEqual([], endpoints)
+        pm.set_insight(blueprint={'field': {}}, endpoints=['filed.end'])
+        blueprint, endpoints = pm.insight
+        self.assertEqual({'field': {}}, blueprint)
+        self.assertEqual(['filed.end'], endpoints)
+
 
 if __name__ == '__main__':
     unittest.main()
