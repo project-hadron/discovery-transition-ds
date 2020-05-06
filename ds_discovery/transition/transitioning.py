@@ -363,15 +363,9 @@ class Transition(AbstractComponent):
 
     def report_nutrition(self, df: pd.DataFrame, granularity: [int, float, list]=None, top: int=None) -> dict:
         """A complete report of the transition"""
-        report = {'_meta-data': {}, 'transition': {}, 'provenance': {}, 'dictionary': {}, 'fields': {}, 'insight': {},
-                  'connectors': {}}
         # meta
-        report['_meta-data'].update({'uid': str(uuid.uuid4()),
-                                     'component': self.pm.manager_name(),
-                                     'task': self.pm.task_name,
-                                     'created': str(pd.Timestamp.now()),
-                                     'component_version': ds_discovery.__version__,
-                                     'task_version': self.pm.version})
+        report = {'_meta-data': {'uid': str(uuid.uuid4()),
+                                 'created': str(pd.Timestamp.now())}}
         # connectors
         _connectors = {}
         for connector in self.pm.connector_contract_list:
@@ -399,9 +393,9 @@ class Transition(AbstractComponent):
                 if len(query) > 0:
                     _connector_dict['query'] = query
             _connectors[connector] = _connector_dict
-        report['connectors'].update(_connectors)
+        report['connectors'] = _connectors
         # provenance
-        report['provenance'].update(self.pm.provenance)
+        report['provenance'] = self.pm.provenance
         _provenance_count = 0
         for item in self.pm.provenance.keys():
             if item in ['title', 'license', 'domain', 'description', 'provider', 'author']:
@@ -413,7 +407,7 @@ class Transition(AbstractComponent):
             _fields[label] = Commons.list_formatter(items.values())
             if label in df.columns:
                 _field_count += 1
-        report['fields'].update(_fields)
+        report['fields'] = _fields
         # dictionary
         _null_total = 0
         _dom_fields = 0
@@ -450,19 +444,24 @@ class Transition(AbstractComponent):
         for label, items in self.pm.get_knowledge(catalog='transition').items():
             _notes[label] = Commons.list_formatter(items.values())
 
-        report['transition'].update({'purpose': self.pm.description,
-                                     'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
-                                                    'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
-                                     'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                                   'datetime': _date_fields, 'bool': _bool_fields,
-                                                   'others': _other_fields},
-                                     'notes': _notes})
+        report['transition'] = {'description': self.pm.description,
+                                'notes': _notes}
         _null_avg = int(100 - round(_null_total / len(df.columns) * 100, 0))
         _dom_avg = int(100 - round(_dom_fields / len(df.columns) * 100, 0))
         _field_avg = int(round(_field_count/len(df.columns)*100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
         report['Scores %'] = {'quantity avg': _null_avg, 'quality avg': _dom_avg,
                               'provenance complete': _prov_avg, 'data described': _field_avg}
+        # Overview
+        report['Overview'] = {'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
+                                             'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+                              'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                            'datetime': _date_fields, 'bool': _bool_fields,
+                                            'others': _other_fields},
+                              'capability': {'name': self.pm.manager_name(),
+                                             'varions': ds_discovery.__version__},
+                              'task': {'name': self.pm.task_name,
+                                       'version': self.pm.version}}
         # analysis
         _analysis_dict = {}
         granularity = granularity if isinstance(granularity, (int, float, list)) else [0.9, 0.75, 0.5, 0.25, 0.1]
