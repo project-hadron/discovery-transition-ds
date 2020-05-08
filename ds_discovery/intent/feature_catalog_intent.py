@@ -731,17 +731,21 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_rtn = df_rtn.drop(column, axis=1).set_index(key)
         return df_rtn
 
-    def flatten_categorical(self, canonical: [pd.DataFrame, str], key, column, prefix=None, index_key=True, dups=True,
-                            unindex: bool=None, save_intent: bool=None,
-                            feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                            remove_duplicates: bool=None) -> [None, pd.DataFrame]:
-        """ flattens a categorical as a sum of one-hot
+    def group_flatten_multihot(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, prefix=None,
+                               aggregator: str=None, multihot_case=None, multihot_rename_map: dict=None,
+                               multihot_replace_spaces: str=None, dups=True, unindex: bool=None, save_intent: bool=None,
+                               feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                               remove_duplicates: bool=None) -> [None, pd.DataFrame]:
+        """ groups flattens a multi hot encoding of a categorical
 
         :param canonical: the Dataframe to reference
         :param key: the key column to sum on
-        :param column: the category type column break into the category columns
+        :param header: the category type column break into the category columns
+        :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
+        :param multihot_rename_map: a from: to dictionary of multihot headers to rename
+        :param multihot_case: changes the headers to lower, upper, title, snake. if none of these then no change
+        :param multihot_replace_spaces: character to replace spaces in multihot headers. Default is '_' (underscore)
         :param prefix: a prefix for the category columns
-        :param index_key: set the key as the index. Default to True
         :param dups: id duplicates should be removed from the original canonical
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -761,24 +765,25 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
-        if column not in canonical:
-            raise NameError(f"The column {column} can't be found in the DataFrame")
+        if header not in canonical:
+            raise NameError(f"The column {header} can't be found in the DataFrame")
         canonical = self._get_canonical(canonical)
+        aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
-        if canonical[column].dtype.name != 'category':
-            canonical[column] = canonical[column].astype('category')
+        if canonical[header].dtype.name != 'category':
+            canonical[header] = canonical[header].astype('category')
         if prefix is None:
-            prefix = column
+            prefix = header
         if not dups:
             canonical.drop_duplicates(inplace=True)
-        dummy_df = pd.get_dummies(canonical[[key, column]], columns=[column], prefix=prefix)
-        dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))]
-        dummy_df = dummy_df.groupby([pd.Grouper(key=key)])[dummy_cols].sum()
-        if index_key:
-            dummy_df = dummy_df.set_index(key)
-        return dummy_df
+        dummy_df = pd.get_dummies(canonical[key + [header]], columns=[header], prefix=prefix)
+        dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))].to_list()
+        dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=key, aggregator=aggregator).reset_index()
+        Transition.scratch_pad().auto_clean_header(dummy_df, case=multihot_case, rename_map=multihot_rename_map,
+                                                   replace_spaces=multihot_replace_spaces, inplace=True)
+        return dummy_df.set_index(key)
 
     def select_date_elements(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, matrix: [str, list],
                              inc_columns: list=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
