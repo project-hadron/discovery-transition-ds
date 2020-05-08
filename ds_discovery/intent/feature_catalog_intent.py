@@ -95,8 +95,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def apply_date_diff(self, canonical: [pd.DataFrame, str], key: [str, list], first_date: str, second_date: str,
                         aggregator: str=None, units: str=None, precision: int=None, rtn_columns: list=None,
-                        rename: str=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
-                        intent_order: int=None, replace_intent: bool=None,
+                        regex: bool=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
+                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> pd.DataFrame:
         """ adds a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
@@ -108,7 +108,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
         :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
         :param precision: the precision of the result
-        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param rtn_columns: (optional) return columns, the header must be listed to be included.
+                    If None then header
+                    if 'all' then all original headers
+        :param regex: if True then treat the rtn_columns as a regular expression
         :param rename: a new name for the column, else primary and secondary name used
         :param unindex: (optional) if the passed canonical should be un-index before processing
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -137,6 +140,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else f'{second_date}-{first_date}'
+        if rtn_columns == 'all':
+            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
+        if isinstance(regex, bool) and regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
         precision = precision if isinstance(precision, int) else 0
         units = units if isinstance(units, str) else 'D'
@@ -200,8 +207,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
     def apply_merge(self, canonical: [pd.DataFrame, str], merge_connector: str, key: [str, list], how: str=None,
                     on: str=None, left_on: str=None, right_on: str=None, left_index: bool=None, right_index: bool=None,
                     sort: bool=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
-                    rtn_columns: list=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
-                    intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                    rtn_columns: list=None, regex: bool=None, unindex: bool=None, save_intent: bool=None,
+                    feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                    remove_duplicates: bool=None):
         """ merges the canonical with another canonical obtained from a connector contract
 
         :param canonical: the canonical to merge on the left
@@ -274,13 +282,15 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df = pd.merge(left=canonical, right=other, how=how, on=on, left_on=left_on, right_on=right_on,
                       left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, indicator=indicator,
                       validate=validate)
+        if isinstance(regex, bool) and regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = rtn_columns if isinstance(rtn_columns, list) else df.columns.to_list()
         return Commons.filter_columns(df, headers=list(set(key + rtn_columns))).set_index(key)
 
     def apply_map(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, value_map: dict,
-                  default_to: Any=None, replace_na: bool=None, rtn_columns: list=None, rename: str=None,
-                  unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
-                  replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+                  default_to: Any=None, replace_na: bool=None, rtn_columns: list=None, regex: bool=None,
+                  rename: str=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
+                  intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Apply mapping and filtering based on a key value pair of find and replace values
 
         :param canonical: the value to apply the substitution to
@@ -289,7 +299,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param value_map: a dictionary of keys and their replace value
         :param default_to: (optional) a default value if no map if found. If None then NaN
         :param replace_na: (optional) if existing NaN values should be replaced with default_value. if None then True
-        :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param rtn_columns: (optional) return columns, the header must be listed to be included.
+                    If None then header
+                    if 'all' then all original headers
+        :param regex: if True then treat the rtn_columns as a regular expression
         :param rename: a new name for the column, else current column header
         :param unindex: (optional) if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -316,6 +329,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
+        if rtn_columns == 'all':
+            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
+        if isinstance(regex, bool) and regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
         replace_na = replace_na if isinstance(replace_na, bool) else True
         if default_to is not None:
@@ -337,7 +354,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param header: the column header name to apply the value map too
         :param to_replace: a dictionary of keys and their replace value
         :param regex: if the to_replace is regular expression
-        :param rtn_columns: The columns to return, the header must be in the list to be included. If None then header
+        :param rtn_columns: (optional) return columns, the header must be listed to be included.
+                    If None then header
+                    if 'all' then all original headers
+        :param regex: if True then treat the rtn_columns as a regular expression
         :param rename: a dictionary of headers to rename
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -364,6 +384,10 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
+        if rtn_columns == 'all':
+            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
+        if isinstance(regex, bool) and regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
         # replace null tag with np.nan
         for _ref, _value in to_replace.copy().items():
