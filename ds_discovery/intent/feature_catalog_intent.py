@@ -780,7 +780,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical.drop_duplicates(inplace=True)
         dummy_df = pd.get_dummies(canonical[key + [header]], columns=[header], prefix=prefix)
         dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))].to_list()
-        dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=key, aggregator=aggregator).reset_index()
+        dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=key, aggregator=aggregator,
+                                       save_intent=False).reset_index()
         Transition.scratch_pad().auto_clean_header(dummy_df, case=multihot_case, rename_map=multihot_rename_map,
                                                    replace_spaces=multihot_replace_spaces, inplace=True)
         return dummy_df.set_index(key)
