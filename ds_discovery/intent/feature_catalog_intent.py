@@ -329,7 +329,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                       regex: bool=None, rtn_columns: list=None, unindex: bool=None, rename: str=None,
                       save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ Apply replacement based on a key value pair of find and replace values
+        """ Apply replacement based on a key value pair of find and replace values. if you wish to replace null values
+        or put in null values use the tag '$null' to represent None or np.nan
 
         :param canonical: the value to apply the substitution to
         :param key: the key column to index on
@@ -364,6 +365,13 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
+        # replace null tag with np.nan
+        for _ref, _value in to_replace.copy().items():
+            if _ref == '$null':
+                to_replace.pop(_ref)
+                to_replace[np.nan] = _value
+            if _value == '$null':
+                to_replace[_ref] = np.nan
         regex = regex if isinstance(regex, bool) else False
         canonical[rename] = canonical[header].replace(to_replace=to_replace, inplace=False, regex=regex)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)

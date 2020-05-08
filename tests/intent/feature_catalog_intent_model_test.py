@@ -230,6 +230,12 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['values'] = [1,3,2,5,4,1,3,2,1,6]
         result = self.fc.apply_replace(df, key='key', header='values', to_replace={1: 10, 2: 11})
         self.assertEqual([10, 3, 11, 5, 4, 10, 3, 11, 10, 6], result['values'].to_list())
+        # nulls
+        result = self.fc.apply_replace(df, key='key', header='values', to_replace={1: '$null'})
+        self.assertEqual(7, result['values'].dropna().size)
+        df['values'] = [np.nan, 3, 2, np.nan, 4, np.nan, 3, 2, 1, 6]
+        result = self.fc.apply_replace(df, key='key', header='values', to_replace={'$null': 0})
+        self.assertEqual([0, 3, 2, 0, 4, 0, 3, 2, 1, 6], result['values'].to_list())
 
     def test_apply_missing(self):
         df = pd.DataFrame()
