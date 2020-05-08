@@ -244,6 +244,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                             “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
                             “many_to_many” or “m:m”: allowed, but does not result in checks.
         :param rtn_columns: (optional) return columns, the header must be listed to be included. If None then header
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param unindex: (optional) if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
@@ -283,7 +284,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                       left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, indicator=indicator,
                       validate=validate)
         if isinstance(regex, bool) and regex:
-            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
+            rtn_columns = Commons.filter_headers(df, regex=rtn_columns)
         rtn_columns = rtn_columns if isinstance(rtn_columns, list) else df.columns.to_list()
         return Commons.filter_columns(df, headers=list(set(key + rtn_columns))).set_index(key)
 
@@ -330,7 +331,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
         if rtn_columns == 'all':
-            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
+            rtn_columns = Commons.filter_headers(canonical, headers=key, drop=True)
         if isinstance(regex, bool) and regex:
             rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
@@ -385,7 +386,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
         if rtn_columns == 'all':
-            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
+            rtn_columns = Commons.filter_headers(canonical, headers=key, drop=True)
         if isinstance(regex, bool) and regex:
             rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
