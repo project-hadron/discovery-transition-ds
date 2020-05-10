@@ -343,9 +343,130 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical.dropna(axis=0, how='any', subset=[rename], inplace=True)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
+    def apply_numeric_typing(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, normalise: bool=None,
+                             precision: int=None, fillna: [int, float]=None, errors: str=None, rtn_columns: list=None,
+                             rtn_regex: bool=None, unindex: bool=None, rename: str=None, save_intent: bool=None,
+                             feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> pd.DataFrame:
+        """ converts columns to categories
+
+        :param canonical: the Pandas.DataFrame to get the column headers from
+        :param key: the key column to index on
+        :param header: the header to apply typing to
+        :param normalise: if the resulting column should be normalised
+        :param precision: how many decimal places to set the return values.
+                        if None then precision is based on the most decimal places of all data points
+                        if 0 (zero) the int is assumed
+        :param fillna: { num_value, 'mean', 'mode', 'median' }. Default to np.nan
+                    - If num_value, then replaces NaN with this number value. Must be a value not a string
+                    - If 'mean', then replaces NaN with the mean of the column
+                    - If 'mode', then replaces NaN with a mode of the column. random sample if more than 1
+                    - If 'median', then replaces NaN with the median of the column
+        :param errors : {'ignore', 'raise', 'coerce'}, default 'coerce'
+                    - If 'raise', then invalid parsing will raise an exception
+                    - If 'coerce', then invalid parsing will be set as NaN
+                    - If 'ignore', then invalid parsing will return the input
+        :param rtn_columns: (optional) return columns, the header must be listed to be included.
+                    If None then header
+                    if 'all' then all original headers
+        :param rtn_regex: if True then treat the rtn_columns as a regular expression
+        :param rename: a dictionary of headers to rename
+        :param unindex: if the passed canonical should be un-index before processing
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: selected list of headers indexed on key
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        canonical = self._get_canonical(canonical)
+        if header not in canonical.columns:
+            raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
+        key = Commons.list_formatter(key)
+        rename = rename if isinstance(rename, str) else header
+        if rtn_columns == 'all':
+            rtn_columns = Commons.filter_headers(canonical, headers=key, drop=True)
+        if isinstance(rtn_regex, bool) and rtn_regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
+        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
+        if canonical[header].dtype.name.startswith('int') and not isinstance(precision, int):
+            precision = 0
+        if not isinstance(fillna, (int, float)) and isinstance(precision, int) and precision == 0:
+            fillna = 0
+        canonical = Transition.scratch_pad().to_numeric_type(df=canonical, headers=header, precision=precision,
+                                                             fillna=fillna, errors=errors, inplace=False)
+        if isinstance(normalise, bool) and normalise:
+            s_column = canonical[rename]
+            s_column = s_column / np.linalg.norm(s_column)
+            if isinstance(precision, int):
+                s_column = np.round(s_column, precision)
+            canonical[rename] = s_column
+        return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
+
+    def apply_category_typing(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, as_num: bool=None,
+                              rtn_columns: list=None, rtn_regex: bool=None, unindex: bool=None, rename: str=None,
+                              save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                              replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ converts columns to categories
+
+        :param canonical: the Pandas.DataFrame to get the column headers from
+        :param key: the key column to index on
+        :param header: the header to apply typing to
+        :param as_num: if true returns the category as a category code
+        :param rtn_columns: (optional) return columns, the header must be listed to be included.
+                    If None then header
+                    if 'all' then all original headers
+        :param rtn_regex: if True then treat the rtn_columns as a regular expression
+        :param rename: a dictionary of headers to rename
+        :param unindex: if the passed canonical should be un-index before processing
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param feature_name: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: selected list of headers indexed on key
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        canonical = self._get_canonical(canonical)
+        if header not in canonical.columns:
+            raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
+        if isinstance(unindex, bool) and unindex:
+            canonical.reset_index(inplace=True)
+        key = Commons.list_formatter(key)
+        rename = rename if isinstance(rename, str) else header
+        if rtn_columns == 'all':
+            rtn_columns = Commons.filter_headers(canonical, headers=key, drop=True)
+        if isinstance(rtn_regex, bool) and rtn_regex:
+            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
+        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
+        canonical = Transition.scratch_pad().to_category_type(df=canonical, headers=header, as_num=as_num,
+                                                              inplace=False)
+        return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
+
     def apply_replace(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, to_replace: dict,
-                      regex: bool=None, rtn_columns: list=None, unindex: bool=None, rename: str=None,
-                      save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                      regex: bool=None, rtn_columns: list=None, rtn_regex: bool=None, unindex: bool=None,
+                      rename: str=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Apply replacement based on a key value pair of find and replace values. if you wish to replace null values
         or put in null values use the tag '$null' to represent None or np.nan
@@ -358,7 +479,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param rtn_columns: (optional) return columns, the header must be listed to be included.
                     If None then header
                     if 'all' then all original headers
-        :param regex: if True then treat the rtn_columns as a regular expression
+        :param rtn_regex: if True then treat the rtn_columns as a regular expression
         :param rename: a dictionary of headers to rename
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -378,16 +499,16 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # intend code block on the canonical
+        canonical = self._get_canonical(canonical)
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         rename = rename if isinstance(rename, str) else header
         if rtn_columns == 'all':
             rtn_columns = Commons.filter_headers(canonical, headers=key, drop=True)
-        if isinstance(regex, bool) and regex:
+        if isinstance(rtn_regex, bool) and rtn_regex:
             rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
         # replace null tag with np.nan
@@ -434,9 +555,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        canonical = self._get_canonical(canonical)
         if header not in canonical.columns:
             raise ValueError(f"The column header '{header}' is not in the canonical DataFrame")
-        canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
@@ -1015,49 +1136,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if result is None:
             return canonical
         return result
-
-    def to_category_type(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list]=None,
-                         drop: bool=None,  dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                         re_ignore_case: bool=None, as_num: bool=None, unindex: bool=None, save_intent: bool=None,
-                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                         remove_duplicates: bool=None) -> pd.DataFrame:
-        """ converts columns to categories
-
-        :param canonical: the Pandas.DataFrame to get the column headers from
-        :param key: the key column to index on
-        :param headers: a list of headers to drop or filter on type
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
-        :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param as_num: if true returns the category as a category code
-        :param unindex: if the passed canonical should be un-index before processing
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param feature_name: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: selected list of headers indexed on key
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        canonical = self._get_canonical(canonical)
-        if isinstance(unindex, bool) and unindex:
-            canonical.reset_index(inplace=True)
-        key = Commons.list_formatter(key)
-        df_rtn = Transition.scratch_pad().to_category_type(df=canonical, headers=headers, drop=drop, dtype=dtype,
-                                                           exclude=exclude, regex=regex, re_ignore_case=re_ignore_case,
-                                                           as_num=as_num)
-        return df_rtn.set_index(key)
 
     @staticmethod
     def select2dict(column: str, condition: str, operator: str=None, logic: str=None, date_format: str=None,

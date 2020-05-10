@@ -242,16 +242,32 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['key'] = list(range(10))
         df['values'] = [1,3,np.nan,5,4,1,3,np.nan,1,6]
         df['cats'] = list('ABCDEFGHIJ')
+        self.assertEqual(8, df['values'].dropna().size)
         result = self.fc.apply_missing(df, key='key', headers='values')
-        print(result)
+        self.assertEqual(10, result['values'].dropna().size)
 
-    def test_to_category_type(self):
+    def test_apply_category_typing(self):
         df = pd.DataFrame()
         df['key'] = list(range(10))
         df['values'] = [1,3,4,5,4,1,3,2,1,6]
-        df['cats'] = list('ABCDEFGHIJ')
-        result = self.fc.to_category_type(df, key='key', headers='cats')
-        print(result['cats'])
+        df['cats'] = list('ABCAEDEABA')
+        result = self.fc.apply_category_typing(df, key='key', header='cats')
+        self.assertTrue(result['cats'].dtype.name, 'category')
+        self.assertEqual(df['cats'].to_list(), result['cats'].to_list())
+        result = self.fc.apply_category_typing(df, key='key', header='cats', as_num=True)
+        self.assertTrue(result['cats'].dtype.name, int)
+        self.assertEqual([0, 1, 2, 0, 4, 3, 4, 0, 1, 0], result['cats'].to_list())
+
+    def test_apply_numeric_typing(self):
+        df = pd.DataFrame()
+        df['key'] = list(range(6))
+        df['ints'] = [1, 8, np.nan, 1, 2, 4]
+        df['floats'] = [1.1, 3.8, 1.1, 2.4, np.nan, 2.5]
+        df['cats'] = list('ABCABA')
+        result = self.fc.apply_numeric_typing(df, key='key', header='ints', precision=0)
+        self.assertEqual([1, 8, 0, 1, 2, 4], result['ints'].to_list())
+        result = self.fc.apply_numeric_typing(df, key='key', header='floats', fillna='mode')
+        self.assertEqual([1.1, 3.8, 1.1, 2.4, 1.1, 2.5], result['floats'].to_list())
 
     def test_get_canonical(self):
         df = pd.DataFrame()
