@@ -37,7 +37,7 @@ class Transition(AbstractComponent):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
+    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, pm_file_type: str=None, pm_module: str=None,
                  pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
                  align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
                  order_next_available: bool=None, default_replace_intent: bool=None):
@@ -47,6 +47,7 @@ class Transition(AbstractComponent):
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
+         :param username: A user name for this task activity.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
@@ -64,7 +65,7 @@ class Transition(AbstractComponent):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
-        _pm = TransitionPropertyManager(task_name=task_name)
+        _pm = TransitionPropertyManager(task_name=task_name, username=username)
         _intent_model = TransitionIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
                                               default_intent_level=default_intent_level,
                                               order_next_available=order_next_available,
@@ -118,7 +119,7 @@ class Transition(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
-    def set_provenance(self, title: str=None, domain: str=None, description: str=None, license: str=None,
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
                        provider_name: str=None, provider_uri: str=None, provider_note: str=None,
                        author_name: str=None, author_uri: str=None, author_contact: str=None,
                        save: bool=None):
@@ -127,7 +128,7 @@ class Transition(AbstractComponent):
         :param title: (optional) the title of the provenance
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
-        :param license: (optional) any associated licensing
+        :param usage_license: (optional) any associated usage licensing
         :param provider_name: (optional) the provider system or institution name or title
         :param provider_uri: (optional) a uri reference that helps identify the provider
         :param provider_note: (optional) any notes that might be useful
@@ -136,7 +137,7 @@ class Transition(AbstractComponent):
         :param author_contact: (optional)the the author contact information
         :param save: (optional) if True, save to file. Default is True
         """
-        self.pm.set_provenance(title=title, domain=domain, description=description, license=license,
+        self.pm.set_provenance(title=title, domain=domain, description=description, usage_license=usage_license,
                                provider_name=provider_name, provider_uri=provider_uri, provider_note=provider_note,
                                author_name=author_name, author_uri=author_uri, author_contact=author_contact)
         self.pm_persist(save=save)

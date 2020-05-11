@@ -42,7 +42,7 @@ class MyTestCase(unittest.TestCase):
                                                       precision=2, feature_name='salary_cat')
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='age', granularity=10.0,
                                                       precision=0, feature_name='age_cat')
-        self.fc.run_feature_pipeline()
+        self.fc.run_feature_pipeline(df)
         result = list(self.fc.pm.get_intent().keys())
         print(result)
 
@@ -53,7 +53,7 @@ class MyTestCase(unittest.TestCase):
         df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[10, 5, 3, 10], size=1000)
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)],
                                                       precision=2, feature_name='salary_cat')
-        self.fc.add_feature_description(feature_name='salary_cat')
+        self.fc.add_feature_description(feature_name='salary_cat', description='')
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='age', granularity=10.0,
                                                       precision=0, feature_name='age_cat')
         result = self.fc.report_feature_catalog(stylise=False)

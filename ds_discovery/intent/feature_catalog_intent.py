@@ -85,6 +85,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                         # add method kwargs to the params
                         if isinstance(kwargs, dict):
                             params.update(kwargs)
+                        # remove the creator param
+                        _ = params.pop('intent_creator', 'Unknown')
                         # add excluded params and set to False
                         params.update({'save_intent': False})
                         df_feature = eval(f"self.{method}(df_feature, **{params})", globals(), locals())

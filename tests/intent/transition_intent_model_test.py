@@ -41,7 +41,7 @@ class IntentModelTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        TransitionIntentModel(property_manager=TransitionPropertyManager('test'), default_save_intent=False)
+        TransitionIntentModel(property_manager=TransitionPropertyManager('test', username='TestUser'), default_save_intent=False)
 
     def test_to_sample(self):
         tools = self.tools

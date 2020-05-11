@@ -7,12 +7,12 @@ from ds_discovery.transition.commons import Commons
 
 class TransitionPropertyManager(AbstractPropertyManager):
 
-    def __init__(self, task_name: str):
+    def __init__(self, task_name: str, username: str):
         # set additional keys
         root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author']},
                      {'insight': ['blueprint', 'endpoints']}]
         knowledge_keys = ['transition', 'observations', 'actions', 'attributes']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
 
     @property
     def provenance(self) -> dict:
@@ -31,7 +31,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
                 report[catalog] = self.get(_key, '')
         return report
 
-    def set_provenance(self, title: str=None, domain: str=None, description: str=None, license: str=None,
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
                        provider_name: str=None, provider_uri: str=None, provider_note: str=None,
                        author_name: str=None, author_uri: str=None, author_contact: str=None):
         """ sets the provenance values. Only sets those passed
@@ -39,7 +39,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
         :param title: (optional) the title of the provenance
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
-        :param license: (optional) any associated licensing
+        :param usage_license: (optional) any associated usage licensing
         :param provider_name: (optional) the provider system or institution name or title
         :param provider_uri: (optional) a uri reference that helps identify the provider
         :param provider_note: (optional) any notes that might be useful

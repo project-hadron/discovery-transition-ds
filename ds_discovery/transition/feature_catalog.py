@@ -29,7 +29,7 @@ class FeatureCatalog(AbstractComponent):
                          reset_templates=reset_templates, align_connectors=align_connectors)
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, pm_file_type: str=None, pm_module: str=None,
+    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, pm_file_type: str=None, pm_module: str=None,
                  pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
                  align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
                  order_next_available: bool=None, default_replace_intent: bool=None):
@@ -39,6 +39,7 @@ class FeatureCatalog(AbstractComponent):
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
+         :param username: A user name for this task activity.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
@@ -56,7 +57,8 @@ class FeatureCatalog(AbstractComponent):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
-        _pm = FeatureCatalogPropertyManager(task_name=task_name)
+        username = username if isinstance(username, str) else 'Unknown'
+        _pm = FeatureCatalogPropertyManager(task_name=task_name, username=username)
         _intent_model = FeatureCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
                                                   default_intent_level=default_intent_level,
                                                   order_next_available=order_next_available,

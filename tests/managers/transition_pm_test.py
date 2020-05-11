@@ -19,20 +19,20 @@ class TransitionPMTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        TransitionPropertyManager('test')
+        TransitionPropertyManager('test', username='TestUser')
 
     def test_catalog(self):
-        pm = TransitionPropertyManager('test')
+        pm = TransitionPropertyManager('test', username='TestUser')
         catalog = pm.knowledge_catalog
         self.assertCountEqual(['transition', 'observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
 
     def test_manager_name(self):
-        pm = TransitionPropertyManager('test')
+        pm = TransitionPropertyManager('test', username='TestUser')
         result = pm.manager_name()
         self.assertEqual('transition', result)
 
     def test_provenance_catalog(self):
-        pm = TransitionPropertyManager('test')
+        pm = TransitionPropertyManager('test', username='TestUser')
         pm.set(pm.KEY.provenance.title_key, 'my_title')
         self.assertEqual('my_title', pm.get(pm.KEY.provenance.title_key))
         pm.set(pm.KEY.provenance.domain_key, 'my_domain')
@@ -49,7 +49,7 @@ class TransitionPMTest(unittest.TestCase):
         self.assertEqual(control, result)
 
     def test_insight(self):
-        pm = TransitionPropertyManager('test')
+        pm = TransitionPropertyManager('test', username='TestUser')
         pm.set_insight(blueprint={'filed': {}})
         blueprint, endpoints = pm.insight
         self.assertEqual({'filed': {}}, blueprint)

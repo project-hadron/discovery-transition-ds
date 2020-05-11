@@ -19,15 +19,15 @@ class FeaturePMTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        FeatureCatalogPropertyManager('test')
+        FeatureCatalogPropertyManager('test', username='TestUser')
 
     def test_catalog(self):
-        pm = FeatureCatalogPropertyManager('test')
+        pm = FeatureCatalogPropertyManager('test', username='TestUser')
         catalog = pm.knowledge_catalog
         self.assertCountEqual(['features', 'observations', 'actions', 'schema', 'intent'], catalog)
 
     def test_manager_name(self):
-        pm = FeatureCatalogPropertyManager('test')
+        pm = FeatureCatalogPropertyManager('test', username='TestUser')
         result = pm.manager_name()
         self.assertEqual('feature_catalog', result)
 

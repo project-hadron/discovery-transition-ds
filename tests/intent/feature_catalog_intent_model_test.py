@@ -39,7 +39,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        FeatureCatalogIntentModel(property_manager=FeatureCatalogPropertyManager('test'), default_save_intent=False)
+        FeatureCatalogIntentModel(property_manager=FeatureCatalogPropertyManager('test', username='UserTest'), default_save_intent=False)
 
     def test_run_pipeline(self):
         local_fc = FeatureCatalog.from_env('tester', default_save=False)
