@@ -166,7 +166,7 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def auto_to_category(self, df, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
+    def auto_to_category(self, df: pd.DataFrame, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
                          nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                          intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                          remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
@@ -204,7 +204,7 @@ class TransitionIntentModel(AbstractIntentModel):
         null_max = 0.7 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
         col_cat = []
-        for c in df.columns:
+        for c in Commons.filter_headers(df, dtype=['object', 'number']):
             if df[c].nunique() < unique_max and round(df[c].isnull().sum() / df_len, 2) < null_max:
                 col_cat.append(c)
         result = self.to_category_type(df, headers=col_cat, fill_nulls=fill_nulls, nulls_list=nulls_list,

@@ -276,10 +276,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                          'weight_pattern': [70.45, 0.0, 29.55],
                                                          'weight_std': [7568.791, 0.0, 7760.859]},
                                             'stats': {'kurtosis': -1.03,
+                                                      'mad': 285.91,
                                                       'mean': 343.39,
                                                       'nulls_percent': 12.0,
                                                       'outlier_percent': 0.0,
                                                       'sample': 44,
+                                                      'sem': 49.52,
                                                       'skew': 0.84,
                                                       'var': 107902.71}},
                                'associate': 'numbers'}}

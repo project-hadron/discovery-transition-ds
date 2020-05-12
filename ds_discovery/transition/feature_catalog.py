@@ -83,12 +83,17 @@ class FeatureCatalog(AbstractComponent):
         return _module_name, _handler
 
     @classmethod
-    def discovery_pad(cls):
+    def scratch_pad(cls) -> FeatureCatalogIntentModel:
+        """ A class method to use the Components intent methods as a scratch pad"""
+        return super().scratch_pad()
+
+    @classmethod
+    def discovery_pad(cls) -> DataDiscovery:
         """ A class method to use the Components discovery methods as a scratch pad"""
         return DataDiscovery()
 
     @classmethod
-    def visual_pad(cls):
+    def visual_pad(cls) -> Visualisation:
         """ A class method to use the Components visualisation methods as a scratch pad"""
         return Visualisation()
 

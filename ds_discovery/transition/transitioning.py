@@ -90,12 +90,17 @@ class Transition(AbstractComponent):
         return _module_name, _handler
 
     @classmethod
-    def discovery_pad(cls):
+    def scratch_pad(cls) -> TransitionIntentModel:
+        """ A class method to use the Components intent methods as a scratch pad"""
+        return super().scratch_pad()
+
+    @classmethod
+    def discovery_pad(cls) -> DataDiscovery:
         """ A class method to use the Components discovery methods as a scratch pad"""
         return DataDiscovery()
 
     @classmethod
-    def visual_pad(cls):
+    def visual_pad(cls) -> Visualisation:
         """ A class method to use the Components visualisation methods as a scratch pad"""
         return Visualisation()
 
@@ -362,8 +367,27 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_nutrition(self, df: pd.DataFrame, granularity: [int, float, list]=None, top: int=None) -> dict:
+    def report_nutrition(self, df: pd.DataFrame=None, granularity: [int, float, list]=None, top: int=None) -> dict:
         """A complete report of the transition"""
+        if not isinstance(df, pd.DataFrame):
+            df = self.load_source_canonical()
+            pad: TransitionIntentModel = self.scratch_pad()
+            _date_headers = []
+            _bool_headers = []
+            for c in Commons.filter_headers(df, dtype=object):
+                if all(Commons.valid_date(x) for x in df[c].dropna()):
+                    _date_headers.append(c)
+                if df[c].nunique() == 2:
+                    values = df[c].value_counts().index.to_list()
+                    if any(x in ['True', 1, 'Y', 'y', 'Yes', 'yes'] for x in values):
+                        _bool_headers.append(c)
+            if len(_bool_headers) > 0:
+                bool_map = {1: True}
+                df = pad.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map)
+            if len(_date_headers) > 0:
+                df = pad.to_date_type(df, headers=_date_headers, inplace=False)
+            df = pad.to_numeric_type(df, dtype='number', inplace=False)
+            df = pad.to_category_type(df, dtype='object', inplace=False)
         # meta
         report = {'_meta-data': {'uid': str(uuid.uuid4()),
                                  'created': str(pd.Timestamp.now())}}
@@ -418,26 +442,43 @@ class Transition(AbstractComponent):
         _bool_fields = 0
         _other_fields = 0
         _data_dict = {}
+        _null_columns = set()
+        _dom_columns = set()
+        _date_columns = set()
+        _numeric_columns = set()
         for _, row in self.canonical_report(df, stylise=False).iterrows():
             _data_dict[row.iloc[0]] = {}
+            _att_name = None
             for index in row.index:
                 if index.startswith('Attribute'):
+                    _att_name = row.loc[index]
                     continue
                 if index.startswith('%_Null'):
                     _null_total += row.loc[index]
+                    if row.loc[index] > 0.98:
+                        _null_columns.add(_att_name)
                 if index.startswith('%_Dom') and row.loc[index] > 0.98:
+                    _dom_columns.add(_att_name)
                     _dom_fields += 1
                 if index.startswith('dType'):
                     if row.loc[index].startswith('int') or row.loc[index].startswith('float'):
                         _numeric_fields += 1
+                        _numeric_columns.add(_att_name)
                     elif row.loc[index].startswith('category'):
                         _category_fields += 1
                     elif row.loc[index].startswith('date'):
                         _date_fields += 1
+                        _date_columns.add(_att_name)
                     elif row.loc[index].startswith('bool'):
                         _bool_fields += 1
                     else:
-                        _other_fields += 1
+                        if any(Commons.valid_date(x) for x in df[_att_name]):
+                            _date_fields += 1
+                            _date_columns.add(_att_name)
+                        elif df[_att_name].nunique() < 100 and df[df[_att_name].isnull()].size < (df.size * 0.8):
+                            _category_fields += 1
+                        else:
+                            _other_fields += 1
                 _data_dict[row.iloc[0]].update({index: row.loc[index]})
         report['dictionary'] = _data_dict
         # notes
@@ -447,27 +488,42 @@ class Transition(AbstractComponent):
 
         report['transition'] = {'description': self.pm.description,
                                 'notes': _notes}
-        _null_avg = int(100 - round(_null_total / len(df.columns) * 100, 0))
-        _dom_avg = int(100 - round(_dom_fields / len(df.columns) * 100, 0))
+        _null_avg = _null_total / len(df.columns)
+        _dom_avg = _dom_fields / len(df.columns)
+        _quality_avg = int(round(100 - (((_null_avg + _dom_avg)/2)*100), 0))
+        _correlated = self._correlated_columns(df)
+        _usable = set(_null_columns).union(_dom_columns).union(_correlated)
+        _usable = int(round(100 - (len(_usable)/df.columns.size) * 100, 2))
         _field_avg = int(round(_field_count/len(df.columns)*100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
-        report['Scores %'] = {'quantity avg': _null_avg, 'quality avg': _dom_avg,
+        report['Scores %'] = {'quality avg': _quality_avg, 'usability avg': _usable,
                               'provenance complete': _prov_avg, 'data described': _field_avg}
-        # Overview
-        report['Overview'] = {'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
-                                             'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
-                              'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                            'datetime': _date_fields, 'bool': _bool_fields,
-                                            'others': _other_fields},
-                              'component': {'name': self.pm.manager_name(),
+        report['Versions'] = {'component': {'name': self.pm.manager_name(),
                                             'version': ds_discovery.__version__},
                               'task': {'name': self.pm.task_name,
-                                       'version': self.pm.version}}
+                                       'version': self.pm.version},
+                              'source': {'name': self.CONNECTOR_SOURCE,
+                                         'version': self.pm.get_connector_contract(self.CONNECTOR_SOURCE).version}}
+        # Raw Measures
+        report['Raw Measures'] = {'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
+                                                 'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+                                  'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                                'datetime': _date_fields, 'bool': _bool_fields,
+                                                'others': _other_fields},
+                                  'usability': {'mostly null': len(_null_columns),
+                                                'predominance': len(_dom_columns),
+                                                'correlated': len(_correlated)}}
         # analysis
         _analysis_dict = {}
         granularity = granularity if isinstance(granularity, (int, float, list)) else [0.9, 0.75, 0.5, 0.25, 0.1]
+        col_kwargs = {}
+        for col in _date_columns:
+            col_kwargs.update({col: {'date_format': '%Y-%m-%dT%H:%M:%S'}})
+        for col in _numeric_columns:
+            col_kwargs.update({col: {'dominant': 0, 'exclude_dominant': True}})
         top = top if isinstance(top, int) else 6
-        for _, row in self.discover.analysis_dictionary(df, granularity=granularity, top=top).iterrows():
+        for _, row in self.discover.analysis_dictionary(df, granularity=granularity, top=top,
+                                                        col_kwargs=col_kwargs).iterrows():
             _analysis_dict[row.iloc[0]] = {}
             for index in row.index:
                 if index.startswith('Attribute') or index.startswith('Unique') or index.startswith('%_Nulls') \
@@ -536,3 +592,24 @@ class Transition(AbstractComponent):
         else:
             return ''
         return 'color: %s' % color
+
+    def _correlated_columns(self, df: pd.DataFrame):
+        """returns th percentage of useful colums"""
+        threshold = 0.98
+        pad: TransitionIntentModel = self.scratch_pad()
+        df = pad.auto_to_category(df, unique_max=1000, inplace=False)
+        df = pad.to_category_type(df, dtype='category', as_num=True)
+        for c in df.columns:
+            if all(Commons.valid_date(x) for x in df[c].dropna()):
+                df = pad.to_date_type(df, dtype='datetime', as_num=True)
+        df = Commons.filter_columns(df, dtype=['number'], exclude=False)
+        for c in df.columns:
+            df[c] = Commons.fillna(df[c])
+        col_corr = set()
+        corr_matrix = df.corr()
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i):
+                if abs(corr_matrix.iloc[i, j]) > threshold:  # we are interested in absolute coeff value
+                    colname = corr_matrix.columns[i]  # getting the name of column
+                    col_corr.add(colname)
+        return col_corr
