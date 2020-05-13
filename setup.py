@@ -70,6 +70,7 @@ setup(
         'matplotlib',
         'seaborn',
         'sklearn',
+        'scipy',
     ],
     extras_require={},
     entry_points={},

@@ -36,6 +36,13 @@ class TestDiscovery(unittest.TestCase):
         except:
             pass
 
+    def test_jensen_shannon_distance(self):
+        p = [0.20, 0.60, 0.20]
+        q = [0.20, 0.599, 0.201]
+        result = Discover.jensen_shannon_distance(p, q, precision=5)
+        print(result)
+
+
     def test_filter_univariate_roc_auc(self):
         tr = Transition.from_env('test')
         tr.set_source('paribas.csv', nrows=5000)
