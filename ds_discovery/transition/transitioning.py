@@ -250,11 +250,11 @@ class Transition(AbstractComponent):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
 
-    def save_clean_canonical(self, df, **kwargs):
+    def save_clean_canonical(self, canonical, **kwargs):
         """Saves the pandas.DataFrame to the clean files folder"""
-        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=df, **kwargs)
+        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
-    def save_report_canonical(self, report_connector_name, report: dict, **kwargs):
+    def save_report_canonical(self, report_connector_name, report: [dict, pd.DataFrame], **kwargs):
         """Saves the pandas.DataFrame to the nutrition folder"""
         if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
                                          self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
