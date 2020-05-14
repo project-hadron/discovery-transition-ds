@@ -224,7 +224,10 @@ class Transition(AbstractComponent):
         if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
                                          self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
-        file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type='json', versioned=True)
+        file_type = 'csv'
+        if report_connector_name == self.CONNECTOR_NUTRITION:
+            file_type = 'json'
+        file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type=file_type, versioned=True)
         uri_file = uri_file if isinstance(uri_file, str) else file_pattern
         self.add_connector_from_template(connector_name=report_connector_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
