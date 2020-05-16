@@ -54,7 +54,7 @@ class FeatureCatalog(AbstractComponent):
          :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         username = username if isinstance(username, str) else 'Unknown'

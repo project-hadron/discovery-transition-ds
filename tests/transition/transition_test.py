@@ -61,21 +61,6 @@ class TransitionTest(unittest.TestCase):
         result = cp.report_attributes(df, stylise=False)
         self.assertEqual((3, 4), df.shape)
 
-    def test_from_remote(self):
-        os.environ['AISTAC_PM_PATH'] = "c12s3://aistac-discovery-persist/contracts"
-        os.environ['AISTAC_PM_TYPE'] = 'pickle'
-        os.environ['AISTAC_PM_MODULE'] = "tests.handlers.managed_content_handlers"
-        os.environ['AISTAC_PM_HANDLER'] = "ManagedContentPersistHandler"
-        instance = Transition.from_env('task', default_save=False)
-        cc = instance.pm.get_connector_contract(connector_name=instance.pm.CONNECTOR_PM_CONTRACT)
-        self.assertTrue(cc.uri.startswith("c12s3://aistac-discovery-persist/contracts"))
-        self.assertEqual("tests.handlers.managed_content_handlers", cc.module_name)
-        self.assertEqual("ManagedContentPersistHandler", cc.handler)
-        os.environ.pop('AISTAC_PM_PATH')
-        os.environ.pop('AISTAC_PM_TYPE')
-        os.environ.pop('AISTAC_PM_MODULE')
-        os.environ.pop('AISTAC_PM_HANDLER')
-
     def test_from_env(self):
         os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()
         os.environ['AISTAC_PM_TYPE'] = 'pickle'

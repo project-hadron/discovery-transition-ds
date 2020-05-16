@@ -62,7 +62,7 @@ class Transition(AbstractComponent):
          :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = TransitionPropertyManager(task_name=task_name, username=username)
@@ -226,7 +226,7 @@ class Transition(AbstractComponent):
             raise ValueError("Report name must be one of the class report constants")
         file_type = 'csv'
         if report_connector_name == self.CONNECTOR_NUTRITION:
-            file_type = 'json'
+            file_type = 'yaml'
         file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type=file_type, versioned=True)
         uri_file = uri_file if isinstance(uri_file, str) else file_pattern
         self.add_connector_from_template(connector_name=report_connector_name, uri_file=uri_file,
