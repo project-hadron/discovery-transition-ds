@@ -21,6 +21,10 @@ class Transition(AbstractComponent):
     CONNECTOR_FIELDS = 'field_description'
     CONNECTOR_NUTRITION = 'nutrition'
 
+    DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
+    DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
+    DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
+
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
         """ Encapsulation class for the transition set of classes
@@ -63,8 +67,8 @@ class Transition(AbstractComponent):
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
-        pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
-        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
+        pm_module = pm_module if isinstance(pm_module, str) else cls.DEFAULT_MODULE
+        pm_handler = pm_handler if isinstance(pm_handler, str) else cls.DEFAULT_PERSIST_HANDLER
         _pm = TransitionPropertyManager(task_name=task_name, username=username)
         _intent_model = TransitionIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
                                               default_intent_level=default_intent_level,
