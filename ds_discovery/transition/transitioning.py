@@ -5,7 +5,7 @@ from aistac.handlers.abstract_handlers import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.transition.commons import Commons
+from ds_discovery.transition.commons import Commons, DataAnalytics
 from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
@@ -374,27 +374,11 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_nutrition(self, df: pd.DataFrame=None, granularity: [int, float, list]=None, top: int=None) -> dict:
+    def report_nutrition(self, df: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(df, pd.DataFrame):
-            df = self.load_source_canonical()
             pad: TransitionIntentModel = self.scratch_pad()
-            _date_headers = []
-            _bool_headers = []
-            for c in Commons.filter_headers(df, dtype=object):
-                if all(Commons.valid_date(x) for x in df[c].dropna()):
-                    _date_headers.append(c)
-                if df[c].nunique() == 2:
-                    values = df[c].value_counts().index.to_list()
-                    if any(x in ['True', 1, 'Y', 'y', 'Yes', 'yes'] for x in values):
-                        _bool_headers.append(c)
-            if len(_bool_headers) > 0:
-                bool_map = {1: True}
-                df = pad.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map)
-            if len(_date_headers) > 0:
-                df = pad.to_date_type(df, headers=_date_headers, inplace=False)
-            df = pad.to_numeric_type(df, dtype='number', inplace=False)
-            df = pad.to_category_type(df, dtype='object', inplace=False)
+            df = pad.auto_transition(self.load_source_canonical(), unique_max=250)
         # meta
         report = {'_meta-data': {'uid': str(uuid.uuid4()),
                                  'created': str(pd.Timestamp.now())}}
@@ -522,33 +506,60 @@ class Transition(AbstractComponent):
                                                 'correlated': len(_correlated)}}
         # analysis
         _analysis_dict = {}
-        granularity = granularity if isinstance(granularity, (int, float, list)) else [0.9, 0.75, 0.5, 0.25, 0.1]
-        col_kwargs = {}
-        for col in _date_columns:
-            col_kwargs.update({col: {'date_format': '%Y-%m-%dT%H:%M:%S'}})
-        for col in _numeric_columns:
-            col_kwargs.update({col: {'dominant': 0, 'exclude_dominant': True}})
-        top = top if isinstance(top, int) else 6
-        for _, row in self.discover.analysis_dictionary(df, granularity=granularity, top=top,
-                                                        col_kwargs=col_kwargs).iterrows():
-            _analysis_dict[row.iloc[0]] = {}
-            for index in row.index:
-                if index.startswith('Attribute') or index.startswith('Unique') or index.startswith('%_Nulls') \
-                        or index.startswith('Sample'):
-                    continue
-                if index.startswith('Upper') or index.startswith('Lower'):
-                    if _analysis_dict[row.iloc[0]].get('Limits') is None:
-                        _analysis_dict[row.iloc[0]].update({'Limits': {index: str(row.loc[index])}})
-                    else:
-                        _analysis_dict[row.iloc[0]].get('Limits').update({index: str(row.loc[index])})
-                    continue
-                _value = row.loc[index]
-                if index.startswith('Selection') and \
-                        isinstance(_value, list) and all(isinstance(x, tuple) for x in _value):
-                    for i in range(len(_value)):
-                        _value[i] = (str(_value[i][0]), str(_value[i][1]), _value[i][2])
-                    _value = [str(x) for x in _value]
-                _analysis_dict[row.iloc[0]].update({index: _value})
+        for c in df.columns.sort_values().values:
+            _column = {}
+            if df[c].dtype.name == 'category' or df[c].dtype.name.startswith('bool'):
+                result = DataAnalytics(self.discover.analyse_category(df[c], top=6, weighting_precision=3))
+                _column['selection'] = result.intent.selection
+                _column['dtype'] = result.intent.dtype
+                _column['lower'] = str(result.intent.lower)
+                _column['upper'] = str(result.intent.upper)
+                _column['unique'] = str(result.intent.granularity)
+                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                _column['nulls_percent'] = str(result.stats.nulls_percent)
+            elif df[c].dtype.name.startswith('int') or df[c].dtype.name.startswith('float'):
+                _dominant = df[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True).index[0]/df.shape[0]
+                _exclude_dominant = True if _dominant > 0.1 else False
+                result = DataAnalytics(self.discover.analyse_number(df[c], granularity=5,
+                                                                    exclude_dominant=_exclude_dominant))
+                _selection = result.intent.selection.copy()
+                if all(isinstance(x, tuple) for x in _selection):
+                    for i in range(len(_selection)):
+                        _selection[i] = (str(_selection[i][0]), str(_selection[i][1]), _selection[i][2])
+                    _selection = [str(x) for x in _selection]
+                _column['intervals'] = _selection
+                _column['dtype'] = result.intent.dtype
+                _column['lower'] = str(result.intent.lower)
+                _column['upper'] = str(result.intent.upper)
+                _column['granularity'] = result.intent.granularity
+                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
+                _column['weight_std'] = [str(x) for x in result.patterns.weight_pattern]
+                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                _column['mode'] = [str(x) for x in result.patterns.dominant_values]
+                _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
+                _column['mode_percent'] = str(result.patterns.dominant_percent)
+                _column['nulls_percent'] = str(result.stats.nulls_percent)
+                _column['mean'] = str(result.stats.mean)
+                _column['var'] = str(result.stats.var)
+                _column['std_err_mean'] = str(result.stats.sem)
+                _column['mean_abs_dev'] = str(result.stats.mad)
+                _column['skew'] = str(result.stats.skew)
+                _column['kurtosis'] = str(result.stats.kurtosis)
+            elif df[c].dtype.name.startswith('date'):
+                result = DataAnalytics(self.discover.analyse_date(df[c], granularity=5,
+                                                                  date_format='%Y-%m-%dT%H:%M:%S'))
+                _column['intervals'] = result.intent.selection
+                _column['dtype'] = result.intent.dtype
+                _column['lower'] = str(result.intent.lower)
+                _column['upper'] = str(result.intent.upper)
+                _column['granularity'] = result.intent.granularity
+                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                _column['nulls_percent'] = str(result.stats.nulls_percent)
+            if len(_column) > 0:
+                _analysis_dict[c] = _column
         report['insight'] = _analysis_dict
         return report
 
