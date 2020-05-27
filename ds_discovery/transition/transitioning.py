@@ -254,15 +254,40 @@ class Transition(AbstractComponent):
             canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
         return canonical
 
-    def save_clean_canonical(self, canonical, **kwargs):
-        """Saves the pandas.DataFrame to the clean files folder"""
+    def save_clean_canonical(self, canonical, auto_connectors: bool=None, **kwargs):
+        """Saves the canonical to the clean files folder, auto creating the connector from template if not set"""
+        if auto_connectors if isinstance(auto_connectors, bool) else True:
+            if not self.pm.has_connector(self.CONNECTOR_PERSIST):
+                self.set_persist()
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
-    def save_report_canonical(self, report_connector_name, report: [dict, pd.DataFrame], **kwargs):
-        """Saves the pandas.DataFrame to the nutrition folder"""
+    def save_nutrition_report(self, canonical: pd.DataFrame=None, file_type: str=None, versioned: bool=None,
+                              stamped: str=None):
+        """ Generates and persists the nutrition
+
+        :param canonical: the canonical to base the report on
+        :param file_type: (optional) an alternative file extension to the default 'pickle' format
+        :param versioned: (optional) if the component version should be included as part of the pattern
+        :param stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
+        :return:
+        """
+        if isinstance(file_type, str) or isinstance(versioned, bool) or isinstance(stamped, str):
+            file_pattern = self.pm.file_pattern(self.CONNECTOR_NUTRITION, file_type=file_type, versioned=versioned,
+                                                stamped=stamped)
+            self.set_report_persist(self.CONNECTOR_NUTRITION, uri_file=file_pattern)
+        report = self.report_nutrition(canonical=canonical)
+        self.save_report_canonical(report_connector_name=self.CONNECTOR_NUTRITION, report=report, auto_connectors=True)
+        return
+
+    def save_report_canonical(self, report_connector_name, report: [dict, pd.DataFrame],
+                              auto_connectors: bool=None, **kwargs):
+        """Saves the canonical to the nutrition folder, auto creating the connector from template if not set"""
         if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
                                          self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
+        if auto_connectors if isinstance(auto_connectors, bool) else True:
+            if not self.pm.has_connector(report_connector_name):
+                self.set_report_persist(report_connector_name=report_connector_name)
         self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
@@ -271,12 +296,12 @@ class Transition(AbstractComponent):
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_clean_canonical(result)
 
-    def canonical_report(self, df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
+    def canonical_report(self, canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
         attribute properties
 
-        :param df: the DataFrame to view
+        :param canonical: the DataFrame to view
         :param stylise: if True present the report stylised.
         :param inc_next_dom: (optional) if to include the next dominate element column
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist
@@ -284,14 +309,14 @@ class Transition(AbstractComponent):
                 ' > 0.95', ".str.contains('shed')"
         :return:
         """
-        return self.discover.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
+        return self.discover.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def report_attributes(self, df, stylise: bool=True):
-        labels = [f'Attributes ({len(df.columns)})', 'dType', 'Description']
+    def report_attributes(self, canonical, stylise: bool=True):
+        labels = [f'Attributes ({len(canonical.columns)})', 'dType', 'Description']
         file = []
-        for c in df.columns.sort_values().values:
-            line = [c, str(df[c].dtype),
+        for c in canonical.columns.sort_values().values:
+            line = [c, str(canonical[c].dtype),
                     ". ".join(self.pm.report_notes(catalog='attributes', labels=c, drop_dates=True).get('text', []))]
             file.append(line)
         df_dd = pd.DataFrame(file, columns=labels)
@@ -301,10 +326,10 @@ class Transition(AbstractComponent):
             df_style = df_dd.style.set_table_styles(style)
             _ = df_style.applymap(self._dtype_color, subset=['dType'])
             _ = df_style.set_properties(subset=['Description'],  **{"text-align": "left"})
-            _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
+            _ = df_style.set_properties(subset=[f'Attributes ({len(canonical.columns)})'], **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
             return df_style
-        df_dd.set_index(keys=f'Attributes ({len(df.columns)})', inplace=True)
+        df_dd.set_index(keys=f'Attributes ({len(canonical.columns)})', inplace=True)
         return df_dd
 
     def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
@@ -374,11 +399,11 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_nutrition(self, df: pd.DataFrame=None) -> dict:
+    def report_nutrition(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
-        if not isinstance(df, pd.DataFrame):
+        if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
-            df = pad.auto_transition(self.load_source_canonical(), unique_max=250)
+            canonical = pad.auto_transition(self.load_source_canonical(), unique_max=250)
         # meta
         report = {'_meta-data': {'uid': str(uuid.uuid4()),
                                  'created': str(pd.Timestamp.now())}}
@@ -421,7 +446,7 @@ class Transition(AbstractComponent):
         _fields = {}
         for label, items in self.pm.get_knowledge(catalog='attributes').items():
             _fields[label] = Commons.list_formatter(items.values())
-            if label in df.columns:
+            if label in canonical.columns:
                 _field_count += 1
         report['fields'] = _fields
         # dictionary
@@ -437,7 +462,7 @@ class Transition(AbstractComponent):
         _dom_columns = set()
         _date_columns = set()
         _numeric_columns = set()
-        for _, row in self.canonical_report(df, stylise=False).iterrows():
+        for _, row in self.canonical_report(canonical, stylise=False).iterrows():
             _data_dict[row.iloc[0]] = {}
             _att_name = None
             for index in row.index:
@@ -463,10 +488,10 @@ class Transition(AbstractComponent):
                     elif row.loc[index].startswith('bool'):
                         _bool_fields += 1
                     else:
-                        if any(Commons.valid_date(x) for x in df[_att_name]):
+                        if any(Commons.valid_date(x) for x in canonical[_att_name]):
                             _date_fields += 1
                             _date_columns.add(_att_name)
-                        elif df[_att_name].nunique() < 100 and df[df[_att_name].isnull()].size < (df.size * 0.8):
+                        elif canonical[_att_name].nunique() < 100 and canonical[canonical[_att_name].isnull()].size < (canonical.size * 0.8):
                             _category_fields += 1
                         else:
                             _other_fields += 1
@@ -479,13 +504,13 @@ class Transition(AbstractComponent):
 
         report['transition'] = {'description': self.pm.description,
                                 'notes': _notes}
-        _null_avg = _null_total / len(df.columns)
-        _dom_avg = _dom_fields / len(df.columns)
+        _null_avg = _null_total / len(canonical.columns)
+        _dom_avg = _dom_fields / len(canonical.columns)
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg)/2)*100), 0))
-        _correlated = self._correlated_columns(df)
+        _correlated = self._correlated_columns(canonical)
         _usable = set(_null_columns).union(_dom_columns).union(_correlated)
-        _usable = int(round(100 - (len(_usable)/df.columns.size) * 100, 2))
-        _field_avg = int(round(_field_count/len(df.columns)*100, 0))
+        _usable = int(round(100 - (len(_usable) / canonical.columns.size) * 100, 2))
+        _field_avg = int(round(_field_count / len(canonical.columns) * 100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
         report['Scores %'] = {'quality avg': _quality_avg, 'usability avg': _usable,
                               'provenance complete': _prov_avg, 'data described': _field_avg}
@@ -496,8 +521,8 @@ class Transition(AbstractComponent):
                               'source': {'name': self.CONNECTOR_SOURCE,
                                          'version': self.pm.get_connector_contract(self.CONNECTOR_SOURCE).version}}
         # Raw Measures
-        report['Raw Measures'] = {'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
-                                                 'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+        report['Raw Measures'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
+                                                 'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
                                   'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
                                                 'datetime': _date_fields, 'bool': _bool_fields,
                                                 'others': _other_fields},
@@ -506,10 +531,10 @@ class Transition(AbstractComponent):
                                                 'correlated': len(_correlated)}}
         # analysis
         _analysis_dict = {}
-        for c in df.columns.sort_values().values:
+        for c in canonical.columns.sort_values().values:
             _column = {}
-            if df[c].dtype.name == 'category' or df[c].dtype.name.startswith('bool'):
-                result = DataAnalytics(self.discover.analyse_category(df[c], top=6, weighting_precision=3))
+            if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
+                result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
                 _column['selection'] = result.intent.selection
                 _column['dtype'] = result.intent.dtype
                 _column['lower'] = str(result.intent.lower)
@@ -518,10 +543,10 @@ class Transition(AbstractComponent):
                 _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                 _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                 _column['nulls_percent'] = str(result.stats.nulls_percent)
-            elif df[c].dtype.name.startswith('int') or df[c].dtype.name.startswith('float'):
-                _dominant = df[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True).index[0]/df.shape[0]
+            elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
+                _dominant = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True).index[0] / canonical.shape[0]
                 _exclude_dominant = True if _dominant > 0.1 else False
-                result = DataAnalytics(self.discover.analyse_number(df[c], granularity=5,
+                result = DataAnalytics(self.discover.analyse_number(canonical[c], granularity=5,
                                                                     exclude_dominant=_exclude_dominant))
                 _selection = result.intent.selection.copy()
                 if all(isinstance(x, tuple) for x in _selection):
@@ -547,8 +572,8 @@ class Transition(AbstractComponent):
                 _column['mean_abs_dev'] = str(result.stats.mad)
                 _column['skew'] = str(result.stats.skew)
                 _column['kurtosis'] = str(result.stats.kurtosis)
-            elif df[c].dtype.name.startswith('date'):
-                result = DataAnalytics(self.discover.analyse_date(df[c], granularity=5,
+            elif canonical[c].dtype.name.startswith('date'):
+                result = DataAnalytics(self.discover.analyse_date(canonical[c], granularity=5,
                                                                   date_format='%Y-%m-%dT%H:%M:%S'))
                 _column['intervals'] = result.intent.selection
                 _column['dtype'] = result.intent.dtype
@@ -611,20 +636,20 @@ class Transition(AbstractComponent):
             return ''
         return 'color: %s' % color
 
-    def _correlated_columns(self, df: pd.DataFrame):
+    def _correlated_columns(self, canonical: pd.DataFrame):
         """returns th percentage of useful colums"""
         threshold = 0.98
         pad: TransitionIntentModel = self.scratch_pad()
-        df = pad.auto_to_category(df, unique_max=1000, inplace=False)
-        df = pad.to_category_type(df, dtype='category', as_num=True)
-        for c in df.columns:
-            if all(Commons.valid_date(x) for x in df[c].dropna()):
-                df = pad.to_date_type(df, dtype='datetime', as_num=True)
-        df = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        for c in df.columns:
-            df[c] = Commons.fillna(df[c])
+        canonical = pad.auto_to_category(canonical, unique_max=1000, inplace=False)
+        canonical = pad.to_category_type(canonical, dtype='category', as_num=True)
+        for c in canonical.columns:
+            if all(Commons.valid_date(x) for x in canonical[c].dropna()):
+                canonical = pad.to_date_type(canonical, dtype='datetime', as_num=True)
+        canonical = Commons.filter_columns(canonical, dtype=['number'], exclude=False)
+        for c in canonical.columns:
+            canonical[c] = Commons.fillna(canonical[c])
         col_corr = set()
-        corr_matrix = df.corr()
+        corr_matrix = canonical.corr()
         for i in range(len(corr_matrix.columns)):
             for j in range(i):
                 if abs(corr_matrix.iloc[i, j]) > threshold:  # we are interested in absolute coeff value

@@ -13,6 +13,9 @@ AI-STAC Discovery Transition and Feature Catalog
 What is AI-STAC
 ===============
 
+“Exploratory data analysis can never be the whole story, but nothing else can serve as the foundation stone.”
+— John Tukey
+
 Augmented Intent - Single Task Accelerator components (AI-STAC) is a unique approach to data recovery, discovery, synthesis
 and modeling that innovates the approach to data science and it's transition to production. it's origins came
 from an incubator project that shadowed a team of Ph.D. data scientists in connection with the development and delivery
