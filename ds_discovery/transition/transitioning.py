@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import uuid
 import ds_discovery
 from aistac.handlers.abstract_handlers import ConnectorContract
@@ -275,7 +276,7 @@ class Transition(AbstractComponent):
             file_pattern = self.pm.file_pattern(self.CONNECTOR_NUTRITION, file_type=file_type, versioned=versioned,
                                                 stamped=stamped)
             self.set_report_persist(self.CONNECTOR_NUTRITION, uri_file=file_pattern)
-        report = self.report_nutrition(canonical=canonical)
+        report = self.transition_report(canonical=canonical)
         self.save_report_canonical(report_connector_name=self.CONNECTOR_NUTRITION, report=report, auto_connectors=True)
         return
 
@@ -327,7 +328,7 @@ class Transition(AbstractComponent):
             _ = df_style.applymap(self._dtype_color, subset=['dType'])
             _ = df_style.set_properties(subset=['Description'],  **{"text-align": "left"})
             _ = df_style.set_properties(subset=[f'Attributes ({len(canonical.columns)})'], **{'font-weight': 'bold',
-                                                                                        'font-size': "120%"})
+                                                                                              'font-size': "120%"})
             return df_style
         df_dd.set_index(keys=f'Attributes ({len(canonical.columns)})', inplace=True)
         return df_dd
@@ -399,11 +400,64 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_nutrition(self, canonical: pd.DataFrame=None) -> dict:
+    def transition_summary_report(self, canonical: pd.DataFrame=None):
+        """Reports a nutrition summary"""
+        report = {}
+        if not isinstance(canonical, pd.DataFrame):
+            pad: TransitionIntentModel = self.scratch_pad()
+            canonical = self.load_source_canonical()
+            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
+            canonical = pad.auto_transition(canonical, unique_max=unique_max)
+        # provinance
+        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author']
+        _provenance_count = len(list(filter(lambda x: x in _provenance_headers, self.pm.provenance.keys())))
+        # descibed
+        _descibed_keys = self.pm.get_knowledge(catalog='attributes').keys()
+        _descibed_count = len(list(filter(lambda x: x in canonical.columns, _descibed_keys)))
+        # dictionary
+        _dictionary = self.canonical_report(canonical, stylise=False)
+        _total_fields = _dictionary.shape[0]
+        _null_total = _dictionary['%_Null'].sum()
+        _dom_fields = _dictionary['%_Dom'].sum()
+
+        _null_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
+        _dom_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
+        _usable_fields = set(_null_columns)
+        _usable_fields.update(_dom_columns)
+        _numeric_fields = len(Commons.filter_headers(canonical, dtype='number'))
+        _category_fields = len(Commons.filter_headers(canonical, dtype='category'))
+        _date_fields = len(Commons.filter_headers(canonical, dtype='datetime'))
+        _bool_fields = len(Commons.filter_headers(canonical, dtype='bool'))
+        _object_fields = len(Commons.filter_headers(canonical, dtype='object'))
+        _other_fields = len(Commons.filter_headers(canonical, dtype=['object', 'category', 'datetime', 'bool',
+                                                                     'number'],  exclude=True))
+        _null_avg = _null_total / canonical.shape[1]
+        _dom_avg = _dom_fields / canonical.shape[1]
+        _quality_avg = int(round(100 - (((_null_avg + _dom_avg)/2)*100), 0))
+        _correlated = self._correlated_columns(canonical)
+        _usable = int(round(100 - (len(_usable_fields) / canonical.columns.size) * 100, 2))
+        _field_avg = int(round(_descibed_count / canonical.shape[1] * 100, 0))
+        _prov_avg = int(round(_provenance_count/6*100, 0))
+        report['score'] = {'quality_avg': _quality_avg, 'usability_avg': _usable,
+                           'provenance_complete': _prov_avg, 'data_described': _field_avg}
+
+        report['summary'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
+                                            'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
+                             'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                           'datetime': _date_fields, 'bool': _bool_fields,
+                                           'others': _other_fields},
+                             'usability': {'mostly_null': len(_null_columns),
+                                           'predominance': len(_dom_columns),
+                                           'correlated': len(_correlated)}}
+        return report
+
+    def transition_report(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
-            canonical = pad.auto_transition(self.load_source_canonical(), unique_max=250)
+            canonical = self.load_source_canonical()
+            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
+            canonical = pad.auto_transition(canonical, unique_max=unique_max)
         # meta
         report = {'_meta-data': {'uid': str(uuid.uuid4()),
                                  'created': str(pd.Timestamp.now())}}
@@ -437,10 +491,8 @@ class Transition(AbstractComponent):
         report['connectors'] = _connectors
         # provenance
         report['provenance'] = self.pm.provenance
-        _provenance_count = 0
-        for item in self.pm.provenance.keys():
-            if item in ['title', 'license', 'domain', 'description', 'provider', 'author']:
-                _provenance_count += 1
+        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author']
+        _provenance_count = len(list(filter(lambda x: x in _provenance_headers, self.pm.provenance.keys())))
         # fields
         _field_count = 0
         _fields = {}
@@ -491,7 +543,8 @@ class Transition(AbstractComponent):
                         if any(Commons.valid_date(x) for x in canonical[_att_name]):
                             _date_fields += 1
                             _date_columns.add(_att_name)
-                        elif canonical[_att_name].nunique() < 100 and canonical[canonical[_att_name].isnull()].size < (canonical.size * 0.8):
+                        elif canonical[_att_name].nunique() < 100 and \
+                                canonical[canonical[_att_name].isnull()].size < (canonical.size * 0.8):
                             _category_fields += 1
                         else:
                             _other_fields += 1
@@ -504,85 +557,102 @@ class Transition(AbstractComponent):
 
         report['transition'] = {'description': self.pm.description,
                                 'notes': _notes}
-        _null_avg = _null_total / len(canonical.columns)
-        _dom_avg = _dom_fields / len(canonical.columns)
+        _null_avg = _null_total / canonical.shape[1]
+        _dom_avg = _dom_fields / canonical.shape[1]
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg)/2)*100), 0))
         _correlated = self._correlated_columns(canonical)
         _usable = set(_null_columns).union(_dom_columns).union(_correlated)
         _usable = int(round(100 - (len(_usable) / canonical.columns.size) * 100, 2))
-        _field_avg = int(round(_field_count / len(canonical.columns) * 100, 0))
+        _field_avg = int(round(_field_count / canonical.shape[1] * 100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
-        report['Scores %'] = {'quality avg': _quality_avg, 'usability avg': _usable,
-                              'provenance complete': _prov_avg, 'data described': _field_avg}
-        report['Versions'] = {'component': {'name': self.pm.manager_name(),
+        report['score'] = {'quality_avg': _quality_avg, 'usability_avg': _usable,
+                           'provenance_complete': _prov_avg, 'data_described': _field_avg}
+        report['versions'] = {'component': {'name': self.pm.manager_name(),
                                             'version': ds_discovery.__version__},
                               'task': {'name': self.pm.task_name,
                                        'version': self.pm.version},
                               'source': {'name': self.CONNECTOR_SOURCE,
                                          'version': self.pm.get_connector_contract(self.CONNECTOR_SOURCE).version}}
         # Raw Measures
-        report['Raw Measures'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
-                                                 'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
-                                  'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                                'datetime': _date_fields, 'bool': _bool_fields,
-                                                'others': _other_fields},
-                                  'usability': {'mostly null': len(_null_columns),
-                                                'predominance': len(_dom_columns),
-                                                'correlated': len(_correlated)}}
+        report['summary'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
+                                            'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
+                             'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                           'datetime': _date_fields, 'bool': _bool_fields,
+                                           'others': _other_fields},
+                             'usability': {'mostly_null': len(_null_columns),
+                                           'predominance': len(_dom_columns),
+                                           'correlated': len(_correlated)}}
+        return report
+
+    def report_statistics(self, canonical: pd.DataFrame = None) -> dict:
+        """A complete report of the transition"""
+        if not isinstance(canonical, pd.DataFrame):
+            pad: TransitionIntentModel = self.scratch_pad()
+            canonical = self.load_source_canonical()
+            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(
+                canonical.shape[0])
+            canonical = pad.auto_transition(canonical, unique_max=unique_max)
+        # meta
+        report = {'_meta-data': {'uid': str(uuid.uuid4()),
+                                 'created': str(pd.Timestamp.now())}}
         # analysis
         _analysis_dict = {}
         for c in canonical.columns.sort_values().values:
-            _column = {}
-            if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
-                result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
-                _column['selection'] = result.intent.selection
-                _column['dtype'] = result.intent.dtype
-                _column['lower'] = str(result.intent.lower)
-                _column['upper'] = str(result.intent.upper)
-                _column['unique'] = str(result.intent.granularity)
-                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
-                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                _column['nulls_percent'] = str(result.stats.nulls_percent)
-            elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
-                _dominant = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True).index[0] / canonical.shape[0]
-                _exclude_dominant = True if _dominant > 0.1 else False
-                result = DataAnalytics(self.discover.analyse_number(canonical[c], granularity=5,
-                                                                    exclude_dominant=_exclude_dominant))
-                _selection = result.intent.selection.copy()
-                if all(isinstance(x, tuple) for x in _selection):
-                    for i in range(len(_selection)):
-                        _selection[i] = (str(_selection[i][0]), str(_selection[i][1]), _selection[i][2])
-                    _selection = [str(x) for x in _selection]
-                _column['intervals'] = _selection
-                _column['dtype'] = result.intent.dtype
-                _column['lower'] = str(result.intent.lower)
-                _column['upper'] = str(result.intent.upper)
-                _column['granularity'] = result.intent.granularity
-                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
-                _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
-                _column['weight_std'] = [str(x) for x in result.patterns.weight_pattern]
-                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                _column['mode'] = [str(x) for x in result.patterns.dominant_values]
-                _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
-                _column['mode_percent'] = str(result.patterns.dominant_percent)
-                _column['nulls_percent'] = str(result.stats.nulls_percent)
-                _column['mean'] = str(result.stats.mean)
-                _column['var'] = str(result.stats.var)
-                _column['std_err_mean'] = str(result.stats.sem)
-                _column['mean_abs_dev'] = str(result.stats.mad)
-                _column['skew'] = str(result.stats.skew)
-                _column['kurtosis'] = str(result.stats.kurtosis)
-            elif canonical[c].dtype.name.startswith('date'):
-                result = DataAnalytics(self.discover.analyse_date(canonical[c], granularity=5,
-                                                                  date_format='%Y-%m-%dT%H:%M:%S'))
-                _column['intervals'] = result.intent.selection
-                _column['dtype'] = result.intent.dtype
-                _column['lower'] = str(result.intent.lower)
-                _column['upper'] = str(result.intent.upper)
-                _column['granularity'] = result.intent.granularity
-                _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
-                _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                _column['nulls_percent'] = str(result.stats.nulls_percent)
+            try:
+                _column = {}
+                if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
+                    result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
+                    _column['selection'] = result.intent.selection
+                    _column['dtype'] = result.intent.dtype
+                    _column['lower'] = str(result.intent.lower)
+                    _column['upper'] = str(result.intent.upper)
+                    _column['unique'] = str(result.intent.granularity)
+                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                    _column['nulls_percent'] = str(result.stats.nulls_percent)
+                elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
+                    _dominant = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False,
+                                                                                dropna=True).index[0] / canonical.shape[0]
+                    _exclude_dominant = True if _dominant > 0.1 else False
+                    result = DataAnalytics(self.discover.analyse_number(canonical[c], granularity=5,
+                                                                        exclude_dominant=_exclude_dominant))
+                    _selection = result.intent.selection.copy()
+                    if all(isinstance(x, tuple) for x in _selection):
+                        for i in range(len(_selection)):
+                            _selection[i] = (str(_selection[i][0]), str(_selection[i][1]), _selection[i][2])
+                        _selection = [str(x) for x in _selection]
+                    _column['intervals'] = _selection
+                    _column['dtype'] = result.intent.dtype
+                    _column['lower'] = str(result.intent.lower)
+                    _column['upper'] = str(result.intent.upper)
+                    _column['granularity'] = result.intent.granularity
+                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
+                    _column['weight_std'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                    _column['mode'] = [str(x) for x in result.patterns.dominant_values]
+                    _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
+                    _column['mode_percent'] = str(result.patterns.dominant_percent)
+                    _column['nulls_percent'] = str(result.stats.nulls_percent)
+                    _column['mean'] = str(result.stats.mean)
+                    _column['var'] = str(result.stats.var)
+                    _column['std_err_mean'] = str(result.stats.sem)
+                    _column['mean_abs_dev'] = str(result.stats.mad)
+                    _column['skew'] = str(result.stats.skew)
+                    _column['kurtosis'] = str(result.stats.kurtosis)
+                elif canonical[c].dtype.name.startswith('date'):
+                    result = DataAnalytics(self.discover.analyse_date(canonical[c], granularity=5,
+                                                                      date_format='%Y-%m-%dT%H:%M:%S'))
+                    _column['intervals'] = result.intent.selection
+                    _column['dtype'] = result.intent.dtype
+                    _column['lower'] = str(result.intent.lower)
+                    _column['upper'] = str(result.intent.upper)
+                    _column['granularity'] = result.intent.granularity
+                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
+                    _column['nulls_percent'] = str(result.stats.nulls_percent)
+            except (ValueError, TypeError, ZeroDivisionError):
+                _column['message:'] = f'Error processing column {c}'
             if len(_column) > 0:
                 _analysis_dict[c] = _column
         report['insight'] = _analysis_dict
