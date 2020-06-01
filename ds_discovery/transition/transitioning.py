@@ -584,7 +584,7 @@ class Transition(AbstractComponent):
                                            'correlated': len(_correlated)}}
         return report
 
-    def report_statistics(self, canonical: pd.DataFrame = None) -> dict:
+    def report_statistics(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
@@ -598,8 +598,8 @@ class Transition(AbstractComponent):
         # analysis
         _analysis_dict = {}
         for c in canonical.columns.sort_values().values:
+            _column = {}
             try:
-                _column = {}
                 if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
                     result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
                     _column['selection'] = result.intent.selection

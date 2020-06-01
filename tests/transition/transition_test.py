@@ -83,12 +83,20 @@ class TransitionTest(unittest.TestCase):
         os.unsetenv('AISTAC_PM_MODULE')
         os.unsetenv('AISTAC_PM_HANDLER')
 
-    def test_report_nutrition_summary(self):
+    def test_transition_summary_report(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
         cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
         report = tr.transition_summary_report()
+        pprint(report)
+
+    def test_report_statistics(self):
+        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
+        cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
+                               module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
+        tr.set_source_contract(connector_contract=cc)
+        report = tr.report_statistics()
         pprint(report)
 
     """
