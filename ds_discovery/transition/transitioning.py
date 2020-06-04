@@ -276,7 +276,7 @@ class Transition(AbstractComponent):
             file_pattern = self.pm.file_pattern(self.CONNECTOR_NUTRITION, file_type=file_type, versioned=versioned,
                                                 stamped=stamped)
             self.set_report_persist(self.CONNECTOR_NUTRITION, uri_file=file_pattern)
-        report = self.transition_report(canonical=canonical)
+        report = self.report_data_quality(canonical=canonical)
         self.save_report_canonical(report_connector_name=self.CONNECTOR_NUTRITION, report=report, auto_connectors=True)
         return
 
@@ -400,7 +400,7 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def transition_summary_report(self, canonical: pd.DataFrame=None):
+    def report_data_quality_summary(self, canonical: pd.DataFrame=None):
         """Reports a nutrition summary"""
         report = {}
         if not isinstance(canonical, pd.DataFrame):
@@ -451,7 +451,7 @@ class Transition(AbstractComponent):
                                            'correlated': len(_correlated)}}
         return report
 
-    def transition_report(self, canonical: pd.DataFrame=None) -> dict:
+    def report_data_quality(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
@@ -623,8 +623,7 @@ class Transition(AbstractComponent):
                         _selection = [str(x) for x in _selection]
                     _column['intervals'] = _selection
                     _column['dtype'] = result.intent.dtype
-                    _column['lower'] = str(result.intent.lower)
-                    _column['upper'] = str(result.intent.upper)
+                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
                     _column['granularity'] = result.intent.granularity
                     _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                     _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
@@ -645,8 +644,7 @@ class Transition(AbstractComponent):
                                                                       date_format='%Y-%m-%dT%H:%M:%S'))
                     _column['intervals'] = result.intent.selection
                     _column['dtype'] = result.intent.dtype
-                    _column['lower'] = str(result.intent.lower)
-                    _column['upper'] = str(result.intent.upper)
+                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
                     _column['granularity'] = result.intent.granularity
                     _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]

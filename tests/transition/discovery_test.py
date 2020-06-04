@@ -17,9 +17,8 @@ class TestDiscovery(unittest.TestCase):
 
     def setUp(self):
         # set environment variables
-        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
-        os.environ['AISTAC_DEFAULT_SOURCE_PATH'] = os.path.join(os.environ['HOME'], 'code', 'projects', 'prod', 'data',
-                                                                'raw')
+        os.environ['AISTAC_PM_PATH'] = os.path.join("${PWD}", 'work', 'config')
+        os.environ['AISTAC_DEFAULT_SOURCE_PATH'] = os.path.join("${HOME}", 'code', 'projects',  'data', 'sample')
         PropertyManager._remove_all()
         try:
             shutil.rmtree('work')
@@ -36,6 +35,14 @@ class TestDiscovery(unittest.TestCase):
         except:
             pass
 
+    def test_bootstrap_confidence_interval(self):
+        normal = pd.Series(np.random.normal(size=10000))
+        expo = pd.Series(np.random.exponential(size=10000))
+        result = DataDiscovery.bootstrap_confidence_interval(normal)
+        print(result)
+        result = DataDiscovery.bootstrap_confidence_interval(expo)
+        print(result)
+
     def test_jensen_shannon_distance(self):
         p = [0.20, 0.60, 0.20]
         q = [0.20, 0.599, 0.201]
@@ -44,7 +51,7 @@ class TestDiscovery(unittest.TestCase):
 
 
     def test_filter_univariate_roc_auc(self):
-        tr = Transition.from_env('test')
+        tr = Transition.from_env('test', default_save=False, default_save_intent=False)
         tr.set_source('paribas.csv', nrows=5000)
         data = tr.load_source_canonical()
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55)
