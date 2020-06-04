@@ -129,36 +129,37 @@ class FeatureCatalog(AbstractComponent):
         """
         return self.pm.get_connector_contract(connector_name=feature_name)
 
-    def set_source_contract(self, connector_contract: ConnectorContract, template_aligned: bool=None, save: bool=None):
-        """ Sets the source contract
+    def set_source_uri(self, uri: str, save: bool=None, **kwargs):
+        """ Sets the source contract giving the full uri path. This is a shortcut of set_source_contract(...), not
+        requiring a ConnectorContract to be set up and using the default module and handler values.
 
-        :param connector_contract: a Connector Contract for the properties persistence
-        :param template_aligned: if the source contact should align with the template changes
+        :param uri: a fully qualified uri of the source data
         :param save: (optional) if True, save to file. Default is True
         """
-        save = save if isinstance(save, bool) else self._default_save
-        if self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE):
-            self.remove_connector_contract(connector_name=self.CONNECTOR_SOURCE)
-        self.pm.set_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
-                                       aligned=template_aligned)
-        self.pm_persist(save)
+        connector_contract = ConnectorContract(uri=uri, module_name=self.DEFAULT_MODULE,
+                                               handler=self.DEFAULT_SOURCE_HANDLER, **kwargs)
+        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
+                                    save=save)
         return
 
-    def set_feature_contract(self, feature_name: str, connector_contract: ConnectorContract,
-                             template_aligned: bool=None, save: bool=None):
+    def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
+        """ Sets the source contract
+
+        :param connector_contract: a Connector Contract for the source data
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
+                                    save=save)
+        return
+
+    def set_feature_contract(self, feature_name: str, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the persist contract.
 
         :param feature_name: the unique name of the feature
         :param connector_contract: a Connector Contract for the properties persistence
-        :param template_aligned: if the source contact should align with the template changes
         :param save: (optional) if True, save to file. Default is True
         """
-        save = save if isinstance(save, bool) else self._default_save
-        if self.pm.has_connector(feature_name):
-            self.remove_connector_contract(feature_name)
-        self.pm.set_connector_contract(connector_name=feature_name, connector_contract=connector_contract,
-                                       aligned=template_aligned)
-        self.pm_persist(save)
+        self.add_connector_contract(connector_name=feature_name, connector_contract=connector_contract, save=save)
         return
 
     def set_source(self, uri_file: str, save: bool=None):

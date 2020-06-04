@@ -20,7 +20,7 @@ class Transition(AbstractComponent):
     CONNECTOR_INSIGHT = 'insight'
     CONNECTOR_INTENT = 'intent'
     CONNECTOR_FIELDS = 'field_description'
-    CONNECTOR_NUTRITION = 'nutrition'
+    CONNECTOR_QUALITY = 'data_quality'
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
@@ -180,13 +180,27 @@ class Transition(AbstractComponent):
         """ gets the persist connector contract that can be used as the next chain source"""
         return self.pm.get_connector_contract(self.CONNECTOR_PERSIST)
 
+    def set_source_uri(self, uri: str, save: bool=None, **kwargs):
+        """ Sets the source contract giving the full uri path. This is a shortcut of set_source_contract(...), not
+        requiring a ConnectorContract to be set up and using the default module and handler values.
+
+        :param uri: a fully qualified uri of the source data
+        :param save: (optional) if True, save to file. Default is True
+        """
+        connector_contract = ConnectorContract(uri=uri, module_name=self.DEFAULT_MODULE,
+                                               handler=self.DEFAULT_SOURCE_HANDLER, **kwargs)
+        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
+                                    save=save)
+        return
+
     def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the source contract
 
         :param connector_contract: a Connector Contract for the source data
         :param save: (optional) if True, save to file. Default is True
         """
-        self.add_connector_contract(self.CONNECTOR_SOURCE, connector_contract=connector_contract, save=save)
+        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
+                                    save=save)
         return
 
     def set_persist_contract(self, connector_contract: ConnectorContract, save: bool=None):
@@ -195,7 +209,8 @@ class Transition(AbstractComponent):
         :param connector_contract: a Connector Contract for the persisted data
         :param save: (optional) if True, save to file. Default is True
         """
-        self.add_connector_contract(self.CONNECTOR_PERSIST, connector_contract=connector_contract, save=save)
+        self.add_connector_contract(connector_name=self.CONNECTOR_PERSIST, connector_contract=connector_contract,
+                                    save=save)
         return
 
     def set_source(self, uri_file: str, save: bool=None, **kwargs):
@@ -227,10 +242,10 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
-                                         self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
+                                         self.CONNECTOR_QUALITY, self.CONNECTOR_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
         file_type = 'csv'
-        if report_connector_name == self.CONNECTOR_NUTRITION:
+        if report_connector_name == self.CONNECTOR_QUALITY:
             file_type = 'yaml'
         file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type=file_type, versioned=True)
         uri_file = uri_file if isinstance(uri_file, str) else file_pattern
@@ -262,9 +277,9 @@ class Transition(AbstractComponent):
                 self.set_persist()
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
-    def save_nutrition_report(self, canonical: pd.DataFrame=None, file_type: str=None, versioned: bool=None,
-                              stamped: str=None):
-        """ Generates and persists the nutrition
+    def save_quality_report(self, canonical: pd.DataFrame=None, file_type: str=None, versioned: bool=None,
+                            stamped: str=None):
+        """ Generates and persists the data quality
 
         :param canonical: the canonical to base the report on
         :param file_type: (optional) an alternative file extension to the default 'pickle' format
@@ -273,18 +288,18 @@ class Transition(AbstractComponent):
         :return:
         """
         if isinstance(file_type, str) or isinstance(versioned, bool) or isinstance(stamped, str):
-            file_pattern = self.pm.file_pattern(self.CONNECTOR_NUTRITION, file_type=file_type, versioned=versioned,
+            file_pattern = self.pm.file_pattern(self.CONNECTOR_QUALITY, file_type=file_type, versioned=versioned,
                                                 stamped=stamped)
-            self.set_report_persist(self.CONNECTOR_NUTRITION, uri_file=file_pattern)
-        report = self.report_data_quality(canonical=canonical)
-        self.save_report_canonical(report_connector_name=self.CONNECTOR_NUTRITION, report=report, auto_connectors=True)
+            self.set_report_persist(self.CONNECTOR_QUALITY, uri_file=file_pattern)
+        report = self.report_quality(canonical=canonical)
+        self.save_report_canonical(report_connector_name=self.CONNECTOR_QUALITY, report=report, auto_connectors=True)
         return
 
     def save_report_canonical(self, report_connector_name, report: [dict, pd.DataFrame],
                               auto_connectors: bool=None, **kwargs):
-        """Saves the canonical to the nutrition folder, auto creating the connector from template if not set"""
+        """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
         if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
-                                         self.CONNECTOR_NUTRITION, self.CONNECTOR_FIELDS]:
+                                         self.CONNECTOR_QUALITY, self.CONNECTOR_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
         if auto_connectors if isinstance(auto_connectors, bool) else True:
             if not self.pm.has_connector(report_connector_name):
@@ -400,8 +415,8 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_data_quality_summary(self, canonical: pd.DataFrame=None):
-        """Reports a nutrition summary"""
+    def report_quality_summary(self, canonical: pd.DataFrame=None):
+        """Reports a data quality summary"""
         report = {}
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
@@ -451,7 +466,7 @@ class Transition(AbstractComponent):
                                            'correlated': len(_correlated)}}
         return report
 
-    def report_data_quality(self, canonical: pd.DataFrame=None) -> dict:
+    def report_quality(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
@@ -585,7 +600,7 @@ class Transition(AbstractComponent):
         return report
 
     def report_statistics(self, canonical: pd.DataFrame=None) -> dict:
-        """A complete report of the transition"""
+        """A complete report of non parametric statistics"""
         if not isinstance(canonical, pd.DataFrame):
             pad: TransitionIntentModel = self.scratch_pad()
             canonical = self.load_source_canonical()
@@ -604,15 +619,14 @@ class Transition(AbstractComponent):
                     result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
                     _column['selection'] = result.intent.selection
                     _column['dtype'] = result.intent.dtype
-                    _column['lower'] = str(result.intent.lower)
-                    _column['upper'] = str(result.intent.upper)
+                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
                     _column['unique'] = str(result.intent.granularity)
                     _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['nulls_percent'] = str(result.stats.nulls_percent)
                 elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
-                    _dominant = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False,
-                                                                                dropna=True).index[0] / canonical.shape[0]
+                    _ = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True)
+                    _dominant = _.index[0] / canonical.shape[0]
                     _exclude_dominant = True if _dominant > 0.1 else False
                     result = DataAnalytics(self.discover.analyse_number(canonical[c], granularity=5,
                                                                         exclude_dominant=_exclude_dominant))
