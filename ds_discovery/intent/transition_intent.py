@@ -112,6 +112,7 @@ class TransitionIntentModel(AbstractIntentModel):
         _date_headers = []
         _bool_headers = []
         _cat_headers = []
+        _num_headers = []
         for c in Commons.filter_headers(df, dtype=object):
             if all(Commons.valid_date(x) for x in df[c].dropna()):
                 _date_headers.append(c)
@@ -119,6 +120,8 @@ class TransitionIntentModel(AbstractIntentModel):
                 _bool_headers.append(c)
             elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
                 _cat_headers.append(c)
+            elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+                _num_headers.append(c)
         if len(_bool_headers) > 0:
             bool_map = {1: True}
             df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)
@@ -126,7 +129,8 @@ class TransitionIntentModel(AbstractIntentModel):
             df = self.to_date_type(df, headers=_date_headers, inplace=False, save_intent=False)
         if len(_cat_headers) > 0:
             df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
-        df = self.to_numeric_type(df, dtype='number', inplace=False, save_intent=False)
+        if len(_num_headers) > 0:
+            df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
         if not inplace:
             return df
         return
