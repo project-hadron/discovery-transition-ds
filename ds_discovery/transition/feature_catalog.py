@@ -136,8 +136,14 @@ class FeatureCatalog(AbstractComponent):
         :param uri: a fully qualified uri of the source data
         :param save: (optional) if True, save to file. Default is True
         """
-        connector_contract = ConnectorContract(uri=uri, module_name=self.DEFAULT_MODULE,
-                                               handler=self.DEFAULT_SOURCE_HANDLER, **kwargs)
+        if not isinstance(uri, str) or len(uri) == 0:
+            raise ValueError("The URI must be a valid string representation of a URI")
+        _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=uri)
+        if f"_from_remote_{_schema}" in dir(self):
+            _module_name, _handler = eval(f"self._from_remote_{_schema}()", globals(), locals())
+        else:
+            _module_name, _handler = self.DEFAULT_MODULE, self.DEFAULT_PERSIST_HANDLER
+        connector_contract = ConnectorContract(uri=uri, module_name=_module_name, handler=_handler, **kwargs)
         self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
                                     save=save)
         return

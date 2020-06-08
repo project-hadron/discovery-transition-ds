@@ -16,11 +16,12 @@ class Transition(AbstractComponent):
 
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
-    CONNECTOR_DICTIONARY = 'dictionary'
-    CONNECTOR_INSIGHT = 'insight'
-    CONNECTOR_INTENT = 'intent'
-    CONNECTOR_FIELDS = 'field_description'
-    CONNECTOR_QUALITY = 'data_quality'
+    REPORT_DICTIONARY = 'dictionary'
+    REPORT_ANALYSIS = 'analysis'
+    REPORT_INTENT = 'intent'
+    REPORT_FIELDS = 'field_description'
+    REPORT_QUALITY = 'data_quality'
+    REPORT_SUMMARY = 'data_quality_summary'
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
@@ -187,8 +188,14 @@ class Transition(AbstractComponent):
         :param uri: a fully qualified uri of the source data
         :param save: (optional) if True, save to file. Default is True
         """
-        connector_contract = ConnectorContract(uri=uri, module_name=self.DEFAULT_MODULE,
-                                               handler=self.DEFAULT_SOURCE_HANDLER, **kwargs)
+        if not isinstance(uri, str) or len(uri) == 0:
+            raise ValueError("The URI must be a valid string representation of a URI")
+        _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=uri)
+        if f"_from_remote_{_schema}" in dir(self):
+            _module_name, _handler = eval(f"self._from_remote_{_schema}()", globals(), locals())
+        else:
+            _module_name, _handler = self.DEFAULT_MODULE, self.DEFAULT_PERSIST_HANDLER
+        connector_contract = ConnectorContract(uri=uri, module_name=_module_name, handler=_handler, **kwargs)
         self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
                                     save=save)
         return
@@ -233,24 +240,30 @@ class Transition(AbstractComponent):
         self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
 
-    def set_report_persist(self, report_connector_name, uri_file: str=None, save: bool=None, **kwargs):
-        """sets the report persist the TEMPLATE_PERSIST connector contract, there are preset constants that should be
-        used
+    def set_report_persist(self, connector_name: [str, list]=None, uri_file: str=None, save: bool=None, **kwargs):
+        """sets the report persist using the TEMPLATE_PERSIST connector contract, there are preset constants that
+        should be used. These constance can be found using Transition.REPORT_<NAME> or <instance>.REPORT_<NAME>
+        where <name> is the name of the report. if no report connector name is given then all the report connectors
+        are set with default values.
 
-        :param report_connector_name: the name of the report connector to set (see class CONNECTOR constants)
+        :param connector_name: (optional) the name(s) of the report connector to set (see class REPORT constants)
         :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
-        if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
-                                         self.CONNECTOR_QUALITY, self.CONNECTOR_FIELDS]:
-            raise ValueError("Report name must be one of the class report constants")
-        file_type = 'csv'
-        if report_connector_name == self.CONNECTOR_QUALITY:
-            file_type = 'yaml'
-        file_pattern = self.pm.file_pattern(connector_name=report_connector_name, file_type=file_type, versioned=True)
-        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
-        self.add_connector_from_template(connector_name=report_connector_name, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
+
+        _reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT, self.REPORT_QUALITY,
+                    self.REPORT_SUMMARY, self.REPORT_FIELDS]
+        if isinstance(connector_name, (str, list)):
+            connector_name = Commons.list_formatter(connector_name)
+            if all([x in _reports for x in connector_name]):
+                raise ValueError(f"Report name(s) {connector_name} must be from the report constants {_reports}")
+            _reports = connector_name
+        for _report in _reports:
+            file_pattern = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
+            uri_file = uri_file if isinstance(uri_file, str) else file_pattern
+            self.add_connector_from_template(connector_name=_report, uri_file=uri_file,
+                                             template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
+        return
 
     def load_source_canonical(self, **kwargs) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
@@ -288,22 +301,22 @@ class Transition(AbstractComponent):
         :return:
         """
         if isinstance(file_type, str) or isinstance(versioned, bool) or isinstance(stamped, str):
-            file_pattern = self.pm.file_pattern(self.CONNECTOR_QUALITY, file_type=file_type, versioned=versioned,
+            file_pattern = self.pm.file_pattern(self.REPORT_QUALITY, file_type=file_type, versioned=versioned,
                                                 stamped=stamped)
-            self.set_report_persist(self.CONNECTOR_QUALITY, uri_file=file_pattern)
+            self.set_report_persist(self.REPORT_QUALITY, uri_file=file_pattern)
         report = self.report_quality(canonical=canonical)
-        self.save_report_canonical(report_connector_name=self.CONNECTOR_QUALITY, report=report, auto_connectors=True)
+        self.save_report_canonical(report_connector_name=self.REPORT_QUALITY, report=report, auto_connectors=True)
         return
 
-    def save_report_canonical(self, report_connector_name, report: [dict, pd.DataFrame],
+    def save_report_canonical(self, report_connector_name: str, report: [dict, pd.DataFrame],
                               auto_connectors: bool=None, **kwargs):
         """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
-        if report_connector_name not in [self.CONNECTOR_DICTIONARY, self.CONNECTOR_INSIGHT, self.CONNECTOR_INTENT,
-                                         self.CONNECTOR_QUALITY, self.CONNECTOR_FIELDS]:
+        if report_connector_name not in [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT,
+                                         self.REPORT_QUALITY, self.REPORT_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
         if auto_connectors if isinstance(auto_connectors, bool) else True:
             if not self.pm.has_connector(report_connector_name):
-                self.set_report_persist(report_connector_name=report_connector_name)
+                self.set_report_persist(connector_name=report_connector_name)
         self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):

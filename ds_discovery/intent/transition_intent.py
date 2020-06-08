@@ -102,7 +102,8 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-        unique_max = 200 if not isinstance(unique_max, int) else unique_max
+        if not isinstance(unique_max, int):
+            unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
         null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
