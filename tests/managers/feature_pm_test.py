@@ -8,7 +8,7 @@ from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalo
 class FeaturePMTest(unittest.TestCase):
 
     def setUp(self):
-        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
+        os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
         pass
 
     def tearDown(self):

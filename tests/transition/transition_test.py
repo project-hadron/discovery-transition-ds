@@ -27,8 +27,8 @@ class TransitionTest(unittest.TestCase):
     """Test: """
     def setUp(self):
         # set environment variables
-        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
-        os.environ['AISTAC_DEFAULT_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
+        os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work', 'config')
+        os.environ['HADRON_DEFAULT_PATH'] = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw')
         try:
             shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
         except:
@@ -62,26 +62,26 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual((3, 4), df.shape)
 
     def test_from_env(self):
-        os.environ['AISTAC_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()
-        os.environ['AISTAC_PM_TYPE'] = 'pickle'
-        os.environ['AISTAC_PM_MODULE'] = 'aistac.handlers.python_handlers'
-        os.environ['AISTAC_PM_HANDLER'] = 'PythonPersistHandler'
+        os.environ['HADRON_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()
+        os.environ['HADRON_PM_TYPE'] = 'pickle'
+        os.environ['HADRON_PM_MODULE'] = 'aistac.handlers.python_handlers'
+        os.environ['HADRON_PM_HANDLER'] = 'PythonPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
-        self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
-        self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
+        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
+        self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
-        os.environ['AISTAC_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
-        os.environ['AISTAC_PM_HANDLER'] = 'PandasPersistHandler'
+        os.environ['HADRON_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
+        os.environ['HADRON_PM_HANDLER'] = 'PandasPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['AISTAC_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
-        self.assertEqual( os.environ['AISTAC_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
-        self.assertEqual(os.environ['AISTAC_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
+        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
+        self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
-        os.unsetenv('AISTAC_PM_PATH')
-        os.unsetenv('AISTAC_PM_TYPE')
-        os.unsetenv('AISTAC_PM_MODULE')
-        os.unsetenv('AISTAC_PM_HANDLER')
+        os.unsetenv('HADRON_PM_PATH')
+        os.unsetenv('HADRON_PM_TYPE')
+        os.unsetenv('HADRON_PM_MODULE')
+        os.unsetenv('HADRON_PM_HANDLER')
 
     def test_transition_summary_report(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
@@ -107,7 +107,7 @@ class TransitionTest(unittest.TestCase):
     #     pm = TransitionPropertyManager('task')
     #     im = TransitionIntentModel(pm)
     #     instance = Transition(pm, im)
-    #     instance._init_properties(pm, os.environ['AISTAC_PM_PATH'])
+    #     instance._init_properties(pm, os.environ['HADRON_PM_PATH'])
     #     sc = ConnectorContract(uri='synthetic_customer.csv',
     #                            module_name=instance.PYTHON_MODULE_NAME, handler=instance.PYTHON_HANDLER, sep=',', encoding='latin1')
     #     instance.set_source_contract(connector_contract=sc)

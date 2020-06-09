@@ -8,7 +8,7 @@ from ds_discovery.managers.transition_property_manager import TransitionProperty
 class TransitionPMTest(unittest.TestCase):
 
     def setUp(self):
-        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
+        os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
         pass
 
     def tearDown(self):

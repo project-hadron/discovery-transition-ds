@@ -12,11 +12,11 @@ from ds_discovery.transition.feature_catalog import FeatureCatalog
 class MyTestCase(unittest.TestCase):
 
     def setUp(self):
-        os.environ['AISTAC_PM_PATH'] = os.path.join('work', 'config')
-        os.environ['AISTAC_DEFAULT_PATH'] = os.path.join('work', 'data')
+        os.environ['HADRON_PM_PATH'] = os.path.join('work', 'config')
+        os.environ['HADRON_DEFAULT_PATH'] = os.path.join('work', 'data')
         try:
-            os.makedirs(os.environ['AISTAC_PM_PATH'])
-            os.makedirs(os.environ['AISTAC_DEFAULT_PATH'])
+            os.makedirs(os.environ['HADRON_PM_PATH'])
+            os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
         except:
             pass
         PropertyManager._remove_all()

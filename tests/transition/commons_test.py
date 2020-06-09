@@ -10,7 +10,7 @@ from build.lib.ds_discovery.transition.commons import Commons
 class CommonsTest(unittest.TestCase):
 
     def setUp(self):
-        os.environ['AISTAC_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
+        os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
         self.tools = SyntheticBuilder.from_env('tester', default_save=False, default_save_intent=False).intent_model
 
     def tearDown(self):

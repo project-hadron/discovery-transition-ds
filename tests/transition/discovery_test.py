@@ -17,8 +17,8 @@ class TestDiscovery(unittest.TestCase):
 
     def setUp(self):
         # set environment variables
-        os.environ['AISTAC_PM_PATH'] = os.path.join("${PWD}", 'work', 'config')
-        os.environ['AISTAC_DEFAULT_SOURCE_PATH'] = os.path.join("${HOME}", 'code', 'projects',  'data', 'sample')
+        os.environ['HADRON_PM_PATH'] = os.path.join("${PWD}", 'work', 'config')
+        os.environ['HADRON_DEFAULT_SOURCE_PATH'] = os.path.join("${HOME}", 'code', 'projects',  'data', 'sample')
         PropertyManager._remove_all()
         try:
             shutil.rmtree('work')

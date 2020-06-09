@@ -203,10 +203,10 @@ them to a demo projects folder
 .. code-block:: bash
 
     # where to find the properties contracts
-    export AISTAC_PM_PATH=~/projects/demo/contracts
+    export HADRON_PM_PATH=~/projects/demo/contracts
 
     # The default path for the source and the persisted data
-    export AISTAC_DEFAULT_PATH=~/projects/demo/data
+    export HADRON_DEFAULT_PATH=~/projects/demo/data
 
 3. In addition to the default environment variables you can set specific component environment variables. This is
 particularly useful with the Transition component as source data tends to sit separate from our interim storage.
@@ -215,7 +215,7 @@ For Transition you replace the ``DEFAULT`` with ``TRANSITION``, and in this case
 .. code-block:: bash
 
     # specific to te transition component source path
-    export AISTAC_TRANSITION_SOURCE_PATH=/tmp/data/sftp
+    export HADRON_TRANSITION_SOURCE_PATH=/tmp/data/sftp
 
 4. save your changes
 5. re-run your bash_profile and check the variables have been set
@@ -306,7 +306,7 @@ need to be set again.
 Source Contract
 ~~~~~~~~~~~~~~~
 Firstly we need to set up the 'Source Contract' that specifies the data to be sourced. Because we are taking advantage
-of the environment variable ``AISTAC_TRANSITION_SOURCE_PATH`` we only need to pass the source file name. In this
+of the environment variable ``HADRON_TRANSITION_SOURCE_PATH`` we only need to pass the source file name. In this
 example we are also going to pass two 'optional' extra parameters that get passed directly to the Source reader,
 ``sep=`` and ``encoding=``
 
