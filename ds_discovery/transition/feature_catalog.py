@@ -12,7 +12,7 @@ from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 class FeatureCatalog(AbstractComponent):
 
-    CONNECTOR_SOURCE = 'source_connector'
+    CONNECTOR_SOURCE = 'primary_source'
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):

@@ -69,22 +69,23 @@ class IntentModelTest(unittest.TestCase):
 
     def test_auto_transition(self):
         tools = self.tools
-        sample_size = 10
+        sample_size = 100
         df = pd.DataFrame()
         df['nums'] = tools.get_number(1, 100, size=sample_size)
-        df['num_str'] = tools.get_category(list('12345'), size=sample_size)
-        df['bools'] = tools.get_category([True, False], size=sample_size)
-        df['bool_str'] = tools.get_category(['1', '0'], size=sample_size)
-        df['bool_num'] = tools.get_category([1, 0], size=sample_size)
-        df['cats'] = tools.get_category(list('ABC'), size=sample_size)
+        df['floats'] = tools.get_number(1, 100, quantity=0.9, size=sample_size)
+        df['num_str'] = tools.get_category(list(range(100)), quantity=0.9, size=sample_size)
+        df['bools'] = tools.get_category([True, False], quantity=0.9, size=sample_size)
+        df['bool_str'] = tools.get_category(['1', '0'], quantity=0.9, size=sample_size)
+        df['bool_num'] = tools.get_category([1, 0], quantity=0.9, size=sample_size)
+        df['cats'] = tools.get_category(list('ABC'), quantity=0.9, size=sample_size)
         df = self.clean.auto_transition(df)
         self.assertTrue(df['nums'].dtype.name.startswith('int'))
-        self.assertTrue(df['num_str'].dtype.name.startswith('int'))
+        self.assertTrue(df['floats'].dtype.name.startswith('float'))
+        self.assertTrue(df['num_str'].dtype.name.startswith('float'))
         self.assertTrue(df['bools'].dtype.name.startswith('bool'))
         self.assertTrue(df['bool_str'].dtype.name.startswith('category'))
         self.assertTrue(df['bool_num'].dtype.name.startswith('bool'))
         self.assertTrue(df['cats'].dtype.name.startswith('category'))
-
 
     def test_auto_remove(self):
         tools = self.tools
