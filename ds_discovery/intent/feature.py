@@ -1,17 +1,10 @@
-import inspect
-import threading
-from copy import deepcopy
 from typing import Any
+
 import pandas as pd
-import numpy as np
-import matplotlib.dates as mdates
-from aistac.intent.abstract_intent import AbstractIntentModel
-from aistac.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
-from ds_discovery.transition.commons import Commons, DataAnalytics
-from ds_discovery.transition.discovery import DataDiscovery
+from ds_discovery.transition.commons import Commons
 
 
 class Feature(object):

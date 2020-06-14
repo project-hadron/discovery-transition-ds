@@ -1,6 +1,5 @@
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
 from aistac.properties.ledger_property_manager import LedgerPropertyManager
 

@@ -9,12 +9,13 @@ https://packaging.python.org/guides/single-sourcing-package-version/
 
 """
 
-# Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+import re
 # To use a consistent encoding
 from codecs import open
 from os import path
-import re
+
+# Always prefer setuptools over distutils
+from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
@@ -65,8 +66,6 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'aistac-foundation',
-        'aistac-foundation[yaml]',
-        'aistac-foundation[aistac-ds]',
         'matplotlib',
         'seaborn',
         'sklearn',

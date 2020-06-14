@@ -1,8 +1,7 @@
-import unittest
 import os
 import shutil
+import unittest
 
-from ds_behavioral import SyntheticBuilder
 from aistac.handlers.abstract_handlers import ConnectorContract
 
 from ds_discovery.handlers.pandas_handlers import PandasSourceHandler, PandasPersistHandler

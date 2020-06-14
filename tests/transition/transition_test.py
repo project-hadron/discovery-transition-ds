@@ -1,25 +1,14 @@
 import os
 import shutil
 import unittest
+from pathlib import Path
 from pprint import pprint
 
-import numpy as np
 import pandas as pd
-
-from pathlib import Path
-
-from ds_behavioral import SyntheticBuilder
-from ds_behavioral.sample.sample_data import ProfileSample
-from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
-from aistac.intent.python_cleaners_intent import PythonCleanersIntentModel
-from aistac.properties.abstract_properties import AbstractPropertyManager
-
-from ds_discovery import Transition
 from aistac.properties.property_manager import PropertyManager
 
-from ds_discovery.intent.transition_intent import TransitionIntentModel
-from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
+from ds_discovery import Transition
 
 
 class TransitionTest(unittest.TestCase):

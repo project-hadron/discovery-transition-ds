@@ -1,9 +1,11 @@
-import pandas as pd
-import numpy as np
 import uuid
-import ds_discovery
-from aistac.handlers.abstract_handlers import ConnectorContract
+
+import numpy as np
+import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
+from aistac.handlers.abstract_handlers import ConnectorContract
+
+import ds_discovery
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.commons import Commons, DataAnalytics
@@ -46,7 +48,7 @@ class Transition(AbstractComponent):
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, pm_file_type: str=None, pm_module: str=None,
                  pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
                  align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
-                 order_next_available: bool=None, default_replace_intent: bool=None):
+                 order_next_available: bool=None, default_replace_intent: bool=None) -> 'Transition':
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -181,35 +183,6 @@ class Transition(AbstractComponent):
         """ gets the persist connector contract that can be used as the next chain source"""
         return self.pm.get_connector_contract(self.CONNECTOR_PERSIST)
 
-    def set_source_uri(self, uri: str, save: bool=None, **kwargs):
-        """ Sets the source contract giving the full uri path. This is a shortcut of set_source_contract(...), not
-        requiring a ConnectorContract to be set up and using the default module and handler values.
-
-        :param uri: a fully qualified uri of the source data
-        :param save: (optional) if True, save to file. Default is True
-        """
-        if not isinstance(uri, str) or len(uri) == 0:
-            raise ValueError("The URI must be a valid string representation of a URI")
-        _schema, _netloc, _path = ConnectorContract.parse_address_elements(uri=uri)
-        if f"_from_remote_{_schema}" in dir(self):
-            _module_name, _handler = eval(f"self._from_remote_{_schema}()", globals(), locals())
-        else:
-            _module_name, _handler = self.DEFAULT_MODULE, self.DEFAULT_PERSIST_HANDLER
-        connector_contract = ConnectorContract(uri=uri, module_name=_module_name, handler=_handler, **kwargs)
-        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
-                                    save=save)
-        return
-
-    def set_source_contract(self, connector_contract: ConnectorContract, save: bool=None):
-        """ Sets the source contract
-
-        :param connector_contract: a Connector Contract for the source data
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.add_connector_contract(connector_name=self.CONNECTOR_SOURCE, connector_contract=connector_contract,
-                                    save=save)
-        return
-
     def set_persist_contract(self, connector_contract: ConnectorContract, save: bool=None):
         """ Sets the persist contract.
 
@@ -219,15 +192,6 @@ class Transition(AbstractComponent):
         self.add_connector_contract(connector_name=self.CONNECTOR_PERSIST, connector_contract=connector_contract,
                                     save=save)
         return
-
-    def set_source(self, uri_file: str, save: bool=None, **kwargs):
-        """sets the source contract CONNECTOR_SOURCE using the TEMPLATE_SOURCE connector contract,
-
-        :param uri_file: the uri_file is appended to the template path
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.add_connector_from_template(connector_name=self.CONNECTOR_SOURCE, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_SOURCE, save=save, **kwargs)
 
     def set_persist(self, uri_file: str=None, save: bool=None, **kwargs):
         """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
@@ -428,7 +392,7 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_quality_summary(self, canonical: pd.DataFrame=None):
+    def report_quality_summary(self, canonical: pd.DataFrame=None, as_dict: bool=False , stylise: bool=True):
         """Reports a data quality summary"""
         report = {}
         if not isinstance(canonical, pd.DataFrame):
@@ -466,17 +430,16 @@ class Transition(AbstractComponent):
         _usable = int(round(100 - (len(_usable_fields) / canonical.columns.size) * 100, 2))
         _field_avg = int(round(_descibed_count / canonical.shape[1] * 100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
-        report['score'] = {'quality_avg': _quality_avg, 'usability_avg': _usable,
-                           'provenance_complete': _prov_avg, 'data_described': _field_avg}
-
-        report['summary'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
-                                            'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
-                             'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                           'datetime': _date_fields, 'bool': _bool_fields,
-                                           'others': _other_fields},
-                             'usability': {'mostly_null': len(_null_columns),
-                                           'predominance': len(_dom_columns),
-                                           'correlated': len(_correlated)}}
+        report = {'score': {'quality_avg': _quality_avg, 'usability_avg': _usable,
+                            'provenance_complete': _prov_avg, 'data_described': _field_avg},
+                  'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
+                                 'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
+                  'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                'datetime': _date_fields, 'bool': _bool_fields,
+                                'others': _other_fields},
+                  'usability': {'mostly_null': len(_null_columns),
+                                'predominance': len(_dom_columns),
+                                'correlated': len(_correlated)}}
         return report
 
     def report_quality(self, canonical: pd.DataFrame=None) -> dict:
@@ -751,3 +714,12 @@ class Transition(AbstractComponent):
                     colname = corr_matrix.columns[i]  # getting the name of column
                     col_corr.add(colname)
         return col_corr
+
+    def _auto_transition(self, canonical: pd.DataFrame) -> [pd.DataFrame, None]:
+        """ attempts auto transition on a canonical """
+        if not isinstance(canonical, pd.DataFrame):
+            pad: TransitionIntentModel = self.scratch_pad()
+            canonical = self.load_source_canonical()
+            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
+            return pad.auto_transition(canonical, unique_max=unique_max)
+        return None

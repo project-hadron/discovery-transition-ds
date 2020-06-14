@@ -1,17 +1,15 @@
-import shutil
-from pprint import pprint
 import os
-import pandas as pd
-import numpy as np
-import seaborn as sns
+import shutil
 import unittest
+from pprint import pprint
 
+import numpy as np
+import pandas as pd
 from aistac.properties.property_manager import PropertyManager
-
-from ds_discovery import Transition
-from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
-from ds_discovery.transition.commons import DataAnalytics
 from ds_behavioral import SyntheticBuilder
+
+from ds_discovery.transition.commons import DataAnalytics
+from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
 
 
 class DiscoveryAnalysisMethod(unittest.TestCase):

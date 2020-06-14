@@ -4,16 +4,11 @@ import unittest
 
 import numpy as np
 import pandas as pd
-import matplotlib.dates as mdates
-
 from aistac.properties.property_manager import PropertyManager
-
 from ds_behavioral import SyntheticBuilder
-from ds_behavioral.sample.sample_data import ProfileSample
-from aistac.handlers.abstract_handlers import ConnectorContract
 
 from ds_discovery import Transition
-from ds_discovery.intent.transition_intent import TransitionIntentModel as Cleaner, TransitionIntentModel
+from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.commons import Commons
 

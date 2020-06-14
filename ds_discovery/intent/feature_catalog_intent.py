@@ -2,19 +2,18 @@ import inspect
 from copy import deepcopy
 from typing import Any
 
-import pandas as pd
-from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
-import numpy as np
 import matplotlib.dates as mdates
-
+import numpy as np
+import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
+from ds_behavioral.components.synthetic_builder import SyntheticBuilder
+from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.transition.commons import Commons, DataAnalytics
 from ds_discovery.transition.discovery import DataDiscovery
 # scratch_pads
 from ds_discovery.transition.transitioning import Transition
-from ds_behavioral.components.synthetic_builder import SyntheticBuilder
 
 __author__ = 'Darryl Oatridge'
 

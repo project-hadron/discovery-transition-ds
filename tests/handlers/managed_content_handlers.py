@@ -1,8 +1,10 @@
 import threading
 from io import StringIO, BytesIO
+
+import boto3
 import pandas as pd
 from botocore.exceptions import ClientError
-import boto3
+
 try:
     import cPickel as pickle
 except ImportError:

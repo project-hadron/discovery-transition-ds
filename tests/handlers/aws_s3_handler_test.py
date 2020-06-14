@@ -1,12 +1,11 @@
-import unittest
 import os
 import shutil
+import unittest
 from datetime import datetime
 
 from ds_behavioral import DataBuilderTools
-from ds_foundation.handlers.abstract_handlers import ConnectorContract
-
 from ds_connectors.handlers.aws_s3_handlers import AwsS3SourceHandler, AwsS3PersistHandler
+from ds_foundation.handlers.abstract_handlers import ConnectorContract
 
 
 class AwsS3HandlerTest(unittest.TestCase):

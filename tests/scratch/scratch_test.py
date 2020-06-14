@@ -2,6 +2,7 @@ import unittest
 
 import pandas as pd
 
+
 class ScratchTest(unittest.TestCase):
     """Test: """
 

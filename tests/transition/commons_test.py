@@ -1,17 +1,20 @@
-import unittest
 import os
 import shutil
+import unittest
+
 import pandas as pd
 from ds_behavioral import SyntheticBuilder
+from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
 
-from build.lib.ds_discovery.transition.commons import Commons
+from ds_discovery.transition.commons import Commons
 
 
 class CommonsTest(unittest.TestCase):
 
     def setUp(self):
         os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
-        self.tools = SyntheticBuilder.from_env('tester', default_save=False, default_save_intent=False).intent_model
+        self.tools: SyntheticIntentModel = SyntheticBuilder.from_env('tester', default_save=False,
+                                                                     default_save_intent=False).intent_model
 
     def tearDown(self):
         try:
@@ -40,6 +43,16 @@ class CommonsTest(unittest.TestCase):
         result = Commons.filter_headers(df, dtype=['number'])
         control = ['weight_num', 'normal_num', 'single num']
         self.assertCountEqual(control, result)
+
+    def test_canonical_formatter(self):
+        tools = self.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['int'] = tools.get_number(1, 10, size=sample_size)
+        df['float'] = tools.get_number(-1, 1, size=sample_size)
+        df['bool'] = tools.get_category([1,0], size=sample_size)
+        df['cat'] = tools.get_category(list('ABCDEF'), size=sample_size)
+        df['object'] = tools.get_string_pattern("cccccccc", size=sample_size)
 
 
 if __name__ == '__main__':

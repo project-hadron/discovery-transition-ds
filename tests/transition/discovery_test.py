@@ -1,11 +1,10 @@
-import shutil
-from pprint import pprint
 import os
-import pandas as pd
-import numpy as np
-import seaborn as sns
+import shutil
 import unittest
 
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Transition

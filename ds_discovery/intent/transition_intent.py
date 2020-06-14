@@ -1,16 +1,16 @@
+import datetime
 import inspect
 import threading
 from builtins import staticmethod
 from copy import deepcopy
-import datetime
+
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
-import matplotlib.dates as mdates
-
 from aistac.intent.abstract_intent import AbstractIntentModel
 
-from ds_discovery.transition.commons import Commons
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
+from ds_discovery.transition.commons import Commons
 
 __author__ = 'Darryl Oatridge'
 

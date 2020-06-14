@@ -1,13 +1,12 @@
+import json
 import os
-from contextlib import closing
+import pickle
 import threading
+from contextlib import closing
+
 import pandas as pd
 import requests
 import yaml
-import pickle
-import json
-
-
 from aistac.handlers.abstract_handlers import AbstractSourceHandler, ConnectorContract, AbstractPersistHandler
 
 __author__ = 'Darryl Oatridge'

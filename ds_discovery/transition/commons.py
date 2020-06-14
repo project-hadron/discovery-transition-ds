@@ -3,6 +3,7 @@ import threading
 from copy import deepcopy
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from aistac.components.aistac_commons import AistacCommons, AnalyticsCommons
 

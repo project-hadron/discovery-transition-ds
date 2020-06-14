@@ -1,6 +1,6 @@
-import numpy as np
 import unittest
 
+import numpy as np
 import pandas as pd
 
 from ds_discovery.transition.discovery import Visualisation

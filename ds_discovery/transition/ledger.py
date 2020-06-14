@@ -1,6 +1,9 @@
 from aistac.components.abstract_ledger_component import AbstractLedger
 from aistac.properties.ledger_property_manager import LedgerPropertyManager
 
+from ds_discovery.intent.ledger_intent import LedgerIntentModel
+
+
 class Ledger(AbstractLedger):
 
     def __init__(self, property_manager: LedgerPropertyManager, intent_model: LedgerIntentModel,
@@ -35,13 +38,13 @@ class Ledger(AbstractLedger):
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
-        pm_module = pm_module if isinstance(pm_module, str) else 'aistac.handlers.python_handlers'
-        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PythonPersistHandler'
-        _pm = ExamplePropertyManager(task_name=task_name, username=username)
-        _intent_model = ExampleIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                           default_intent_level=default_intent_level,
-                                           order_next_available=order_next_available,
-                                           default_replace_intent=default_replace_intent)
+        pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
+        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
+        _pm = LedgerPropertyManager(task_name=task_name, username=username)
+        _intent_model = LedgerIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                          default_intent_level=default_intent_level,
+                                          order_next_available=order_next_available,
+                                          default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
                                  pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,

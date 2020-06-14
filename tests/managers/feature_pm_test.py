@@ -1,6 +1,6 @@
-import unittest
 import os
 import shutil
+import unittest
 
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 

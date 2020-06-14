@@ -1,6 +1,6 @@
-import unittest
 import os
 import shutil
+import unittest
 
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 
