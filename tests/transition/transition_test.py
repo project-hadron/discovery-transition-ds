@@ -77,8 +77,19 @@ class TransitionTest(unittest.TestCase):
         cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
-        report = tr.report_quality_summary()
-        pprint(report)
+        report = tr.report_quality_summary(as_dict=True)
+        control = {'data_shape': {'columns': 15, 'memory': '293.6KB', 'rows': 1000},
+                   'data_type': {'bool': 2,
+                                 'category': 5,
+                                 'datetime': 1,
+                                 'numeric': 3,
+                                 'others': 0},
+                   'score': {'data_described': 0,
+                             'provenance_complete': 0,
+                             'quality_avg': 74,
+                             'usability_avg': 93},
+                   'usability': {'correlated': 0, 'mostly_null': 1, 'predominance': 1}}
+        self.assertDictEqual(control, report)
 
     def test_report_statistics(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)

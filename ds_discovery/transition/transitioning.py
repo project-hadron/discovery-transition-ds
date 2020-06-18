@@ -4,8 +4,6 @@ import numpy as np
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
-
-import ds_discovery
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.transition.commons import Commons, DataAnalytics
@@ -160,21 +158,6 @@ class Transition(AbstractComponent):
         self.pm.reset_provenance()
         self.pm_persist(save)
 
-    def set_insight(self, blueprint: dict, endpoints: list=None, save: bool=None):
-        """sets the insight analysis parameters
-
-        :param blueprint: the analysis blueprint of what to analysis and how
-        :param endpoints: (optional) the endpoints, if any, where the tree ends
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.pm.set_insight(blueprint=blueprint, endpoints=endpoints)
-        self.pm_persist(save)
-
-    def reset_insight(self, save: bool=None):
-        """resets the insight back to its default"""
-        self.pm.reset_insight()
-        self.pm_persist(save)
-
     def is_source_modified(self):
         """Test if the source file is modified since last load"""
         return self.pm.is_connector_modified(self.CONNECTOR_SOURCE)
@@ -325,14 +308,19 @@ class Transition(AbstractComponent):
         df_dd.set_index(keys=f'Attributes ({len(canonical.columns)})', inplace=True)
         return df_dd
 
-    def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
+    def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
+                          stylise: bool=True):
         """ generates a report on the source contract
 
         :param connector_filter: (optional) filters on the connector name.
+        :param inc_pm: (optional) include the property manager connector
+        :param inc_template: (optional) include the template connectors
         :param stylise: (optional) returns a stylised DataFrame with formatting
         :return: pd.DataFrame
         """
-        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
+        report = self.pm.report_connectors(connector_filter=connector_filter, inc_pm=inc_pm,
+                                           inc_template=inc_template)
+        df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
             Commons.report(df, index_header='connector_name')
         df.set_index(keys='connector_name', inplace=True)
@@ -392,14 +380,18 @@ class Transition(AbstractComponent):
         df.set_index(keys='provenance', inplace=True)
         return df
 
-    def report_quality_summary(self, canonical: pd.DataFrame=None, as_dict: bool=False , stylise: bool=True):
-        """Reports a data quality summary"""
-        report = {}
+    def report_quality_summary(self, canonical: pd.DataFrame=None, as_dict: bool=None, stylise: bool=None):
+        """ a summary quality report of the canonical
+
+        :param canonical: (optional) the canonical to be sumarised. If not passed then loads the canonical source
+        :param as_dict: (optional) if the result should be a dictionary. Default is False
+        :param stylise: (optional) if as_dict is False, if the return dataFrame should be stylised
+        :return: a dict or pd.DataFrame
+        """
+        as_dict = as_dict if isinstance(as_dict, bool) else False
+        stylise = stylise if isinstance(stylise, bool) else True
         if not isinstance(canonical, pd.DataFrame):
-            pad: TransitionIntentModel = self.scratch_pad()
-            canonical = self.load_source_canonical()
-            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
-            canonical = pad.auto_transition(canonical, unique_max=unique_max)
+            canonical = self._auto_transition()
         # provinance
         _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author']
         _provenance_count = len(list(filter(lambda x: x in _provenance_headers, self.pm.provenance.keys())))
@@ -430,8 +422,8 @@ class Transition(AbstractComponent):
         _usable = int(round(100 - (len(_usable_fields) / canonical.columns.size) * 100, 2))
         _field_avg = int(round(_descibed_count / canonical.shape[1] * 100, 0))
         _prov_avg = int(round(_provenance_count/6*100, 0))
-        report = {'score': {'quality_avg': _quality_avg, 'usability_avg': _usable,
-                            'provenance_complete': _prov_avg, 'data_described': _field_avg},
+        report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%",
+                            'provenance_complete': f"{_prov_avg}%", 'data_described': f"{_field_avg}%"},
                   'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
                                  'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
                   'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
@@ -440,18 +432,28 @@ class Transition(AbstractComponent):
                   'usability': {'mostly_null': len(_null_columns),
                                 'predominance': len(_dom_columns),
                                 'correlated': len(_correlated)}}
-        return report
+        if as_dict:
+            return report
+        df = pd.DataFrame(columns=['report', 'summary', 'result'])
+        counter = 0
+        for index, values in report.items():
+            for summary, result in values.items():
+                df.loc[counter] = [index, summary, result]
+                counter += 1
+        if stylise:
+            Commons.report(df, index_header='report', bold='summary')
+        df.set_index(keys='report', inplace=True)
+        return df
 
     def report_quality(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of the transition"""
         if not isinstance(canonical, pd.DataFrame):
-            pad: TransitionIntentModel = self.scratch_pad()
-            canonical = self.load_source_canonical()
-            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
-            canonical = pad.auto_transition(canonical, unique_max=unique_max)
+            canonical = self._auto_transition()
         # meta
-        report = {'_meta-data': {'uid': str(uuid.uuid4()),
-                                 'created': str(pd.Timestamp.now())}}
+        report = {'meta-data': {'uid': str(uuid.uuid4()),
+                                'created': str(pd.Timestamp.now()),
+                                'creator': self.pm.username},
+                  'summary': self.report_quality_summary(canonical, as_dict=True)}
         # connectors
         _connectors = {}
         for connector in self.pm.connector_contract_list:
@@ -491,20 +493,9 @@ class Transition(AbstractComponent):
             _fields[label] = Commons.list_formatter(items.values())
             if label in canonical.columns:
                 _field_count += 1
-        report['fields'] = _fields
+        report['attributes'] = _fields
         # dictionary
-        _null_total = 0
-        _dom_fields = 0
-        _numeric_fields = 0
-        _category_fields = 0
-        _date_fields = 0
-        _bool_fields = 0
-        _other_fields = 0
         _data_dict = {}
-        _null_columns = set()
-        _dom_columns = set()
-        _date_columns = set()
-        _numeric_columns = set()
         for _, row in self.canonical_report(canonical, stylise=False).iterrows():
             _data_dict[row.iloc[0]] = {}
             _att_name = None
@@ -512,33 +503,6 @@ class Transition(AbstractComponent):
                 if index.startswith('Attribute'):
                     _att_name = row.loc[index]
                     continue
-                if index.startswith('%_Null'):
-                    _null_total += row.loc[index]
-                    if row.loc[index] > 0.98:
-                        _null_columns.add(_att_name)
-                if index.startswith('%_Dom') and row.loc[index] > 0.98:
-                    _dom_columns.add(_att_name)
-                    _dom_fields += 1
-                if index.startswith('dType'):
-                    if row.loc[index].startswith('int') or row.loc[index].startswith('float'):
-                        _numeric_fields += 1
-                        _numeric_columns.add(_att_name)
-                    elif row.loc[index].startswith('category'):
-                        _category_fields += 1
-                    elif row.loc[index].startswith('date'):
-                        _date_fields += 1
-                        _date_columns.add(_att_name)
-                    elif row.loc[index].startswith('bool'):
-                        _bool_fields += 1
-                    else:
-                        if any(Commons.valid_date(x) for x in canonical[_att_name]):
-                            _date_fields += 1
-                            _date_columns.add(_att_name)
-                        elif canonical[_att_name].nunique() < 100 and \
-                                canonical[canonical[_att_name].isnull()].size < (canonical.size * 0.8):
-                            _category_fields += 1
-                        else:
-                            _other_fields += 1
                 _data_dict[row.iloc[0]].update({index: row.loc[index]})
         report['dictionary'] = _data_dict
         # notes
@@ -548,44 +512,12 @@ class Transition(AbstractComponent):
 
         report['transition'] = {'description': self.pm.description,
                                 'notes': _notes}
-        _null_avg = _null_total / canonical.shape[1]
-        _dom_avg = _dom_fields / canonical.shape[1]
-        _quality_avg = int(round(100 - (((_null_avg + _dom_avg)/2)*100), 0))
-        _correlated = self._correlated_columns(canonical)
-        _usable = set(_null_columns).union(_dom_columns).union(_correlated)
-        _usable = int(round(100 - (len(_usable) / canonical.columns.size) * 100, 2))
-        _field_avg = int(round(_field_count / canonical.shape[1] * 100, 0))
-        _prov_avg = int(round(_provenance_count/6*100, 0))
-        report['score'] = {'quality_avg': _quality_avg, 'usability_avg': _usable,
-                           'provenance_complete': _prov_avg, 'data_described': _field_avg}
-        report['versions'] = {'component': {'name': self.pm.manager_name(),
-                                            'version': ds_discovery.__version__},
-                              'task': {'name': self.pm.task_name,
-                                       'version': self.pm.version},
-                              'source': {'name': self.CONNECTOR_SOURCE,
-                                         'version': self.pm.get_connector_contract(self.CONNECTOR_SOURCE).version}}
-        # Raw Measures
-        report['summary'] = {'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
-                                            'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
-                             'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                           'datetime': _date_fields, 'bool': _bool_fields,
-                                           'others': _other_fields},
-                             'usability': {'mostly_null': len(_null_columns),
-                                           'predominance': len(_dom_columns),
-                                           'correlated': len(_correlated)}}
         return report
 
     def report_statistics(self, canonical: pd.DataFrame=None) -> dict:
         """A complete report of non parametric statistics"""
         if not isinstance(canonical, pd.DataFrame):
-            pad: TransitionIntentModel = self.scratch_pad()
-            canonical = self.load_source_canonical()
-            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(
-                canonical.shape[0])
-            canonical = pad.auto_transition(canonical, unique_max=unique_max)
-        # meta
-        report = {'_meta-data': {'uid': str(uuid.uuid4()),
-                                 'created': str(pd.Timestamp.now())}}
+            canonical = self._auto_transition()
         # analysis
         _analysis_dict = {}
         for c in canonical.columns.sort_values().values:
@@ -614,7 +546,6 @@ class Transition(AbstractComponent):
                     _column['intervals'] = _selection
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['granularity'] = result.intent.granularity
                     _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                     _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
                     _column['weight_std'] = [str(x) for x in result.patterns.weight_pattern]
@@ -635,7 +566,6 @@ class Transition(AbstractComponent):
                     _column['intervals'] = result.intent.selection
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['granularity'] = result.intent.granularity
                     _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['nulls_percent'] = str(result.stats.nulls_percent)
@@ -715,11 +645,11 @@ class Transition(AbstractComponent):
                     col_corr.add(colname)
         return col_corr
 
-    def _auto_transition(self, canonical: pd.DataFrame) -> [pd.DataFrame, None]:
+    def _auto_transition(self) -> pd.DataFrame:
         """ attempts auto transition on a canonical """
-        if not isinstance(canonical, pd.DataFrame):
-            pad: TransitionIntentModel = self.scratch_pad()
-            canonical = self.load_source_canonical()
-            unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
-            return pad.auto_transition(canonical, unique_max=unique_max)
-        return None
+        pad: TransitionIntentModel = self.scratch_pad()
+        if not self.pm.has_connector(self.CONNECTOR_SOURCE):
+            raise ConnectionError("Unable to load Source canonical as the Source Connector has not been set")
+        canonical = self.load_source_canonical()
+        unique_max = np.log2(canonical.shape[0]) ** 2 if canonical.shape[0] > 50000 else np.sqrt(canonical.shape[0])
+        return pad.auto_transition(canonical, unique_max=unique_max)

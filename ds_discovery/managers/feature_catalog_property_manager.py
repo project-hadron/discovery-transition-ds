@@ -1,8 +1,7 @@
 from aistac.properties.abstract_properties import AbstractPropertyManager
+from ds_discovery.transition.commons import Commons
 
 __author__ = 'Darryl Oatridge'
-
-from ds_discovery.transition.commons import Commons
 
 
 class FeatureCatalogPropertyManager(AbstractPropertyManager):

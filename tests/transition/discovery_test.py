@@ -34,6 +34,11 @@ class TestDiscovery(unittest.TestCase):
         except:
             pass
 
+    def test_interquartile_outliers(self):
+        expo = pd.Series(np.random.exponential(size=10000))
+        result = DataDiscovery.interquartile_outliers(expo)
+        print(result)
+
     def test_bootstrap_confidence_interval(self):
         normal = pd.Series(np.random.normal(size=10000))
         expo = pd.Series(np.random.exponential(size=10000))

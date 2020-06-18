@@ -1,16 +1,14 @@
+from ds_discovery.transition.commons import Commons
 from aistac.properties.abstract_properties import AbstractPropertyManager
 
 __author__ = 'Darryl Oatridge'
-
-from ds_discovery.transition.commons import Commons
 
 
 class TransitionPropertyManager(AbstractPropertyManager):
 
     def __init__(self, task_name: str, username: str):
         # set additional keys
-        root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author']},
-                     {'insight': ['blueprint', 'endpoints']}]
+        root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author']}]
         knowledge_keys = ['transition', 'observations', 'actions', 'attributes']
         super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
 
@@ -61,31 +59,6 @@ class TransitionPropertyManager(AbstractPropertyManager):
         """resets provenance back to its default values"""
         self._base_pm.remove(self.KEY.provenance_key)
         self.set(self.KEY.provenance_key, {})
-        return
-
-    @property
-    def insight(self) -> (dict, list):
-        """The insight analysis parameters, returning a tuple of blueprint and endpoints """
-        blueprint: dict = self.get(self.KEY.insight.blueprint_key, {})
-        endpoints: list = self.get(self.KEY.insight.endpoints_key, [])
-        return blueprint, endpoints
-
-    def set_insight(self, blueprint: dict, endpoints: list=None):
-        """sets the insight analysis parameters. This removes any current insight values
-
-        :param blueprint: the analysis blueprint of what to analysis and how
-        :param endpoints: the endpoints, if any, where the tree ends
-        """
-        self.reset_insight()
-        self.set(self.KEY.insight.blueprint_key, blueprint)
-        if isinstance(endpoints, list):
-            self.set(self.KEY.insight.endpoints_key, endpoints)
-        return
-
-    def reset_insight(self):
-        """resets the insights back to default"""
-        self._base_pm.remove(self.KEY.insight_key)
-        self.set(self.KEY.insight_key, {})
         return
 
     @staticmethod

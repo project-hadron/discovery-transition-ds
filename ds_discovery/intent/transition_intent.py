@@ -640,6 +640,8 @@ class TransitionIntentModel(AbstractIntentModel):
         for c in obj_cols:
             for item in nulls_list:
                 df[c] = df[c].replace(item, fill_nulls)
+            if all(df[c].str.isalnum()):
+                df[c] = df[c].str.strip()
             df[c] = df[c].astype('category')
             if as_num:
                 df[c] = df[c].cat.codes
@@ -895,10 +897,12 @@ class TransitionIntentModel(AbstractIntentModel):
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].apply(str)
+            df[c] = df[c].str.strip()
             for item in nulls_list:
                 df[c] = df[c].replace(item, fill_nulls)
             if isinstance(use_string_type, bool) and use_string_type:
                 df[c] = df[c].astype('string', errors='ignore')
+
         if not inplace:
             return df
         return
