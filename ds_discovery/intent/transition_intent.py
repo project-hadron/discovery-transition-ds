@@ -641,7 +641,7 @@ class TransitionIntentModel(AbstractIntentModel):
             for item in nulls_list:
                 df[c] = df[c].replace(item, fill_nulls)
             if not all(df[c].astype(str).str.isnumeric()):
-                df[c] = df[c].str.strip()
+                df[c] = df[c].astype(str).str.strip()
             df[c] = df[c].astype('category')
             if as_num:
                 df[c] = df[c].cat.codes
