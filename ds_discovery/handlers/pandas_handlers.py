@@ -1,13 +1,12 @@
-import json
-import os
-import pickle
-import threading
 from contextlib import closing
-
+import os
+import threading
 import pandas as pd
-import requests
-import yaml
-from aistac.handlers.abstract_handlers import AbstractSourceHandler, ConnectorContract, AbstractPersistHandler
+import pickle
+import json
+
+from aistac.handlers.abstract_handlers import AbstractSourceHandler, AbstractPersistHandler
+from aistac.handlers.abstract_handlers import ConnectorContract, HandlerFactory
 
 __author__ = 'Darryl Oatridge'
 
@@ -67,18 +66,28 @@ class PandasSourceHandler(AbstractSourceHandler):
             raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
         if _cc.schema.startswith('http'):
-            return requests.get(_cc.address).status_code == 200
+            module_name = 'requests'
+            if HandlerFactory.check_module(module_name=module_name):
+                module = HandlerFactory.get_module(module_name=module_name)
+                return module.get(_cc.address).status_code == 200
+            raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
+                                      f"Please pip install the appropriate package in order to complete this action")
         if os.path.exists(_cc.address):
             return True
         return False
 
     def get_modified(self) -> [int, float, str]:
         """ returns the modified state of the connector resource"""
-        if not isinstance(self.connector_contract, ConnectorContract):
-            raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
         if _cc.schema.startswith('http'):
-            return requests.head(_cc.address).headers.get('last-modified', 0)
+            if not isinstance(self.connector_contract, ConnectorContract):
+                raise ValueError("The Pandas Connector Contract has not been set")
+            module_name = 'requests'
+            if HandlerFactory.check_module(module_name=module_name):
+                module = HandlerFactory.get_module(module_name=module_name)
+                return module.head(_cc.address).headers.get('last-modified', 0)
+            raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
+                                      f"Please pip install the appropriate package in order to complete this action")
         return os.path.getmtime(_cc.address) if os.path.exists(_cc.address) else 0
 
     @staticmethod
@@ -88,15 +97,21 @@ class PandasSourceHandler(AbstractSourceHandler):
         :param path_file: the name and path of the file
         :return: a dictionary
         """
+        module_name = 'yaml'
+        if HandlerFactory.check_module(module_name=module_name):
+            module = HandlerFactory.get_module(module_name=module_name)
+        else:
+            raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
+                                      f"Please pip install the appropriate package in order to complete this action")
         encoding = kwargs.pop('encoding', 'utf-8')
         with threading.Lock():
             try:
                 with closing(open(path_file, mode='r', encoding=encoding)) as ymlfile:
-                    rtn_dict = yaml.safe_load(ymlfile)
+                    rtn_dict = module.safe_load(ymlfile)
             except IOError as e:
-                raise IOError("The yaml file {} failed to open with: {}".format(path_file, e))
+                raise IOError(f"The yaml file {path_file} failed to open with: {e}")
             if not isinstance(rtn_dict, dict) or not rtn_dict:
-                raise TypeError("The yaml file {} could not be loaded as a dict type".format(path_file))
+                raise TypeError(f"The yaml file {path_file} could not be loaded as a dict type")
             return rtn_dict
 
     @staticmethod
@@ -200,15 +215,21 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         :param path_file: the name and path of the file
         :param default_flow_style: (optional) if to include the default YAML flow style
         """
+        module_name = 'yaml'
+        if HandlerFactory.check_module(module_name=module_name):
+            module = HandlerFactory.get_module(module_name=module_name)
+        else:
+            raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
+                                      f"Please pip install the appropriate package in order to complete this action")
         encoding = kwargs.pop('encoding', 'utf-8')
         default_flow_style = kwargs.pop('default_flow_style', False)
         with threading.Lock():
             # make sure the dump is clean
             try:
                 with closing(open(path_file, mode='w', encoding=encoding)) as ymlfile:
-                    yaml.safe_dump(data=data, stream=ymlfile, default_flow_style=default_flow_style, **kwargs)
+                    module.safe_dump(data=data, stream=ymlfile, default_flow_style=default_flow_style, **kwargs)
             except IOError as e:
-                raise IOError("The yaml file {} failed to open with: {}".format(path_file, e))
+                raise IOError(f"The yaml file {path_file} failed to open with: {e}")
         # check the file was created
         return
 

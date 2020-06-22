@@ -405,7 +405,7 @@ class Transition(AbstractComponent):
         _dom_fields = _dictionary['%_Dom'].sum()
 
         _null_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
-        _dom_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
+        _dom_columns = _dictionary['%_Dom'].where(_dictionary['%_Dom'] > 0.98).dropna()
         _usable_fields = set(_null_columns)
         _usable_fields.update(_dom_columns)
         _numeric_fields = len(Commons.filter_headers(canonical, dtype='number'))
@@ -573,8 +573,7 @@ class Transition(AbstractComponent):
                 _column['message:'] = f'Error processing column {c}'
             if len(_column) > 0:
                 _analysis_dict[c] = _column
-        report['insight'] = _analysis_dict
-        return report
+        return _analysis_dict
 
     def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,
                           save=None):

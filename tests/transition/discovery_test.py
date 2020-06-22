@@ -7,8 +7,10 @@ import pandas as pd
 import seaborn as sns
 from aistac.properties.property_manager import PropertyManager
 
-from ds_discovery import Transition
+from ds_discovery import Transition, FeatureCatalog
 from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
+
+from ds_behavioral import SyntheticBuilder
 
 
 class TestDiscovery(unittest.TestCase):
@@ -67,7 +69,6 @@ class TestDiscovery(unittest.TestCase):
                                                     fit_kwargs={'verbose': False})
         self.assertCountEqual(['v50', 'v10', 'v14', 'v12', 'v129', 'v62', 'v21', 'v34'], result)
 
-
     def test_filter_univariate_mse(self):
         data = pd.read_csv('../../../data/raw/ames_housing.csv', nrows=50000)
         result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, )
@@ -78,7 +79,6 @@ class TestDiscovery(unittest.TestCase):
                                                 model='CatBoostRegressor',
                                                 regressor_kwargs=regressor_kwargs, fit_kwargs={'verbose': False})
         print(result)
-
 
     def test_filter_fisher_score(self):
         df = sns.load_dataset('titanic')
@@ -98,6 +98,20 @@ class TestDiscovery(unittest.TestCase):
         self.assertEqual(['class', 'pclass'], result)
         result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=0.999)
         self.assertEqual(['class', 'pclass', 'deck', 'parch', 'sibsp'], result)
+
+    def test_filter_correlated(self):
+        tools = SyntheticBuilder.scratch_pad()
+        df = pd.DataFrame()
+        df['col1'] = [1,2,3,4,5,6,7]
+        df['col2'] = [1,2,3,4,5,6,7]
+        df['col3'] = [2,2,3,2,2,2,3]
+        df['col4'] = [2,2,3,2,2,2,3]
+        df['col5'] = [2,2,3,2,2,2,3]
+        df['col4'] = [7,2,4,2,1,6,4]
+        df['target'] = [1,0,1,1,0,0,1]
+        result = DataDiscovery.filter_correlated(df, target='target')
+        print(result)
+
 
 
 if __name__ == '__main__':

@@ -1,9 +1,6 @@
 import re
 import threading
 from copy import deepcopy
-from typing import Any
-
-import numpy as np
 import pandas as pd
 from aistac.components.aistac_commons import AistacCommons, AnalyticsCommons
 
@@ -51,17 +48,6 @@ class Commons(AistacCommons):
         else:
             values.fillna('', inplace=True)
         return values
-
-    @staticmethod
-    def dict_with_missing(base: dict, default: Any):
-        """returns a dictionary wih defining  __missing__() which returns the default value"""
-
-        class DictMissing(dict):
-
-            def __missing__(self, x):
-                return default
-
-        return DictMissing(base)
 
     @staticmethod
     def list_formatter(value) -> list:

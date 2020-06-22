@@ -5,8 +5,8 @@ from typing import Any
 import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
+from aistac.handlers.abstract_handlers import HandlerFactory
 from aistac.intent.abstract_intent import AbstractIntentModel
-from ds_behavioral.components.synthetic_builder import SyntheticBuilder
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
@@ -1054,12 +1054,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
+
         # intend code block on the canonical
+        module_name = 'ds_behavioral.components.synthetic_builder'
+        if HandlerFactory.check_module(module_name=module_name):
+            handler = HandlerFactory.get_module(module_name=module_name)
+        else:
+            raise ModuleNotFoundError("The 'apply_missing(...)' method requires the SyntheticBuilder module. "
+                                      "Please pip install the discovery-behavioral-utils package")
         canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
-        sim = SyntheticBuilder.scratch_pad()
+        sim = handler.SyntheticBuilder.scratch_pad()
         tr = Transition.scratch_pad()
         headers = self._pm.list_formatter(headers)
         inc_columns = self._pm.list_formatter(inc_columns)
