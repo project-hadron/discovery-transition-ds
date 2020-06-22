@@ -10,6 +10,10 @@ from ds_discovery.transition.discovery import DataDiscovery, Visualisation
 
 class FeatureCatalog(AbstractComponent):
 
+    DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
+    DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
+    DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
+
     def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
         """ Encapsulation class for the transition set of classes

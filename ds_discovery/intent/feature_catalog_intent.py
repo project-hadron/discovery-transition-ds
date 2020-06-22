@@ -879,19 +879,19 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn
 
     def group_flatten_multihot(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, prefix=None,
-                               aggregator: str=None, multihot_case=None, multihot_rename_map: dict=None,
-                               multihot_replace_spaces: str=None, dups=True, unindex: bool=None, save_intent: bool=None,
+                               aggregator: str=None, dups=True, title_rename_map: dict=None, title_case=None,
+                               title_replace_spaces: str=None, unindex: bool=None, save_intent: bool=None,
                                feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                                remove_duplicates: bool=None) -> [None, pd.DataFrame]:
-        """ groups flattens a multi hot encoding of a categorical
+        """ groups flattens a one-hot or multi-hot encoding of a categorical
 
         :param canonical: the Dataframe to reference
         :param key: the key column to sum on
         :param header: the category type column break into the category columns
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
-        :param multihot_rename_map: a from: to dictionary of multihot headers to rename
-        :param multihot_case: changes the headers to lower, upper, title, snake. if none of these then no change
-        :param multihot_replace_spaces: character to replace spaces in multihot headers. Default is '_' (underscore)
+        :param title_rename_map: dictionary map of title header mapping
+        :param title_case: changes the column header title to lower, upper, title, snake.
+        :param title_replace_spaces: character to replace spaces in title headers. Default is '_' (underscore)
         :param prefix: a prefix for the category columns
         :param dups: id duplicates should be removed from the original canonical
         :param unindex: if the passed canonical should be un-index before processing
@@ -929,8 +929,8 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))].to_list()
         dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=key, aggregator=aggregator,
                                        save_intent=False).reset_index()
-        Transition.scratch_pad().auto_clean_header(dummy_df, case=multihot_case, rename_map=multihot_rename_map,
-                                                   replace_spaces=multihot_replace_spaces, inplace=True)
+        Transition.scratch_pad().auto_clean_header(dummy_df, case=title_case, rename_map=title_rename_map,
+                                                   replace_spaces=title_replace_spaces, inplace=True)
         return dummy_df.set_index(key)
 
     def select_date_elements(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, matrix: [str, list],
