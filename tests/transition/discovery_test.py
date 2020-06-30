@@ -70,14 +70,10 @@ class TestDiscovery(unittest.TestCase):
         self.assertCountEqual(['v50', 'v10', 'v14', 'v12', 'v129', 'v62', 'v21', 'v34'], result)
 
     def test_filter_univariate_mse(self):
-        data = pd.read_csv('../../../data/raw/ames_housing.csv', nrows=50000)
-        result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, )
-        print(result)
-        # customer
-        regressor_kwargs = {'iterations': 2, 'learning_rate': 1, 'depth': 2}
-        result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=True, package='catboost',
-                                                model='CatBoostRegressor',
-                                                regressor_kwargs=regressor_kwargs, fit_kwargs={'verbose': False})
+        tr = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr.set_source('ames_housing.csv', nrows=5000)
+        data = tr.load_source_canonical()
+        result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=False, )
         print(result)
 
     def test_filter_fisher_score(self):
