@@ -29,10 +29,10 @@ class FeatureCatalog(AbstractComponent):
                          reset_templates=reset_templates, align_connectors=align_connectors)
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, pm_file_type: str=None, pm_module: str=None,
-                 pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
-                 align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
-                 order_next_available: bool=None, default_replace_intent: bool=None) -> 'FeatureCatalog':
+    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
+                 pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
+                 reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
+                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -40,6 +40,7 @@ class FeatureCatalog(AbstractComponent):
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param username: A user name for this task activity.
+         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
@@ -54,7 +55,7 @@ class FeatureCatalog(AbstractComponent):
          :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         username = username if isinstance(username, str) else 'Unknown'
@@ -63,8 +64,9 @@ class FeatureCatalog(AbstractComponent):
                                                   default_intent_level=default_intent_level,
                                                   order_next_available=order_next_available,
                                                   default_replace_intent=default_replace_intent)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
-                                 pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
+                                 pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
+                                 pm_kwargs=pm_kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
 
@@ -200,6 +202,20 @@ class FeatureCatalog(AbstractComponent):
             self.pm_persist(save)
         return
 
+    def save_feature_schema(self, feature_name: str, canonical: pd.DataFrame=None, save: bool=None):
+        """ Saves the feature schema to the Property contract. The default loads the feature canonical but optionally
+        a canonical can be passed to base the schema on
+
+        :param feature_name: the name of the schema feature to save
+        :param canonical: (optional) the canonical to base the schema on
+        :param save: (optional) if True, save to file. Default is True
+        """
+        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_catalog_feature(feature_name)
+        report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
+        self.pm.set_canonical_schema(name=feature_name, canonical_report=report)
+        self.pm_persist(save=save)
+        return
+
     def remove_feature(self, feature_name: str, save: bool=None):
         """completely removes a feature including connector, intent and description"""
         if self.pm.has_connector(connector_name=feature_name):
@@ -234,12 +250,12 @@ class FeatureCatalog(AbstractComponent):
         return
 
     @staticmethod
-    def canonical_report(df, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
+    def canonical_report(canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
         attribute properties
 
-        :param df: the DataFrame to view
+        :param canonical: the DataFrame to view
         :param stylise: if True present the report stylised.
         :param inc_next_dom: (optional) if to include the next dominate element column
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist
@@ -247,8 +263,21 @@ class FeatureCatalog(AbstractComponent):
                 ' > 0.95', ".str.contains('shed')"
         :return:
         """
-        return DataDiscovery.data_dictionary(df=df, stylise=stylise, inc_next_dom=inc_next_dom,
+        return DataDiscovery.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
+
+    def report_feature_schema(self, feature_name: str, stylise: bool=True):
+        """ presents the current feature schema
+
+        :param feature_name: the name of the feature schema
+        :param stylise: if True present the report stylised.
+        :return: pd.DataFrame
+        """
+        report = self.pm.get_canonical_schema(name=feature_name)
+        if len(report) == 0:
+            report = {'Attributes (0)': {}, 'dType': {}, '%_Null': {}, '%_Dom': {}, 'Count': {}, 'Unique': {},
+                      'Observations': {}}
+        return self.discover.data_schema(report=report, stylise=stylise)
 
     def report_feature_catalog(self, feature_names: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract

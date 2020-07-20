@@ -121,6 +121,12 @@ class PandasSourceHandler(AbstractSourceHandler):
         encoding = kwargs.pop('encoding', 'ASCII')
         errors = kwargs.pop('errors', 'strict')
         with threading.Lock():
+            if path_file.startswith('http'):
+                module_name = 'requests'
+                if HandlerFactory.check_module(module_name=module_name):
+                    module = HandlerFactory.get_module(module_name=module_name)
+                    r = module.get(path_file)
+                    return r.content
             with closing(open(path_file, mode='rb')) as f:
                 return pickle.load(f, fix_imports=fix_imports, encoding=encoding, errors=errors)
 
@@ -128,6 +134,12 @@ class PandasSourceHandler(AbstractSourceHandler):
     def _json_load(path_file: str, **kwargs) -> [dict, pd.DataFrame]:
         """ loads a pickle file """
         with threading.Lock():
+            if path_file.startswith('http'):
+                module_name = 'requests'
+                if HandlerFactory.check_module(module_name=module_name):
+                    module = HandlerFactory.get_module(module_name=module_name)
+                    r = module.get(path_file)
+                    return r.json()
             with closing(open(path_file, mode='r')) as f:
                 return json.load(f, **kwargs)
 

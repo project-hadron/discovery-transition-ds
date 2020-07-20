@@ -17,6 +17,7 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
     REPORT_DICTIONARY = 'dictionary'
+    REPORT_SCHEMA = 'primary_schema'
     REPORT_ANALYSIS = 'analysis'
     REPORT_INTENT = 'intent'
     REPORT_FIELDS = 'field_description'
@@ -43,10 +44,10 @@ class Transition(AbstractComponent):
         self._raw_attribute_list = []
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, pm_file_type: str=None, pm_module: str=None,
-                 pm_handler: str=None, pm_kwargs: dict=None, default_save=None, reset_templates: bool=None,
-                 align_connectors: bool=None, default_save_intent: bool=None, default_intent_level: bool=None,
-                 order_next_available: bool=None, default_replace_intent: bool=None) -> 'Transition':
+    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
+                 pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
+                 reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
+                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -54,6 +55,7 @@ class Transition(AbstractComponent):
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
          :param username: A user name for this task activity.
+         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
          :param pm_handler: (optional) the handler for retrieving the resource
@@ -68,7 +70,7 @@ class Transition(AbstractComponent):
          :param default_replace_intent: (optional) the default replace existing intent behaviour
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'pickle'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else cls.DEFAULT_MODULE
         pm_handler = pm_handler if isinstance(pm_handler, str) else cls.DEFAULT_PERSIST_HANDLER
         _pm = TransitionPropertyManager(task_name=task_name, username=username)
@@ -76,8 +78,9 @@ class Transition(AbstractComponent):
                                               default_intent_level=default_intent_level,
                                               order_next_available=order_next_available,
                                               default_replace_intent=default_replace_intent)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, pm_file_type=pm_file_type,
-                                 pm_module=pm_module, pm_handler=pm_handler, pm_kwargs=pm_kwargs)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
+                                 pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
+                                 pm_kwargs=pm_kwargs)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
 
@@ -242,7 +245,7 @@ class Transition(AbstractComponent):
         """ Generates and persists the data quality
 
         :param canonical: the canonical to base the report on
-        :param file_type: (optional) an alternative file extension to the default 'pickle' format
+        :param file_type: (optional) an alternative file extension to the default 'json' format
         :param versioned: (optional) if the component version should be included as part of the pattern
         :param stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
         :return:
@@ -266,6 +269,21 @@ class Transition(AbstractComponent):
                 self.set_report_persist(connector_name=report_connector_name)
         self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
 
+    def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, save: bool=None):
+        """ Saves the canonical schema to the Property contract. The default loads the clean canonical but optionally
+        a canonical can be passed to base the schema on and optionally a name given other than the default
+
+        :param schema_name: (optional) the name of the schema to save
+        :param canonical: (optional) the canonical to base the schema on
+        :param save: (optional) if True, save to file. Default is True
+        """
+        schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
+        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_clean_canonical()
+        report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
+        self.pm.set_canonical_schema(name=schema_name, canonical_report=report)
+        self.pm_persist(save=save)
+        return
+
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the transition pipeline from source to persist"""
         canonical = self.load_source_canonical()
@@ -288,7 +306,27 @@ class Transition(AbstractComponent):
         return self.discover.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
+    def report_canonical_schema(self, schema_name: str=None, stylise: bool=True):
+        """ presents the current canonical schema
+
+        :param schema_name: (optional) the name of the schema
+        :param stylise: if True present the report stylised.
+        :return: pd.DataFrame
+        """
+        schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
+        report = self.pm.get_canonical_schema(name=schema_name)
+        if len(report) == 0:
+            report = {'Attributes (0)': {}, 'dType': {}, '%_Null': {}, '%_Dom': {}, 'Count': {}, 'Unique': {},
+                      'Observations': {}}
+        return self.discover.data_schema(report=report, stylise=stylise)
+
     def report_attributes(self, canonical, stylise: bool=True):
+        """ generates a report on the attributes and any description provided
+
+        :param canonical: the canonical to report on
+        :param stylise: if True present the report stylised.
+        :return: pd.DataFrame
+        """
         labels = [f'Attributes ({len(canonical.columns)})', 'dType', 'Description']
         file = []
         for c in canonical.columns.sort_values().values:

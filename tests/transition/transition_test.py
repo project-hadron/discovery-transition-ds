@@ -99,6 +99,11 @@ class TransitionTest(unittest.TestCase):
         report = tr.report_statistics()
         pprint(report)
 
+    def test_repo_load(self):
+        os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
+        tr: Transition = Transition.from_env('hk_income')
+
+
     """
         OLD STUFF BELLOW
     """

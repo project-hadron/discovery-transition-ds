@@ -1,12 +1,11 @@
 from aistac.components.abstract_ledger_component import AbstractLedger
-from aistac.properties.ledger_property_manager import LedgerPropertyManager
+from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
+from ds_discovery.intent.tolerance_catalog_intent import ToleranceCatalogIntentModel
 
-from ds_discovery.intent.ledger_intent import LedgerIntentModel
 
+class ToleranceDrift(AbstractLedger):
 
-class Ledger(AbstractLedger):
-
-    def __init__(self, property_manager: LedgerPropertyManager, intent_model: LedgerIntentModel,
+    def __init__(self, property_manager: ToleranceCatalogPropertyManager, intent_model: ToleranceCatalogIntentModel,
                  default_save=None, reset_templates: bool = None, align_connectors: bool = None):
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
                          reset_templates=reset_templates, align_connectors=align_connectors)
@@ -41,11 +40,11 @@ class Ledger(AbstractLedger):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
-        _pm = LedgerPropertyManager(task_name=task_name, username=username)
-        _intent_model = LedgerIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                          default_intent_level=default_intent_level,
-                                          order_next_available=order_next_available,
-                                          default_replace_intent=default_replace_intent)
+        _pm = ToleranceCatalogPropertyManager(task_name=task_name, username=username)
+        _intent_model = ToleranceCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                                    default_intent_level=default_intent_level,
+                                                    order_next_available=order_next_available,
+                                                    default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
                                  pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
                                  pm_kwargs=pm_kwargs)
