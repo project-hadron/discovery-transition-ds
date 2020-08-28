@@ -1,4 +1,6 @@
+import time
 import uuid
+from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -210,8 +212,8 @@ class Transition(AbstractComponent):
             _reports = connector_name
         for _report in _reports:
             file_pattern = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
-            uri_file = uri_file if isinstance(uri_file, str) else file_pattern
-            self.add_connector_from_template(connector_name=_report, uri_file=uri_file,
+            file_name = uri_file if isinstance(uri_file, str) else file_pattern
+            self.add_connector_from_template(connector_name=_report, uri_file=file_name,
                                              template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
         return
 
@@ -262,7 +264,7 @@ class Transition(AbstractComponent):
                               auto_connectors: bool=None, **kwargs):
         """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
         if report_connector_name not in [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT,
-                                         self.REPORT_QUALITY, self.REPORT_FIELDS]:
+                                         self.REPORT_QUALITY, self.REPORT_SUMMARY, self.REPORT_FIELDS]:
             raise ValueError("Report name must be one of the class report constants")
         if auto_connectors if isinstance(auto_connectors, bool) else True:
             if not self.pm.has_connector(report_connector_name):

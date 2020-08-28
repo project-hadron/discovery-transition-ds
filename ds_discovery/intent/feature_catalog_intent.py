@@ -879,10 +879,11 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         return df_rtn
 
     def group_flatten_multihot(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, prefix=None,
+                               prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False,  dtype: Any=None,
                                aggregator: str=None, dups=True, title_rename_map: dict=None, title_case=None,
-                               title_replace_spaces: str=None, unindex: bool=None, save_intent: bool=None,
-                               feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                               remove_duplicates: bool=None) -> [None, pd.DataFrame]:
+                               title_replace_spaces: str=None, inc_columns: list=None, unindex: bool=None,
+                               save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
+                               replace_intent: bool=None, remove_duplicates: bool=None) -> [None, pd.DataFrame]:
         """ groups flattens a one-hot or multi-hot encoding of a categorical
 
         :param canonical: the Dataframe to reference
@@ -892,7 +893,23 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param title_rename_map: dictionary map of title header mapping
         :param title_case: changes the column header title to lower, upper, title, snake.
         :param title_replace_spaces: character to replace spaces in title headers. Default is '_' (underscore)
-        :param prefix: a prefix for the category columns
+        :param prefix : str, list of str, or dict of str, default None
+                String to append DataFrame column names.
+                Pass a list with length equal to the number of columns
+                when calling get_dummies on a DataFrame. Alternatively, `prefix`
+                can be a dictionary mapping column names to prefixes.
+        :param prefix_sep : str, default '_'
+                If appending prefix, separator/delimiter to use. Or pass a
+                list or dictionary as with `prefix`.
+        :param dummy_na : bool, default False
+                Add a column to indicate NaNs, if False NaNs are ignored.
+        :param drop_first : bool, default False
+                Whether to get k-1 dummies out of k categorical levels by removing the
+                first level.
+        :param dtype : dtype, default np.uint8
+                Data type for new columns. Only a single dtype is allowed.
+        :param inc_columns: (optional) additional columns to include in the returning canonical.
+                If extra columsn are included the group aggriation key will be on all these columns not just the key.
         :param dups: id duplicates should be removed from the original canonical
         :param unindex: if the passed canonical should be un-index before processing
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -916,18 +933,25 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             raise NameError(f"The column {header} can't be found in the DataFrame")
         canonical = self._get_canonical(canonical)
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
+        prefix = prefix if isinstance(prefix, str) else header
+        prefix_sep = prefix_sep if isinstance(prefix_sep, str) else "_"
+        dummy_na = dummy_na if isinstance(dummy_na, bool) else False
+        drop_first = drop_first if isinstance(drop_first, bool) else False
+        dtype = dtype if dtype else np.uint8
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
         if canonical[header].dtype.name != 'category':
             canonical[header] = canonical[header].astype('category')
-        if prefix is None:
-            prefix = header
+        inc_columns = self._pm.list_formatter(inc_columns)
+        df = Commons.filter_columns(canonical, headers=list(set(key + [header] + inc_columns)))
         if not dups:
-            canonical.drop_duplicates(inplace=True)
-        dummy_df = pd.get_dummies(canonical[key + [header]], columns=[header], prefix=prefix)
-        dummy_cols = dummy_df.columns[dummy_df.columns.to_series().str.contains('{}_'.format(prefix))].to_list()
-        dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=key, aggregator=aggregator,
+            df.drop_duplicates(inplace=True)
+        dummy_df = pd.get_dummies(canonical, columns=[header], prefix=prefix, prefix_sep=prefix_sep, dummy_na=dummy_na,
+                                  drop_first=drop_first, dtype=dtype)
+        dummy_cols = Commons.filter_headers(dummy_df, regex=f'{prefix}{prefix_sep}')
+        group_cols = Commons.filter_headers(dummy_df, headers=dummy_cols, drop=True)
+        dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=group_cols, aggregator=aggregator,
                                        save_intent=False).reset_index()
         Transition.scratch_pad().auto_clean_header(dummy_df, case=title_case, rename_map=title_rename_map,
                                                    replace_spaces=title_replace_spaces, inplace=True)

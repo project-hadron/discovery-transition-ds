@@ -7,6 +7,7 @@ from pprint import pprint
 import pandas as pd
 from aistac.handlers.abstract_handlers import ConnectorContract
 from aistac.properties.property_manager import PropertyManager
+from ds_behavioral import SyntheticBuilder
 
 from ds_discovery import Transition
 
@@ -102,6 +103,15 @@ class TransitionTest(unittest.TestCase):
     def test_repo_load(self):
         os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
         tr: Transition = Transition.from_env('hk_income')
+
+    def test_run_transition_pipeline(self):
+        os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
+        tr: Transition = Transition.from_env('hk_income', default_save=False, default_save_intent=False)
+        pprint(tr.pm.report_connectors())
+        # builder: SyntheticBuilder = SyntheticBuilder.from_env('hk_income', default_save=False, default_save_intent=False)
+        # builder.run_synthetic_pipeline(size=1000)
+        # tr.run_transition_pipeline()
+
 
 
     """
