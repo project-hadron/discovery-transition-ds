@@ -151,7 +151,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
                     uri = <scheme>://<netloc>/[<path>/]<filename.ext>
     """
 
-    def persist_canonical(self, canonical: pd.DataFrame, **kwargs) -> bool:
+    def persist_canonical(self, canonical: [pd.DataFrame, dict], **kwargs) -> bool:
         """ persists the canonical dataset
 
         Extra Parameters in the ConnectorContract kwargs:
@@ -162,7 +162,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         _uri = self.connector_contract.uri
         return self.backup_canonical(uri=_uri, canonical=canonical, **kwargs)
 
-    def backup_canonical(self, canonical: pd.DataFrame, uri: str, **kwargs) -> bool:
+    def backup_canonical(self, canonical: [pd.DataFrame, dict], uri: str, **kwargs) -> bool:
         """ creates a backup of the canonical to an alternative URI
 
         Extra Parameters in the ConnectorContract kwargs:
@@ -195,6 +195,10 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
             return True
         # json
         if file_type.lower() in ['json']:
+            if isinstance(canonical, pd.DataFrame):
+                with threading.Lock():
+                    canonical.to_json(_address, **write_params)
+                return True
             self._json_dump(data=canonical, path_file=_address, **write_params)
             return True
         # pickle

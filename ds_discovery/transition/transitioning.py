@@ -211,9 +211,11 @@ class Transition(AbstractComponent):
                 raise ValueError(f"Report name(s) {connector_name} must be from the report constants {_reports}")
             _reports = connector_name
         for _report in _reports:
-            file_pattern = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
-            file_name = uri_file if isinstance(uri_file, str) else file_pattern
-            self.add_connector_from_template(connector_name=_report, uri_file=file_name,
+            if not isinstance(uri_file, str):
+                uri_file = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
+                if 'orient' not in kwargs.keys():
+                    kwargs.update({'orient': 'records'})
+            self.add_connector_from_template(connector_name=_report, uri_file=uri_file,
                                              template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
         return
 
