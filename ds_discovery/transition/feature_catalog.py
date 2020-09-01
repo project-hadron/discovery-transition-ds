@@ -32,7 +32,8 @@ class FeatureCatalog(AbstractComponent):
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
                  reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
+                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None,
+                 has_contract: bool=None):
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -53,6 +54,7 @@ class FeatureCatalog(AbstractComponent):
          :param default_intent_level: (optional) the default level intent should be saved at
          :param order_next_available: (optional) if the default behaviour for the order should be next available order
          :param default_replace_intent: (optional) the default replace existing intent behaviour
+         :param has_contract: (optional) indicates the instance should have a property manager domain contract
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
@@ -66,7 +68,7 @@ class FeatureCatalog(AbstractComponent):
                                                   default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
                                  pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
-                                 pm_kwargs=pm_kwargs)
+                                 pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
 

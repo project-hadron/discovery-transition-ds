@@ -57,14 +57,14 @@ class TransitionTest(unittest.TestCase):
         os.environ['HADRON_PM_MODULE'] = 'aistac.handlers.python_handlers'
         os.environ['HADRON_PM_HANDLER'] = 'PythonPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/hadron_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
         os.environ['HADRON_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
         os.environ['HADRON_PM_HANDLER'] = 'PandasPersistHandler'
         tr = Transition.from_env('task')
-        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/aistac_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
+        self.assertEqual( os.environ['HADRON_PM_PATH'] + "/hadron_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
@@ -79,18 +79,7 @@ class TransitionTest(unittest.TestCase):
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
         report = tr.report_quality_summary(as_dict=True)
-        control = {'data_shape': {'columns': 15, 'memory': '293.6KB', 'rows': 1000},
-                   'data_type': {'bool': 2,
-                                 'category': 5,
-                                 'datetime': 1,
-                                 'numeric': 3,
-                                 'others': 0},
-                   'score': {'data_described': 0,
-                             'provenance_complete': 0,
-                             'quality_avg': 74,
-                             'usability_avg': 93},
-                   'usability': {'correlated': 0, 'mostly_null': 1, 'predominance': 1}}
-        self.assertDictEqual(control, report)
+        self.assertEqual(['score', 'data_shape', 'data_type', 'usability'], list(report.keys()))
 
     def test_report_statistics(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
