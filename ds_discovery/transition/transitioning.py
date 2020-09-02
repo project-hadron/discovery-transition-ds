@@ -214,10 +214,10 @@ class Transition(AbstractComponent):
             _reports = connector_name
         for _report in _reports:
             if not isinstance(uri_file, str):
-                uri_file = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
+                file_pattern = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
                 if 'orient' not in kwargs.keys():
                     kwargs.update({'orient': 'records'})
-            self.add_connector_from_template(connector_name=_report, uri_file=uri_file,
+            self.add_connector_from_template(connector_name=_report, uri_file=file_pattern,
                                              template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
         return
 
