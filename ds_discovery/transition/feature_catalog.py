@@ -66,9 +66,9 @@ class FeatureCatalog(AbstractComponent):
                                                   default_intent_level=default_intent_level,
                                                   order_next_available=order_next_available,
                                                   default_replace_intent=default_replace_intent)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
-                                 pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
-                                 pm_kwargs=pm_kwargs, has_contract=has_contract)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
+                                 uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
+                                 pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
 

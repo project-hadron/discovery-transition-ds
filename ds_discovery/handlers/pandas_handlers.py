@@ -125,7 +125,10 @@ class PandasSourceHandler(AbstractSourceHandler):
                 module_name = 'requests'
                 if HandlerFactory.check_module(module_name=module_name):
                     module = HandlerFactory.get_module(module_name=module_name)
-                    r = module.get(path_file)
+                    username = kwargs.get('username', None)
+                    password = kwargs.get('password', None)
+                    auth = (username, password) if username and password else None
+                    r = module.get(path_file, auth=auth)
                     return r.content
             with closing(open(path_file, mode='rb')) as f:
                 return pickle.load(f, fix_imports=fix_imports, encoding=encoding, errors=errors)
@@ -138,7 +141,10 @@ class PandasSourceHandler(AbstractSourceHandler):
                 module_name = 'requests'
                 if HandlerFactory.check_module(module_name=module_name):
                     module = HandlerFactory.get_module(module_name=module_name)
-                    r = module.get(path_file)
+                    username = kwargs.get('username', None)
+                    password = kwargs.get('password', None)
+                    auth = (username, password) if username and password else None
+                    r = module.get(path_file, auth=auth)
                     return r.json()
             with closing(open(path_file, mode='r')) as f:
                 return json.load(f, **kwargs)

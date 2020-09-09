@@ -1,7 +1,4 @@
-import time
 import uuid
-from datetime import datetime, timedelta
-
 import numpy as np
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
@@ -19,12 +16,11 @@ class Transition(AbstractComponent):
     CONNECTOR_SOURCE = 'primary_source'
     CONNECTOR_PERSIST = 'primary_persist'
     REPORT_DICTIONARY = 'dictionary'
-    REPORT_SCHEMA = 'primary_schema'
     REPORT_ANALYSIS = 'analysis'
-    REPORT_INTENT = 'intent'
     REPORT_FIELDS = 'field_description'
     REPORT_QUALITY = 'data_quality'
     REPORT_SUMMARY = 'data_quality_summary'
+    REPORTS_TRANSITION = [REPORT_DICTIONARY, REPORT_ANALYSIS, REPORT_FIELDS, REPORT_QUALITY, REPORT_SUMMARY]
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
@@ -82,9 +78,9 @@ class Transition(AbstractComponent):
                                               default_intent_level=default_intent_level,
                                               order_next_available=order_next_available,
                                               default_replace_intent=default_replace_intent)
-        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, uri_pm_repo=uri_pm_repo,
-                                 pm_file_type=pm_file_type, pm_module=pm_module, pm_handler=pm_handler,
-                                 pm_kwargs=pm_kwargs, has_contract=has_contract)
+        super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
+                                 uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
+                                 pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
 

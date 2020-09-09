@@ -3,8 +3,8 @@ import shutil
 import unittest
 
 from aistac.handlers.abstract_handlers import ConnectorContract
-
 from ds_discovery.handlers.pandas_handlers import PandasSourceHandler, PandasPersistHandler
+from ds_behavioral import SyntheticBuilder
 
 
 class MyTestCase(unittest.TestCase):
@@ -55,7 +55,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(0, handler.get_modified())
         self.assertFalse(handler.exists())
         # create the file and persist
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = .get_profiles(include_id=True, size=1000)
         self.assertTrue(handler.persist_canonical(df))
         modified = handler.get_modified()
         self.assertTrue(handler.exists())
