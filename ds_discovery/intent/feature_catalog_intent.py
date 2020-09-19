@@ -10,10 +10,10 @@ from aistac.intent.abstract_intent import AbstractIntentModel
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_discovery.transition.commons import Commons, DataAnalytics
-from ds_discovery.transition.discovery import DataDiscovery
+from ds_discovery.components.commons import Commons, DataAnalytics
+from ds_discovery.components.discovery import DataDiscovery
 # scratch_pads
-from ds_discovery.transition.transitioning import Transition
+from ds_discovery.components.transitioning import Transition
 
 __author__ = 'Darryl Oatridge'
 

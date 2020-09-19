@@ -9,7 +9,7 @@ from ds_behavioral import SyntheticBuilder
 
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_discovery.transition.feature_catalog import FeatureCatalog
+from ds_discovery.components.feature_catalog import FeatureCatalog
 
 
 class FeatureCatalogIntentTest(unittest.TestCase):

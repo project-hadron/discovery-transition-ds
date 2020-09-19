@@ -6,7 +6,7 @@ import pandas as pd
 from ds_behavioral import SyntheticBuilder
 from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
 
-from ds_discovery.transition.commons import Commons
+from ds_discovery.components.commons import Commons
 
 
 class CommonsTest(unittest.TestCase):

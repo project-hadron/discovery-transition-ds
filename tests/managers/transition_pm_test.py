@@ -24,12 +24,12 @@ class TransitionPMTest(unittest.TestCase):
     def test_catalog(self):
         pm = TransitionPropertyManager('test', username='TestUser')
         catalog = pm.knowledge_catalog
-        self.assertCountEqual(['transition', 'observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
+        self.assertCountEqual(['components', 'observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
 
     def test_manager_name(self):
         pm = TransitionPropertyManager('test', username='TestUser')
         result = pm.manager_name()
-        self.assertEqual('transition', result)
+        self.assertEqual('components', result)
 
     def test_provenance_catalog(self):
         pm = TransitionPropertyManager('test', username='TestUser')

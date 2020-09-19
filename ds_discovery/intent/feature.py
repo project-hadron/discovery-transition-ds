@@ -4,7 +4,7 @@ import pandas as pd
 
 __author__ = 'Darryl Oatridge'
 
-from ds_discovery.transition.commons import Commons
+from ds_discovery.components.commons import Commons
 
 
 class Feature(object):

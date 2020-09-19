@@ -4,8 +4,8 @@ from aistac.handlers.abstract_handlers import ConnectorContract
 
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_discovery.transition.commons import Commons
-from ds_discovery.transition.discovery import DataDiscovery, Visualisation
+from ds_discovery.components.commons import Commons
+from ds_discovery.components.discovery import DataDiscovery, Visualisation
 
 
 class FeatureCatalog(AbstractComponent):
@@ -16,7 +16,7 @@ class FeatureCatalog(AbstractComponent):
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
-        """ Encapsulation class for the transition set of classes
+        """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
@@ -113,7 +113,7 @@ class FeatureCatalog(AbstractComponent):
 
     @property
     def discover(self) -> DataDiscovery:
-        """The transition instance"""
+        """The components instance"""
         return DataDiscovery()
 
     @property

@@ -10,7 +10,7 @@ from ds_behavioral import SyntheticBuilder
 from ds_discovery import Transition
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.transition.commons import Commons
+from ds_discovery.components.commons import Commons
 
 
 class IntentModelTest(unittest.TestCase):

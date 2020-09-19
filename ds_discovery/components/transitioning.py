@@ -5,8 +5,8 @@ from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.transition.commons import Commons, DataAnalytics
-from ds_discovery.transition.discovery import DataDiscovery, Visualisation
+from ds_discovery.components.commons import Commons, DataAnalytics
+from ds_discovery.components.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
 
@@ -28,7 +28,7 @@ class Transition(AbstractComponent):
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
                  default_save=None, reset_templates: bool=None, align_connectors: bool=None):
-        """ Encapsulation class for the transition set of classes
+        """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
         :param intent_model: the model codebase containing the parameterizable intent
@@ -125,7 +125,7 @@ class Transition(AbstractComponent):
 
     @property
     def discover(self) -> DataDiscovery:
-        """The transition instance"""
+        """The components instance"""
         return DataDiscovery()
 
     @property
@@ -200,15 +200,14 @@ class Transition(AbstractComponent):
         :param uri_file: (optional) the uri_file is appended to the template path
         :param save: (optional) if True, save to file. Default is True
         """
-
-        _reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT, self.REPORT_QUALITY,
-                    self.REPORT_SUMMARY, self.REPORT_FIELDS]
-        if isinstance(connector_name, (str, list)):
-            connector_name = Commons.list_formatter(connector_name)
-            if all([x in _reports for x in connector_name]):
-                raise ValueError(f"Report name(s) {connector_name} must be from the report constants {_reports}")
-            _reports = connector_name
-        for _report in _reports:
+        _default_reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_QUALITY, self.REPORT_SUMMARY,
+                            self.REPORT_FIELDS] + self.REPORTS_BASE_LIST
+        if not isinstance(connector_name, (str, list)):
+            connector_name = _default_reports
+        for _report in self.pm.list_formatter(connector_name):
+            if _report not in _default_reports:
+                raise ValueError(f"Report name(s) {_report} must be from the report constants {_default_reports}")
+            file_pattern = uri_file
             if not isinstance(uri_file, str):
                 file_pattern = self.pm.file_pattern(connector_name=_report, file_type='json', versioned=True)
                 if 'orient' not in kwargs.keys():
@@ -287,7 +286,7 @@ class Transition(AbstractComponent):
         return
 
     def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
-        """Runs the transition pipeline from source to persist"""
+        """Runs the components pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_clean_canonical(result)
@@ -486,7 +485,7 @@ class Transition(AbstractComponent):
         return df
 
     def report_quality(self, canonical: pd.DataFrame=None) -> dict:
-        """A complete report of the transition"""
+        """A complete report of the components"""
         if not isinstance(canonical, pd.DataFrame):
             canonical = self._auto_transition()
         # meta
@@ -547,10 +546,10 @@ class Transition(AbstractComponent):
         report['dictionary'] = _data_dict
         # notes
         _notes = {}
-        for label, items in self.pm.get_knowledge(catalog='transition').items():
+        for label, items in self.pm.get_knowledge(catalog='components').items():
             _notes[label] = Commons.list_formatter(items.values())
 
-        report['transition'] = {'description': self.pm.description,
+        report['components'] = {'description': self.pm.description,
                                 'notes': _notes}
         return report
 
@@ -685,7 +684,7 @@ class Transition(AbstractComponent):
         return col_corr
 
     def _auto_transition(self) -> pd.DataFrame:
-        """ attempts auto transition on a canonical """
+        """ attempts auto components on a canonical """
         pad: TransitionIntentModel = self.scratch_pad()
         if not self.pm.has_connector(self.CONNECTOR_SOURCE):
             raise ConnectionError("Unable to load Source canonical as the Source Connector has not been set")

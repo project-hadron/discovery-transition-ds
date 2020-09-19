@@ -8,8 +8,8 @@ import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from ds_behavioral import SyntheticBuilder
 
-from ds_discovery.transition.commons import DataAnalytics
-from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
+from ds_discovery.components.commons import DataAnalytics
+from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
 
 class DiscoveryAnalysisMethod(unittest.TestCase):

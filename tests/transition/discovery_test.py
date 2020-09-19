@@ -8,7 +8,7 @@ import seaborn as sns
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Transition, FeatureCatalog
-from ds_discovery.transition.discovery import DataDiscovery as Discover, DataDiscovery
+from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
 from ds_behavioral import SyntheticBuilder
 

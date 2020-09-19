@@ -10,7 +10,7 @@ import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
 
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.transition.commons import Commons
+from ds_discovery.components.commons import Commons
 
 __author__ = 'Darryl Oatridge'
 

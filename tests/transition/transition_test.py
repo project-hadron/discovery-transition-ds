@@ -290,7 +290,7 @@ class TransitionTest(unittest.TestCase):
 #         self.assertEqual(structure, tr.pm.get(tr.pm.KEY.contract_key))
 #         control = {'cleaners': {}, 'snapshot': {}, 'connectors':
 #                    {'pm_data_control': {'handler': 'PandasPersistHandler',
-#                                  'location': '/Users/doatridge/code/projects/prod/transition-transition-ds/tests/transition/work/config/control',
+#                                  'location': '/Users/doatridge/code/projects/prod/components-components-ds/tests/components/work/config/control',
 #                                  'modified': 0,
 #                                  'module_name': 'ds_discovery.handlers.pandas_handlers',
 #                                  'resource': 'config_data_control.yaml',

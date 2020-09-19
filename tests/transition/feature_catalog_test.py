@@ -6,7 +6,7 @@ import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from ds_behavioral import SyntheticBuilder
 
-from ds_discovery.transition.feature_catalog import FeatureCatalog
+from ds_discovery.components.feature_catalog import FeatureCatalog
 
 
 class MyTestCase(unittest.TestCase):

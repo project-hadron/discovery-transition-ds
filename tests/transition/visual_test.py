@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from ds_discovery.transition.discovery import Visualisation
+from ds_discovery.components.discovery import Visualisation
 
 
 class VisualTest(unittest.TestCase):
