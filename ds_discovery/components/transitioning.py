@@ -377,13 +377,20 @@ class Transition(AbstractComponent):
         df.set_index(keys='name', inplace=True)
         return df
 
-    def report_intent(self, stylise: bool=True):
+    def report_intent(self, levels: [str, int, list]=None, stylise: bool=True):
         """ generates a report on all the intent
 
-        :param stylise: returns a stylised dataframe with formatting
+        :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
+        :param stylise: (optional) returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        df = pd.DataFrame.from_dict(data=self.pm.report_intent(), orient='columns')
+        if isinstance(levels, (int,str)):
+            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
+            if stylise:
+                Commons.report(df, index_header='order')
+                df.set_index(keys='order', inplace=True)
+                return df
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
         if stylise:
             Commons.report(df, index_header='level')
         df.set_index(keys='level', inplace=True)
