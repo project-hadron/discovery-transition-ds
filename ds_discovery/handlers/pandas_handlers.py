@@ -21,6 +21,8 @@ class PandasSourceHandler(AbstractSourceHandler):
     def __init__(self, connector_contract: ConnectorContract):
         """ initialise the Hander passing the connector_contract dictionary """
         super().__init__(connector_contract)
+        self._file_state = 0
+        self._changed_flag = True
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
@@ -58,6 +60,8 @@ class PandasSourceHandler(AbstractSourceHandler):
                 rtn_data = self._yaml_load(path_file=_cc.address, **load_params)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
+        # set the change flag to read
+        self.reset_changed(changed=False)
         return rtn_data
 
     def exists(self) -> bool:
@@ -65,30 +69,46 @@ class PandasSourceHandler(AbstractSourceHandler):
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
-        if _cc.schema.startswith('http'):
+        if _cc.schema.startswith('http') or _cc.schema.startswith('git'):
             module_name = 'requests'
+            _address = _cc.address.replace("git://", "https://")
             if HandlerFactory.check_module(module_name=module_name):
                 module = HandlerFactory.get_module(module_name=module_name)
-                return module.get(_cc.address).status_code == 200
+                return module.get(_address).status_code == 200
             raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
                                       f"Please pip install the appropriate package in order to complete this action")
         if os.path.exists(_cc.address):
             return True
         return False
 
-    def get_modified(self) -> [int, float, str]:
-        """ returns the modified state of the connector resource"""
+    def has_changed(self) -> bool:
+        """ returns the status of the change_flag indicating if the file has changed since last load or reset"""
+        if not self.exists():
+            return False
+        # maintain the change flag
         _cc = self.connector_contract
-        if _cc.schema.startswith('http'):
+        if _cc.schema.startswith('http') or _cc.schema.startswith('git'):
             if not isinstance(self.connector_contract, ConnectorContract):
                 raise ValueError("The Pandas Connector Contract has not been set")
             module_name = 'requests'
+            _address = _cc.address.replace("git://", "https://")
             if HandlerFactory.check_module(module_name=module_name):
                 module = HandlerFactory.get_module(module_name=module_name)
-                return module.head(_cc.address).headers.get('last-modified', 0)
-            raise ModuleNotFoundError(f"The required module {module_name} has not been installed. "
-                                      f"Please pip install the appropriate package in order to complete this action")
-        return os.path.getmtime(_cc.address) if os.path.exists(_cc.address) else 0
+                state = module.head(_address).headers.get('last-modified', 0)
+            else:
+                raise ModuleNotFoundError(f"The required module {module_name} has not been installed. Please pip "
+                                          f"install the appropriate package in order to complete this action")
+        else:
+            state = os.stat(_cc.address).st_mtime_ns
+        if state != self._file_state:
+            self._changed_flag = True
+            self._file_state = state
+        return self._changed_flag
+
+    def reset_changed(self, changed: bool = False):
+        """ manual reset to say the file has been seen. This is automatically called if the file is loaded"""
+        changed = changed if isinstance(changed, bool) else False
+        self._changed_flag = changed
 
     @staticmethod
     def _yaml_load(path_file, **kwargs) -> dict:

@@ -1,38 +1,42 @@
 import os
 import shutil
 import unittest
+import pandas as pd
 
 from aistac.handlers.abstract_handlers import ConnectorContract
+from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
+
 from ds_discovery.handlers.pandas_handlers import PandasSourceHandler, PandasPersistHandler
 from ds_behavioral import SyntheticBuilder
 
 
-class MyTestCase(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        os.environ['CONTRACT_PATH'] = os.path.join(os.environ['PWD'], 'work')
-        try:
-            shutil.copytree('../data', os.path.join(os.environ['PWD'], 'work'))
-        except:
-            pass
-
-    @classmethod
-    def tearDownClass(cls):
-        try:
-            shutil.rmtree(os.path.join(os.environ['PWD'], 'work'))
-        except:
-            pass
+class PandasHandlerTest(unittest.TestCase):
 
     def setUp(self):
+        # clean out any old environments
+        for key in os.environ.keys():
+            if key.startswith('HADRON'):
+                del os.environ[key]
+
+        os.environ['HADRON_PM_PATH'] = os.path.join('work', 'config')
+        os.environ['HADRON_DEFAULT_PATH'] = os.path.join('work', 'data')
         try:
-            shutil.rmtree(os.path.join(os.environ['PWD'], 'work/data/2_transition'))
+            os.makedirs(os.environ['HADRON_PM_PATH'])
+            os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
         except:
             pass
-        os.mkdir(os.path.join(os.environ['PWD'], 'work/data/2_transition'))
+        scratch: SyntheticIntentModel = SyntheticBuilder.scratch_pad()
+        df = scratch.model_noise(num_columns=10, size=1000)
+        file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.csv')
+        df.to_csv(file)
+        file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.dat')
+        df.to_csv(file)
 
     def tearDown(self):
-        pass
+        try:
+            shutil.rmtree('work')
+        except:
+            pass
 
     def test_runs(self):
         """Basic smoke test"""
@@ -40,41 +44,41 @@ class MyTestCase(unittest.TestCase):
         PandasPersistHandler(ConnectorContract('work/data/2_transition/example01.pkl', '', '', file_type='pickle'))
 
     def test_source_handler(self):
-        handler = PandasSourceHandler(ConnectorContract('work/data/0_raw/example01.csv', '', ''))
+        file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.csv')
+        handler = PandasSourceHandler(ConnectorContract(file, '', ''))
         self.assertTrue(isinstance(handler.supported_types(), list) and len(handler.supported_types()) > 0)
         df = handler.load_canonical()
-        self.assertEqual((9999,20), df.shape)
-        self.assertTrue(handler.get_modified() > 0)
+        self.assertEqual((1000,10), df.shape)
+        self.assertTrue(handler.has_changed())
         handler = PandasSourceHandler(ConnectorContract('work/data/0_raw/example01.dat', '', '', file_type='csv'))
         df = handler.load_canonical()
-        self.assertEqual((9999,20), df.shape)
+        self.assertEqual((1000,10), df.shape)
 
     def test_persist_handler(self):
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/example01.pkl', '', '', file_type='pickle'))
         self.assertTrue(isinstance(handler.supported_types(), list) and len(handler.supported_types()) > 0)
-        self.assertEqual(0, handler.get_modified())
+        self.assertFalse(handler.has_changed())
         self.assertFalse(handler.exists())
         # create the file and persist
-        df = .get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         self.assertTrue(handler.persist_canonical(df))
-        modified = handler.get_modified()
         self.assertTrue(handler.exists())
-        self.assertTrue(modified > 0)
+        self.assertTrue(handler.has_changed())
         df = handler.load_canonical()
-        self.assertEqual((1000, 5), df.shape)
+        self.assertEqual((1000, 10), df.shape)
         # write again to check modified
         df['value'] = [0] * df.shape[0]
         self.assertTrue(handler.persist_canonical(df))
         df = handler.load_canonical()
-        self.assertEqual((1000, 6), df.shape)
-        self.assertGreater(handler.get_modified(), modified)
+        self.assertEqual((1000, 11), df.shape)
+        self.assertTrue(handler.has_changed())
 
     def test_persist_backup(self):
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/example01.json', '', ''))
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         self.assertTrue(handler.persist_canonical(df))
-        df = handler.load_canonical()
-        self.assertEqual((1000, 5), df.shape)
+        df = pd.DataFrame(data=handler.load_canonical())
+        self.assertEqual((1000, 10), df.shape)
         handler.remove_canonical()
         self.assertFalse(handler.exists())
         # Backup
@@ -84,19 +88,19 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(ConnectorContract.parse_address(uri)))
 
     def test_json(self):
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.json',
-                                                        '', '', file_type='json'))
+                                                         '', '', file_type='json'))
         handler.persist_canonical(df)
         self.assertTrue(handler.exists())
-        result = handler.load_canonical()
+        result = pd.DataFrame(data=handler.load_canonical())
         self.assertEqual(df.shape, result.shape)
         self.assertCountEqual(df.columns, result.columns)
         handler.remove_canonical()
         self.assertFalse(handler.exists())
 
     def test_csv(self):
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.csv',
                                                         '', '', file_type='csv'))
         handler.persist_canonical(df)
@@ -108,7 +112,7 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(handler.exists())
 
     def test_pickle(self):
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.pkl',
                                                         '', '', file_type='pickle'))
         handler.persist_canonical(df)
@@ -120,7 +124,7 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(handler.exists())
 
     def test_parquet(self):
-        df = DataBuilderTools.get_profiles(include_id=True, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.pq',
                                                         '', '', file_type='parquet'))
         handler.persist_canonical(df)
@@ -130,6 +134,26 @@ class MyTestCase(unittest.TestCase):
         self.assertCountEqual(df.columns, result.columns)
         handler.remove_canonical()
         self.assertFalse(handler.exists())
+        
+    def test_change_flags(self):
+        """Basic smoke test"""
+        file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.csv')
+        open(file, 'a').close()
+        cc = ConnectorContract(uri=file, module_name='', handler='')
+        source = PandasSourceHandler(cc)
+        self.assertTrue(source.has_changed())
+        _ = source.load_canonical()
+        self.assertFalse(source.has_changed())
+        source.reset_changed(True)
+        self.assertTrue(source.has_changed())
+        source.reset_changed()
+        self.assertFalse(source.has_changed())
+        # touch the file
+        os.remove(file)
+        with open(file, 'a'):
+            os.utime(file, None)
+        self.assertTrue(source.has_changed())
+
 
 if __name__ == '__main__':
     unittest.main()

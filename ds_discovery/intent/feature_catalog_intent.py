@@ -1059,9 +1059,9 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param nulls_list: (optional) a list of nulls other than np.nan that should be considered null
         :param replace_zero: (optional) if zero what to replace the weighting value with to avoid zero probability
         :param precision: (optional) by default set to 3.
-        :param unindex:
-        :param day_first: if the date provided has day first
-        :param year_first: if the date provided has year first
+        :param unindex: (optional) if the passed canonical should be un-index before processing
+        :param day_first: (optional) if the date provided has day first
+        :param year_first: (optional) if the date provided has year first
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param feature_name: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
