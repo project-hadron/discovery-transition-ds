@@ -280,7 +280,6 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         other = handler.load_canonical()
         if isinstance(other, dict):
             other = pd.DataFrame.from_dict(data=other, orient='columns')
-        self._pm.set_modified(merge_connector, handler.get_modified())
         df = pd.merge(left=canonical, right=other, how=how, on=on, left_on=left_on, right_on=right_on,
                       left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, indicator=indicator,
                       validate=validate)

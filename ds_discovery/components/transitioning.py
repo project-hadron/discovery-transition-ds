@@ -161,10 +161,6 @@ class Transition(AbstractComponent):
         self.pm.reset_provenance()
         self.pm_persist(save)
 
-    def is_source_modified(self):
-        """Test if the source file is modified since last load"""
-        return self.pm.is_connector_modified(self.CONNECTOR_SOURCE)
-
     def get_persist_contract(self):
         """ gets the persist connector contract that can be used as the next chain source"""
         return self.pm.get_connector_contract(self.CONNECTOR_PERSIST)

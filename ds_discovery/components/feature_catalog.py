@@ -121,10 +121,6 @@ class FeatureCatalog(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
-    def is_source_modified(self):
-        """Test if the source file is modified since last load"""
-        return self.pm.has_connector(connector_name=self.CONNECTOR_SOURCE)
-
     def get_feature_contract(self, feature_name: str=None) -> ConnectorContract:
         """ gets the feature connector contract
 
