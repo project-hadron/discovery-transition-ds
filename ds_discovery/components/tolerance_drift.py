@@ -1,4 +1,7 @@
+import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
+from ds_discovery.components.commons import Commons
+from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
 from ds_discovery.intent.tolerance_catalog_intent import ToleranceCatalogIntentModel
 
@@ -52,3 +55,121 @@ class ToleranceDrift(AbstractComponent):
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
+
+    @classmethod
+    def _from_remote_s3(cls) -> (str, str):
+        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
+        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
+        _handler = 'AwsS3PersistHandler'
+        return _module_name, _handler
+
+    @classmethod
+    def _from_remote_eb(cls) -> (str, str):
+        """ Class Factory Method that builds the connector handlers an Hadron EventBook Handler."""
+        _module_name = 'ds_engines.handlers.event_handlers'
+        _handler = 'EventPersistHandler'
+        return _module_name, _handler
+
+    @classmethod
+    def scratch_pad(cls) -> ToleranceCatalogIntentModel:
+        """ A class method to use the Components intent methods as a scratch pad"""
+        return super().scratch_pad()
+
+    @property
+    def intent_model(self) -> ToleranceCatalogIntentModel:
+        """The intent model instance"""
+        return self._intent_model
+
+    @property
+    def pm(self) -> ToleranceCatalogPropertyManager:
+        """The properties manager instance"""
+        return self._component_pm
+
+    @property
+    def discover(self) -> DataDiscovery:
+        """The components instance"""
+        return DataDiscovery()
+
+    def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
+        """ generates a report on the source contract
+
+        :param connector_filter: (optional) filters on the connector name.
+        :param stylise: (optional) returns a stylised DataFrame with formatting
+        :return: pd.DataFrame
+        """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
+        if stylise:
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['connector_name'], **{'font-weight': 'bold'})
+            return df_style
+        else:
+            df.set_index(keys='connector_name', inplace=True)
+        return df
+
+    def report_run_book(self, stylise: bool=True):
+        """ generates a report on all the intent
+
+        :param stylise: returns a stylised dataframe with formatting
+        :return: pd.Dataframe
+        """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+        df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
+        if stylise:
+            index = df[df['name'].duplicated()].index.to_list()
+            df.loc[index, 'name'] = ''
+            df = df.reset_index(drop=True)
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['name'],  **{'font-weight': 'bold', 'font-size': "120%"})
+            return df_style
+        return df
+
+    def report_intent(self, levels: [str, int, list]=None, stylise: bool=True):
+        """ generates a report on all the intent
+
+        :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
+        :param stylise: (optional) returns a stylised dataframe with formatting
+        :return: pd.Dataframe
+        """
+        if isinstance(levels, (int,str)):
+            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
+            if stylise:
+                Commons.report(df, index_header='order')
+                df.set_index(keys='order', inplace=True)
+                return df
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
+        if stylise:
+            Commons.report(df, index_header='level')
+        df.set_index(keys='level', inplace=True)
+        return df
+
+    def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
+                     re_ignore_case: bool=False, stylise: bool=True, drop_dates: bool=False):
+        """ generates a report on the notes
+
+        :param catalog: (optional) the catalog to filter on
+        :param labels: (optional) s label or list of labels to filter on
+        :param regex: (optional) a regular expression on the notes
+        :param re_ignore_case: (optional) if the regular expression should be case sensitive
+        :param stylise: (optional) returns a stylised dataframe with formatting
+        :param drop_dates: (optional) excludes the 'date' column from the report
+        :return: pd.Dataframe
+        """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        drop_dates = False if not isinstance(drop_dates, bool) else drop_dates
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
+        report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
+                                      drop_dates=drop_dates)
+        df = pd.DataFrame.from_dict(data=report, orient='columns')
+        if stylise:
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['section'], **{'font-weight': 'bold'})
+            _ = df_style.set_properties(subset=['label', 'section'], **{'font-size': "120%"})
+            return df_style
+        return df
+
