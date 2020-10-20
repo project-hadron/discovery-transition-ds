@@ -8,8 +8,21 @@ from ds_discovery.intent.tolerance_catalog_intent import ToleranceCatalogIntentM
 
 class ToleranceDrift(AbstractComponent):
 
+    DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
+    DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
+    DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
+
     def __init__(self, property_manager: ToleranceCatalogPropertyManager, intent_model: ToleranceCatalogIntentModel,
                  default_save=None, reset_templates: bool = None, align_connectors: bool = None):
+        """ Encapsulation class for the components set of classes
+
+        :param property_manager: The contract property manager instance for this component
+        :param intent_model: the model codebase containing the parameterizable intent
+        :param default_save: The default behaviour of persisting the contracts:
+                    if False: The connector contracts are kept in memory (useful for restricted file systems)
+        :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
+        :param align_connectors: (optional) resets aligned connectors to the template
+        """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
                          reset_templates=reset_templates, align_connectors=align_connectors)
 
@@ -55,13 +68,6 @@ class ToleranceDrift(AbstractComponent):
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
                    reset_templates=reset_templates, align_connectors=align_connectors)
-
-    @classmethod
-    def _from_remote_s3(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
-        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
-        _handler = 'AwsS3PersistHandler'
-        return _module_name, _handler
 
     @classmethod
     def scratch_pad(cls) -> ToleranceCatalogIntentModel:

@@ -38,7 +38,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         FeatureCatalogIntentModel(property_manager=FeatureCatalogPropertyManager('test', username='UserTest'), default_save_intent=False)
 
     def test_run_pipeline(self):
-        local_fc = FeatureCatalog.from_env('tester', default_save=False)
+        local_fc = FeatureCatalog.from_env('tester', default_save=False, has_contract=False)
         df = pd.DataFrame()
         df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=1000)
         df['age'] = self.tools.get_number(20, 90, weight_pattern=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
@@ -54,7 +54,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         _ = local_fc.intent_model.run_intent_pipeline(df, feature_name='Second', train_size=750, shuffle=True)
 
     def test_run_pipeline_from_connector(self):
-        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False, has_contract=False)
         catalog.set_catalog_feature('test')
         df = pd.DataFrame()
         df['key'] = list(range(10))
@@ -72,7 +72,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         self.assertEqual((10,2),result.shape)
 
     def test_run_pipeline_intent_order(self):
-        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False, has_contract=False)
         catalog.set_catalog_feature('test')
         df = pd.DataFrame()
         df['key'] = list(range(6))
@@ -88,7 +88,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         result = catalog.intent_model.run_intent_pipeline(df, feature_name='test')
 
     def test_apply_merge(self):
-        catalog: FeatureCatalog = FeatureCatalog.from_env('merge')
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', has_contract=False)
         catalog.set_catalog_feature('test')
         merge_df = pd.DataFrame()
         merge_df['cu_id'] = [1,2,3,4,5,6]
@@ -273,7 +273,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         df['cu_id'] = [1,2,3,4,5,6]
         df['age'] = [23, 18, 47, 32, 29, 61]
         df['gender'] = ['M', 'F', 'M', 'M', 'F', 'M']
-        catalog: FeatureCatalog = FeatureCatalog.from_env('tester')
+        catalog: FeatureCatalog = FeatureCatalog.from_env('tester', has_contract=False)
         catalog.set_catalog_feature('data')
         catalog.save_catalog_feature(feature_name='data', canonical=df)
         value = catalog.intent_model._get_canonical('data')
@@ -281,7 +281,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         self.assertEqual(['cu_id', 'age', 'gender'], value.columns.to_list())
 
     def test_set_intend_signature(self):
-        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False)
+        catalog: FeatureCatalog = FeatureCatalog.from_env('merge', default_save=False, has_contract=False)
         catalog.set_catalog_feature('test')
         df = pd.DataFrame()
         df['key'] = list(range(10))

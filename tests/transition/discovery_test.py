@@ -57,7 +57,7 @@ class TestDiscovery(unittest.TestCase):
 
 
     def test_filter_univariate_roc_auc(self):
-        tr = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tr.set_source('paribas.csv', nrows=5000)
         data = tr.load_source_canonical()
         result = Discover.filter_univariate_roc_auc(data, target='target', threshold=0.55)
@@ -70,7 +70,7 @@ class TestDiscovery(unittest.TestCase):
         self.assertCountEqual(['v50', 'v10', 'v14', 'v12', 'v129', 'v62', 'v21', 'v34'], result)
 
     def test_filter_univariate_mse(self):
-        tr = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tr.set_source('ames_housing.csv', nrows=5000)
         data = tr.load_source_canonical()
         result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=False, top=5)

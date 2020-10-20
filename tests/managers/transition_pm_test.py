@@ -48,17 +48,6 @@ class TransitionPMTest(unittest.TestCase):
         control = {'author_name': 'joe bloggs', 'domain': 'my_domain', 'title': 'new_title'}
         self.assertEqual(control, result)
 
-    def test_insight(self):
-        pm = TransitionPropertyManager('test', username='TestUser')
-        pm.set_insight(blueprint={'filed': {}})
-        blueprint, endpoints = pm.insight
-        self.assertEqual({'filed': {}}, blueprint)
-        self.assertEqual([], endpoints)
-        pm.set_insight(blueprint={'field': {}}, endpoints=['filed.end'])
-        blueprint, endpoints = pm.insight
-        self.assertEqual({'field': {}}, blueprint)
-        self.assertEqual(['filed.end'], endpoints)
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -73,13 +73,6 @@ class FeatureCatalog(AbstractComponent):
                    reset_templates=reset_templates, align_connectors=align_connectors)
 
     @classmethod
-    def _from_remote_s3(cls) -> (str, str):
-        """ Class Factory Method that builds the connector handlers an Amazon AWS s3 remote store."""
-        _module_name = 'ds_connectors.handlers.aws_s3_handlers'
-        _handler = 'AwsS3PersistHandler'
-        return _module_name, _handler
-
-    @classmethod
     def scratch_pad(cls) -> FeatureCatalogIntentModel:
         """ A class method to use the Components intent methods as a scratch pad"""
         return super().scratch_pad()

@@ -48,11 +48,12 @@ class PandasHandlerTest(unittest.TestCase):
         handler = PandasSourceHandler(ConnectorContract(file, '', ''))
         self.assertTrue(isinstance(handler.supported_types(), list) and len(handler.supported_types()) > 0)
         df = handler.load_canonical()
-        self.assertEqual((1000,10), df.shape)
+        self.assertEqual((1000,11), df.shape)
         self.assertTrue(handler.has_changed())
-        handler = PandasSourceHandler(ConnectorContract('work/data/0_raw/example01.dat', '', '', file_type='csv'))
+        file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.dat')
+        handler = PandasSourceHandler(ConnectorContract(file, '', '', file_type='csv'))
         df = handler.load_canonical()
-        self.assertEqual((1000,10), df.shape)
+        self.assertEqual((1000,11), df.shape)
 
     def test_persist_handler(self):
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/example01.pkl', '', '', file_type='pickle'))
@@ -71,6 +72,10 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertTrue(handler.persist_canonical(df))
         df = handler.load_canonical()
         self.assertEqual((1000, 11), df.shape)
+        self.assertTrue(handler.has_changed())
+        df = df.drop('value', axis='columns')
+        self.assertTrue(handler.persist_canonical(df))
+        self.assertEqual((1000, 10), df.shape)
         self.assertTrue(handler.has_changed())
 
     def test_persist_backup(self):

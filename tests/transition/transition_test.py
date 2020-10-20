@@ -33,10 +33,10 @@ class TransitionTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        Transition.from_env('TestAgent')
+        Transition.from_env('TestAgent', has_contract=False)
 
     def test_provenance_report(self):
-        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tr.set_provenance(title='new_title', domain='Healthcare', author_name='Joe Bloggs')
         result = tr.report_provenance()
         self.assertCountEqual([['new_title'], ['Healthcare'], ['Joe Bloggs']], result.values.tolist())
@@ -46,7 +46,7 @@ class TransitionTest(unittest.TestCase):
         notes = pd.DataFrame()
         notes['label'] = ['A', 'B', 'D', 'F']
         notes['text'] = ['This is the Alpha', 'Beta follows it closely', 'D is the last', 'F is out of place']
-        cp = Transition.from_env('task')
+        cp = Transition.from_env('task', has_contract=False)
         cp.upload_attributes(canonical=notes, label_key='label', text_key='text')
         result = cp.report_attributes(df, stylise=False)
         self.assertEqual((3, 4), df.shape)
@@ -56,14 +56,14 @@ class TransitionTest(unittest.TestCase):
         os.environ['HADRON_PM_TYPE'] = 'pickle'
         os.environ['HADRON_PM_MODULE'] = 'aistac.handlers.python_handlers'
         os.environ['HADRON_PM_HANDLER'] = 'PythonPersistHandler'
-        tr = Transition.from_env('task')
+        tr = Transition.from_env('task', has_contract=False)
         self.assertEqual( os.environ['HADRON_PM_PATH'] + "/hadron_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
 
         os.environ['HADRON_PM_MODULE'] = 'ds_discovery.handlers.pandas_handlers'
         os.environ['HADRON_PM_HANDLER'] = 'PandasPersistHandler'
-        tr = Transition.from_env('task')
+        tr = Transition.from_env('task', has_contract=False)
         self.assertEqual( os.environ['HADRON_PM_PATH'] + "/hadron_pm_transition_task.pickle", tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).uri)
         self.assertEqual( os.environ['HADRON_PM_MODULE'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).module_name)
         self.assertEqual(os.environ['HADRON_PM_HANDLER'], tr.pm.get_connector_contract(tr.pm.CONNECTOR_PM_CONTRACT).handler)
@@ -74,7 +74,7 @@ class TransitionTest(unittest.TestCase):
         os.unsetenv('HADRON_PM_HANDLER')
 
     def test_transition_summary_report(self):
-        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
@@ -82,7 +82,7 @@ class TransitionTest(unittest.TestCase):
         self.assertEqual(['score', 'data_shape', 'data_type', 'usability'], list(report.keys()))
 
     def test_report_statistics(self):
-        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False)
+        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
@@ -91,13 +91,13 @@ class TransitionTest(unittest.TestCase):
 
     def test_repo_load(self):
         os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
-        tr: Transition = Transition.from_env('hk_income')
+        tr: Transition = Transition.from_env('hk_income', has_contract=False)
 
     def test_run_transition_pipeline(self):
         os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
-        tr: Transition = Transition.from_env('hk_income', default_save=False, default_save_intent=False)
+        tr: Transition = Transition.from_env('hk_income', default_save=False, default_save_intent=False, has_contract=False)
         pprint(tr.pm.report_connectors())
-        # builder: SyntheticBuilder = SyntheticBuilder.from_env('hk_income', default_save=False, default_save_intent=False)
+        # builder: SyntheticBuilder = SyntheticBuilder.from_env('hk_income', default_save=False, default_save_intent=False, has_contract=False)
         # builder.run_synthetic_pipeline(size=1000)
         # tr.run_transition_pipeline()
 
@@ -123,7 +123,7 @@ class TransitionTest(unittest.TestCase):
     #     print(report.columns)
     #
     # def test_keys(self):
-    #     tr = Transition.from_env('Example01')
+    #     tr = Transition.from_env('Example01', has_contract=False)
     #     join = tr.pm.join
     #     self.assertEqual('data.Example01.connectors', tr.pm.KEY.connectors_key)
     #     self.assertEqual('data.Example01.cleaners', tr.pm.KEY.cleaners_key)
@@ -135,7 +135,7 @@ class TransitionTest(unittest.TestCase):
     #     self.assertEqual('data.Example01.connectors.kwargs', join(tr.pm.KEY.connectors_key, 'kwargs'))
     #
     # def test_is_contract_empty(self):
-    #     tr = Transition.from_env('synthetic')
+    #     tr = Transition.from_env('synthetic', has_contract=False)
     #     self.assertTrue(tr.is_contract_empty())
     #     tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
     #     self.assertFalse(tr.is_contract_empty())
@@ -152,13 +152,13 @@ class TransitionTest(unittest.TestCase):
     #     self.assertTrue(tr.is_contract_empty())
     #
 #     def test_source_report(self):
-#         tr = Transition.from_env('synthetic')
+#         tr = Transition.from_env('synthetic', has_contract=False)
 #         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
 #         report = tr.report_connectors(stylise=False)
 #         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report.columns))
 #
 #     def test_load_clean_file(self):
-#         tr = Transition.from_env('Example01')
+#         tr = Transition.from_env('Example01', has_contract=False)
 #         tr.set_version('0.01')
 #         tr.set_source_contract(uri='example01.csv', sep=',', encoding='latin1', load=False)
 #         df = tr.load_source_canonical()

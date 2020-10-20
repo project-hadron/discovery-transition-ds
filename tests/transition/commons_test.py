@@ -14,7 +14,8 @@ class CommonsTest(unittest.TestCase):
     def setUp(self):
         os.environ['HADRON_PM_PATH'] = os.path.join(os.environ['PWD'], 'work')
         self.tools: SyntheticIntentModel = SyntheticBuilder.from_env('tester', default_save=False,
-                                                                     default_save_intent=False).intent_model
+                                                                     default_save_intent=False,
+                                                                     has_contract=False).intent_model
 
     def tearDown(self):
         try:

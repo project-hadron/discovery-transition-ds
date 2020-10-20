@@ -1028,7 +1028,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if 'min' in matrix:
             df_time[f"{rename}_min"] = canonical[header].dt.minute
         if 'woy' in matrix:
-            df_time[f"{rename}_woy"] = canonical[header].dt.weekofyear
+            df_time[f"{rename}_woy"] = canonical[header].dt.isocalendar().week
         if 'doy' in matrix:
             df_time[f"{rename}_doy"] = canonical[header].dt.dayofyear
         if 'ordinal' in matrix:

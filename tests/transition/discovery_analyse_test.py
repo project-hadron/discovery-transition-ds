@@ -64,7 +64,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertCountEqual(control, list(result.get('intent').keys()))
         control = ['weight_pattern', 'sample_distribution']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
-        control = ['outlier_percent', 'nulls_percent', 'sample']
+        control = ['excluded_percent', 'nulls_percent', 'sample']
         self.assertCountEqual(control, list(result.get('stats').keys()))
 
     def test_analyse_category_limits(self):
@@ -77,7 +77,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(top, len(result.get('intent').get('selection')))
         self.assertCountEqual(['A', 'B'], result.get('intent').get('selection'))
         self.assertCountEqual([40, 30], result.get('patterns').get('weight_pattern'))
-        self.assertEqual(30, result.get('stats').get('outlier_percent'))
+        self.assertEqual(30, result.get('stats').get('excluded_percent'))
         self.assertEqual(14, result.get('stats').get('sample'))
         lower = 0.2
         upper = 7
@@ -88,7 +88,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(upper, result.get('intent').get('upper'))
         self.assertCountEqual(['C', 'B'], result.get('intent').get('selection'))
         self.assertCountEqual([33, 50], result.get('patterns').get('weight_pattern'))
-        self.assertEqual(50, result.get('stats').get('outlier_percent'))
+        self.assertEqual(50, result.get('stats').get('excluded_percent'))
         self.assertEqual(10, result.get('stats').get('sample'))
 
     def test_analyse_number(self):
@@ -195,10 +195,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                               'year_first': False},
                    'patterns': {'sample_distribution': [1, 0, 3],
                                 'weight_pattern': [25.0, 0.0, 75.0]},
-                   'stats': {'kurtosis': 3.86,
+                   'stats': {'bootstrap_ci': (17572.5, 17797.75),
+                             'emp_outliers': [0, 0],
+                             'excluded_percent': 0.0,
+                             'irq_outliers': [1, 0],
+                             'kurtosis': 3.86,
                              'mean': '2018-07-04',
                              'nulls_percent': 60.0,
-                             'outlier_percent': 0.0,
                              'sample': 4,
                              'skew': -1.96}}
         self.assertEqual(control, result)
@@ -221,10 +224,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                               'year_first': False},
                    'patterns': {'sample_distribution': [2, 3, 5],
                                 'weight_pattern': [20.0, 30.0, 50.0]},
-                   'stats': {'kurtosis': 0.64,
+                   'stats': {'bootstrap_ci': (17493.5054775573, 17724.4628926684),
+                             'emp_outliers': [0, 0],
+                             'excluded_percent': 0.0,
+                             'irq_outliers': [1, 0], 'kurtosis': 0.64,
                              'mean': pd.Timestamp('2018-03-22 17:31:12+0000', tz='UTC'),
                              'nulls_percent': 0.0,
-                             'outlier_percent': 0.0,
+                             'excluded_percent': 0.0,
                              'sample': 10,
                              'skew': -0.94}}
         self.assertEqual(control, result)
@@ -245,8 +251,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                       'weighting_precision': 2},
                                            'patterns': {'sample_distribution': [30, 20],
                                                         'weight_pattern': [60.0, 40.0]},
-                                           'stats': {'nulls_percent': 0.0,
-                                                     'outlier_percent': 0.0,
+                                           'stats': {'excluded_percent': 0.0,'nulls_percent': 0.0,
                                                      'sample': 50}},
                               'associate': 'gender'}}
         self.assertEqual(control, result)
@@ -273,11 +278,14 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                          'weight_mean': [140.484, 0.0, 827.231],
                                                          'weight_pattern': [70.45, 0.0, 29.55],
                                                          'weight_std': [7568.791, 0.0, 7760.859]},
-                                            'stats': {'kurtosis': -1.03,
+                                            'stats': {'bootstrap_ci': (253.857, 445.214),
+                                                      'emp_outliers': [0, 0],
+                                                      'excluded_percent': 0.0,
+                                                      'irq_outliers': [0, 0], 'kurtosis': -1.03,
                                                       'mad': 285.91,
                                                       'mean': 343.39,
+                                                      'excluded_percent': 0.0,
                                                       'nulls_percent': 12.0,
-                                                      'outlier_percent': 0.0,
                                                       'sample': 44,
                                                       'sem': 49.52,
                                                       'skew': 0.84,
@@ -287,7 +295,6 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         #dates
         df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = [{'dates': {'dtype': 'datetime', 'granularity': 3, 'date_format': '%d-%m-%Y'}}]
-        result = Discover.analyse_association(df, columns_list)
         control = {'dates': {'analysis': {'intent': {'date_format': '%d-%m-%Y',
                                                      'day_first': False,
                                                      'dtype': 'date',
@@ -301,13 +308,17 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                      'year_first': False},
                                           'patterns': {'sample_distribution': [12, 21, 11],
                                                        'weight_pattern': [27.27, 47.73, 25.0]},
-                                          'stats': {'kurtosis': -0.5,
+                                          'stats': {'bootstrap_ci': (14622.3654489759,
+                                                                     15435.002697157),
+                                                    'emp_outliers': [0, 0],
+                                                    'excluded_percent': 0.0,
+                                                    'irq_outliers': [0, 0], 'kurtosis': -0.5,
                                                     'mean': '14-03-2011',
                                                     'nulls_percent': 12.0,
-                                                    'outlier_percent': 0.0,
                                                     'sample': 44,
                                                     'skew': 0.25}},
                              'associate': 'dates'}}
+        result = Discover.analyse_association(df, columns_list)
         self.assertEqual(control, result)
 
     def test_analyse_associate_multi(self):

@@ -20,8 +20,8 @@ class MyTestCase(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
-        self.tools = SyntheticBuilder.from_env('tester', default_save=False, default_save_intent=False).intent_model
-        self.fc: FeatureCatalog = FeatureCatalog.from_env('tester', default_save=False)
+        self.tools = SyntheticBuilder.from_env('tester', default_save=False, default_save_intent=False, has_contract=False).intent_model
+        self.fc: FeatureCatalog = FeatureCatalog.from_env('tester', default_save=False, has_contract=False)
 
     def tearDown(self):
         try:
