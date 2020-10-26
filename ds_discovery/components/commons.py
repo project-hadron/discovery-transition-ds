@@ -10,7 +10,7 @@ __author__ = 'Darryl Oatridge'
 class Commons(AistacCommons):
 
     @staticmethod
-    def report(canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):
+    def report(canonical: pd.DataFrame, index_header: [str, list], bold: [str, list]=None, large_font: [str, list]=None):
         """ generates a stylised report
 
         :param canonical

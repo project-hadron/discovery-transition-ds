@@ -6,7 +6,7 @@ from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCa
 from ds_discovery.intent.tolerance_catalog_intent import ToleranceCatalogIntentModel
 
 
-class ToleranceDrift(AbstractComponent):
+class ConceptTolerance(AbstractComponent):
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
