@@ -120,6 +120,7 @@ class Transition(AbstractComponent):
         return Visualisation()
 
     def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
+                       cost_price: str = None, cost_code: str = None, cost_type: str = None,
                        provider_name: str=None, provider_uri: str=None, provider_note: str=None,
                        author_name: str=None, author_uri: str=None, author_contact: str=None,
                        save: bool=None):
@@ -129,6 +130,9 @@ class Transition(AbstractComponent):
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
         :param usage_license: (optional) any associated usage licensing
+        :param cost_price: (optional) a cost price associated with this provenance
+        :param cost_code: (optional) a cost centre code or reference code
+        :param cost_type: (optional) the cost type or description
         :param provider_name: (optional) the provider system or institution name or title
         :param provider_uri: (optional) a uri reference that helps identify the provider
         :param provider_note: (optional) any notes that might be useful
@@ -138,6 +142,7 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         self.pm.set_provenance(title=title, domain=domain, description=description, usage_license=usage_license,
+                               cost_price=cost_price, cost_code=cost_code, cost_type=cost_type,
                                provider_name=provider_name, provider_uri=provider_uri, provider_note=provider_note,
                                author_name=author_name, author_uri=author_uri, author_contact=author_contact)
         self.pm_persist(save=save)
@@ -343,7 +348,7 @@ class Transition(AbstractComponent):
                                            inc_template=inc_template)
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
-            Commons.report(df, index_header='connector_name')
+            return Commons.report(df, index_header='connector_name')
         df.set_index(keys='connector_name', inplace=True)
         return df
 
@@ -355,7 +360,7 @@ class Transition(AbstractComponent):
         """
         df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
         if stylise:
-            Commons.report(df, index_header='name')
+            return Commons.report(df, index_header='name')
         df.set_index(keys='name', inplace=True)
         return df
 
@@ -369,12 +374,10 @@ class Transition(AbstractComponent):
         if isinstance(levels, (int,str)):
             df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
             if stylise:
-                Commons.report(df, index_header='order')
-                df.set_index(keys='order', inplace=True)
-                return df
+                return Commons.report(df, index_header='order')
         df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
         if stylise:
-            Commons.report(df, index_header='level')
+            return Commons.report(df, index_header='level')
         df.set_index(keys='level', inplace=True)
         return df
 
@@ -394,7 +397,7 @@ class Transition(AbstractComponent):
                                       drop_dates=drop_dates)
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
-            Commons.report(df, index_header='section', bold='label')
+            return Commons.report(df, index_header='section', bold='label')
         df.set_index(keys='section', inplace=True)
         return df
 
@@ -404,7 +407,7 @@ class Transition(AbstractComponent):
         df = df.transpose().reset_index()
         df.columns = ['provenance', 'values']
         if stylise:
-            Commons.report(df, index_header='provenance')
+            return Commons.report(df, index_header='provenance')
         df.set_index(keys='provenance', inplace=True)
         return df
 
@@ -421,8 +424,9 @@ class Transition(AbstractComponent):
         if not isinstance(canonical, pd.DataFrame):
             canonical = self._auto_transition()
         # provinance
-        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author']
+        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author', 'cost']
         _provenance_count = len(list(filter(lambda x: x in _provenance_headers, self.pm.provenance.keys())))
+        _provenance_cost = self.pm.provenance.get('cost', {}).get('price', 'NA')
         # descibed
         _descibed_keys = self.pm.get_knowledge(catalog='attributes').keys()
         _descibed_count = len(list(filter(lambda x: x in canonical.columns, _descibed_keys)))
@@ -459,7 +463,8 @@ class Transition(AbstractComponent):
                                 'others': _other_fields},
                   'usability': {'mostly_null': len(_null_columns),
                                 'predominance': len(_dom_columns),
-                                'correlated': len(_correlated)}}
+                                'correlated': len(_correlated)},
+                  'cost': {'price': _provenance_cost}}
         if as_dict:
             return report
         df = pd.DataFrame(columns=['report', 'summary', 'result'])
@@ -481,6 +486,7 @@ class Transition(AbstractComponent):
         report = {'meta-data': {'uid': str(uuid.uuid4()),
                                 'created': str(pd.Timestamp.now()),
                                 'creator': self.pm.username},
+                  'description': self.pm.description,
                   'summary': self.report_quality_summary(canonical, as_dict=True)}
         # connectors
         _connectors = {}
@@ -512,7 +518,7 @@ class Transition(AbstractComponent):
         report['connectors'] = _connectors
         # provenance
         report['provenance'] = self.pm.provenance
-        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author']
+        _provenance_headers = ['title', 'license', 'domain', 'description', 'provider',  'author', 'cost']
         _provenance_count = len(list(filter(lambda x: x in _provenance_headers, self.pm.provenance.keys())))
         # fields
         _field_count = 0
@@ -534,12 +540,14 @@ class Transition(AbstractComponent):
                 _data_dict[row.iloc[0]].update({index: row.loc[index]})
         report['dictionary'] = _data_dict
         # notes
-        _notes = {}
-        for label, items in self.pm.get_knowledge(catalog='components').items():
-            _notes[label] = Commons.list_formatter(items.values())
-
-        report['components'] = {'description': self.pm.description,
-                                'notes': _notes}
+        _observations = {}
+        for label, items in self.pm.get_knowledge(catalog='observations').items():
+            _observations[label] = Commons.list_formatter(items.values())
+        _actions = {}
+        for label, items in self.pm.get_knowledge(catalog='actions').items():
+            _actions[label] = Commons.list_formatter(items.values())
+        report['notes'] = {'observations': _observations,
+                           'actions': _actions}
         return report
 
     def report_statistics(self, canonical: pd.DataFrame=None) -> dict:

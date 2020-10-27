@@ -8,8 +8,8 @@ class TransitionPropertyManager(AbstractPropertyManager):
 
     def __init__(self, task_name: str, username: str):
         # set additional keys
-        root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author']}]
-        knowledge_keys = ['components', 'observations', 'actions', 'attributes']
+        root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author', 'cost']}]
+        knowledge_keys = ['observations', 'actions', 'attributes']
         super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
 
     @property
@@ -22,7 +22,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
         report = dict()
         for catalog in self.get(self.KEY.provenance_key, {}).keys():
             _key = self.join(self.KEY.provenance_key, catalog)
-            if catalog in ['provider', 'author']:
+            if catalog in ['provider', 'author', 'cost']:
                 for name, value in self.get(_key, {}).items():
                     report[f"{catalog}_{name}"] = value
             else:
@@ -30,6 +30,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
         return report
 
     def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
+                       cost_price: str=None, cost_code: str=None, cost_type: str=None,
                        provider_name: str=None, provider_uri: str=None, provider_note: str=None,
                        author_name: str=None, author_uri: str=None, author_contact: str=None):
         """ sets the provenance values. Only sets those passed
@@ -38,6 +39,9 @@ class TransitionPropertyManager(AbstractPropertyManager):
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
         :param usage_license: (optional) any associated usage licensing
+        :param cost_price: (optional) a cost price associated with this provenance
+        :param cost_code: (optional) a cost centre code or reference code
+        :param cost_type: (optional) the cost type or description
         :param provider_name: (optional) the provider system or institution name or title
         :param provider_uri: (optional) a uri reference that helps identify the provider
         :param provider_note: (optional) any notes that might be useful
@@ -50,7 +54,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
                 continue
             if name in ['title', 'domain', 'description', 'license']:
                 self.set(self.join(self.KEY.provenance_key, name), value)
-            if name.startswith('provider') or name.startswith('author'):
+            if name.startswith('provider') or name.startswith('author') or name.startswith('cost'):
                 key, item = name.split(sep='_')
                 self.set(self.join(self.KEY.provenance_key, key, item), value)
         return

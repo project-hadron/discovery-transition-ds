@@ -38,7 +38,7 @@ class TransitionTest(unittest.TestCase):
     def test_provenance_report(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tr.set_provenance(title='new_title', domain='Healthcare', author_name='Joe Bloggs')
-        result = tr.report_provenance()
+        result = tr.report_provenance(stylise=False)
         self.assertCountEqual([['new_title'], ['Healthcare'], ['Joe Bloggs']], result.values.tolist())
 
     def test_dictionary_report(self):
@@ -79,7 +79,7 @@ class TransitionTest(unittest.TestCase):
                                module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
         tr.set_source_contract(connector_contract=cc)
         report = tr.report_quality_summary(as_dict=True)
-        self.assertEqual(['score', 'data_shape', 'data_type', 'usability'], list(report.keys()))
+        self.assertEqual(['score', 'data_shape', 'data_type', 'usability', 'cost'], list(report.keys()))
 
     def test_report_statistics(self):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)

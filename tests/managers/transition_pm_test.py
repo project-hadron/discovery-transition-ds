@@ -24,12 +24,12 @@ class TransitionPMTest(unittest.TestCase):
     def test_catalog(self):
         pm = TransitionPropertyManager('test', username='TestUser')
         catalog = pm.knowledge_catalog
-        self.assertCountEqual(['components', 'observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
+        self.assertCountEqual(['observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
 
     def test_manager_name(self):
         pm = TransitionPropertyManager('test', username='TestUser')
         result = pm.manager_name()
-        self.assertEqual('components', result)
+        self.assertEqual('transition', result)
 
     def test_provenance_catalog(self):
         pm = TransitionPropertyManager('test', username='TestUser')
@@ -46,6 +46,10 @@ class TransitionPMTest(unittest.TestCase):
         pm.set_provenance(author_name='joe bloggs')
         result = pm.report_provenance()
         control = {'author_name': 'joe bloggs', 'domain': 'my_domain', 'title': 'new_title'}
+        self.assertEqual(control, result)
+        pm.set_provenance(cost_price='$0.04', cost_code='32412')
+        result = pm.get(pm.KEY.provenance.cost_key)
+        control = {'price': '$0.04', 'code': '32412'}
         self.assertEqual(control, result)
 
 

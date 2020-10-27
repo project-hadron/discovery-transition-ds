@@ -21,8 +21,10 @@ class Commons(AistacCommons):
         """
         pd.set_option('max_colwidth', 200)
         pd.set_option('expand_frame_repr', True)
-        bold = Commons.list_formatter(bold).append(index_header)
-        large_font = Commons.list_formatter(large_font).append(index_header)
+        bold = Commons.list_formatter(bold)
+        bold.append(index_header)
+        large_font = Commons.list_formatter(large_font)
+        large_font.append(index_header)
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         index = canonical[canonical[index_header].duplicated()].index.to_list()
@@ -30,8 +32,10 @@ class Commons(AistacCommons):
         canonical = canonical.reset_index(drop=True)
         df_style = canonical.style.set_table_styles(style)
         _ = df_style.set_properties(**{'text-align': 'left'})
-        _ = df_style.set_properties(subset=bold, **{'font-weight': 'bold'})
-        _ = df_style.set_properties(subset=large_font, **{'font-size': "120%"})
+        if len(bold) > 0:
+            _ = df_style.set_properties(subset=bold, **{'font-weight': 'bold'})
+        if len(large_font) > 0:
+            _ = df_style.set_properties(subset=large_font, **{'font-size': "120%"})
         return df_style
 
     @staticmethod

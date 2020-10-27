@@ -4,4 +4,4 @@ from ds_discovery.components.transitioning import Transition
 from ds_discovery.components.concept_tolerance import ConceptTolerance
 
 # release version number picked up in the setup.py
-__version__ = "2.10.009"
+__version__ = "2.10.010"
