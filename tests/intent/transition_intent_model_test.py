@@ -38,6 +38,15 @@ class IntentModelTest(unittest.TestCase):
         """Basic smoke test"""
         TransitionIntentModel(property_manager=TransitionPropertyManager('test', username='TestUser'), default_save_intent=False)
 
+    def test_to_date_element(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['dates'] = tools.get_datetime("01/01/2018", "01/02/2018", day_first=False, size=5)
+        result = self.clean.to_date_element(df, matrix=['yr', 'dec'])
+        self.assertCountEqual(['dates', 'dates_yr', 'dates_dec'], result.columns.to_list())
+        result = self.clean.to_date_element(df, matrix=[])
+        self.assertCountEqual(['dates'], result.columns.to_list())
+
     def test_to_sample(self):
         tools = self.tools
         df = pd.DataFrame(tools.model_us_zip(size=1000))

@@ -907,6 +907,99 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
+    def to_date_element(self, df: pd.DataFrame, matrix: [str, list], headers: [str, list]=None, drop: bool=None,
+                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                        day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
+                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+        """ breaks a date down into value representations of the various parts that date.
+
+        :param df: the Pandas.DataFrame to get the column headers from
+        :param matrix: the matrix options (see below)
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param year_first: specifies if to parse with the year first
+                If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
+                If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
+        :param day_first: specifies if to parse with the day first
+                If True, parses dates with the day first, eg %d-%m-%Y.
+                If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+        :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+
+        Matrix options are:
+        - yr: year
+        - dec: decade
+        - mon: month
+        - day: day
+        - dow: day of week
+        - hr: hour
+        - min: minute
+        - woy: week of year
+        = doy: day of year
+        - ordinal: numeric float value of date
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
+        day_first = day_first if isinstance(day_first, bool) else False
+        year_first = year_first if isinstance(year_first, bool) else False
+        infer_datetime_format = date_format is None
+        if not inplace:
+            with threading.Lock():
+                df = deepcopy(df)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
+        for c in obj_cols:
+            df[c] = df[c].fillna(np.nan)
+            df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
+                                   dayfirst=day_first, yearfirst=year_first, format=date_format)
+            matrix = Commons.list_formatter(matrix)
+            if 'yr' in matrix:
+                df[f"{c}_yr"] = df[c].dt.year
+            if 'dec' in matrix:
+                df[f"{c}_dec"] = (df[c].dt.year - df[c].dt.year % 10).astype('category')
+            if 'mon' in matrix:
+                df[f"{c}_mon"] = df[c].dt.month
+            if 'day' in matrix:
+                df[f"{c}_day"] = df[c].dt.day
+            if 'dow' in matrix:
+                df[f"{c}_dow"] = df[c].dt.dayofweek
+            if 'hr' in matrix:
+                df[f"{c}_hr"] = df[c].dt.hour
+            if 'min' in matrix:
+                df[f"{c}_min"] = df[c].dt.minute
+            if 'woy' in matrix:
+                df[f"{c}_woy"] = df[c].dt.isocalendar().week
+            if 'doy' in matrix:
+                df[f"{c}_doy"] = df[c].dt.dayofyear
+            if 'ordinal' in matrix:
+                df[f"{c}_ordinal"] = mdates.date2num(df[c])
+        if not inplace:
+            return df
+        return
+
     def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
                      exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, as_num=None,
                      day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
@@ -970,11 +1063,11 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def to_date_from_mpldates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                              exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                              date_format: str=None, inplace: bool=None, save_intent: bool=None,
-                              intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                              remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+    def to_date_from_mpldates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None,
+                              dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                              re_ignore_case: bool=None, date_format: str=None, inplace: bool=None,
+                              save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                              replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ converts columns that are matplotlib dates to datetime (see matplotlib.dates num2date(...))
 
         :param df: the Pandas.DataFrame to get the column headers from
