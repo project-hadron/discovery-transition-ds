@@ -159,6 +159,5 @@ class PandasHandlerTest(unittest.TestCase):
             os.utime(file, None)
         self.assertTrue(source.has_changed())
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -33,6 +33,7 @@ class PandasSourceHandler(AbstractSourceHandler):
         'pd.read_' methods and directly passes the kwargs to these methods.
 
         Extra Parameters in the ConnectorContract kwargs:
+            - use_full_uri: (optional) use the uri in full and don't remove the query parameters
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
             - read_params: (optional) value pair dict of parameters to pass to the read methods. Underlying
                            read methods the parameters are passed to are all pandas 'read_*', e.g. pd.read_csv
@@ -40,24 +41,29 @@ class PandasSourceHandler(AbstractSourceHandler):
         if not isinstance(self.connector_contract, ConnectorContract):
             raise ValueError("The Pandas Connector Contract has not been set")
         _cc = self.connector_contract
-        load_params = _cc.kwargs
-        load_params.update(_cc.query)  # Update kwargs with those in the uri query
-        load_params.update(kwargs)     # Update with any passed though the call
-        _, _, _ext = _cc.address.rpartition('.')
-        file_type = load_params.pop('file_type', _ext if len(_ext) > 0 else 'csv')
+        load_params = kwargs
+        load_params.update(_cc.kwargs)  # Update with any kwargs in the
+        if load_params.pop('use_full_uri', False):
+            file_type = load_params.pop('file_type', 'csv')
+            address = _cc.uri
+        else:
+            load_params.update(_cc.query)  # Update kwargs with those in the uri query
+            _, _, _ext = _cc.address.rpartition('.')
+            address = _cc.address
+            file_type = load_params.pop('file_type', _ext if len(_ext) > 0 else 'csv')
         with threading.Lock():
             if file_type.lower() in ['parquet', 'pq']:
-                rtn_data = pd.read_parquet(_cc.address, **load_params)
+                rtn_data = pd.read_parquet(address, **load_params)
             elif file_type.lower() in ['zip', 'csv', 'tsv', 'txt']:
-                rtn_data = pd.read_csv(_cc.address, **load_params)
+                rtn_data = pd.read_csv(address, **load_params)
             elif file_type.lower() in ['json']:
-                rtn_data = self._json_load(path_file=_cc.address, **load_params)
+                rtn_data = self._json_load(path_file=address, **load_params)
             elif file_type.lower() in ['xls', 'xlsx']:
-                rtn_data = pd.read_excel(_cc.address, **load_params)
+                rtn_data = pd.read_excel(address, **load_params)
             elif file_type.lower() in ['pkl ', 'pickle']:
-                rtn_data = self._pickle_load(path_file=_cc.address, **load_params)
+                rtn_data = self._pickle_load(path_file=address, **load_params)
             elif file_type.lower() in ['yml', 'yaml']:
-                rtn_data = self._yaml_load(path_file=_cc.address, **load_params)
+                rtn_data = self._yaml_load(path_file=address, **load_params)
             else:
                 raise LookupError('The source format {} is not currently supported'.format(file_type))
         # set the change flag to read
