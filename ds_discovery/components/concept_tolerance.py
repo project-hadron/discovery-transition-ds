@@ -1,4 +1,5 @@
 import pandas as pd
+from aistac import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
@@ -88,6 +89,87 @@ class ConceptTolerance(AbstractComponent):
     def discover(self) -> DataDiscovery:
         """The components instance"""
         return DataDiscovery()
+
+    def get_feature_contract(self, feature_name: str=None) -> ConnectorContract:
+        """ gets the feature connector contract
+
+        :param feature_name: The unique name of the feature
+        :return: connector contract
+        """
+        return self.pm.get_connector_contract(connector_name=feature_name)
+
+    def set_feature_contract(self, feature_name: str, connector_contract: ConnectorContract, save: bool=None):
+        """ Sets the persist contract.
+
+        :param feature_name: the unique name of the feature
+        :param connector_contract: a Connector Contract for the properties persistence
+        :param save: (optional) if True, save to file. Default is True
+        """
+        self.add_connector_contract(connector_name=feature_name, connector_contract=connector_contract, save=save)
+        return
+
+    def load_source_canonical(self) -> [pd.DataFrame]:
+        """returns the contracted source data as a DataFrame """
+        return self.load_canonical(connector_name=self.CONNECTOR_SOURCE)
+
+    def load_catalog_feature(self, feature_name: str, reset_index: bool=None) -> pd.DataFrame:
+        """returns the feature data as a DataFrame
+
+        :param feature_name: a unique feature name
+        :param reset_index: if the index should be reset bringing the key into the columns
+        :return: pandas DataFrame
+        """
+        canonical = self.load_canonical(connector_name=feature_name)
+        if isinstance(reset_index, bool) and reset_index:
+            canonical.reset_index(inplace=True)
+        return canonical
+
+    def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
+        """returns the canonical of the referenced connector
+
+        :param connector_name: the name or label to identify and reference the connector
+        """
+        canonical = super().load_canonical(connector_name=connector_name, **kwargs)
+        if isinstance(canonical, dict):
+            canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
+        return canonical
+
+    def save_catalog_feature(self, canonical, feature_name: str):
+        """Saves the pandas.DataFrame to the feature catalog
+
+        :param canonical: the pandas DataFrame
+        :param feature_name: a unique feature name
+        """
+        self.persist_canonical(connector_name=feature_name, canonical=canonical)
+
+    def add_feature_description(self, feature_name: str, description: str, save: bool=None):
+        """ adds a description note that is included in with the 'report_features'"""
+        if isinstance(description, str) and description:
+            self.pm.set_intent_description(level=feature_name, text=description)
+            self.pm_persist(save)
+        return
+
+    def save_feature_schema(self, feature_name: str, canonical: pd.DataFrame=None, save: bool=None):
+        """ Saves the feature schema to the Property contract. The default loads the feature canonical but optionally
+        a canonical can be passed to base the schema on
+
+        :param feature_name: the name of the schema feature to save
+        :param canonical: (optional) the canonical to base the schema on
+        :param save: (optional) if True, save to file. Default is True
+        """
+        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_catalog_feature(feature_name)
+        report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
+        self.pm.set_canonical_schema(name=feature_name, canonical_report=report)
+        self.pm_persist(save=save)
+        return
+
+    def remove_feature(self, feature_name: str, save: bool=None):
+        """completely removes a feature including connector, intent and description"""
+        if self.pm.has_connector(connector_name=feature_name):
+            self.remove_connector_contract(connector_name=feature_name, save=save)
+        if self.pm.has_intent(level=feature_name):
+            self.remove_intent(level=feature_name)
+        return
 
     @staticmethod
     def canonical_report(canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,

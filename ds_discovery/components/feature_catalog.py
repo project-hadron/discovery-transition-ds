@@ -137,7 +137,7 @@ class FeatureCatalog(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         versioned = versioned if isinstance(versioned, bool) else True
-        uri_file = self.pm.file_pattern(connector_name=feature_name, versioned=versioned, stamped=stamped,
+        uri_file = self.pm.file_pattern(name=feature_name, versioned=versioned, stamped=stamped,
                                         file_type=file_type)
         self.add_connector_from_template(connector_name=feature_name, uri_file=uri_file,
                                          template_name=self.TEMPLATE_PERSIST, save=save)
