@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import uuid
 import numpy as np
 import pandas as pd
@@ -20,7 +22,6 @@ class Transition(AbstractComponent):
     REPORT_FIELDS = 'field_description'
     REPORT_QUALITY = 'data_quality'
     REPORT_SUMMARY = 'data_quality_summary'
-    REPORTS_TRANSITION = [REPORT_DICTIONARY, REPORT_ANALYSIS, REPORT_FIELDS, REPORT_QUALITY, REPORT_SUMMARY]
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
@@ -46,7 +47,7 @@ class Transition(AbstractComponent):
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
                  reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
                  default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None,
-                 has_contract: bool=None):
+                 has_contract: bool=None) -> Transition:
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -250,7 +251,8 @@ class Transition(AbstractComponent):
                               auto_connectors: bool=None, **kwargs):
         """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
         if report_connector_name not in [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT,
-                                         self.REPORT_QUALITY, self.REPORT_SUMMARY, self.REPORT_FIELDS]:
+                                         self.REPORT_QUALITY, self.REPORT_SUMMARY,
+                                         self.REPORT_FIELDS] + self.REPORTS_BASE_LIST:
             raise ValueError("Report name must be one of the class report constants")
         if auto_connectors if isinstance(auto_connectors, bool) else True:
             if not self.pm.has_connector(report_connector_name):
@@ -640,6 +642,23 @@ class Transition(AbstractComponent):
         super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key,
                              text_key=text_key, constraints=constraints, save=save)
 
+    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None):
+        """ Creates a bootstrap simulator with a SyntheticBuilder. Note this does not set the source
+
+        :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
+        :param project_name: (optional) a project name that will replace the hadron naming on file prefix
+        :param path: (optional) a path added to the template path default
+        """
+        self.set_persist(uri_file=self.pm.file_pattern(name='dataset', project=project_name, path=path,
+                                                       file_type='parquet', versioned=True))
+        self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS])
+        self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
+        self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
+                            domain=domain,
+                            usage_license="Public Consuption",
+                            description=f"A domain specific {domain} {project_name} dataset for {self.pm.task_name}")
+        return
+
     @staticmethod
     def _dtype_color(dtype: str):
         """Apply color to types"""
@@ -662,7 +681,7 @@ class Transition(AbstractComponent):
     def _correlated_columns(self, canonical: pd.DataFrame):
         """returns th percentage of useful colums"""
         threshold = 0.98
-        pad: TransitionIntentModel = self.scratch_pad()
+        pad = self.scratch_pad()
         canonical = pad.auto_to_category(canonical, unique_max=1000, inplace=False)
         canonical = pad.to_category_type(canonical, dtype='category', as_num=True)
         for c in canonical.columns:
@@ -682,7 +701,7 @@ class Transition(AbstractComponent):
 
     def _auto_transition(self) -> pd.DataFrame:
         """ attempts auto components on a canonical """
-        pad: TransitionIntentModel = self.scratch_pad()
+        pad = self.scratch_pad()
         if not self.pm.has_connector(self.CONNECTOR_SOURCE):
             raise ConnectionError("Unable to load Source canonical as the Source Connector has not been set")
         canonical = self.load_source_canonical()
