@@ -216,8 +216,9 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         write_params = persist_params.pop('write_params', {})
         # parquet
         if file_type.lower() in ['pq', 'pqt', 'parquet']:
+            _index = write_params.pop('index', False)
             with threading.Lock():
-                canonical.to_parquet(_address, **write_params)
+                canonical.to_parquet(_address, index=_index, **write_params)
             return True
         # csv
         if file_type.lower() in ['csv', 'tsv', 'txt']:
