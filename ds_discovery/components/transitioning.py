@@ -642,20 +642,22 @@ class Transition(AbstractComponent):
         super().upload_notes(canonical=canonical.to_dict(orient='list'), catalog=catalog, label_key=label_key,
                              text_key=text_key, constraints=constraints, save=save)
 
-    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None):
-        """ Creates a bootstrap simulator with a SyntheticBuilder. Note this does not set the source
+    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
+        """ Creates a bootstrap Transition setup. Note this does not set the source
 
         :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
         :param project_name: (optional) a project name that will replace the hadron naming on file prefix
         :param path: (optional) a path added to the template path default
+        :param file_type: (optional) a file_type for the persisted file, default is 'parguet'
         """
+        file_type = file_type if isinstance(file_type, str) else 'parquet'
         self.set_persist(uri_file=self.pm.file_pattern(name='dataset', project=project_name, path=path,
-                                                       file_type='parquet', versioned=True))
+                                                       file_type=file_type, versioned=True))
         self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS])
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
                             domain=domain,
-                            usage_license="Public Consuption",
+                            usage_license="Public Consumption",
                             description=f"A domain specific {domain} {project_name} dataset for {self.pm.task_name}")
         return
 
