@@ -651,8 +651,10 @@ class Transition(AbstractComponent):
         :param file_type: (optional) a file_type for the persisted file, default is 'parguet'
         """
         file_type = file_type if isinstance(file_type, str) else 'parquet'
-        self.set_persist(uri_file=self.pm.file_pattern(name='dataset', project=project_name, path=path,
-                                                       file_type=file_type, versioned=True))
+        project_name = project_name if isinstance(project_name, str) else 'hadron'
+        file_name = self.pm.file_pattern(name='complete', project=project_name.lower(), path=path, file_type=file_type,
+                                         versioned=True)
+        self.set_persist(uri_file=file_name)
         self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS])
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
