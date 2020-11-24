@@ -203,7 +203,10 @@ class Transition(AbstractComponent):
                 raise ValueError(f"Report name(s) {_report} must be from the report constants {_default_reports}")
             file_pattern = uri_file
             if not isinstance(uri_file, str):
-                file_pattern = self.pm.file_pattern(name=_report, file_type='json', versioned=True)
+                file_type='json'
+                if _report in [self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS]:
+                    file_type = 'csv'
+                file_pattern = self.pm.file_pattern(name=_report, file_type=file_type, versioned=True)
                 if 'orient' not in kwargs.keys():
                     kwargs.update({'orient': 'records'})
             self.add_connector_from_template(connector_name=_report, uri_file=file_pattern,
