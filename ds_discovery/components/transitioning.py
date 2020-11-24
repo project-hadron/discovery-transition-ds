@@ -120,17 +120,18 @@ class Transition(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
-    def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
-                       cost_price: str = None, cost_code: str = None, cost_type: str = None,
-                       provider_name: str=None, provider_uri: str=None, provider_note: str=None,
-                       author_name: str=None, author_uri: str=None, author_contact: str=None,
-                       save: bool=None):
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, license_type: str=None,
+                       license_name: str=None, license_uri: str=None, cost_price: str = None, cost_code: str = None,
+                       cost_type: str = None, provider_name: str=None, provider_uri: str=None, provider_note: str=None,
+                       author_name: str=None, author_uri: str=None, author_contact: str=None, save: bool=None):
         """sets the provenance values. Only sets those passed
 
         :param title: (optional) the title of the provenance
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
-        :param usage_license: (optional) any associated usage licensing
+        :param license_type: (optional) The type of the license. Default 'ODC-By'
+        :param license_name: (optional) The full name of the license. Default 'Open Data Commons Attribution License'
+        :param license_uri: (optional) The license uri. Default https://opendatacommons.org/licenses/by/
         :param cost_price: (optional) a cost price associated with this provenance
         :param cost_code: (optional) a cost centre code or reference code
         :param cost_type: (optional) the cost type or description
@@ -142,10 +143,15 @@ class Transition(AbstractComponent):
         :param author_contact: (optional)the the author contact information
         :param save: (optional) if True, save to file. Default is True
         """
-        self.pm.set_provenance(title=title, domain=domain, description=description, usage_license=usage_license,
-                               cost_price=cost_price, cost_code=cost_code, cost_type=cost_type,
-                               provider_name=provider_name, provider_uri=provider_uri, provider_note=provider_note,
-                               author_name=author_name, author_uri=author_uri, author_contact=author_contact)
+        license_type = license_type if license_type else 'PDDL'
+        license_name = license_name if license_name else 'Open Data Commons Attribution License'
+        license_uri = license_uri if license_uri else 'https://opendatacommons.org/licenses/pddl/summary'
+
+        self.pm.set_provenance(title=title, domain=domain, description=description, license_type=license_type,
+                               license_name=license_name, license_uri=license_uri, cost_price=cost_price,
+                               cost_code=cost_code, cost_type=cost_type, provider_name=provider_name,
+                               provider_uri=provider_uri, provider_note=provider_note, author_name=author_name,
+                               author_uri=author_uri, author_contact=author_contact)
         self.pm_persist(save=save)
 
     def reset_provenance(self, save: bool=None):
@@ -373,7 +379,7 @@ class Transition(AbstractComponent):
         :param stylise: (optional) returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        if isinstance(levels, (int,str)):
+        if isinstance(levels, (int, str)):
             df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
             if stylise:
                 return Commons.report(df, index_header='order')
@@ -659,7 +665,6 @@ class Transition(AbstractComponent):
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
                             domain=domain,
-                            usage_license="Public Consumption",
                             description=f"A domain specific {domain} {project_name} dataset for {self.pm.task_name}")
         return
 

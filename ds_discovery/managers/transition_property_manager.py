@@ -29,16 +29,18 @@ class TransitionPropertyManager(AbstractPropertyManager):
                 report[catalog] = self.get(_key, '')
         return report
 
-    def set_provenance(self, title: str=None, domain: str=None, description: str=None, usage_license: str=None,
-                       cost_price: str=None, cost_code: str=None, cost_type: str=None,
-                       provider_name: str=None, provider_uri: str=None, provider_note: str=None,
+    def set_provenance(self, title: str=None, domain: str=None, description: str=None, license_type: str=None,
+                       license_name: str=None, license_uri: str=None, cost_price: str=None, cost_code: str=None,
+                       cost_type: str=None, provider_name: str=None, provider_uri: str=None, provider_note: str=None,
                        author_name: str=None, author_uri: str=None, author_contact: str=None):
         """ sets the provenance values. Only sets those passed
 
         :param title: (optional) the title of the provenance
         :param domain: (optional) the domain it sits within
         :param description: (optional) a description of the provenance
-        :param usage_license: (optional) any associated usage licensing
+        :param license_type: (optional) The type of the license such as PDDL, ODC-By, ODC-ODbL
+        :param license_name: (optional) The full name of the license e.g. 'Open Data Commons Attribution License'
+        :param license_uri: (optional) The link to the license e.g. 'https://opendatacommons.org/licenses/by/summary/'
         :param cost_price: (optional) a cost price associated with this provenance
         :param cost_code: (optional) a cost centre code or reference code
         :param cost_type: (optional) the cost type or description
