@@ -159,31 +159,6 @@ class Transition(AbstractComponent):
         self.pm.reset_provenance()
         self.pm_persist(save)
 
-    def get_persist_contract(self):
-        """ gets the persist connector contract that can be used as the next chain source"""
-        return self.pm.get_connector_contract(self.CONNECTOR_PERSIST)
-
-    def set_persist_contract(self, connector_contract: ConnectorContract, save: bool=None):
-        """ Sets the persist contract.
-
-        :param connector_contract: a Connector Contract for the persisted data
-        :param save: (optional) if True, save to file. Default is True
-        """
-        self.add_connector_contract(connector_name=self.CONNECTOR_PERSIST, connector_contract=connector_contract,
-                                    save=save)
-        return
-
-    def set_persist(self, uri_file: str=None, save: bool=None, **kwargs):
-        """sets the persist contract CONNECTOR_PERSIST using the TEMPLATE_PERSIST connector contract
-
-        :param uri_file: (optional) the uri_file is appended to the template path
-        :param save: (optional) if True, save to file. Default is True
-        """
-        file_pattern = self.pm.file_pattern(name=self.CONNECTOR_PERSIST)
-        uri_file = uri_file if isinstance(uri_file, str) else file_pattern
-        self.add_connector_from_template(connector_name=self.CONNECTOR_PERSIST, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
-
     def set_report_persist(self, connector_name: [str, list]=None, uri_file: str=None, save: bool=None, **kwargs):
         """sets the report persist using the TEMPLATE_PERSIST connector contract, there are preset constants that
         should be used. These constance can be found using Transition.REPORT_<NAME> or <instance>.REPORT_<NAME>
