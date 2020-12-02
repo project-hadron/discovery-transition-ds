@@ -22,7 +22,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
         report = dict()
         for catalog in self.get(self.KEY.provenance_key, {}).keys():
             _key = self.join(self.KEY.provenance_key, catalog)
-            if catalog in ['provider', 'author', 'cost']:
+            if catalog in ['provider', 'author', 'cost', 'license']:
                 for name, value in self.get(_key, {}).items():
                     report[f"{catalog}_{name}"] = value
             else:
@@ -51,12 +51,15 @@ class TransitionPropertyManager(AbstractPropertyManager):
         :param author_uri: (optional) the author uri
         :param author_contact: (optional)the the author contact information
         """
-        for name, value in locals().items():
+        params = locals().copy()
+        params.pop('self', None)
+        for name, value in params.items():
             if value is None:
                 continue
-            if name in ['title', 'domain', 'description', 'license']:
+            if name in ['title', 'domain', 'description']:
                 self.set(self.join(self.KEY.provenance_key, name), value)
-            if name.startswith('provider') or name.startswith('author') or name.startswith('cost'):
+            if name.startswith('provider') or name.startswith('author') or name.startswith('cost') or name.startswith(
+                    'license'):
                 key, item = name.split(sep='_')
                 self.set(self.join(self.KEY.provenance_key, key, item), value)
         return
