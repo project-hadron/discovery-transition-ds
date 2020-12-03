@@ -26,7 +26,8 @@ class PandasHandlerTest(unittest.TestCase):
         except:
             pass
         scratch: SyntheticIntentModel = SyntheticBuilder.scratch_pad()
-        df = scratch.model_noise(num_columns=10, size=1000)
+        df = pd.DataFrame(index=range(1000))
+        df = scratch.model_noise(df, num_columns=10)
         file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.csv')
         df.to_csv(file)
         file = os.path.join(os.environ['HADRON_DEFAULT_PATH'], 'example01.dat')
@@ -61,7 +62,7 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertFalse(handler.has_changed())
         self.assertFalse(handler.exists())
         # create the file and persist
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         self.assertTrue(handler.persist_canonical(df))
         self.assertTrue(handler.exists())
         self.assertTrue(handler.has_changed())
@@ -80,7 +81,7 @@ class PandasHandlerTest(unittest.TestCase):
 
     def test_persist_backup(self):
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/example01.json', '', ''))
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         self.assertTrue(handler.persist_canonical(df))
         df = pd.DataFrame(data=handler.load_canonical())
         self.assertEqual((1000, 10), df.shape)
@@ -93,7 +94,7 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertTrue(os.path.exists(ConnectorContract.parse_address(uri)))
 
     def test_json(self):
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.json',
                                                          '', '', file_type='json'))
         handler.persist_canonical(df)
@@ -105,7 +106,7 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertFalse(handler.exists())
 
     def test_csv(self):
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.csv',
                                                         '', '', file_type='csv'))
         handler.persist_canonical(df)
@@ -117,7 +118,7 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertFalse(handler.exists())
 
     def test_pickle(self):
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.pkl',
                                                         '', '', file_type='pickle'))
         handler.persist_canonical(df)
@@ -129,7 +130,7 @@ class PandasHandlerTest(unittest.TestCase):
         self.assertFalse(handler.exists())
 
     def test_parquet(self):
-        df = SyntheticBuilder.scratch_pad().model_noise(num_columns=10, size=1000)
+        df = SyntheticBuilder.scratch_pad().model_noise(pd.DataFrame(index=range(1000)), num_columns=10)
         handler = PandasPersistHandler(ConnectorContract('work/data/2_transition/handler_test.pq',
                                                         '', '', file_type='parquet'))
         handler.persist_canonical(df)

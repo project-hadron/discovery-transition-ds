@@ -210,7 +210,7 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         _, _, _ext = _address.rpartition('.')
         if not self.connector_contract.schema.startswith('http'):
             _path, _ = os.path.split(_address)
-            if not os.path.exists(_path):
+            if len(_path) > 0 and not os.path.exists(_path):
                 os.makedirs(_path)
         file_type = persist_params.pop('file_type', _ext if len(_ext) > 0 else 'pkl')
         write_params = persist_params.pop('write_params', {})
