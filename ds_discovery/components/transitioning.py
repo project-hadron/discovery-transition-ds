@@ -106,6 +106,11 @@ class Transition(AbstractComponent):
         return self._intent_model
 
     @property
+    def cleaners(self) -> TransitionIntentModel:
+        """The intent model instance"""
+        return self._intent_model
+
+    @property
     def pm(self) -> TransitionPropertyManager:
         """The properties manager instance"""
         return self._component_pm
