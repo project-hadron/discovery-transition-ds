@@ -1034,7 +1034,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                                           precision=precision)
                     result = DataAnalytics(result)
                     col[col.isna()] = sim.get_number(range_value=result.intent.lower, to_value=result.intent.upper,
-                                                     weight_pattern=result.patterns.weight_pattern, precision=0,
+                                                     relative_freq=result.patterns.relative_freq, precision=0,
                                                      size=size, save_intent=False)
                 elif is_datetime64_any_dtype(col):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
@@ -1045,7 +1045,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     result = DataAnalytics(result)
                     col[col.isna()] = sim.get_category(selection=result.intent.selection,
-                                                       weight_pattern=result.patterns.weight_pattern, size=size,
+                                                       relative_freq=result.patterns.relative_freq, size=size,
                                                        save_intent=False)
                     col = col.astype('category')
             df_rtn[c] = col

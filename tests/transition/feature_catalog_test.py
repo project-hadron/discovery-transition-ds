@@ -36,8 +36,8 @@ class MyTestCase(unittest.TestCase):
     def test_run_feature_pipeline(self):
         df = pd.DataFrame()
         df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=1000)
-        df['age'] = self.tools.get_number(20, 90, weight_pattern=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
-        df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[10, 5, 3, 10], size=1000)
+        df['age'] = self.tools.get_number(20, 90, relative_freq=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
+        df['salary'] = self.tools.get_number(0, 100.0, relative_freq=[10, 5, 3, 10], size=1000)
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)],
                                                       precision=2, feature_name='salary_cat')
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='age', granularity=10.0,
@@ -49,8 +49,8 @@ class MyTestCase(unittest.TestCase):
     def test_report_feature(self):
         df = pd.DataFrame()
         df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=1000)
-        df['age'] = self.tools.get_number(20, 90, weight_pattern=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
-        df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[10, 5, 3, 10], size=1000)
+        df['age'] = self.tools.get_number(20, 90, relative_freq=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
+        df['salary'] = self.tools.get_number(0, 100.0, relative_freq=[10, 5, 3, 10], size=1000)
         _ = self.fc.intent_model.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)],
                                                       precision=2, feature_name='salary_cat')
         self.fc.add_feature_description(feature_name='salary_cat', description='')

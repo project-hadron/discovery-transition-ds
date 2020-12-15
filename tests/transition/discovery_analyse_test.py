@@ -41,14 +41,14 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
     def test_discovery_associate(self):
         tools = SyntheticBuilder.scratch_pad()
         df = pd.DataFrame()
-        df['cat'] = tools.get_category(list('AB'), weight_pattern=[1,3], size=1000)
-        df['gender'] = tools.get_category(list('MF'), weight_pattern=[1,3], size=1000)
+        df['cat'] = tools.get_category(list('AB'), relative_freq=[1,3], size=1000)
+        df['gender'] = tools.get_category(list('MF'), relative_freq=[1,3], size=1000)
         result = Discover.analyse_association(df, columns_list=['cat', 'gender'])
         self.assertEqual(['cat', 'gender'], list(result))
 
     def test_discovery_analytics_class(self):
         tools = SyntheticBuilder.scratch_pad()
-        dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
+        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         analytics = DataAnalytics(label='tester', analysis=result)
         self.assertEqual(analytics.intent.selection, analytics.sample_map.index.to_list())
@@ -56,13 +56,13 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
     def test_analyse_category(self):
         tools = SyntheticBuilder.scratch_pad()
-        dataset = tools.get_category(list('ABCDE')+[np.nan], weight_pattern=[1,3,2,7,4], size=694)
+        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats']
         self.assertCountEqual(control, list(result.keys()))
         control = ['dtype', 'selection', 'upper', 'lower', 'granularity', 'weighting_precision']
         self.assertCountEqual(control, list(result.get('intent').keys()))
-        control = ['weight_pattern', 'sample_distribution']
+        control = ['relative_freq', 'sample_distribution']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
         control = ['excluded_percent', 'nulls_percent', 'sample']
         self.assertCountEqual(control, list(result.get('stats').keys()))
@@ -76,7 +76,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(top, result.get('intent').get('top'))
         self.assertEqual(top, len(result.get('intent').get('selection')))
         self.assertCountEqual(['A', 'B'], result.get('intent').get('selection'))
-        self.assertCountEqual([40, 30], result.get('patterns').get('weight_pattern'))
+        self.assertCountEqual([40, 30], result.get('patterns').get('relative_freq'))
         self.assertEqual(30, result.get('stats').get('excluded_percent'))
         self.assertEqual(14, result.get('stats').get('sample'))
         lower = 0.2
@@ -87,7 +87,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         self.assertEqual(lower, result.get('intent').get('lower'))
         self.assertEqual(upper, result.get('intent').get('upper'))
         self.assertCountEqual(['C', 'B'], result.get('intent').get('selection'))
-        self.assertCountEqual([33, 50], result.get('patterns').get('weight_pattern'))
+        self.assertCountEqual([33, 50], result.get('patterns').get('relative_freq'))
         self.assertEqual(50, result.get('stats').get('excluded_percent'))
         self.assertEqual(10, result.get('stats').get('sample'))
 
@@ -95,14 +95,14 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         dataset = []
         result = Discover.analyse_number(dataset)
         control = [1]
-        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual(control, result.get('patterns').get('relative_freq'))
         self.assertEqual((0,0,3), (result.get('intent').get('lower'), result.get('intent').get('upper'), result.get('intent').get('granularity')))
         self.assertEqual(0, result.get('stats').get('sample'))
         dataset = [1,2,3,4,5,6,7,8,9,10]
 
         result = Discover.analyse_number(dataset, granularity=2)
         control = [50.0, 50.0]
-        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual(control, result.get('patterns').get('relative_freq'))
         self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
         self.assertEqual(control, result.get('intent').get('selection'))
@@ -110,7 +110,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
         result = Discover.analyse_number(dataset, granularity=3.0)
         control = [30.0, 30.0, 40.0]
-        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual(control, result.get('patterns').get('relative_freq'))
         self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
         self.assertEqual(control, result.get('intent').get('selection'))
@@ -118,7 +118,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
         result = Discover.analyse_number(dataset, granularity=2.0)
         control = [20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual(control, result.get('patterns').get('relative_freq'))
         self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
         self.assertEqual(control, result.get('intent').get('selection'))
@@ -126,7 +126,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
 
         result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
         control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
-        self.assertEqual(control, result.get('patterns').get('weight_pattern'))
+        self.assertEqual(control, result.get('patterns').get('relative_freq'))
         self.assertEqual((0,5), (result.get('intent').get('lower'), result.get('intent').get('upper')))
         control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
         self.assertEqual(control, result.get('intent').get('selection'))
@@ -150,17 +150,17 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         intervals = [(0,1,'both'),(1,2),(2,3)]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=intervals))
         control = [50.0, 25.0, 25.0]
-        self.assertEqual(control, result.patterns.weight_pattern)
+        self.assertEqual(control, result.patterns.relative_freq)
         intervals = [(0,1,'both'),(1,2,'both'),(2,3)]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=intervals))
         control = [50.0, 50.0, 25.0]
-        self.assertEqual(control, result.patterns.weight_pattern)
+        self.assertEqual(control, result.patterns.relative_freq)
         # percentile
         dataset = [0, 0, 2, 2, 1, 2, 3]
         percentile = [.25, .5, .75]
         result = DataAnalytics(Discover.analyse_number(dataset, granularity=percentile))
         control = [28.57, 57.14, 0.0, 14.29]
-        self.assertEqual(control, result.patterns.weight_pattern)
+        self.assertEqual(control, result.patterns.relative_freq)
 
     def test_analyse_number_lower_upper(self):
         # Default
@@ -194,7 +194,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                               'weighting_precision': 2,
                               'year_first': False},
                    'patterns': {'sample_distribution': [1, 0, 3],
-                                'weight_pattern': [25.0, 0.0, 75.0]},
+                                'relative_freq': [25.0, 0.0, 75.0]},
                    'stats': {'bootstrap_ci': (17572.5, 17797.75),
                              'emp_outliers': [0, 0],
                              'excluded_percent': 0.0,
@@ -223,7 +223,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                               'weighting_precision': 2,
                               'year_first': False},
                    'patterns': {'sample_distribution': [2, 3, 5],
-                                'weight_pattern': [20.0, 30.0, 50.0]},
+                                'relative_freq': [20.0, 30.0, 50.0]},
                    'stats': {'bootstrap_ci': (17493.5054775573, 17724.4628926684),
                              'emp_outliers': [0, 0],
                              'excluded_percent': 0.0,
@@ -239,7 +239,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         size = 50
         df = pd.DataFrame()
-        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], bounded_weighting=True, size=size)
+        df['gender'] = tools.get_category(selection=['M', 'F'], relative_freq=[6, 4], bounded_weighting=True, size=size)
         # category
         columns_list = [{'gender': {}}]
         result = Discover.analyse_association(df, columns_list)
@@ -250,7 +250,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                       'upper': 60.0,
                                                       'weighting_precision': 2},
                                            'patterns': {'sample_distribution': [30, 20],
-                                                        'weight_pattern': [60.0, 40.0]},
+                                                        'relative_freq': [60.0, 40.0]},
                                            'stats': {'excluded_percent': 0.0,'nulls_percent': 0.0,
                                                      'sample': 50}},
                               'associate': 'gender'}}
@@ -259,7 +259,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_association(df, columns_list)
         self.assertEqual(control, result)
         # number
-        df['numbers'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['numbers'] = tools.get_number(range_value=1000, relative_freq=[5,0,2], size=size, quantity=0.9, seed=31)
         columns_list = [{'numbers': {'type': 'number', 'granularity': 3}}]
         result = Discover.analyse_association(df, columns_list)
         control = {'numbers': {'analysis': {'intent': {'dtype': 'number',
@@ -276,7 +276,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                          'dominant_values': [100.0, 139.0],
                                                          'sample_distribution': [31, 0, 13],
                                                          'weight_mean': [140.484, 0.0, 827.231],
-                                                         'weight_pattern': [70.45, 0.0, 29.55],
+                                                         'relative_freq': [70.45, 0.0, 29.55],
                                                          'weight_std': [7568.791, 0.0, 7760.859]},
                                             'stats': {'bootstrap_ci': (253.857, 445.214),
                                                       'emp_outliers': [0, 0],
@@ -293,7 +293,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                'associate': 'numbers'}}
         self.assertEqual(control, result)
         #dates
-        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
+        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', relative_freq=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = [{'dates': {'dtype': 'datetime', 'granularity': 3, 'date_format': '%d-%m-%Y'}}]
         control = {'dates': {'analysis': {'intent': {'date_format': '%d-%m-%Y',
                                                      'day_first': False,
@@ -307,7 +307,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                      'weighting_precision': 2,
                                                      'year_first': False},
                                           'patterns': {'sample_distribution': [12, 21, 11],
-                                                       'weight_pattern': [27.27, 47.73, 25.0]},
+                                                       'relative_freq': [27.27, 47.73, 25.0]},
                                           'stats': {'bootstrap_ci': (14622.3654489759,
                                                                      15435.002697157),
                                                     'emp_outliers': [0, 0],
@@ -325,12 +325,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         size = 50
         df = pd.DataFrame()
-        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
+        df['gender'] = tools.get_category(selection=['M', 'F'], relative_freq=[6, 4], size=size)
         df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, seed=31, size=size)
-        df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], seed=31, size=size)
-        df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
-        df['numbers'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9, seed=31)
-        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', weight_pattern=[1, 9, 4], size=size, quantity=0.9, seed=31)
+        df['age'] = tools.get_number(range_value=20,to_value=80, relative_freq=[1,2,5,6,2,1,0.5], seed=31, size=size)
+        df['fare'] = tools.get_number(range_value=1000, relative_freq=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['numbers'] = tools.get_number(range_value=1000, relative_freq=[5,0,2], size=size, quantity=0.9, seed=31)
+        df['dates'] = tools.get_datetime('10/10/2000', '31/12/2018', relative_freq=[1, 9, 4], size=size, quantity=0.9, seed=31)
         columns_list = ['numbers', 'age', 'fare']
         result = Discover.analyse_association(df, columns_list)
         pprint(result)
@@ -345,10 +345,10 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         size = 50
         df = pd.DataFrame()
-        df['gender'] = tools.get_category(selection=['M', 'F'], weight_pattern=[6, 4], size=size)
+        df['gender'] = tools.get_category(selection=['M', 'F'], relative_freq=[6, 4], size=size)
         df['lived'] = tools.get_category(selection=['yes', 'no'], quantity=80.0, size=size)
-        df['age'] = tools.get_number(range_value=20,to_value=80, weight_pattern=[1,2,5,6,2,1,0.5], size=size)
-        df['fare'] = tools.get_number(range_value=1000, weight_pattern=[5,0,2], size=size, quantity=0.9)
+        df['age'] = tools.get_number(range_value=20,to_value=80, relative_freq=[1,2,5,6,2,1,0.5], size=size)
+        df['fare'] = tools.get_number(range_value=1000, relative_freq=[5,0,2], size=size, quantity=0.9)
         columns_list = [{'gender': {}, 'age':  {}}, {'lived': {}}]
         exclude = ['age.lived']
         result = Discover.analyse_association(df, columns_list, exclude)

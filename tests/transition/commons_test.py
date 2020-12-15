@@ -33,10 +33,10 @@ class CommonsTest(unittest.TestCase):
         df = pd.DataFrame()
         df['normal_num'] = tools.get_number(1, 10, size=sample_size, seed=31)
         df['single num'] = tools.get_number(1, 1, quantity=0.8, size=sample_size, seed=31)
-        df['weight_num'] = tools.get_number(1, 2, weight_pattern=[90, 1], size=sample_size, seed=31)
+        df['weight_num'] = tools.get_number(1, 2, relative_freq=[90, 1], size=sample_size, seed=31)
         df['null'] = tools.get_number(1, 100, quantity=0, size=sample_size, seed=31)
         df['single cat'] = tools.get_category(['A'], quantity=0.6, size=sample_size, seed=31)
-        df['weight_cat'] = tools.get_category(['A', 'B', 'C'], weight_pattern=[80, 1, 1], size=sample_size, seed=31)
+        df['weight_cat'] = tools.get_category(['A', 'B', 'C'], relative_freq=[80, 1, 1], size=sample_size, seed=31)
         df['normal_cat'] = tools.get_category(['A', 'B', 'C'], size=sample_size, seed=31)
         result = Commons.filter_headers(df, headers=['normal_num', 'single num'])
         control = ['normal_num', 'single num']

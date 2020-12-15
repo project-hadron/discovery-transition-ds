@@ -556,7 +556,7 @@ class Transition(AbstractComponent):
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
                     _column['unique'] = str(result.intent.granularity)
-                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['nulls_percent'] = str(result.stats.nulls_percent)
                 elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
@@ -573,9 +573,9 @@ class Transition(AbstractComponent):
                     _column['intervals'] = _selection
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
                     _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
-                    _column['weight_std'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['weight_std'] = [str(x) for x in result.patterns.relative_freq]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['mode'] = [str(x) for x in result.patterns.dominant_values]
                     _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
@@ -593,7 +593,7 @@ class Transition(AbstractComponent):
                     _column['intervals'] = result.intent.selection
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['weight_pattern'] = [str(x) for x in result.patterns.weight_pattern]
+                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['nulls_percent'] = str(result.stats.nulls_percent)
             except (ValueError, TypeError, ZeroDivisionError):

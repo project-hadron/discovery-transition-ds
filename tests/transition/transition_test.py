@@ -384,37 +384,37 @@ class TransitionTest(unittest.TestCase):
 #         df = tools.get_profiles(size=sample_size, mf_weighting=[5, 3])
 #         df['id'] = tools.unique_identifiers(range_value=1000000, to_value=9999999, prefix='CU_', size=sample_size)
 #         value_distribution = [0.01, 0.8, 1, 3, 9, 8, 3, 2, 1] + list(np.flip(np.exp(np.arange(-5, 0.0, 0.2)).round(2)))
-#         df['balance'] = tools.get_number(0.0, 1000, precision=2, weight_pattern=value_distribution, size=sample_size)
+#         df['balance'] = tools.get_number(0.0, 1000, precision=2, relative_freq=value_distribution, size=sample_size)
 #         age_pattern = [3, 5, 6, 10, 6, 5, 7, 15, 5, 2, 1, 0.5, 0.2, 0.1]
-#         df['age'] = tools.get_number(20.0, 90.0, weight_pattern=age_pattern, quantity=0.85, size=sample_size)
+#         df['age'] = tools.get_number(20.0, 90.0, relative_freq=age_pattern, quantity=0.85, size=sample_size)
 #         df['start'] = tools._get_datetime(start='01/01/2018', until='31/12/2018', date_format='%m-%d-%y',
 #                                           size=sample_size)
 #         prof_pattern = [10, 8, 5, 4, 3, 2] + [1] * 9
 #         profession = ProfileSample.professions(size=15)
-#         df['profession'] = tools.get_category(selection=profession, weight_pattern=prof_pattern, quantity=0.90,
+#         df['profession'] = tools.get_category(selection=profession, relative_freq=prof_pattern, quantity=0.90,
 #                                               size=sample_size)
-#         df['online'] = tools.get_category(selection=[1, 0], weight_pattern=[1, 4], size=sample_size)
+#         df['online'] = tools.get_category(selection=[1, 0], relative_freq=[1, 4], size=sample_size)
 #
 #         # Selective Noise
 #         df['single num'] = tools.get_number(1, 1, quantity=0.8, size=sample_size, seed=31)
-#         df['weight_num'] = tools.get_number(1, 2, weight_pattern=[90, 1], size=sample_size, seed=31)
+#         df['weight_num'] = tools.get_number(1, 2, relative_freq=[90, 1], size=sample_size, seed=31)
 #         df['null'] = tools.get_number(1, 100, quantity=0, size=sample_size, seed=31)
 #         df['single cat'] = tools.get_category(['A'], quantity=0.6, size=sample_size, seed=31)
-#         df['weight_cat'] = tools.get_category(['A', 'B', 'C'], weight_pattern=[80, 1, 1], size=sample_size, seed=31)
+#         df['weight_cat'] = tools.get_category(['A', 'B', 'C'], relative_freq=[80, 1, 1], size=sample_size, seed=31)
 #
 #         # Optional extra fields
 #         if extra:
 #             df['last_login'] = tools._get_datetime(start='01/01/2019', until='01/05/2019',
 #                                                    date_pattern=[1, 2, 3, 5, 9, 20], date_format='%m-%d-%y %H:%M',
 #                                                    size=sample_size)
-#             df['status'] = tools.get_category(selection=['Active', 'Closed', 'Suspended'], weight_pattern=[50, 5, 2],
+#             df['status'] = tools.get_category(selection=['Active', 'Closed', 'Suspended'], relative_freq=[50, 5, 2],
 #                                               size=sample_size)
 #         # Optional extra noise
 #         if noise:
 #             for i in range(40):
-#                 quantity = tools.get_number(0.005, 0.03, weight_pattern=[5, 2, 1, 0.5])[0]
+#                 quantity = tools.get_number(0.005, 0.03, relative_freq=[5, 2, 1, 0.5])[0]
 #                 col = "noise_{}".format(i)
-#                 df[col] = tools.get_number(0, 1, weight_pattern=[20, 1], quantity=quantity, size=sample_size)
+#                 df[col] = tools.get_number(0, 1, relative_freq=[20, 1], quantity=quantity, size=sample_size)
 #
 #         # save
 #         filename = os.path.join(os.environ['PWD'], 'work', 'data', '0_raw', 'synthetic.csv')

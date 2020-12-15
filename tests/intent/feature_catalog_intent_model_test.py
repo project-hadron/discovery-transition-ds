@@ -41,8 +41,8 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         local_fc = FeatureCatalog.from_env('tester', default_save=False, has_contract=False)
         df = pd.DataFrame()
         df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=1000)
-        df['age'] = self.tools.get_number(20, 90, weight_pattern=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
-        df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[10, 5, 3, 10], size=1000)
+        df['age'] = self.tools.get_number(20, 90, relative_freq=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
+        df['salary'] = self.tools.get_number(0, 100.0, relative_freq=[10, 5, 3, 10], size=1000)
         _ = local_fc.intent_model.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)], precision=2, feature_name='First')
         local_fc.intent_model.group_features(df, headers=['age', 'salary'], aggregator='sum', group_by=['cu_id'], feature_name='First', unindex= True, intent_order=1)
         _ = local_fc.intent_model.interval_categorical(df, key='cu_id', column='age', granularity=[0.9, 0.1], categories=['younger', 'average', 'older'], precision=0, feature_name='Second')
@@ -122,8 +122,8 @@ class FeatureCatalogIntentTest(unittest.TestCase):
     def test_interval_categorical(self):
         df = pd.DataFrame()
         df['cu_id'] = self.tools.get_number(100000, 1000000, at_most=1, size=1000)
-        df['age'] = self.tools.get_number(20, 90, weight_pattern=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
-        df['salary'] = self.tools.get_number(0, 100.0, weight_pattern=[10, 5, 3, 10], size=1000)
+        df['age'] = self.tools.get_number(20, 90, relative_freq=[5, 2, 4, 3, 2, 0.5, 0.1], size=1000)
+        df['salary'] = self.tools.get_number(0, 100.0, relative_freq=[10, 5, 3, 10], size=1000)
         result = self.fc.interval_categorical(df, key='cu_id', column='salary', granularity=[(0, 20), (80, 100)],
                                                   precision=2)
         self.assertEqual('category', result['salary_cat'].dtype.name)
