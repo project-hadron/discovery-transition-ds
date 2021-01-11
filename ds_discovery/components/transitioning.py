@@ -438,8 +438,8 @@ class Transition(AbstractComponent):
         _category_fields = len(Commons.filter_headers(canonical, dtype='category'))
         _date_fields = len(Commons.filter_headers(canonical, dtype='datetime'))
         _bool_fields = len(Commons.filter_headers(canonical, dtype='bool'))
-        _object_fields = len(Commons.filter_headers(canonical, dtype='object'))
-        _other_fields = len(Commons.filter_headers(canonical, dtype=['object', 'category', 'datetime', 'bool',
+        _string_fields = len(Commons.filter_headers(canonical, dtype='string'))
+        _other_fields = len(Commons.filter_headers(canonical, dtype=['string', 'category', 'datetime', 'bool',
                                                                      'number'],  exclude=True))
         _null_avg = _null_total / canonical.shape[1]
         _dom_avg = _dom_fields / canonical.shape[1]
@@ -447,14 +447,14 @@ class Transition(AbstractComponent):
         _correlated = self._correlated_columns(canonical)
         _usable = int(round(100 - (len(_usable_fields) / canonical.columns.size) * 100, 2))
         _field_avg = int(round(_descibed_count / canonical.shape[1] * 100, 0))
-        _prov_avg = int(round(_provenance_count/6*100, 0))
+        _prov_avg = int(round(_provenance_count/len(_provenance_headers)*100, 0))
         report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%",
                             'provenance_complete': f"{_prov_avg}%", 'data_described': f"{_field_avg}%"},
                   'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
                                  'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
                   'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
                                 'datetime': _date_fields, 'bool': _bool_fields,
-                                'others': _other_fields},
+                                'string': _string_fields, 'object': _other_fields},
                   'usability': {'mostly_null': len(_null_columns),
                                 'predominance': len(_dom_columns),
                                 'correlated': len(_correlated)},
