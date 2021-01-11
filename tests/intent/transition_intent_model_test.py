@@ -49,19 +49,19 @@ class IntentModelTest(unittest.TestCase):
 
     def test_to_sample(self):
         tools = self.tools
-        df = pd.DataFrame(tools.model_us_zip(size=1000))
+        df = pd.DataFrame(tools.model_sample_map({'@empty'}, sample_map='us_zipcode_primary').iloc[:200])
         result = self.clean.to_sample(df, sample_size=100)
-        self.assertEqual((100, 5), result.shape)
+        self.assertEqual((100, 13), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=100, shuffle=True)
-        self.assertEqual((100, 5), result.shape)
+        self.assertEqual((100, 13), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
         result = self.clean.to_sample(df, sample_size=0.2)
-        self.assertEqual((200, 5), result.shape)
+        self.assertEqual((200, 13), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=0.2, shuffle=True)
-        self.assertEqual((200, 5), result.shape)
+        self.assertEqual((200, 13), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
     def test_to_date_from_mdates(self):
@@ -94,12 +94,12 @@ class IntentModelTest(unittest.TestCase):
     def test_auto_remove(self):
         tools = self.tools
         df = pd.DataFrame()
-        df['single_num'] = tools.get_number(1, 1, quantity=0.7, size=100)
+        df['single_num'] = tools.get_number(1, 2, quantity=0.7, size=100)
         df['two_num'] = tools.get_number(2, quantity=0.7, size=100)
         df['null_num'] = tools.get_number(1, 100, quantity=0, size=100)
         df['normal'] = tools.get_number(1, 100, size=100)
         df.loc[1:4, 'normal'] = 'None'
-        df['none_num'] = tools.get_number(1, 1, quantity=0.7, size=100)
+        df['none_num'] = tools.get_number(1, 2, quantity=0.7, size=100)
         df.loc[1:4, 'none_num'] = 'None'
         df.loc[7:9, 'none_num'] = ''
         self.clean.auto_remove_columns(df, nulls_list=True, inplace=True)
@@ -108,7 +108,7 @@ class IntentModelTest(unittest.TestCase):
     def test_auto_remove_predom(self):
         tools = self.tools
         df = pd.DataFrame()
-        df['single_num'] = tools.get_number(1, 1, size=100)
+        df['single_num'] = tools.get_number(1, 2, size=100)
         df['two_num'] = tools.get_number(2, size=100)
         df['weight_num'] = tools.get_number(2, relative_freq=[98, 1], size=100)
         df['null_num'] = tools.get_number(1, 100, quantity=0, size=100)
@@ -122,7 +122,7 @@ class IntentModelTest(unittest.TestCase):
 
     def test_clean_headers(self):
         tools = self.tools
-        df = pd.DataFrame(tools.model_us_zip(size=10))
+        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
         control = ['City', 'State', 'Zipcode']
         result = df.columns
         self.assertTrue(control, result)
@@ -136,11 +136,11 @@ class IntentModelTest(unittest.TestCase):
     def test_remove_columns(self):
         tools = self.tools
         clean = self.clean
-        df = pd.DataFrame(tools.model_us_zip(size=10))
+        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
         result = clean.to_remove(df, headers=['City'])
         self.assertNotIn('City', result.columns.values)
 
-        df = pd.DataFrame(tools.model_us_zip(size=10))
+        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
         clean.to_remove(df, headers=['City', 'State'], inplace=True)
         self.assertNotIn('City', df.columns.values)
         self.assertNotIn('State', df.columns.values)
@@ -148,12 +148,12 @@ class IntentModelTest(unittest.TestCase):
     def test_select_columns(self):
         tools = self.tools
         clean = self.clean
-        df = pd.DataFrame(tools.model_us_zip(size=10))
+        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
         control = ['City']
         result = clean.to_select(df, headers=['City'])
         self.assertEqual(['City'], result.columns.values)
 
-        df = pd.DataFrame(tools.model_us_zip(size=10))
+        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary').iloc[:10])
         clean.to_select(df, headers=['City', 'State'], inplace=True)
         self.assertIn('City', df.columns.values)
         self.assertIn('State', df.columns.values)
@@ -233,8 +233,8 @@ class IntentModelTest(unittest.TestCase):
         df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y %H:%M:%S', seed=102)
         df['number'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%Y%m%d.0', seed=101)
         result = cleaner.to_date_type(df, headers=['date', 'datetime'])
-        self.assertEqual(df['date'].iloc[0], result['date'].iloc[0].strftime(format='%d-%m-%Y'))
-        self.assertEqual(df['datetime'].iloc[0], result['datetime'].iloc[0].strftime(format='%d-%m-%Y %H:%M:%S'))
+        self.assertEqual(df['date'].iloc[0], result['date'].iloc[0].strftime(format='%m-%d-%Y'))
+        self.assertEqual(df['datetime'].iloc[0], result['datetime'].iloc[0].strftime(format='%m-%d-%Y %H:%M:%S'))
 
         df['numtime'] = df['datetime']
         result = cleaner.to_date_type(df, headers=['numtime'], as_num=True)

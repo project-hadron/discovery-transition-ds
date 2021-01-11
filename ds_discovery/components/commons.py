@@ -155,7 +155,7 @@ class Commons(AistacCommons):
 class DataAnalytics(AnalyticsCommons):
 
     @property
-    def weight_map(self):
+    def relative_freq_map(self):
         return pd.Series(data=self.patterns.relative_freq, index=self.intent.selection, copy=True, dtype=float)
 
     @property

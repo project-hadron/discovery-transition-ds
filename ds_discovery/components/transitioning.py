@@ -15,13 +15,12 @@ __author__ = 'Darryl Oatridge'
 
 class Transition(AbstractComponent):
 
-    CONNECTOR_SOURCE = 'primary_source'
-    CONNECTOR_PERSIST = 'primary_persist'
     REPORT_DICTIONARY = 'dictionary'
     REPORT_ANALYSIS = 'analysis'
     REPORT_FIELDS = 'field_description'
     REPORT_QUALITY = 'data_quality'
     REPORT_SUMMARY = 'data_quality_summary'
+    REPORT_PROVENANCE = 'provenance'
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
@@ -175,7 +174,7 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         _default_reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_QUALITY, self.REPORT_SUMMARY,
-                            self.REPORT_FIELDS] + self.REPORTS_BASE_LIST
+                            self.REPORT_FIELDS, self.REPORT_PROVENANCE] + self.REPORTS_BASE_LIST
         if not isinstance(connector_name, (str, list)):
             connector_name = _default_reports
         for _report in self.pm.list_formatter(connector_name):
@@ -184,7 +183,7 @@ class Transition(AbstractComponent):
             file_pattern = uri_file
             if not isinstance(uri_file, str):
                 file_type='json'
-                if _report in [self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS]:
+                if _report in [self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS, self.REPORT_PROVENANCE]:
                     file_type = 'csv'
                 file_pattern = self.pm.file_pattern(name=_report, file_type=file_type, versioned=True)
                 if 'orient' not in kwargs.keys():
@@ -240,7 +239,7 @@ class Transition(AbstractComponent):
                               auto_connectors: bool=None, **kwargs):
         """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
         if report_connector_name not in [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT,
-                                         self.REPORT_QUALITY, self.REPORT_SUMMARY,
+                                         self.REPORT_QUALITY, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
                                          self.REPORT_FIELDS] + self.REPORTS_BASE_LIST:
             raise ValueError("Report name must be one of the class report constants")
         if auto_connectors if isinstance(auto_connectors, bool) else True:
@@ -551,7 +550,7 @@ class Transition(AbstractComponent):
             _column = {}
             try:
                 if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
-                    result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, weighting_precision=3))
+                    result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, freq_precision=3))
                     _column['selection'] = result.intent.selection
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
@@ -574,8 +573,8 @@ class Transition(AbstractComponent):
                     _column['dtype'] = result.intent.dtype
                     _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
                     _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
-                    _column['weight_mean'] = [str(x) for x in result.patterns.weight_mean]
-                    _column['weight_std'] = [str(x) for x in result.patterns.relative_freq]
+                    _column['freq_mean'] = [str(x) for x in result.patterns.freq_mean]
+                    _column['freq_std'] = [str(x) for x in result.patterns.freq_std]
                     _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
                     _column['mode'] = [str(x) for x in result.patterns.dominant_values]
                     _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
@@ -644,7 +643,8 @@ class Transition(AbstractComponent):
         file_name = self.pm.file_pattern(name='complete', project=project_name.lower(), path=path, file_type=file_type,
                                          versioned=True)
         self.set_persist(uri_file=file_name)
-        self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_FIELDS])
+        self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
+                                                self.REPORT_FIELDS])
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
                             domain=domain,

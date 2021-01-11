@@ -2,7 +2,6 @@ import inspect
 from copy import deepcopy
 from typing import Any
 
-import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 from aistac.handlers.abstract_handlers import HandlerFactory
@@ -698,7 +697,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
     def group_features(self, canonical: [pd.DataFrame, str], headers: [str, list], group_by: [str, list],
                        aggregator: str=None, drop_group_by: bool=False, include_weighting: bool=False,
-                       weighting_precision: int=None, remove_weighting_zeros: bool=False, remove_aggregated: bool=False,
+                       freq_precision: int=None, remove_weighting_zeros: bool=False, remove_aggregated: bool=False,
                        drop_dup_index: str=None, unindex: bool=None, save_intent: bool=None,
                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                        remove_duplicates: bool=None) -> pd.DataFrame:
@@ -711,7 +710,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
         :param drop_group_by: drops the group by headers
         :param include_weighting: include a percentage weighting column for each
-        :param weighting_precision: a precision for the weighting values
+        :param freq_precision: a precision for the weighting values
         :param remove_aggregated: if used in conjunction with the weighting then drops the aggrigator column
         :param remove_weighting_zeros: removes zero values
         :param drop_dup_index: if any duplicate index should be removed passing either 'First' or 'last'
@@ -736,7 +735,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         canonical = self._get_canonical(canonical)
-        weighting_precision = weighting_precision if isinstance(weighting_precision, int) else 3
+        freq_precision = freq_precision if isinstance(freq_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
         headers = self._pm.list_formatter(headers)
         group_by = self._pm.list_formatter(group_by)
@@ -746,7 +745,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_sub['sum'] = df_sub.sum(axis=1, numeric_only=True)
             total = df_sub['sum'].sum()
             df_sub['weighting'] = df_sub['sum'].\
-                apply(lambda x: round((x / total), weighting_precision) if isinstance(x, (int, float)) else 0)
+                apply(lambda x: round((x / total), freq_precision) if isinstance(x, (int, float)) else 0)
             df_sub = df_sub.drop(columns='sum')
             if remove_weighting_zeros:
                 df_sub = df_sub[df_sub['weighting'] > 0]
@@ -1033,7 +1032,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
                                                           precision=precision)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_number(range_value=result.intent.lower, to_value=result.intent.upper,
+                    col[col.isna()] = sim.get_number(from_value=result.intent.lower, to_value=result.intent.upper,
                                                      relative_freq=result.patterns.relative_freq, precision=0,
                                                      size=size, save_intent=False)
                 elif is_datetime64_any_dtype(col):
@@ -1162,7 +1161,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         :param exclude: (optional) convenience parameter identifying param keys to exclude.
         :return: dict of the intent
         """
-        if not isinstance(params.get('canonical', None), str):
+        if not isinstance(params.get('canonical', None), (str, dict)):
             exclude = ['canonical']
         return super()._intent_builder(method=method, params=params, exclude=exclude)
 
@@ -1226,10 +1225,33 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                  f"Use 'AND', 'OR', 'NOT', 'XOR'")
         return select_idx
 
-    def _get_canonical(self, data: [pd.DataFrame, str]) -> pd.DataFrame:
+    def _get_canonical(self, data: [pd.DataFrame, pd.Series, list, str, dict], header: str = None) -> pd.DataFrame:
         if isinstance(data, pd.DataFrame):
             return deepcopy(data)
-        if isinstance(data, str):
+        if isinstance(data, dict):
+            method = data.pop('method', None)
+            if method is None:
+                raise ValueError(f"The data dictionary has no 'method' key.")
+            if str(method).startswith('@generate'):
+                task_name = data.pop('task_name', None)
+                if task_name is None:
+                    raise ValueError(f"The data method '@generate' requires a 'task_name' key.")
+                repo_uri = data.pop('repo_uri', None)
+                module = HandlerFactory.get_module(module_name='ds_behavioral')
+                inst = module.SyntheticBuilder.from_env(task_name=task_name, uri_pm_repo=repo_uri, default_save=False)
+                size = data.pop('size', None)
+                seed = data.get('seed', None)
+                run_book = data.pop('run_book', None)
+                result = inst.tools.run_intent_pipeline(size=size, columns=run_book, seed=seed)
+                return inst.tools.frame_selection(canonical=result, save_intent=False, **data)
+            else:
+                raise ValueError(f"The data 'method' key {method} is not a recognised intent method")
+        elif isinstance(data, (list, pd.Series)):
+            header = header if isinstance(header, str) else 'default'
+            return pd.DataFrame(data=deepcopy(data), columns=[header])
+        elif isinstance(data, str):
+            if data == '@empty':
+                return pd.DataFrame()
             if not self._pm.has_connector(connector_name=data):
                 raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
             handler = self._pm.get_connector_handler(data)
@@ -1237,5 +1259,5 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             if isinstance(canonical, dict):
                 canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
             return canonical
-        raise ValueError(f"The canonical format is not recognised, pd.DataFrame, "
-                         f"ConnectorContract expected, {type(data)} passed")
+        raise ValueError(f"The canonical format is not recognised, pd.DataFrame, pd.Series"
+                         f"str, list or dict expected, {type(data)} passed")

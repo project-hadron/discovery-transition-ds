@@ -382,7 +382,7 @@ class TransitionTest(unittest.TestCase):
 #         # main build
 #         sample_size = sample_size if isinstance(sample_size, int) and 1 <= sample_size <= 10000 else 100
 #         df = tools.get_profiles(size=sample_size, mf_weighting=[5, 3])
-#         df['id'] = tools.unique_identifiers(range_value=1000000, to_value=9999999, prefix='CU_', size=sample_size)
+#         df['id'] = tools.unique_identifiers(from_value=1000000, to_value=9999999, prefix='CU_', size=sample_size)
 #         value_distribution = [0.01, 0.8, 1, 3, 9, 8, 3, 2, 1] + list(np.flip(np.exp(np.arange(-5, 0.0, 0.2)).round(2)))
 #         df['balance'] = tools.get_number(0.0, 1000, precision=2, relative_freq=value_distribution, size=sample_size)
 #         age_pattern = [3, 5, 6, 10, 6, 5, 7, 15, 5, 2, 1, 0.5, 0.2, 0.1]
