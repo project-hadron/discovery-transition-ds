@@ -39,7 +39,8 @@ class TransitionTest(unittest.TestCase):
         tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tr.set_provenance(title='new_title', domain='Healthcare', author_name='Joe Bloggs')
         result = tr.report_provenance(stylise=False)
-        self.assertCountEqual([['new_title'], ['Healthcare'], ['Joe Bloggs']], result.values.tolist())
+        self.assertEqual((6,1), result.shape)
+        self.assertCountEqual(['title', 'domain', 'license_type', 'license_name', 'license_uri', 'author_name'], list(result.index))
 
     def test_provenance_from_bootstrap(self):
         tr: Transition = Transition.from_memory()
@@ -57,7 +58,7 @@ class TransitionTest(unittest.TestCase):
         cp = Transition.from_env('task', has_contract=False)
         cp.upload_attributes(canonical=notes, label_key='label', text_key='text')
         result = cp.report_attributes(df, stylise=False)
-        self.assertEqual((3, 4), df.shape)
+        self.assertEqual((4, 2), result.shape)
 
     def test_from_env(self):
         os.environ['HADRON_PM_PATH'] = Path(os.environ['PWD'], 'work').as_posix()

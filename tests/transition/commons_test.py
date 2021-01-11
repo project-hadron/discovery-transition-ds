@@ -32,8 +32,8 @@ class CommonsTest(unittest.TestCase):
         sample_size = 1000
         df = pd.DataFrame()
         df['normal_num'] = tools.get_number(1, 10, size=sample_size, seed=31)
-        df['single num'] = tools.get_number(1, 1, quantity=0.8, size=sample_size, seed=31)
-        df['weight_num'] = tools.get_number(1, 2, relative_freq=[90, 1], size=sample_size, seed=31)
+        df['single num'] = tools.get_number(1, 2, quantity=0.8, size=sample_size, seed=31)
+        df['weight_num'] = tools.get_number(1, 3, relative_freq=[90, 1], size=sample_size, seed=31)
         df['null'] = tools.get_number(1, 100, quantity=0, size=sample_size, seed=31)
         df['single cat'] = tools.get_category(['A'], quantity=0.6, size=sample_size, seed=31)
         df['weight_cat'] = tools.get_category(['A', 'B', 'C'], relative_freq=[80, 1, 1], size=sample_size, seed=31)

@@ -321,7 +321,6 @@ class Transition(AbstractComponent):
             _ = df_style.set_properties(subset=[f'Attributes ({len(canonical.columns)})'], **{'font-weight': 'bold',
                                                                                               'font-size': "120%"})
             return df_style
-        df_dd.set_index(keys=f'Attributes ({len(canonical.columns)})', inplace=True)
         return df_dd
 
     def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
@@ -339,7 +338,6 @@ class Transition(AbstractComponent):
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
             return Commons.report(df, index_header='connector_name')
-        df.set_index(keys='connector_name', inplace=True)
         return df
 
     def report_run_book(self, stylise: bool=True):
@@ -351,7 +349,6 @@ class Transition(AbstractComponent):
         df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
         if stylise:
             return Commons.report(df, index_header='name')
-        df.set_index(keys='name', inplace=True)
         return df
 
     def report_intent(self, levels: [str, int, list]=None, stylise: bool=True):
@@ -368,7 +365,6 @@ class Transition(AbstractComponent):
         df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
         if stylise:
             return Commons.report(df, index_header='level')
-        df.set_index(keys='level', inplace=True)
         return df
 
     def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
@@ -388,17 +384,25 @@ class Transition(AbstractComponent):
         df = pd.DataFrame.from_dict(data=report, orient='columns')
         if stylise:
             return Commons.report(df, index_header='section', bold='label')
-        df.set_index(keys='section', inplace=True)
         return df
 
-    def report_provenance(self, stylise: bool=True):
+    def report_provenance(self, as_dict: bool=None, stylise: bool=None):
+        """ a report on the provenance set as part of the domain contract
+
+        :param as_dict: (optional) if the result should be a dictionary. Default is False
+        :param stylise: (optional) if as_dict is False, if the return dataFrame should be stylised
+        :return:
+        """
+        as_dict = as_dict if isinstance(as_dict, bool) else False
+        stylise = stylise if isinstance(stylise, bool) else True
         report = self.pm.report_provenance()
+        if as_dict:
+            return report
         df = pd.DataFrame(report, index=['values'])
         df = df.transpose().reset_index()
         df.columns = ['provenance', 'values']
         if stylise:
             return Commons.report(df, index_header='provenance')
-        df.set_index(keys='provenance', inplace=True)
         return df
 
     def report_quality_summary(self, canonical: pd.DataFrame=None, as_dict: bool=None, stylise: bool=None):
@@ -465,7 +469,6 @@ class Transition(AbstractComponent):
                 counter += 1
         if stylise:
             Commons.report(df, index_header='report', bold='summary')
-        df.set_index(keys='report', inplace=True)
         return df
 
     def report_quality(self, canonical: pd.DataFrame=None) -> dict:
