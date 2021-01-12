@@ -163,8 +163,8 @@ class Transition(AbstractComponent):
         self.pm.reset_provenance()
         self.pm_persist(save)
 
-    def set_report_persist(self, connector_name: [str, list]=None, uri_file: str=None, project_name: str=None,
-                           path: str=None, save: bool=None, **kwargs):
+    def set_report_persist(self, connector_name: [str, list]=None, uri_file: str=None, project: str=None,
+                           path: str=None, file_type: str=None, save: bool=None, **kwargs):
         """sets the report persist using the TEMPLATE_PERSIST connector contract, there are preset constants that
         should be used. These constance can be found using Transition.REPORT_<NAME> or <instance>.REPORT_<NAME>
         where <name> is the name of the report. if no report connector name is given then all the report connectors
@@ -172,13 +172,14 @@ class Transition(AbstractComponent):
 
         :param connector_name: (optional) the name(s) of the report connector to set (see class REPORT constants)
         :param uri_file: (optional) the uri_file is appended to the template path
-        :param project_name: (optional) a project name that will replace the hadron naming, if no uri_file
+        :param project: (optional) a project name that will replace the hadron naming, if no uri_file
         :param path: (optional) a path added to the template path default, if no uri_file
+        :param file_type: (optional) a file type of the report, if no uri_file
         :param save: (optional) if True, save to file. Default is True
         """
         _default_reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_QUALITY, self.REPORT_SUMMARY,
                             self.REPORT_FIELDS, self.REPORT_PROVENANCE] + self.REPORTS_BASE_LIST
-        project_name = project_name if isinstance(project_name, str) else 'hadron'
+        project = project if isinstance(project, str) else 'hadron'
         if not isinstance(connector_name, (str, list)):
             connector_name = _default_reports
         for _report in self.pm.list_formatter(connector_name):
@@ -186,10 +187,10 @@ class Transition(AbstractComponent):
                 raise ValueError(f"Report name(s) {_report} must be from the report constants {_default_reports}")
             file_pattern = uri_file
             if not isinstance(uri_file, str):
-                file_type = 'csv'
+                file_type = file_type if isinstance(file_type, str) else 'csv'
                 if _report in [self.REPORT_ANALYSIS, self.REPORT_QUALITY]:
-                    file_type = 'json'
-                file_pattern = self.pm.file_pattern(name=_report, project=project_name.lower(), path=path,
+                    file_type = file_type if isinstance(file_type, str) else 'json'
+                file_pattern = self.pm.file_pattern(name=_report, project=project, path=path,
                                                     file_type=file_type, versioned=True)
                 if 'orient' not in kwargs.keys():
                     kwargs.update({'orient': 'records'})
@@ -650,8 +651,8 @@ class Transition(AbstractComponent):
         file_name = self.pm.file_pattern(name='complete', project=project_name.lower(), path=path, file_type=file_type,
                                          versioned=True)
         self.set_persist(uri_file=file_name)
-        self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
-                                                self.REPORT_FIELDS])
+        self.set_report_persist(connector_name=[self.REPORT_SCHEMA, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
+                                                self.REPORT_FIELDS], project=project_name, path=path)
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
                             domain=domain,

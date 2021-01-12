@@ -90,13 +90,12 @@ class TransitionTest(unittest.TestCase):
         report = tr.report_quality_summary(as_dict=True)
         self.assertEqual(['score', 'data_shape', 'data_type', 'usability', 'cost'], list(report.keys()))
 
-    def test_report_statistics(self):
-        tr: Transition = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
-        cc = ConnectorContract(uri=os.path.join(os.environ['HOME'], 'code', 'projects', 'data', 'sample', 'synthetic_customer.csv'),
-                               module_name=tr.DEFAULT_MODULE, handler=tr.DEFAULT_SOURCE_HANDLER)
-        tr.set_source_contract(connector_contract=cc)
-        report = tr.report_statistics()
-        pprint(report)
+    def test_set_report_persist(self):
+        tr: Transition = Transition.from_env('tester', default_save=False, has_contract=False)
+        tr.setup_bootstrap(domain='domain', project_name='project_name', path=None)
+        report = tr.report_connectors(stylise=False)
+        _, file = os.path.split(report.uri.iloc[0])
+        self.assertTrue(file.startswith('project_name'))
 
     def test_repo_load(self):
         os.environ['HADRON_PM_REPO'] = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
