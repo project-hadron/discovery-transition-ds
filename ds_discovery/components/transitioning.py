@@ -453,6 +453,7 @@ class Transition(AbstractComponent):
         _usable = int(round(100 - (len(_usable_fields) / canonical.columns.size) * 100, 2))
         _field_avg = int(round(_descibed_count / canonical.shape[1] * 100, 0))
         _prov_avg = int(round(_provenance_count/len(_provenance_headers)*100, 0))
+        _adjustments = self.report_intent(stylise=False).intent.size
         report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%",
                             'provenance_complete': f"{_prov_avg}%", 'data_described': f"{_field_avg}%"},
                   'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
@@ -461,8 +462,9 @@ class Transition(AbstractComponent):
                                 'datetime': _date_fields, 'bool': _bool_fields,
                                 'others': _other_fields},
                   'usability': {'mostly_null': len(_null_columns),
-                                'predominance': len(_dom_columns),
-                                'correlated': len(_correlated)},
+                                'predominant': len(_dom_columns),
+                                'correlated': len(_correlated),
+                                'adjustments': _adjustments},
                   'cost': {'price': _provenance_cost}}
         if as_dict:
             return report
