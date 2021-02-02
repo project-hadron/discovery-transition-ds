@@ -14,6 +14,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import scipy.stats
 import seaborn as sns
+from aistac.components.aistac_commons import DataAnalytics
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
@@ -1477,9 +1478,8 @@ class DataDiscovery(object):
     @staticmethod
     def data_schema(analysis: dict, stylise: bool=True):
         """ returns the schema dictionary as the canonical with optional style"""
-        pass
+        return DataAnalytics(analysis=analysis)
         # TODO:
-        # da = DataAnalytics(analysis=analysis)
         # for section in da.attributes:
         #     for item in
         # if stylise:
