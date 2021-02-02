@@ -6,17 +6,19 @@ from aistac.components.abstract_component import AbstractComponent
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
-from ds_discovery.intent.tolerance_catalog_intent import ToleranceCatalogIntentModel
+from ds_discovery.intent.data_tolerance_intent import DataToleranceIntentModel
 
 
-class ConceptTolerance(AbstractComponent):
+class DataTolerance(AbstractComponent):
+    """Component providing data tolerance reporting"""
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
     DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
 
-    def __init__(self, property_manager: ToleranceCatalogPropertyManager, intent_model: ToleranceCatalogIntentModel,
-                 default_save=None, reset_templates: bool = None, align_connectors: bool = None):
+    def __init__(self, property_manager: ToleranceCatalogPropertyManager, intent_model: DataToleranceIntentModel,
+                 default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
@@ -24,24 +26,31 @@ class ConceptTolerance(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
+        :param template_path: (optional) a template path to use if the environment variable does not exist
+        :param template_module: (optional) a template module to use if the environment variable does not exist
+        :param template_source_handler: (optional) a template source handler to use if no environment variable
+        :param template_persist_handler: (optional) a template persist handler to use if no environment variable
         :param align_connectors: (optional) resets aligned connectors to the template
         """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         reset_templates=reset_templates, align_connectors=align_connectors)
+                         reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                         template_source_handler=template_source_handler,
+                         template_persist_handler=template_persist_handler, align_connectors=align_connectors)
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
-                 reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None,
-                 has_contract: bool=None) -> ConceptTolerance:
-        """ Class Factory Method to instantiates the components application. The Factory Method handles the
+                 reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
+                 default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
+                 default_replace_intent: bool=None, has_contract: bool=None) -> DataTolerance:
+        """ Class Factory Method to instantiates the component's application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
-         :param username: A user name for this task activity.
+         :param username: A username for this task activity.
          :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
@@ -50,6 +59,10 @@ class ConceptTolerance(AbstractComponent):
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param reset_templates: (optional) reset connector templates from environ variables. Default True
                                 (see `report_environ()`)
+         :param template_path: (optional) a template path to use if the environment variable does not exist
+         :param template_module: (optional) a template module to use if the environment variable does not exist
+         :param template_source_handler: (optional) a template source handler to use if no environment variable
+         :param template_persist_handler: (optional) a template persist handler to use if no environment variable
          :param align_connectors: (optional) resets aligned connectors to the template. default Default True
          :param default_save_intent: (optional) The default action for saving intent in the property manager
          :param default_intent_level: (optional) the default level intent should be saved at
@@ -62,23 +75,25 @@ class ConceptTolerance(AbstractComponent):
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = ToleranceCatalogPropertyManager(task_name=task_name, username=username)
-        _intent_model = ToleranceCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                                    default_intent_level=default_intent_level,
-                                                    order_next_available=order_next_available,
-                                                    default_replace_intent=default_replace_intent)
+        _intent_model = DataToleranceIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                                 default_intent_level=default_intent_level,
+                                                 order_next_available=order_next_available,
+                                                 default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
-                   reset_templates=reset_templates, align_connectors=align_connectors)
+                   reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                   template_source_handler=template_source_handler, template_persist_handler=template_persist_handler,
+                   align_connectors=align_connectors)
 
     @classmethod
-    def scratch_pad(cls) -> ToleranceCatalogIntentModel:
+    def scratch_pad(cls) -> DataToleranceIntentModel:
         """ A class method to use the Components intent methods as a scratch pad"""
         return super().scratch_pad()
 
     @property
-    def intent_model(self) -> ToleranceCatalogIntentModel:
+    def intent_model(self) -> DataToleranceIntentModel:
         """The intent model instance"""
         return self._intent_model
 
@@ -133,7 +148,7 @@ class ConceptTolerance(AbstractComponent):
         """
         canonical = super().load_canonical(connector_name=connector_name, **kwargs)
         if isinstance(canonical, dict):
-            canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
+            canonical = pd.DataFrame.from_dict(data=canonical)
         return canonical
 
     def save_catalog_feature(self, canonical, feature_name: str):
@@ -161,7 +176,7 @@ class ConceptTolerance(AbstractComponent):
         """
         canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_catalog_feature(feature_name)
         report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
-        self.pm.set_canonical_schema(name=feature_name, canonical_report=report)
+        self.pm.set_canonical_schema(name=feature_name, schema=report)
         self.pm_persist(save=save)
         return
 
@@ -190,7 +205,7 @@ class ConceptTolerance(AbstractComponent):
         return DataDiscovery.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def report_connectors(self, connector_filter: [str, list] = None, inc_pm: bool = None, inc_template: bool = None,
+    def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
                           stylise: bool = True):
         """ generates a report on the source contract
 
@@ -202,7 +217,7 @@ class ConceptTolerance(AbstractComponent):
         """
         report = self.pm.report_connectors(connector_filter=connector_filter, inc_pm=inc_pm,
                                            inc_template=inc_template)
-        df = pd.DataFrame.from_dict(data=report, orient='columns')
+        df = pd.DataFrame.from_dict(data=report)
         if stylise:
             return Commons.report(df, index_header='connector_name')
         df.set_index(keys='connector_name', inplace=True)
@@ -214,13 +229,13 @@ class ConceptTolerance(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_run_book())
         if stylise:
             return Commons.report(df, index_header='name')
         df.set_index(keys='name', inplace=True)
         return df
 
-    def report_intent(self, levels: [str, int, list] = None, stylise: bool = True):
+    def report_intent(self, levels: [str, int, list]=None, stylise: bool = True):
         """ generates a report on all the intent
 
         :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
@@ -228,16 +243,16 @@ class ConceptTolerance(AbstractComponent):
         :return: pd.Dataframe
         """
         if isinstance(levels, (int, str)):
-            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
+            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels))
             if stylise:
                 return Commons.report(df, index_header='order')
-        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels))
         if stylise:
             return Commons.report(df, index_header='level')
         df.set_index(keys='level', inplace=True)
         return df
 
-    def report_notes(self, catalog: [str, list] = None, labels: [str, list] = None, regex: [str, list] = None,
+    def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
                      re_ignore_case: bool = False, stylise: bool = True, drop_dates: bool = False):
         """ generates a report on the notes
 
@@ -251,7 +266,7 @@ class ConceptTolerance(AbstractComponent):
         """
         report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
                                       drop_dates=drop_dates)
-        df = pd.DataFrame.from_dict(data=report, orient='columns')
+        df = pd.DataFrame.from_dict(data=report)
         if stylise:
             return Commons.report(df, index_header='section', bold='label')
         df.set_index(keys='section', inplace=True)

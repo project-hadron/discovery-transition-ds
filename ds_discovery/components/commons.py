@@ -2,7 +2,7 @@ import re
 import threading
 from copy import deepcopy
 import pandas as pd
-from aistac.components.aistac_commons import AistacCommons, AnalyticsCommons
+from aistac.components.aistac_commons import AistacCommons
 
 __author__ = 'Darryl Oatridge'
 
@@ -10,13 +10,14 @@ __author__ = 'Darryl Oatridge'
 class Commons(AistacCommons):
 
     @staticmethod
-    def report(canonical: pd.DataFrame, index_header: [str, list], bold: [str, list]=None, large_font: [str, list]=None):
+    def report(canonical: pd.DataFrame, index_header: [str, list], bold: [str, list]=None,
+               large_font: [str, list]=None):
         """ generates a stylised report
 
-        :param canonical
-        :param index_header:
-        :param bold:
-        :param large_font
+        :param canonical: the DataFrame to report on
+        :param index_header: the header to index on
+        :param bold: any columns to make bold
+        :param large_font: any columns to enlarge
         :return: stylised report DataFrame
         """
         pd.set_option('max_colwidth', 200)
@@ -67,13 +68,13 @@ class Commons(AistacCommons):
                        exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None) -> list:
         """ returns a list of headers based on the filter criteria
 
-        :param df: the Pandas.DataFrame to get the column headers from
+        :param df: the DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or exclude. Default None.
                     example: int, float, bool, 'category', 'object', 'number'. 'datetime', 'datetimetz', 'timedelta'
         :param exclude: to exclude or include the dtypes. Default is False
-        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' headers
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$' excludes '_amt' headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :return: a filtered list of headers
 
@@ -119,12 +120,12 @@ class Commons(AistacCommons):
                        copy: bool=None) -> pd.DataFrame:
         """ Returns a subset of columns based on the filter criteria
 
-        :param df: the Pandas.DataFrame to get the column headers from
+        :param df: the DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param copy: if the passed pandas.DataFrame should be used or a deep copy. Default is True
         :return:
@@ -141,7 +142,7 @@ class Commons(AistacCommons):
     def col_width(df, column, as_value=False) -> tuple:
         """ gets the max and min length or values of a column as a (max, min) tuple
 
-        :param df: the pandas.DataFrame
+        :param df: the DataFrame
         :param column: the column to find the max and min for
         :param as_value: if the return should be a length or the values. Default is False
         :return: returns a tuple with the (max, min) length or values
@@ -150,19 +151,3 @@ class Commons(AistacCommons):
             field_length = df[column].apply(str).str.len()
             return df.loc[field_length.argmax(), column], df.loc[field_length.argmin(), column]
         return df[column].apply(str).str.len().max(), df[column].apply(str).str.len().min()
-
-
-class DataAnalytics(AnalyticsCommons):
-
-    @property
-    def relative_freq_map(self):
-        return pd.Series(data=self.patterns.relative_freq, index=self.intent.selection, copy=True, dtype=float)
-
-    @property
-    def sample_map(self):
-        return pd.Series(data=self.patterns.sample_distribution, index=self.intent.selection, copy=True, dtype=float)
-
-    @property
-    def dominance_map(self):
-        return pd.Series(data=self.patterns.dominance_weighting, index=self.patterns.dominant_values, copy=True,
-                         dtype=float)

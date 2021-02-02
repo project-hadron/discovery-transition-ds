@@ -5,9 +5,10 @@ import numpy as np
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
+
+from ds_discovery.components.commons import Commons
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.components.commons import Commons, DataAnalytics
 from ds_discovery.components.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
@@ -27,7 +28,8 @@ class Transition(AbstractComponent):
     DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
 
     def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
-                 default_save=None, reset_templates: bool=None, align_connectors: bool=None):
+                 default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
@@ -35,18 +37,25 @@ class Transition(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
+        :param template_path: (optional) a template path to use if the environment variable does not exist
+        :param template_module: (optional) a template module to use if the environment variable does not exist
+        :param template_source_handler: (optional) a template source handler to use if no environment variable
+        :param template_persist_handler: (optional) a template persist handler to use if no environment variable
         :param align_connectors: (optional) resets aligned connectors to the template
         """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         reset_templates=reset_templates, align_connectors=align_connectors)
+                         reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                         template_source_handler=template_source_handler,
+                         template_persist_handler=template_persist_handler, align_connectors=align_connectors)
         self._raw_attribute_list = []
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
-                 reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None,
-                 has_contract: bool=None) -> Transition:
+                 reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
+                 default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
+                 default_replace_intent: bool=None, has_contract: bool=None) -> Transition:
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -62,6 +71,10 @@ class Transition(AbstractComponent):
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param reset_templates: (optional) reset connector templates from environ variables. Default True
                                 (see `report_environ()`)
+         :param template_path: (optional) a template path to use if the environment variable does not exist
+         :param template_module: (optional) a template module to use if the environment variable does not exist
+         :param template_source_handler: (optional) a template source handler to use if no environment variable
+         :param template_persist_handler: (optional) a template persist handler to use if no environment variable
          :param align_connectors: (optional) resets aligned connectors to the template. default Default True
          :param default_save_intent: (optional) The default action for saving intent in the property manager
          :param default_intent_level: (optional) the default level intent should be saved at
@@ -82,7 +95,9 @@ class Transition(AbstractComponent):
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
-                   reset_templates=reset_templates, align_connectors=align_connectors)
+                   reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                   template_source_handler=template_source_handler, template_persist_handler=template_persist_handler,
+                   align_connectors=align_connectors)
 
     @classmethod
     def scratch_pad(cls) -> TransitionIntentModel:
@@ -213,7 +228,7 @@ class Transition(AbstractComponent):
         """
         canonical = super().load_canonical(connector_name=connector_name, **kwargs)
         if isinstance(canonical, dict):
-            canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
+            canonical = pd.DataFrame.from_dict(data=canonical)
         return canonical
 
     def save_clean_canonical(self, canonical, auto_connectors: bool=None, **kwargs):
@@ -253,18 +268,21 @@ class Transition(AbstractComponent):
                 self.set_report_persist(connector_name=report_connector_name)
         self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
 
-    def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, save: bool=None):
+    def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
+                              save: bool=None):
         """ Saves the canonical schema to the Property contract. The default loads the clean canonical but optionally
         a canonical can be passed to base the schema on and optionally a name given other than the default
 
         :param schema_name: (optional) the name of the schema to save
         :param canonical: (optional) the canonical to base the schema on
+        :param schema_tree: (optional) an analytics dict (see Discovery.analyse_association(...)
         :param save: (optional) if True, save to file. Default is True
         """
         schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
         canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_clean_canonical()
-        report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
-        self.pm.set_canonical_schema(name=schema_name, canonical_report=report)
+        schema_tree = schema_tree if isinstance(schema_tree, list) else canonical.columns.to_list()
+        analytics = self.discover.analyse_association(canonical, columns_list=schema_tree)
+        self.pm.set_canonical_schema(name=schema_name, schema=analytics)
         self.pm_persist(save=save)
         return
 
@@ -298,11 +316,8 @@ class Transition(AbstractComponent):
         :return: pd.DataFrame
         """
         schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
-        report = self.pm.get_canonical_schema(name=schema_name)
-        if len(report) == 0:
-            report = {'Attributes (0)': {}, 'dType': {}, '%_Null': {}, '%_Dom': {}, 'Count': {}, 'Unique': {},
-                      'Observations': {}}
-        return self.discover.data_schema(report=report, stylise=stylise)
+        analytics = self.pm.get_canonical_schema(name=schema_name)
+        return self.discover.data_schema(analysis=analytics, stylise=stylise)
 
     def report_attributes(self, canonical, stylise: bool=True):
         """ generates a report on the attributes and any description provided
@@ -341,7 +356,7 @@ class Transition(AbstractComponent):
         """
         report = self.pm.report_connectors(connector_filter=connector_filter, inc_pm=inc_pm,
                                            inc_template=inc_template)
-        df = pd.DataFrame.from_dict(data=report, orient='columns')
+        df = pd.DataFrame.from_dict(data=report)
         if stylise:
             return Commons.report(df, index_header='connector_name')
         return df
@@ -352,7 +367,7 @@ class Transition(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_run_book())
         if stylise:
             return Commons.report(df, index_header='name')
         return df
@@ -365,10 +380,10 @@ class Transition(AbstractComponent):
         :return: pd.Dataframe
         """
         if isinstance(levels, (int, str)):
-            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels), orient='columns')
+            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels))
             if stylise:
                 return Commons.report(df, index_header='order')
-        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels), orient='columns')
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels))
         if stylise:
             return Commons.report(df, index_header='level')
         return df
@@ -387,7 +402,7 @@ class Transition(AbstractComponent):
         """
         report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
                                       drop_dates=drop_dates)
-        df = pd.DataFrame.from_dict(data=report, orient='columns')
+        df = pd.DataFrame.from_dict(data=report)
         if stylise:
             return Commons.report(df, index_header='section', bold='label')
         return df
@@ -462,7 +477,7 @@ class Transition(AbstractComponent):
                                 'datetime': _date_fields, 'bool': _bool_fields,
                                 'others': _other_fields},
                   'usability': {'mostly_null': len(_null_columns),
-                                'predominant': len(_dom_columns),
+                                'predominance': len(_dom_columns),
                                 'correlated': len(_correlated),
                                 'adjustments': _adjustments},
                   'cost': {'price': _provenance_cost}}
@@ -549,67 +564,6 @@ class Transition(AbstractComponent):
         report['notes'] = {'observations': _observations,
                            'actions': _actions}
         return report
-
-    def report_statistics(self, canonical: pd.DataFrame=None) -> dict:
-        """A complete report of non parametric statistics"""
-        if not isinstance(canonical, pd.DataFrame):
-            canonical = self._auto_transition()
-        # analysis
-        _analysis_dict = {}
-        for c in canonical.columns.sort_values().values:
-            _column = {}
-            try:
-                if canonical[c].dtype.name == 'category' or canonical[c].dtype.name.startswith('bool'):
-                    result = DataAnalytics(self.discover.analyse_category(canonical[c], top=6, freq_precision=3))
-                    _column['selection'] = result.intent.selection
-                    _column['dtype'] = result.intent.dtype
-                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['unique'] = str(result.intent.granularity)
-                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
-                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                    _column['nulls_percent'] = str(result.stats.nulls_percent)
-                elif canonical[c].dtype.name.startswith('int') or canonical[c].dtype.name.startswith('float'):
-                    _ = canonical[c].mode(dropna=True)[:1].value_counts(normalize=False, dropna=True)
-                    _dominant = _.index[0] / canonical.shape[0]
-                    _exclude_dominant = True if _dominant > 0.1 else False
-                    result = DataAnalytics(self.discover.analyse_number(canonical[c], granularity=5,
-                                                                        exclude_dominant=_exclude_dominant))
-                    _selection = result.intent.selection.copy()
-                    if all(isinstance(x, tuple) for x in _selection):
-                        for i in range(len(_selection)):
-                            _selection[i] = (str(_selection[i][0]), str(_selection[i][1]), _selection[i][2])
-                        _selection = [str(x) for x in _selection]
-                    _column['intervals'] = _selection
-                    _column['dtype'] = result.intent.dtype
-                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
-                    _column['freq_mean'] = [str(x) for x in result.patterns.freq_mean]
-                    _column['freq_std'] = [str(x) for x in result.patterns.freq_std]
-                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                    _column['mode'] = [str(x) for x in result.patterns.dominant_values]
-                    _column['mode_weighting'] = [str(x) for x in result.patterns.dominance_weighting]
-                    _column['mode_percent'] = str(result.patterns.dominant_percent)
-                    _column['nulls_percent'] = str(result.stats.nulls_percent)
-                    _column['mean'] = str(result.stats.mean)
-                    _column['var'] = str(result.stats.var)
-                    _column['std_err_mean'] = str(result.stats.sem)
-                    _column['mean_abs_dev'] = str(result.stats.mad)
-                    _column['skew'] = str(result.stats.skew)
-                    _column['kurtosis'] = str(result.stats.kurtosis)
-                elif canonical[c].dtype.name.startswith('date'):
-                    result = DataAnalytics(self.discover.analyse_date(canonical[c], granularity=5,
-                                                                      date_format='%Y-%m-%dT%H:%M:%S'))
-                    _column['intervals'] = result.intent.selection
-                    _column['dtype'] = result.intent.dtype
-                    _column['limits'] = (str(result.intent.lower), str(result.intent.upper))
-                    _column['relative_freq'] = [str(x) for x in result.patterns.relative_freq]
-                    _column['sample_distribution'] = [str(x) for x in result.patterns.sample_distribution]
-                    _column['nulls_percent'] = str(result.stats.nulls_percent)
-            except (ValueError, TypeError, ZeroDivisionError):
-                _column['message:'] = f'Error processing column {c}'
-            if len(_column) > 0:
-                _analysis_dict[c] = _column
-        return _analysis_dict
 
     def upload_attributes(self, canonical: pd.DataFrame, label_key: str, text_key: str, constraints: list=None,
                           save=None):

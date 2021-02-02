@@ -1,7 +1,7 @@
 # bring definitions to the top level
 from ds_discovery.components.feature_catalog import FeatureCatalog
 from ds_discovery.components.transitioning import Transition
-from ds_discovery.components.concept_tolerance import ConceptTolerance
+from ds_discovery.components.data_tolerance import DataTolerance
 
 # release version number picked up in the setup.py
-__version__ = "2.11.011"
+__version__ = "2.11.012"

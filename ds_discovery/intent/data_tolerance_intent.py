@@ -1,17 +1,19 @@
 import inspect
-from copy import deepcopy
 from typing import Any
 
 import numpy as np
 import pandas as pd
-from numpy.polynomial.polynomial import Polynomial
 from aistac.intent.abstract_intent import AbstractIntentModel
+
+from ds_discovery.components.discovery import DataDiscovery
+from ds_discovery.intent.common_intent import CommonsIntent
 from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
 
-class ToleranceCatalogIntentModel(AbstractIntentModel):
+class DataToleranceIntentModel(CommonsIntent):
+    """ The Data Tolerance intent modelling methods"""
 
     def __init__(self, property_manager: ToleranceCatalogPropertyManager, default_save_intent: bool=None,
                  default_intent_level: [str, int, float]=None, order_next_available: bool=None,
@@ -76,21 +78,7 @@ class ToleranceCatalogIntentModel(AbstractIntentModel):
             return df_measure
         raise ValueError(f"The measure '{measure}, can't be found in the tolerance catalog")
 
-    def _get_canonical(self, data: [pd.DataFrame, str]) -> pd.DataFrame:
-        if isinstance(data, pd.DataFrame):
-            return deepcopy(data)
-        if isinstance(data, str):
-            if not self._pm.has_connector(connector_name=data):
-                raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
-            handler = self._pm.get_connector_handler(data)
-            canonical = handler.load_canonical()
-            if isinstance(canonical, dict):
-                canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
-            return canonical
-        raise ValueError(f"The canonical format is not recognised, pd.DataFrame, "
-                         f"ConnectorContract expected, {type(data)} passed")
-
-    def tolerate_analysis(self, canonical: [pd.DataFrame, str], header: str, analytics: dict, tolerance: dict,
+    def tolerate_analysis(self, canonical: Any, header: str, tolerance: dict, schema_name: str=None, dtype: str=None,
                           save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """"""
@@ -99,8 +87,20 @@ class ToleranceCatalogIntentModel(AbstractIntentModel):
                                    measure_name=measure_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        canonical = self._get_canonical(canonical, header=header)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' could not be found in the canonical DataFrame")
+        if not self._pm.has_canonical_schema(name=schema_name):
+            raise ValueError(f"The schema name '{schema_name}' could not be found in the Schema Catalog")
+        schema = self._pm.get_canonical_schema(name=schema_name)
+        if header not in schema:
+            raise ValueError(f"The header '{header}' could not be found in the schema '{schema_name}'")
+        # sample = schema.
+        # dtype = dtype if isinstance(dtype, str) else sample
+        # values = canonical[header].copy
+        # DataDiscovery.
 
-    def tolerate_correlation(self, canonical: [pd.DataFrame, str], header: str, analytics: dict, tolerance: dict,
+    def tolerate_correlation(self, canonical: Any, header: str, analytics: dict, tolerance: dict,
                              save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,
                              replace_intent: bool=None, remove_duplicates: bool=None):
         """"""
@@ -110,7 +110,7 @@ class ToleranceCatalogIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
 
-    def tolerate_condition(self, canonical: [pd.DataFrame, str], header: str, analytics: dict, tolerance: dict,
+    def tolerate_condition(self, canonical: Any, header: str, analytics: dict, tolerance: dict,
                            save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None):
         """"""
@@ -119,7 +119,6 @@ class ToleranceCatalogIntentModel(AbstractIntentModel):
                                    measure_name=measure_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-
 
     """
         PRIVATE METHODS SECTION

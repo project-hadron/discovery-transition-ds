@@ -274,7 +274,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
     # drop column that only have 1 value in them
     def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                            auto_contract: bool=None, drop_empty_row: bool=None, inplace: bool=None,
+                            drop_empty_row: bool=None, inplace: bool=None,
                             save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                             replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
@@ -285,7 +285,6 @@ class TransitionIntentModel(AbstractIntentModel):
         :param nulls_list: can be boolean or a list:
                     if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None', ' ']
                     if list then this is considered potential null values.
-        :param auto_contract: if the auto_category or to_category should be returned
         :param drop_empty_row: also drop any rows where all the values are empty
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -309,7 +308,6 @@ class TransitionIntentModel(AbstractIntentModel):
         if not inplace:
             with threading.Lock():
                 df = deepcopy(df)
-        auto_contract = auto_contract if isinstance(auto_contract, bool) else True
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         if isinstance(nulls_list, bool) and nulls_list:
@@ -331,7 +329,7 @@ class TransitionIntentModel(AbstractIntentModel):
                 col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
         if isinstance(drop_empty_row, bool) and drop_empty_row:
-            result = result.dropna(axis=0, how='all')
+            result = result.dropna(how='all')
         if not inplace:
             return result
         return
@@ -482,7 +480,7 @@ class TransitionIntentModel(AbstractIntentModel):
     def to_sample(self, df, sample_size: [int, float], shuffle: bool=None, seed: int=None, inplace: bool=None,
                   save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                   replace_intent: bool=None, remove_duplicates: bool=None):
-        """ clean the headers of a pandas DataFrame replacing space with underscore
+        """ allows a certain sample size to be selected from the dataframe.
 
         :param df: the pandas.DataFrame to drop duplicates from
         :param sample_size: If float, should be between 0.0 and 1.0 and represent the proportion of the

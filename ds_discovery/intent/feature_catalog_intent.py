@@ -5,11 +5,12 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from aistac.handlers.abstract_handlers import HandlerFactory
-from aistac.intent.abstract_intent import AbstractIntentModel
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
+from ds_discovery.intent.common_intent import CommonsIntent
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
-from ds_discovery.components.commons import Commons, DataAnalytics
+from ds_discovery.components.commons import Commons
+from aistac.components.aistac_commons import DataAnalytics
 from ds_discovery.components.discovery import DataDiscovery
 # scratch_pads
 from ds_discovery.components.transitioning import Transition
@@ -17,7 +18,7 @@ from ds_discovery.components.transitioning import Transition
 __author__ = 'Darryl Oatridge'
 
 
-class FeatureCatalogIntentModel(AbstractIntentModel):
+class FeatureCatalogIntentModel(CommonsIntent):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, default_save_intent: bool=None,
@@ -43,7 +44,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: [pd.DataFrame, str], feature_name: [int, str],
+    def run_intent_pipeline(self, canonical: Any, feature_name: [int, str],
                             train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
                             **kwargs) -> [pd.DataFrame, pd.Series]:
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
@@ -93,7 +94,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             return df_feature
         raise ValueError(f"The feature '{feature_name}, can't be found in the feature catalog")
 
-    def apply_date_diff(self, canonical: [pd.DataFrame, str], key: [str, list], first_date: str, second_date: str,
+    def apply_date_diff(self, canonical: Any, key: [str, list], first_date: str, second_date: str,
                         aggregator: str=None, units: str=None, precision: int=None, rtn_columns: list=None,
                         regex: bool=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -152,7 +153,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical[rename] = [np.round(v, precision) for v in canonical[rename]]
         return Commons.filter_columns(canonical, headers=list(set(key + [rename] + rtn_columns))).set_index(key)
 
-    def select_feature(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list]=None,
+    def select_feature(self, canonical: Any, key: [str, list], headers: [str, list]=None,
                        drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                        re_ignore_case: bool=None, drop_dup_index: str=None, rename: dict=None, unindex: bool=None,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
@@ -204,7 +205,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_rtn.rename(columns=rename, inplace=True)
         return df_rtn.set_index(key)
 
-    def apply_merge(self, canonical: [pd.DataFrame, str], merge_connector: str, key: [str, list], how: str=None,
+    def apply_merge(self, canonical: Any, merge_connector: str, key: [str, list], how: str=None,
                     on: str=None, left_on: str=None, right_on: str=None, left_index: bool=None, right_index: bool=None,
                     sort: bool=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
                     rtn_columns: list=None, regex: bool=None, unindex: bool=None, save_intent: bool=None,
@@ -287,7 +288,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         rtn_columns = rtn_columns if isinstance(rtn_columns, list) else df.columns.to_list()
         return Commons.filter_columns(df, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_map(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, value_map: dict,
+    def apply_map(self, canonical: Any, key: [str, list], header: str, value_map: dict,
                   default_to: Any=None, replace_na: bool=None, rtn_columns: list=None, regex: bool=None,
                   rename: str=None, unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
                   intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -342,7 +343,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical.dropna(axis=0, how='any', subset=[rename], inplace=True)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_numeric_typing(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, normalise: bool=None,
+    def apply_numeric_typing(self, canonical: Any, key: [str, list], header: str, normalise: bool=None,
                              precision: int=None, fillna: [int, float]=None, errors: str=None, rtn_columns: list=None,
                              rtn_regex: bool=None, unindex: bool=None, rename: str=None, save_intent: bool=None,
                              feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -414,7 +415,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical[rename] = s_column
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_category_typing(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, as_num: bool=None,
+    def apply_category_typing(self, canonical: Any, key: [str, list], header: str, as_num: bool=None,
                               rtn_columns: list=None, rtn_regex: bool=None, unindex: bool=None, rename: str=None,
                               save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                               replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -463,7 +464,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                                               inplace=False)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_replace(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, to_replace: dict,
+    def apply_replace(self, canonical: Any, key: [str, list], header: str, to_replace: dict,
                       regex: bool=None, rtn_columns: list=None, rtn_regex: bool=None, unindex: bool=None,
                       rename: str=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -521,7 +522,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical[rename] = canonical[header].replace(to_replace=to_replace, inplace=False, regex=regex)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
-    def apply_condition(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, conditions: [tuple, list],
+    def apply_condition(self, canonical: Any, key: [str, list], header: str, conditions: [tuple, list],
                         default: [int, float, str]=None, inc_columns: list=None, rename: str=None, unindex: bool=None,
                         save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -592,7 +593,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             canonical[rename] = np.select(selection, choices)
         return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
-    def select_where(self, canonical: [pd.DataFrame, str], key: [str, list], selection: list, inc_columns: list=None,
+    def select_where(self, canonical: Any, key: [str, list], selection: list, inc_columns: list=None,
                      unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns a selected result based upon a set of conditions.
@@ -652,7 +653,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         canonical = canonical.iloc[select_idx]
         return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
-    def remove_outliers(self, canonical: [pd.DataFrame, str], key: [str, list], column: str, lower_quantile: float=None,
+    def remove_outliers(self, canonical: Any, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None) -> [None, pd.DataFrame]:
@@ -691,11 +692,11 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
 
         result = DataDiscovery.analyse_number(df_rtn[column], granularity=[lower_quantile, upper_quantile])
         analysis = DataAnalytics(result)
-        df_rtn = df_rtn[(df_rtn[column] > analysis.intent.selection[0][1]) & (df_rtn[column] <
-                                                                              analysis.intent.selection[2][0])]
+        df_rtn = df_rtn[(df_rtn[column] > analysis.intent.intervals[0][1]) & (df_rtn[column] <
+                                                                              analysis.intent.intervals[2][0])]
         return df_rtn.set_index(key)
 
-    def group_features(self, canonical: [pd.DataFrame, str], headers: [str, list], group_by: [str, list],
+    def group_features(self, canonical: Any, headers: [str, list], group_by: [str, list],
                        aggregator: str=None, drop_group_by: bool=False, include_weighting: bool=False,
                        freq_precision: int=None, remove_weighting_zeros: bool=False, remove_aggregated: bool=False,
                        drop_dup_index: str=None, unindex: bool=None, save_intent: bool=None,
@@ -758,7 +759,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
 
-    def interval_categorical(self, canonical: [pd.DataFrame, str], key: [str, list], column: str,
+    def interval_categorical(self, canonical: Any, key: [str, list], column: str,
                              inc_columns: list=None, granularity: [int, float, list]=None, lower: [int, float]=None,
                              upper: [int, float]=None, rename: str=None, categories: list=None, precision: int=None,
                              unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None,
@@ -876,7 +877,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
         df_rtn = df_rtn.drop(column, axis=1).set_index(key)
         return df_rtn
 
-    def group_flatten_multihot(self, canonical: [pd.DataFrame, str], key: [str, list], header: str, prefix=None,
+    def group_flatten_multihot(self, canonical: Any, key: [str, list], header: str, prefix=None,
                                prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False,  dtype: Any=None,
                                aggregator: str=None, dups=True, title_rename_map: dict=None, title_case=None,
                                title_replace_spaces: str=None, inc_columns: list=None, unindex: bool=None,
@@ -955,7 +956,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                                                    replace_spaces=title_replace_spaces, inplace=True)
         return dummy_df.set_index(key)
 
-    def apply_missing(self, canonical: [pd.DataFrame, str], key: [str, list], headers: [str, list],
+    def apply_missing(self, canonical: Any, key: [str, list], headers: [str, list],
                       inc_columns: list=None, granularity: [int, float]=None, lower: [int, float]=None,
                       upper: [int, float]=None, nulls_list: list=None, replace_zero: [int, float]=None,
                       precision: int=None, unindex: bool=None, day_first: bool=False, year_first: bool=False,
@@ -1032,7 +1033,7 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                     result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
                                                           precision=precision)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_number(from_value=result.intent.lower, to_value=result.intent.upper,
+                    col[col.isna()] = sim.get_number(from_value=result.intent.lowest, to_value=result.intent.highest,
                                                      relative_freq=result.patterns.relative_freq, precision=0,
                                                      size=size, save_intent=False)
                 elif is_datetime64_any_dtype(col):
@@ -1043,14 +1044,14 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
                     result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_category(selection=result.intent.selection,
+                    col[col.isna()] = sim.get_category(selection=result.intent.categories,
                                                        relative_freq=result.patterns.relative_freq, size=size,
                                                        save_intent=False)
                     col = col.astype('category')
             df_rtn[c] = col
         return df_rtn.set_index(key)
 
-    def custom_builder(self, canonical: [pd.DataFrame, str], code_str: str, use_exec: bool=False,
+    def custom_builder(self, canonical: Any, code_str: str, use_exec: bool=False,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> [None, pd.DataFrame]:
         """ enacts a code_str on a dataFrame, returning the output of the code_str or the DataFrame if using exec or
@@ -1224,40 +1225,3 @@ class FeatureCatalogIntentModel(AbstractIntentModel):
                 raise ValueError(f"The logic '{_logic}' for column '{_column}' is not recognised logic. "
                                  f"Use 'AND', 'OR', 'NOT', 'XOR'")
         return select_idx
-
-    def _get_canonical(self, data: [pd.DataFrame, pd.Series, list, str, dict], header: str = None) -> pd.DataFrame:
-        if isinstance(data, pd.DataFrame):
-            return deepcopy(data)
-        if isinstance(data, dict):
-            method = data.pop('method', None)
-            if method is None:
-                raise ValueError(f"The data dictionary has no 'method' key.")
-            if str(method).startswith('@generate'):
-                task_name = data.pop('task_name', None)
-                if task_name is None:
-                    raise ValueError(f"The data method '@generate' requires a 'task_name' key.")
-                repo_uri = data.pop('repo_uri', None)
-                module = HandlerFactory.get_module(module_name='ds_behavioral')
-                inst = module.SyntheticBuilder.from_env(task_name=task_name, uri_pm_repo=repo_uri, default_save=False)
-                size = data.pop('size', None)
-                seed = data.get('seed', None)
-                run_book = data.pop('run_book', None)
-                result = inst.tools.run_intent_pipeline(size=size, columns=run_book, seed=seed)
-                return inst.tools.frame_selection(canonical=result, save_intent=False, **data)
-            else:
-                raise ValueError(f"The data 'method' key {method} is not a recognised intent method")
-        elif isinstance(data, (list, pd.Series)):
-            header = header if isinstance(header, str) else 'default'
-            return pd.DataFrame(data=deepcopy(data), columns=[header])
-        elif isinstance(data, str):
-            if data == '@empty':
-                return pd.DataFrame()
-            if not self._pm.has_connector(connector_name=data):
-                raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
-            handler = self._pm.get_connector_handler(data)
-            canonical = handler.load_canonical()
-            if isinstance(canonical, dict):
-                canonical = pd.DataFrame.from_dict(data=canonical, orient='columns')
-            return canonical
-        raise ValueError(f"The canonical format is not recognised, pd.DataFrame, pd.Series"
-                         f"str, list or dict expected, {type(data)} passed")

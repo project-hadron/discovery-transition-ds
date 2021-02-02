@@ -5,10 +5,10 @@ from pprint import pprint
 
 import numpy as np
 import pandas as pd
+from aistac.components.aistac_commons import DataAnalytics
 from aistac.properties.property_manager import PropertyManager
 from ds_behavioral import SyntheticBuilder
 
-from ds_discovery.components.commons import DataAnalytics
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
 
@@ -58,92 +58,92 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
-        control = ['intent', 'patterns', 'stats']
+        control = ['intent', 'patterns', 'stats', 'params']
         self.assertCountEqual(control, list(result.keys()))
-        control = ['dtype', 'selection', 'upper', 'lower', 'granularity', 'freq_precision']
+        control = ['dtype', 'categories', 'highest_unique', 'lowest_unique', 'category_count']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         control = ['relative_freq', 'sample_distribution']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
-        control = ['excluded_percent', 'nulls_percent', 'sample']
+        control = ['nulls_percent', 'sample_size', 'excluded_percent']
         self.assertCountEqual(control, list(result.get('stats').keys()))
+        control = ['freq_precision']
+        self.assertCountEqual(control, list(result.get('params').keys()))
 
     def test_analyse_category_limits(self):
         top = 2
         dataset = ['A']*8 + ['B']*6 + ['C']*4 + ['D']*2
         result = Discover.analyse_category(dataset, top=top, freq_precision=0)
-        control = ['dtype', 'selection', 'top', 'upper', 'lower', 'granularity', 'freq_precision']
-        self.assertCountEqual(control, list(result.get('intent').keys()))
-        self.assertEqual(top, result.get('intent').get('top'))
-        self.assertEqual(top, len(result.get('intent').get('selection')))
-        self.assertCountEqual(['A', 'B'], result.get('intent').get('selection'))
+        control = ['dtype', 'categories', 'top', 'highest_unique', 'lowest_unique', 'category_count']
+        self.assertCountEqual(control, list(result.get('top')))
+        self.assertEqual(top, len(result.get('intent').get('categories')))
+        self.assertCountEqual(['A', 'B'], result.get('intent').get('categories'))
         self.assertCountEqual([40, 30], result.get('patterns').get('relative_freq'))
         self.assertEqual(30, result.get('stats').get('excluded_percent'))
-        self.assertEqual(14, result.get('stats').get('sample'))
+        self.assertEqual(14, result.get('stats').get('sample_size'))
         lower = 0.2
         upper = 7
         result = Discover.analyse_category(dataset, lower=lower, upper=upper, freq_precision=0)
-        control = ['dtype', 'selection', 'upper', 'lower', 'granularity', 'freq_precision']
+        control = ['dtype', 'categories', 'highest_unique', 'lowest_unique', 'granularity']
         self.assertCountEqual(control, list(result.get('intent').keys()))
-        self.assertEqual(lower, result.get('intent').get('lower'))
-        self.assertEqual(upper, result.get('intent').get('upper'))
-        self.assertCountEqual(['C', 'B'], result.get('intent').get('selection'))
+        self.assertEqual(lower, result.get('intent').get('lowest_unique'))
+        self.assertEqual(upper, result.get('intent').get('highest_unique'))
+        self.assertCountEqual(['C', 'B'], result.get('intent').get('categories'))
         self.assertCountEqual([33, 50], result.get('patterns').get('relative_freq'))
         self.assertEqual(50, result.get('stats').get('excluded_percent'))
-        self.assertEqual(10, result.get('stats').get('sample'))
+        self.assertEqual(10, result.get('stats').get('sample_size'))
 
     def test_analyse_number(self):
         dataset = []
         result = Discover.analyse_number(dataset)
         control = [1]
         self.assertEqual(control, result.get('patterns').get('relative_freq'))
-        self.assertEqual((0,0,3), (result.get('intent').get('lower'), result.get('intent').get('upper'), result.get('intent').get('granularity')))
-        self.assertEqual(0, result.get('stats').get('sample'))
+        self.assertEqual((0,0,3), (result.get('intent').get('lowest'), result.get('intent').get('highest'), result.get('intent').get('granularity')))
+        self.assertEqual(0, result.get('stats').get('sample_size'))
         dataset = [1,2,3,4,5,6,7,8,9,10]
-
         result = Discover.analyse_number(dataset, granularity=2)
         control = [50.0, 50.0]
         self.assertEqual(control, result.get('patterns').get('relative_freq'))
-        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
+        self.assertEqual((1,10), (result.get('intent').get('lowest'), result.get('intent').get('highest')))
         control = [(1.0, 5.5, 'both'), (5.5, 10.0, 'right')]
-        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(control, result.get('intent').get('intervals'))
         self.assertEqual(2, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=3.0)
         control = [30.0, 30.0, 40.0]
         self.assertEqual(control, result.get('patterns').get('relative_freq'))
-        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
+        self.assertEqual((1,10), (result.get('intent').get('lowest'), result.get('intent').get('highest')))
         control = [(1.0, 4.0, 'left'), (4.0, 7.0, 'left'), (7.0, 10.0, 'both')]
-        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(control, result.get('intent').get('intervals'))
         self.assertEqual(3.0, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=2.0)
         control = [20.0, 20.0, 20.0, 20.0, 20.0]
         self.assertEqual(control, result.get('patterns').get('relative_freq'))
-        self.assertEqual((1,10), (result.get('intent').get('lower'), result.get('intent').get('upper')))
+        self.assertEqual((1,10), (result.get('intent').get('lowest'), result.get('intent').get('highest')))
         control = [(1.0, 3.0, 'left'), (3.0, 5.0, 'left'), (5.0, 7.0, 'left'), (7.0, 9.0, 'left'), (9.0, 11.0, 'both')]
-        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(control, result.get('intent').get('intervals'))
         self.assertEqual(2.0, result.get('intent').get('granularity'))
 
         result = Discover.analyse_number(dataset, granularity=1.0, lower=0, upper=5)
         control = [0.0, 20.0, 20.0, 20.0, 20.0, 20.0]
         self.assertEqual(control, result.get('patterns').get('relative_freq'))
-        self.assertEqual((0,5), (result.get('intent').get('lower'), result.get('intent').get('upper')))
+        self.assertEqual((0,5), (result.get('intent').get('lowest'), result.get('intent').get('highest')))
         control = [(0.0, 1.0, 'left'), (1.0, 2.0, 'left'), (2.0, 3.0, 'left'), (3.0, 4.0, 'left'), (4.0, 5.0, 'left'), (5.0, 6.0, 'both')]
-        self.assertEqual(control, result.get('intent').get('selection'))
+        self.assertEqual(control, result.get('intent').get('intervals'))
         self.assertEqual(1.0, result.get('intent').get('granularity'))
+        pprint(result)
 
     def test_number_zero_count(self):
         dataset = [1,0,0,1,1,1,0,0,1,0]
-        result = DataAnalytics(analysis=Discover.analyse_number(dataset), label='test')
-        pprint(result.to_dict)
-        # self.assertEqual([50.0], result.get('dominance_weighting'))
-        # dataset = [1,0,0,2,5,4,0,4,1,0]
-        # result = Discover.analyse_number(dataset, lower=0, granularity=3)
-        # self.assertEqual([40.0], result.get('dominance_weighting'))
-        # self.assertEqual([10], result.get('sample'))
-        # result = Discover.analyse_number(dataset, lower=1, granularity=3)
-        # self.assertEqual([40.0], result.get('dominance_weighting'))
-        # self.assertEqual([6], result.get('sample'))
+        result = DataAnalytics(analysis=Discover.analyse_number(dataset))
+        self.assertEqual([50.0], result.get('dominance_weighting'))
+        dataset = [1,0,0,2,5,4,0,4,1,0]
+        result = Discover.analyse_number(dataset, lower=0, granularity=3)
+        self.assertEqual([40.0], result.get('dominance_weighting'))
+        self.assertEqual([10], result.get('sample'))
+        result = Discover.analyse_number(dataset, lower=1, granularity=3)
+        self.assertEqual([40.0], result.get('dominance_weighting'))
+        self.assertEqual([6], result.get('sample'))
 
     def test_analysis_granularity_list(self):
         dataset = [0,1,2,3]
@@ -166,16 +166,17 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         # Default
         dataset = list(range(1,10))
         result = DataAnalytics(Discover.analyse_number(dataset))
-        self.assertEqual(1, result.intent.lower)
-        self.assertEqual(9, result.intent.upper)
+        pprint(result)
+        self.assertEqual(1, result.intent.lowest)
+        self.assertEqual(9, result.intent.highest)
         # Outer Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=0, upper=10))
-        self.assertEqual(0, result.intent.lower)
-        self.assertEqual(10, result.intent.upper)
+        self.assertEqual(0, result.intent.lowest)
+        self.assertEqual(10, result.intent.highest)
         # Inner Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=2, upper=8))
-        self.assertEqual(2, result.intent.lower)
-        self.assertEqual(8, result.intent.upper)
+        self.assertEqual(2, result.intent.lowest)
+        self.assertEqual(8, result.intent.highest)
 
     def test_analyse_date(self):
         tools = SyntheticBuilder.scratch_pad()
@@ -186,16 +187,16 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                               'day_first': False,
                               'dtype': 'date',
                               'granularity': 3,
-                              'lower': '2017-12-02',
+                              'lowest': '2017-12-02',
                               'selection': [('2017-12-02', '2018-03-13', 'both'),
                                             ('2018-03-13', '2018-06-22', 'right'),
                                             ('2018-06-22', '2018-10-01', 'right')],
-                              'upper': '2018-10-01',
+                              'highest': '2018-10-01',
                               'freq_precision': 2,
                               'year_first': False},
                    'patterns': {'sample_distribution': [1, 0, 3],
                                 'relative_freq': [25.0, 0.0, 75.0]},
-                   'stats': {'bootstrap_ci': (17572.5, 17797.75),
+                   'stats': {'bootstrap_bci': (17572.5, 17797.75),
                              'emp_outliers': [0, 0],
                              'excluded_percent': 0.0,
                              'irq_outliers': [1, 0],
@@ -209,7 +210,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         control = {'intent': {'day_first': False,
                               'dtype': 'date',
                               'granularity': 3,
-                              'lower': pd.Timestamp('2017-02-12 19:02:11.531780+0000', tz='UTC'),
+                              'lowest': pd.Timestamp('2017-02-12 19:02:11.531780+0000', tz='UTC'),
                               'selection': [(pd.Timestamp('2017-02-12 19:02:11.531780+0000', tz='UTC'),
                                              pd.Timestamp('2017-09-08 17:43:30.973860+0000', tz='UTC'),
                                              'both'),
@@ -219,12 +220,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                             (pd.Timestamp('2018-04-04 16:24:50.415940+0000', tz='UTC'),
                                              pd.Timestamp('2018-10-29 15:06:09.858020+0000', tz='UTC'),
                                              'right')],
-                              'upper': pd.Timestamp('2018-10-29 15:06:09.858020+0000', tz='UTC'),
+                              'highest': pd.Timestamp('2018-10-29 15:06:09.858020+0000', tz='UTC'),
                               'freq_precision': 2,
                               'year_first': False},
                    'patterns': {'sample_distribution': [2, 3, 5],
                                 'relative_freq': [20.0, 30.0, 50.0]},
-                   'stats': {'bootstrap_ci': (17493.5054775573, 17724.4628926684),
+                   'stats': {'bootstrap_bci': (17493.5054775573, 17724.4628926684),
                              'emp_outliers': [0, 0],
                              'excluded_percent': 0.0,
                              'irq_outliers': [1, 0], 'kurtosis': 0.64,
@@ -245,9 +246,9 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_association(df, columns_list)
         control = {'gender': {'analysis': {'intent': {'dtype': 'category',
                                                       'granularity': 2,
-                                                      'lower': 40.0,
+                                                      'lowest': 40.0,
                                                       'selection': ['M', 'F'],
-                                                      'upper': 60.0,
+                                                      'highest': 60.0,
                                                       'freq_precision': 2},
                                            'patterns': {'sample_distribution': [30, 20],
                                                         'relative_freq': [60.0, 40.0]},
@@ -264,12 +265,12 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         result = Discover.analyse_association(df, columns_list)
         control = {'numbers': {'analysis': {'intent': {'dtype': 'number',
                                                        'granularity': 3,
-                                                       'lower': 9.0,
+                                                       'lowest': 9.0,
                                                        'precision': 3,
                                                        'selection': [(9.0, 330.0, 'both'),
                                                                      (330.0, 651.0, 'right'),
                                                                      (651.0, 972.0, 'right')],
-                                                       'upper': 972.0,
+                                                       'highest': 972.0,
                                                        'freq_precision': 2},
                                             'patterns': {'dominance_weighting': [50.0, 50.0],
                                                          'dominant_percent': 9.09,
@@ -278,7 +279,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                          'freq_mean': [140.484, 0.0, 827.231],
                                                          'relative_freq': [70.45, 0.0, 29.55],
                                                          'freq_std': [7568.791, 0.0, 7760.859]},
-                                            'stats': {'bootstrap_ci': (253.857, 445.214),
+                                            'stats': {'bootstrap_bci': (253.857, 445.214),
                                                       'emp_outliers': [0, 0],
                                                       'excluded_percent': 0.0,
                                                       'irq_outliers': [0, 0], 'kurtosis': -1.03,
@@ -299,16 +300,16 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
                                                      'day_first': False,
                                                      'dtype': 'date',
                                                      'granularity': 3,
-                                                     'lower': '14-01-2003',
+                                                     'lowest': '14-01-2003',
                                                      'selection': [('14-01-2003', '29-04-2008', 'both'),
                                                                    ('29-04-2008', '13-08-2013', 'right'),
                                                                    ('13-08-2013', '27-11-2018', 'right')],
-                                                     'upper': '27-11-2018',
+                                                     'highest': '27-11-2018',
                                                      'freq_precision': 2,
                                                      'year_first': False},
                                           'patterns': {'sample_distribution': [12, 21, 11],
                                                        'relative_freq': [27.27, 47.73, 25.0]},
-                                          'stats': {'bootstrap_ci': (14622.3654489759,
+                                          'stats': {'bootstrap_bci': (14622.3654489759,
                                                                      15435.002697157),
                                                     'emp_outliers': [0, 0],
                                                     'excluded_percent': 0.0,

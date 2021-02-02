@@ -2,6 +2,7 @@ from contextlib import closing
 import os
 import threading
 import pandas as pd
+import numpy as np
 import pickle
 import json
 
@@ -32,6 +33,14 @@ class PandasSourceHandler(AbstractSourceHandler):
         """ returns the canonical dataset based on the connector contract. This method utilises the pandas
         'pd.read_' methods and directly passes the kwargs to these methods.
 
+        if reading large CSV file you can use the lambda functions in skiprows by passing it as a string at setup
+        example:
+                # 0.01 probability (1% of the rows)
+                skiprows=lambda i: i>0 and random.random() > 0.01
+
+                # or every nth row, in this case 100th
+                lambda i: i % 100 != 0
+
         Extra Parameters in the ConnectorContract kwargs:
             - use_full_uri: (optional) use the uri in full and don't remove the query parameters
             - file_type: (optional) the type of the source file. if not set, inferred from the file extension
@@ -55,6 +64,8 @@ class PandasSourceHandler(AbstractSourceHandler):
             if file_type.lower() in ['parquet', 'pq']:
                 rtn_data = pd.read_parquet(address, **load_params)
             elif file_type.lower() in ['zip', 'csv', 'tsv', 'txt']:
+                if 'skiprows' in load_params and load_params.get('skiprows').startswith("lambda"):
+                    load_params['skiprows'] = eval(load_params.get('skiprows'))
                 rtn_data = pd.read_csv(address, **load_params)
             elif file_type.lower() in ['json']:
                 rtn_data = self._json_load(path_file=address, **load_params)

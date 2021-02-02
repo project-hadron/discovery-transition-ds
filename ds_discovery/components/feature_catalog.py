@@ -17,7 +17,8 @@ class FeatureCatalog(AbstractComponent):
     DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
-                 default_save=None, reset_templates: bool=None, align_connectors: bool=None):
+                 default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
@@ -25,17 +26,24 @@ class FeatureCatalog(AbstractComponent):
         :param default_save: The default behaviour of persisting the contracts:
                     if False: The connector contracts are kept in memory (useful for restricted file systems)
         :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
+        :param template_path: (optional) a template path to use if the environment variable does not exist
+        :param template_module: (optional) a template module to use if the environment variable does not exist
+        :param template_source_handler: (optional) a template source handler to use if no environment variable
+        :param template_persist_handler: (optional) a template persist handler to use if no environment variable
         :param align_connectors: (optional) resets aligned connectors to the template
         """
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         reset_templates=reset_templates, align_connectors=align_connectors)
+                         reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                         template_source_handler=template_source_handler,
+                         template_persist_handler=template_persist_handler, align_connectors=align_connectors)
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
-                 reset_templates: bool=None, align_connectors: bool=None, default_save_intent: bool=None,
-                 default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None,
-                 has_contract: bool=None) -> FeatureCatalog:
+                 reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
+                 default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
+                 default_replace_intent: bool=None, has_contract: bool=None) -> FeatureCatalog:
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -51,6 +59,10 @@ class FeatureCatalog(AbstractComponent):
          :param default_save: (optional) if the configuration should be persisted. default to 'True'
          :param reset_templates: (optional) reset connector templates from environ variables. Default True
                                 (see `report_environ()`)
+         :param template_path: (optional) a template path to use if the environment variable does not exist
+         :param template_module: (optional) a template module to use if the environment variable does not exist
+         :param template_source_handler: (optional) a template source handler to use if no environment variable
+         :param template_persist_handler: (optional) a template persist handler to use if no environment variable
          :param align_connectors: (optional) resets aligned connectors to the template. default Default True
          :param default_save_intent: (optional) The default action for saving intent in the property manager
          :param default_intent_level: (optional) the default level intent should be saved at
@@ -72,7 +84,9 @@ class FeatureCatalog(AbstractComponent):
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
         return cls(property_manager=_pm, intent_model=_intent_model, default_save=default_save,
-                   reset_templates=reset_templates, align_connectors=align_connectors)
+                   reset_templates=reset_templates, template_path=template_path, template_module=template_module,
+                   template_source_handler=template_source_handler, template_persist_handler=template_persist_handler,
+                   align_connectors=align_connectors)
 
     @classmethod
     def scratch_pad(cls) -> FeatureCatalogIntentModel:
@@ -198,7 +212,7 @@ class FeatureCatalog(AbstractComponent):
         """
         canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_catalog_feature(feature_name)
         report = self.canonical_report(canonical=canonical, stylise=False).to_dict()
-        self.pm.set_canonical_schema(name=feature_name, canonical_report=report)
+        self.pm.set_canonical_schema(name=feature_name, schema=report)
         self.pm_persist(save=save)
         return
 
@@ -285,7 +299,7 @@ class FeatureCatalog(AbstractComponent):
             df.set_index(keys='feature_name', inplace=True)
         return df
 
-    def report_connectors(self, connector_filter: [str, list] = None, inc_pm: bool = None, inc_template: bool = None,
+    def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
                           stylise: bool = True):
         """ generates a report on the source contract
 
@@ -315,7 +329,7 @@ class FeatureCatalog(AbstractComponent):
         df.set_index(keys='name', inplace=True)
         return df
 
-    def report_intent(self, levels: [str, int, list] = None, stylise: bool = True):
+    def report_intent(self, levels: [str, int, list]=None, stylise: bool = True):
         """ generates a report on all the intent
 
         :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
@@ -332,7 +346,7 @@ class FeatureCatalog(AbstractComponent):
         df.set_index(keys='level', inplace=True)
         return df
 
-    def report_notes(self, catalog: [str, list] = None, labels: [str, list] = None, regex: [str, list] = None,
+    def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
                      re_ignore_case: bool = False, stylise: bool = True, drop_dates: bool = False):
         """ generates a report on the notes
 
