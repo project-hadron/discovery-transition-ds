@@ -1354,6 +1354,7 @@ class DataDiscovery(object):
                     precision = kwargs.get('precision')
                     dominant = kwargs.get('dominant')
                     exclude_dominant = kwargs.get('exclude_dominant')
+                    selection = 'intervals'
                     section['analysis'] = tools.analyse_number(_df[label], granularity=granularity, lower=lower,
                                                                upper=upper, precision=precision,
                                                                freq_precision=freq_precision,
@@ -1362,6 +1363,7 @@ class DataDiscovery(object):
                     day_first = kwargs.get('day_first')
                     year_first = kwargs.get('year_first')
                     date_format = kwargs.get('date_format')
+                    selection = 'intervals'
                     section['analysis'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
                                                              upper=upper, day_first=day_first, year_first=year_first,
                                                              freq_precision=freq_precision,
@@ -1370,11 +1372,12 @@ class DataDiscovery(object):
                     top = kwargs.get('top')
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
+                    selection = 'categories'
                     section['analysis'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
                                                                  replace_zero=replace_zero, nulls_list=nulls_list,
                                                                  freq_precision=freq_precision)
                 # iterate the sub categories
-                for category in section.get('analysis').get('intent').get('selection'):
+                for category in section.get('analysis').get('intent').get(selection):
                     if section.get('sub_category') is None:
                         section['sub_category'] = {}
                     section.get('sub_category').update({category: {}})
