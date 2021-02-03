@@ -593,10 +593,13 @@ class DataDiscovery(object):
 
         :param values: the values to consider
         :param precision: a precision for the output
-        :return: the Statistics and p-value where if p_value > statistics the Null Hypothesis fails
+        :return: the Statistics and p-value
         """
+        if values.size < 8:
+            raise ValueError(f"Shapiro Wilk Normality test requires 8 or more samples; {values.size} samples given")
         precision = precision if isinstance(precision, int) else 4
         stats, p_values = shapiro(values)
+
         stats = round(stats, precision)
         p_values = round(p_values, precision)
         return stats, p_values
@@ -613,18 +616,18 @@ class DataDiscovery(object):
 
         :param values: the values to consider
         :param precision: a precision for the output
-        :return: the Statistics and p-value where if p_value > statistics the Null Hypothesis fails
+        :return: the Statistics and p-value
         """
         if values.size < 8:
-            raise ValueError(f"K2 Normality test requires 8 or more samples; {values.size} samples were given")
+            raise ValueError(f"K2 Normality test requires 8 or more samples; {values.size} samples given")
         precision = precision if isinstance(precision, int) else 4
-        stats, p_values = normaltest(values)
+        stats, p_values = normaltest(values, nan_policy='omit')
         stats = round(stats, precision)
         p_values = round(p_values, precision)
         return stats, p_values
 
     @staticmethod
-    def anderson_darling_normality(values: pd.Series, precision: int=None) -> (float, list, list):
+    def anderson_darling_normality(values: pd.Series, dist: str=None, precision: int=None) -> (float, list, list):
         """Anderson-Darling Test is a statistical test that can be used to evaluate whether a data sample comes from
         one of among many known data samples, named for Theodore Anderson and Donald Darling.
 
@@ -635,11 +638,18 @@ class DataDiscovery(object):
         p-value. This can provide the basis for a more thorough interpretation of the result.
 
         :param values:
-        :param precision:
+        :param dist: (optional) The type of distribution to test against. default is 'norm'
+                      options are {'norm', 'expon', 'logistic', 'gumbel', 'gumbel_l', 'gumbel_r', 'extreme1'}
+
+        :param (optional) precision: the precision of the return
         :return: the Statistics, the significance level and the critical values
         """
+        if values.size < 8:
+            raise ValueError(f"Anderson Darling Normality test requires 8 or more samples; {values.size} samples given")
+        dist = dist if isinstance(dist, str) and dist in ['norm', 'expon', 'logistic', 'gumbel', 'gumbel_l',
+                                                          'gumbel_r', 'extreme1'] else 'norm'
         precision = precision if isinstance(precision, int) else 4
-        statistic, significance_level, critical_values = anderson(values)
+        statistic, significance_level, critical_values = anderson(values, dist=dist)
         statistic = round(statistic, precision)
         critical_values = [round(x, precision) for x in critical_values]
         return statistic, significance_level, critical_values
@@ -1200,9 +1210,6 @@ class DataDiscovery(object):
         _outliers_irq = (len(_o_low), len(_o_high))
         _o_low, _o_high = DataDiscovery.empirical_outliers(values)
         _outliers_emp = (len(_o_low), len(_o_high))
-        # returns the stats and p-value. Null-hypothesis fails if p-value > stats
-        _shapiro_wilk_norm = DataDiscovery.shapiro_wilk_normality(values)
-        _shapiro_wilk_norm = np.round(_shapiro_wilk_norm[0] - _shapiro_wilk_norm[1], freq_precision)
         _intervals = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in _intervals]
         rtn_dict = {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
                                'lowest': np.round(lower, precision), 'highest': np.round(upper, precision)},
@@ -1213,12 +1220,19 @@ class DataDiscovery(object):
                     'stats': {'nulls_percent': _nulls_percent, 'sample_size': values.size,
                               'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent,
                               'bci_mean': _mean, 'bci_std': _std, 'outliers_irq': _outliers_irq,
-                              'outliers_emp': _outliers_emp, 'normality_sw': _shapiro_wilk_norm}}
-        if values.size >= 8:
-            # returns the stats and p-value. Null-hypothesis fails if p-value > stats
-            _k2_norm = DataDiscovery.dagostinos_k2_normality(values)
-            _k2_norm = np.round(_k2_norm[0] - _k2_norm[1], freq_precision)
-            rtn_dict.get('stats')['normality_k2'] = _k2_norm
+                              'outliers_emp': _outliers_emp}}
+        if values.size >= 10:
+            if values.size < 5000:
+                _, _p_value = DataDiscovery.shapiro_wilk_normality(values, precision=freq_precision)
+                rtn_dict.get('stats')['p_value_sharpo'] = _p_value
+            _, _p_value = DataDiscovery.dagostinos_k2_normality(values, precision=freq_precision)
+            rtn_dict.get('stats')['p_value_k2'] = _p_value
+            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='norm', precision=freq_precision)
+            rtn_dict.get('stats')['anderson_norm'] = list(_level)
+            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='expon', precision=freq_precision)
+            rtn_dict.get('stats')['anderson_expon'] = list(_level)
+            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='logistic', precision=freq_precision)
+            rtn_dict.get('stats')['anderson_logistic'] = list(_level)
         if exclude_dominant:
             rtn_dict.get('patterns')['dominant_excluded'] = dominant
             rtn_dict.get('patterns')['dominant_percent'] = _dominant_percent

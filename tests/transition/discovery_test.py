@@ -36,6 +36,23 @@ class TestDiscovery(unittest.TestCase):
         except:
             pass
 
+    def test_sharpo_wilks(self):
+        norm = pd.Series(np.random.normal(size=10000))
+        expo = pd.Series(np.random.exponential(size=10000))
+        logistic = pd.Series(np.random.logistic(size=10000))
+
+        norm.sort_values(inplace=True)
+        # result = DataDiscovery.shapiro_wilk_normality(norm)
+        # print(result)
+        # result = DataDiscovery.dagostinos_k2_normality(norm)
+        # print(result)
+        result = DataDiscovery.anderson_darling_normality(norm, dist='norm')
+        print(result)
+        result = DataDiscovery.anderson_darling_normality(expo, dist='expon')
+        print(result)
+        result = DataDiscovery.anderson_darling_normality(logistic, dist='logistic')
+        print(result)
+
     def test_interquartile_outliers(self):
         expo = pd.Series(np.random.exponential(size=10000))
         result = DataDiscovery.interquartile_outliers(expo)
