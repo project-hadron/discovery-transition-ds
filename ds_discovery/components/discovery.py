@@ -1405,7 +1405,7 @@ class DataDiscovery(object):
                         else:
                             df_filter = _df[_df[label] == category]
                         _get_weights(df_filter, columns=columns, index=index + 1, weighting=sub_category,
-                                     parent=tree+[f"idx#{str(idx)}"])
+                                     parent=tree+[str(idx)])
                     # tidy empty sub categories
                     if section.get('sub_category').get(category) == {}:
                         section.pop('sub_category')
