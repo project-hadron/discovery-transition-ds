@@ -1352,19 +1352,15 @@ class DataDiscovery(object):
                 tree.append(label)
                 if '.'.join(tree) in exclude_associate:
                     continue
-                section = {'associate': str('.'.join(tree))}
+                section = {'address': str('.'.join(tree))}
                 if label not in _df.columns:
                     raise ValueError("header '{}' not found in the DataFrame".format(label))
-                dtype = kwargs.get('dtype')
-                if dtype is None:
-                    dtype = df[label].dtype.name
+                dtype = kwargs.get('dtype', df[label].dtype.name).lower()
                 lower = kwargs.get('lower')
                 upper = kwargs.get('upper')
                 granularity = kwargs.get('granularity')
                 freq_precision = kwargs.get('freq_precision')
-                if (df[label].dtype.name.startswith('int')
-                        or df[label].dtype.name.startswith('float')
-                        or str(dtype).lower().startswith('number')):
+                if dtype.startswith('int') or dtype.startswith('float') or dtype.startswith('number'):
                     precision = kwargs.get('precision')
                     dominant = kwargs.get('dominant')
                     exclude_dominant = kwargs.get('exclude_dominant')
@@ -1373,7 +1369,7 @@ class DataDiscovery(object):
                                                                upper=upper, precision=precision,
                                                                freq_precision=freq_precision,
                                                                dominant=dominant, exclude_dominant=exclude_dominant)
-                elif str(dtype).lower().startswith('date'):
+                elif dtype.startswith('date'):
                     day_first = kwargs.get('day_first')
                     year_first = kwargs.get('year_first')
                     date_format = kwargs.get('date_format')
@@ -1382,7 +1378,7 @@ class DataDiscovery(object):
                                                              upper=upper, day_first=day_first, year_first=year_first,
                                                              freq_precision=freq_precision,
                                                              date_format=date_format)
-                else:
+                elif dtype.startswith('category'):
                     top = kwargs.get('top')
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
@@ -1390,8 +1386,14 @@ class DataDiscovery(object):
                     section['analysis'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
                                                                  replace_zero=replace_zero, nulls_list=nulls_list,
                                                                  freq_precision=freq_precision)
+                elif dtype.startswith('object') or dtype.startswith('string'):
+                    continue
+                else:
+                    raise ValueError(f"The column '{label}' has an unrecognised dtype '{dtype}'")
                 # iterate the sub categories
-                for category in section.get('analysis').get('intent').get(selection):
+                _selections = section.get('analysis').get('intent').get(selection, [])
+                for idx in range(len(_selections)):
+                    category = _selections[idx]
                     if section.get('sub_category') is None:
                         section['sub_category'] = {}
                     section.get('sub_category').update({category: {}})
@@ -1402,7 +1404,8 @@ class DataDiscovery(object):
                             df_filter = _df.loc[_df[label].apply(lambda x: x in interval)]
                         else:
                             df_filter = _df[_df[label] == category]
-                        _get_weights(df_filter, columns=columns, index=index + 1, weighting=sub_category, parent=tree)
+                        _get_weights(df_filter, columns=columns, index=index + 1, weighting=sub_category,
+                                     parent=tree+[f"idx#{str(idx)}"])
                     # tidy empty sub categories
                     if section.get('sub_category').get(category) == {}:
                         section.pop('sub_category')
