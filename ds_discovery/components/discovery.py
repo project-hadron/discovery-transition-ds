@@ -1352,7 +1352,7 @@ class DataDiscovery(object):
                 tree.append(label)
                 if '.'.join(tree) in exclude_associate:
                     continue
-                section = {'address': str('.'.join(tree))}
+                section = {'branch': {'label': label, 'root': str('.'.join(tree))}}
                 if label not in _df.columns:
                     raise ValueError("header '{}' not found in the DataFrame".format(label))
                 dtype = kwargs.get('dtype', df[label].dtype.name).lower()
@@ -1365,16 +1365,17 @@ class DataDiscovery(object):
                     dominant = kwargs.get('dominant')
                     exclude_dominant = kwargs.get('exclude_dominant')
                     selection = 'intervals'
-                    section['analysis'] = tools.analyse_number(_df[label], granularity=granularity, lower=lower,
+                    section['insight'] = tools.analyse_number(_df[label], granularity=granularity, lower=lower,
                                                                upper=upper, precision=precision,
                                                                freq_precision=freq_precision,
                                                                dominant=dominant, exclude_dominant=exclude_dominant)
+
                 elif dtype.startswith('date'):
                     day_first = kwargs.get('day_first')
                     year_first = kwargs.get('year_first')
                     date_format = kwargs.get('date_format')
                     selection = 'intervals'
-                    section['analysis'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
+                    section['insight'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
                                                              upper=upper, day_first=day_first, year_first=year_first,
                                                              freq_precision=freq_precision,
                                                              date_format=date_format)
@@ -1383,7 +1384,7 @@ class DataDiscovery(object):
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
                     selection = 'categories'
-                    section['analysis'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
+                    section['insight'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
                                                                  replace_zero=replace_zero, nulls_list=nulls_list,
                                                                  freq_precision=freq_precision)
                 elif dtype.startswith('object') or dtype.startswith('string'):
@@ -1391,13 +1392,14 @@ class DataDiscovery(object):
                 else:
                     raise ValueError(f"The column '{label}' has an unrecognised dtype '{dtype}'")
                 # iterate the sub categories
-                _selections = section.get('analysis').get('intent').get(selection, [])
+                _selections = section.get('insight', {}).get('intent', {}).get(selection, [])
+                section['branch'].update({'leaves': _selections})
                 for idx in range(len(_selections)):
                     category = _selections[idx]
                     if section.get('sub_category') is None:
                         section['sub_category'] = {}
                     section.get('sub_category').update({category: {}})
-                    sub_category = section.get('sub_category').get(category)
+                    sub_category = section.get('sub_category', {}).get(category, {})
                     if index < len(columns) - 1:
                         if isinstance(category, tuple):
                             interval = pd.Interval(left=category[0], right=category[1], closed=category[2])
