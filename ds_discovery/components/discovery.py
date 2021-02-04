@@ -1236,11 +1236,10 @@ class DataDiscovery(object):
             rtn_dict.get('stats')['anderson_logistic'] = list(_level)
         if exclude_dominant:
             rtn_dict.get('patterns')['dominant_excluded'] = dominant
-            rtn_dict.get('patterns')['dominant_percent'] = _dominant_percent
         else:
             rtn_dict.get('patterns')['dominant_values'] = dominant
-            rtn_dict.get('patterns')['dominance_freq'] = _dominance_freq
-            rtn_dict.get('patterns')['dominant_percent'] = _dominant_percent
+        rtn_dict.get('patterns')['dominance_freq'] = _dominance_freq
+        rtn_dict.get('patterns')['dominant_percent'] = _dominant_percent
         return rtn_dict
 
     @staticmethod
@@ -1639,7 +1638,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def analysis2dict(header: str, dtype: str=None, lower: [int, float]=None, upper: [int, float]=None,
-                      freq_precision: int=None, **kwargs) -> dict:
+                      freq_precision: int=None, precision: int=None, **kwargs) -> dict:
         """ a utility method to help build analytics conditions by aligning method parameters with dictionary format.
 
         :param header:the header name of the value column
@@ -1647,11 +1646,13 @@ class DataDiscovery(object):
         :param lower: (optional) the lower limit of category count or numeric boundary
         :param upper: (optional) the upper limit of category count or numeric boundary
         :param freq_precision: (optional) The precision of the relative freq values. by default set to 2.
+        :param precision: (optional) if numeric, sets the precision
         :param kwargs: name value pairs associated with the method that are specific to categories, numbers or dates
         :return: a dictionary for an individual element
         """
         outcome = Commons.param2dict(**locals())
         header = outcome.pop('header')
+        outcome.update(outcome.pop('kwargs'))
         return {header: outcome}
 
     @staticmethod
