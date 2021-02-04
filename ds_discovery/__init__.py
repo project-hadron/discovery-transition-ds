@@ -4,4 +4,4 @@ from ds_discovery.components.transitioning import Transition
 from ds_discovery.components.data_tolerance import DataTolerance
 
 # release version number picked up in the setup.py
-__version__ = "2.11.020"
+__version__ = "2.11.021"
