@@ -1127,7 +1127,7 @@ class DataDiscovery(object):
         # if there are no samples remaining
         if values.size == 0:
             return {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
-                               'lowest': np.round(lower, precision), 'highest': np.round(upper, precision)},
+                               'lowest': round(lower, precision), 'highest': round(upper, precision)},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'bci_replicates': replicates,
                                'bci_p_percent': p_percent},
                     'patterns': {'relative_freq': [1], 'freq_mean_ci': [],
@@ -1212,7 +1212,7 @@ class DataDiscovery(object):
         _outliers_emp = (len(_o_low), len(_o_high))
         _intervals = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in _intervals]
         rtn_dict = {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
-                               'lowest': np.round(lower, precision), 'highest': np.round(upper, precision)},
+                               'lowest': round(lower, precision), 'highest': round(upper, precision)},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'bci_replicates': replicates,
                                'bci_p_percent': p_percent},
                     'patterns': {'relative_freq': _values_weights.to_list(), 'freq_mean_bci': _mean_weights,
@@ -1355,7 +1355,11 @@ class DataDiscovery(object):
                 section = {'branch': {'label': label, 'root': str('.'.join(tree))}}
                 if label not in _df.columns:
                     raise ValueError("header '{}' not found in the DataFrame".format(label))
-                dtype = kwargs.get('dtype', df[label].dtype.name).lower()
+                dtype = kwargs.get('dtype')
+                if not dtype:
+                    dtype = df[label].dtype.name
+                    dtype = 'number' if dtype.startswith('int') or dtype.startswith('float') else dtype
+                dtype = dtype.lower()
                 lower = kwargs.get('lower')
                 upper = kwargs.get('upper')
                 granularity = kwargs.get('granularity')
@@ -1391,25 +1395,30 @@ class DataDiscovery(object):
                     continue
                 else:
                     raise ValueError(f"The column '{label}' has an unrecognised dtype '{dtype}'")
+                # check if we trim the branch
+                if kwargs.get('trim', False):
+                    continue
                 # iterate the sub categories
-                _selections = section.get('insight', {}).get('intent', {}).get(selection, [])
-                section['branch'].update({'leaves': _selections})
-                for idx in range(len(_selections)):
-                    category = _selections[idx]
+                _leaves = section.get('insight', {}).get('intent', {}).get(selection, [])
+                _leaves = [str(x) for x in _leaves]
+                section['branch'].update({'leaves': _leaves})
+                for idx in range(len(_leaves)):
+                    _leaf = _leaves[idx]
                     if section.get('sub_category') is None:
                         section['sub_category'] = {}
-                    section.get('sub_category').update({category: {}})
-                    sub_category = section.get('sub_category', {}).get(category, {})
+                    section.get('sub_category').update({_leaf: {}})
+                    sub_category = section.get('sub_category', {}).get(_leaf, {})
                     if index < len(columns) - 1:
-                        if isinstance(category, tuple):
-                            interval = pd.Interval(left=category[0], right=category[1], closed=category[2])
+                        _selection = section.get('insight', {}).get('intent', {}).get(selection, [])[idx]
+                        if isinstance(_selection, tuple):
+                            interval = pd.Interval(left=_selection[0], right=_selection[1], closed=_selection[2])
                             df_filter = _df.loc[_df[label].apply(lambda x: x in interval)]
                         else:
-                            df_filter = _df[_df[label] == category]
+                            df_filter = _df[_df[label] == _selection]
                         _get_weights(df_filter, columns=columns, index=index + 1, weighting=sub_category,
                                      parent=tree+[str(idx)])
                     # tidy empty sub categories
-                    if section.get('sub_category').get(category) == {}:
+                    if section.get('sub_category').get(_leaf) == {}:
                         section.pop('sub_category')
                 weighting[label] = section
             return
@@ -1626,6 +1635,23 @@ class DataDiscovery(object):
         if not inc_next_dom:
             df_dd.drop('%_Nxt', axis='columns', inplace=True)
         return df_dd
+
+    @staticmethod
+    def analysis2dict(header: str, dtype: str=None, lower: [int, float]=None, upper: [int, float]=None,
+                      freq_precision: int=None, **kwargs) -> dict:
+        """ a utility method to help build analytics conditions by aligning method parameters with dictionary format.
+
+        :param header:the header name of the value column
+        :param dtype: the data type of the values
+        :param lower: (optional) the lower limit of category count or numeric boundary
+        :param upper: (optional) the upper limit of category count or numeric boundary
+        :param freq_precision: (optional) The precision of the relative freq values. by default set to 2.
+        :param kwargs: name value pairs associated with the method that are specific to categories, numbers or dates
+        :return: a dictionary for an individual element
+        """
+        outcome = Commons.param2dict(**locals())
+        header = outcome.pop('header')
+        return {header: outcome}
 
     @staticmethod
     def _category_dictionary(df) -> list:

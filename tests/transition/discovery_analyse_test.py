@@ -9,6 +9,7 @@ from aistac.components.aistac_commons import DataAnalytics
 from aistac.properties.property_manager import PropertyManager
 from ds_behavioral import SyntheticBuilder
 
+from ds_discovery import Transition
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
 
@@ -341,6 +342,25 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         # self.assertCountEqual(['M', 'F'], list(result.get('numbers').get('analysis').get('intent').get(dtype)))
         # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('M').keys()))
         # self.assertCountEqual(['lived'], list(result.get('gender').get('sub_category').get('F').keys()))
+
+    def test_analyse_associate_levels_nums(self):
+        clinical_health = 'https://assets.datacamp.com/production/repositories/628/datasets/444cdbf175d5fbf564b564bd36ac21740627a834/diabetes.csv'
+        tr = Transition.from_memory()
+        tr.set_source_uri(clinical_health)
+        # columns_list = [{'diabetes': {'dtype': 'category'}},
+        #                 {'age': {'dtype': 'int', 'granularity': 10.0, 'lower': 21, 'upper': 90, }},
+        #                 {'pregnancies': {}, 'glucose': {}, 'diastolic': {}, 'triceps': {}, 'insulin': {}, 'bmi': {},
+        #                  'dpf': {}}]
+        columns_list = [{'age': {'dtype': 'int', 'granularity': 1}},
+                        {'glucose': {}}]
+        df_clinical = tr.load_source_canonical()
+        discover: DataDiscovery = tr.discover
+        analysis_blob = discover.analyse_association(df_clinical, columns_list=columns_list)
+        age = DataAnalytics.from_branch(analytics_blob=analysis_blob, branch="age")
+        glucose = DataAnalytics.from_branch(analytics_blob=analysis_blob, branch="age.0.glucose")
+        pprint(age.intent.to_dict())
+        pprint(glucose.intent.to_dict())
+
 
     def test_analyse_associate_levels(self):
         tools = SyntheticBuilder.scratch_pad()
