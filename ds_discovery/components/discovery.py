@@ -1366,9 +1366,9 @@ class DataDiscovery(object):
                     exclude_dominant = kwargs.get('exclude_dominant')
                     selection = 'intervals'
                     section['insight'] = tools.analyse_number(_df[label], granularity=granularity, lower=lower,
-                                                               upper=upper, precision=precision,
-                                                               freq_precision=freq_precision,
-                                                               dominant=dominant, exclude_dominant=exclude_dominant)
+                                                              upper=upper, precision=precision,
+                                                              freq_precision=freq_precision,
+                                                              dominant=dominant, exclude_dominant=exclude_dominant)
 
                 elif dtype.startswith('date'):
                     day_first = kwargs.get('day_first')
@@ -1376,17 +1376,17 @@ class DataDiscovery(object):
                     date_format = kwargs.get('date_format')
                     selection = 'intervals'
                     section['insight'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
-                                                             upper=upper, day_first=day_first, year_first=year_first,
-                                                             freq_precision=freq_precision,
-                                                             date_format=date_format)
+                                                            upper=upper, day_first=day_first, year_first=year_first,
+                                                            freq_precision=freq_precision,
+                                                            date_format=date_format)
                 elif dtype.startswith('category'):
                     top = kwargs.get('top')
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
                     selection = 'categories'
                     section['insight'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
-                                                                 replace_zero=replace_zero, nulls_list=nulls_list,
-                                                                 freq_precision=freq_precision)
+                                                                replace_zero=replace_zero, nulls_list=nulls_list,
+                                                                freq_precision=freq_precision)
                 elif dtype.startswith('object') or dtype.startswith('string'):
                     continue
                 else:
