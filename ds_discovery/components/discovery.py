@@ -1126,12 +1126,13 @@ class DataDiscovery(object):
 
         # if there are no samples remaining
         if values.size == 0:
+            _intervals = [(lower, upper, 'both')]
             return {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
                                'lowest': round(lower, precision), 'highest': round(upper, precision)},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'bci_replicates': replicates,
                                'bci_p_percent': p_percent},
-                    'patterns': {'relative_freq': [1], 'freq_mean_ci': [],
-                                 'freq_std_ci': [], 'sample_distribution': [0]},
+                    'patterns': {'relative_freq': [1], 'freq_mean_ci': [0],
+                                 'freq_std_ci': [0], 'sample_distribution': [0]},
                     'stats': {'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
                               'excluded_percent': _excluded_percent, 'mean_ci': (0, 0), 'std_ci': (0, 0),
                               'irq_outliers': (0, 0), 'emp_outliers': (0, 0)}}
