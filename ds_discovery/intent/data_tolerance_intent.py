@@ -3,16 +3,13 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from aistac.intent.abstract_intent import AbstractIntentModel
-
-from ds_discovery.components.discovery import DataDiscovery
-from ds_discovery.intent.common_intent import CommonsIntent
+from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
 
-class DataToleranceIntentModel(CommonsIntent):
+class DataToleranceIntentModel(AbstractCommonsIntentModel):
     """ The Data Tolerance intent modelling methods"""
 
     def __init__(self, property_manager: ToleranceCatalogPropertyManager, default_save_intent: bool=None,

@@ -7,18 +7,16 @@ import pandas as pd
 from aistac.handlers.abstract_handlers import HandlerFactory
 from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
-from ds_discovery.intent.common_intent import CommonsIntent
+from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.components.commons import Commons
 from aistac.components.aistac_commons import DataAnalytics
 from ds_discovery.components.discovery import DataDiscovery
-# scratch_pads
-from ds_discovery.components.transitioning import Transition
 
 __author__ = 'Darryl Oatridge'
 
 
-class FeatureCatalogIntentModel(CommonsIntent):
+class FeatureCatalogIntentModelModel(AbstractCommonsIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, default_save_intent: bool=None,
@@ -279,7 +277,7 @@ class FeatureCatalogIntentModel(CommonsIntent):
         handler = self._pm.get_connector_handler(merge_connector)
         other = handler.load_canonical()
         if isinstance(other, dict):
-            other = pd.DataFrame.from_dict(data=other, orient='columns')
+            other = pd.DataFrame.from_dict(data=other)
         df = pd.merge(left=canonical, right=other, how=how, on=on, left_on=left_on, right_on=right_on,
                       left_index=left_index, right_index=right_index, sort=sort, suffixes=suffixes, indicator=indicator,
                       validate=validate)
@@ -340,7 +338,7 @@ class FeatureCatalogIntentModel(CommonsIntent):
             value_map = Commons.dict_with_missing(value_map, default=default_to)
         na_action = 'ignore' if replace_na else None
         canonical[rename] = canonical[header].map(value_map, na_action=na_action)
-        canonical.dropna(axis=0, how='any', subset=[rename], inplace=True)
+        canonical.dropna(subset=[rename], inplace=True)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
     def apply_numeric_typing(self, canonical: Any, key: [str, list], header: str, normalise: bool=None,
@@ -405,11 +403,12 @@ class FeatureCatalogIntentModel(CommonsIntent):
             precision = 0
         if not isinstance(fillna, (int, float)) and isinstance(precision, int) and precision == 0:
             fillna = 0
-        canonical = Transition.scratch_pad().to_numeric_type(df=canonical, headers=header, precision=precision,
-                                                             fillna=fillna, errors=errors, inplace=False)
+        module = HandlerFactory.get_module(module_name='ds_discovery')
+        canonical = module.Transition.scratch_pad().to_numeric_type(df=canonical, headers=header, precision=precision,
+                                                                    fillna=fillna, errors=errors, inplace=False)
         if isinstance(normalise, bool) and normalise:
             s_column = canonical[rename]
-            s_column = s_column / np.linalg.norm(s_column)
+            s_column /= np.linalg.norm(s_column)
             if isinstance(precision, int):
                 s_column = np.round(s_column, precision)
             canonical[rename] = s_column
@@ -460,8 +459,9 @@ class FeatureCatalogIntentModel(CommonsIntent):
         if isinstance(rtn_regex, bool) and rtn_regex:
             rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
         rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
-        canonical = Transition.scratch_pad().to_category_type(df=canonical, headers=header, as_num=as_num,
-                                                              inplace=False)
+        module = HandlerFactory.get_module(module_name='ds_discovery')
+        canonical = module.Transition.scratch_pad().to_category_type(df=canonical, headers=header, as_num=as_num,
+                                                                     inplace=False)
         return Commons.filter_columns(canonical, headers=list(set(key + rtn_columns))).set_index(key)
 
     def apply_replace(self, canonical: Any, key: [str, list], header: str, to_replace: dict,
@@ -952,8 +952,9 @@ class FeatureCatalogIntentModel(CommonsIntent):
         group_cols = Commons.filter_headers(dummy_df, headers=dummy_cols, drop=True)
         dummy_df = self.group_features(dummy_df, headers=dummy_cols, group_by=group_cols, aggregator=aggregator,
                                        save_intent=False).reset_index()
-        Transition.scratch_pad().auto_clean_header(dummy_df, case=title_case, rename_map=title_rename_map,
-                                                   replace_spaces=title_replace_spaces, inplace=True)
+        module = HandlerFactory.get_module(module_name='ds_discovery')
+        module.Transition.scratch_pad().auto_clean_header(dummy_df, case=title_case, rename_map=title_rename_map,
+                                                          replace_spaces=title_replace_spaces, inplace=True)
         return dummy_df.set_index(key)
 
     def apply_missing(self, canonical: Any, key: [str, list], headers: [str, list],
@@ -1000,18 +1001,13 @@ class FeatureCatalogIntentModel(CommonsIntent):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
 
         # intend code block on the canonical
-        module_name = 'ds_behavioral.components.synthetic_builder'
-        if HandlerFactory.check_module(module_name=module_name):
-            handler = HandlerFactory.get_module(module_name=module_name)
-        else:
-            raise ModuleNotFoundError("The 'apply_missing(...)' method requires the SyntheticBuilder module. "
-                                      "Please pip install the discovery-behavioral-utils package")
         canonical = self._get_canonical(canonical)
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
         key = Commons.list_formatter(key)
-        sim = handler.SyntheticBuilder.scratch_pad()
-        tr = Transition.scratch_pad()
+        module = HandlerFactory.get_module(module_name='ds_discovery')
+        sim = module.SyntheticBuilder.scratch_pad()
+        tr = module.Transition.scratch_pad()
         headers = self._pm.list_formatter(headers)
         inc_columns = self._pm.list_formatter(inc_columns)
         if not inc_columns:
@@ -1039,7 +1035,7 @@ class FeatureCatalogIntentModel(CommonsIntent):
                 elif is_datetime64_any_dtype(col):
                     result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
                                                         day_first=day_first, year_first=year_first)
-                    synthetic = sim.associate_analysis(result, size=size, save_intent=False)
+                    synthetic = sim.model_analysis(col, result,  save_intent=False)
                     col = col.apply(lambda x:  synthetic.pop(0) if x == pd.to_datetime(pd.NaT) else x)
                 else:
                     result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)

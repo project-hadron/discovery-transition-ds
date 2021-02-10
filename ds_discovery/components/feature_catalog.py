@@ -4,7 +4,7 @@ import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
 
-from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
+from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModelModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery, Visualisation
@@ -16,7 +16,7 @@ class FeatureCatalog(AbstractComponent):
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
     DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
 
-    def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModel,
+    def __init__(self, property_manager: FeatureCatalogPropertyManager, intent_model: FeatureCatalogIntentModelModel,
                  default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
@@ -76,10 +76,10 @@ class FeatureCatalog(AbstractComponent):
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         username = username if isinstance(username, str) else 'Unknown'
         _pm = FeatureCatalogPropertyManager(task_name=task_name, username=username)
-        _intent_model = FeatureCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                                  default_intent_level=default_intent_level,
-                                                  order_next_available=order_next_available,
-                                                  default_replace_intent=default_replace_intent)
+        _intent_model = FeatureCatalogIntentModelModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                                       default_intent_level=default_intent_level,
+                                                       order_next_available=order_next_available,
+                                                       default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
@@ -89,7 +89,7 @@ class FeatureCatalog(AbstractComponent):
                    align_connectors=align_connectors)
 
     @classmethod
-    def scratch_pad(cls) -> FeatureCatalogIntentModel:
+    def scratch_pad(cls) -> FeatureCatalogIntentModelModel:
         """ A class method to use the Components intent methods as a scratch pad"""
         return super().scratch_pad()
 
@@ -104,7 +104,7 @@ class FeatureCatalog(AbstractComponent):
         return Visualisation()
 
     @property
-    def intent_model(self) -> FeatureCatalogIntentModel:
+    def intent_model(self) -> FeatureCatalogIntentModelModel:
         """The intent model instance"""
         return self._intent_model
 
