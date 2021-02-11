@@ -1,6 +1,6 @@
 import unittest
 from ds_discovery import Transition, FeatureCatalog
-from ds_behavioral import SyntheticBuilder
+from ds_discovery import SyntheticBuilder
 
 
 class MyTestCase(unittest.TestCase):

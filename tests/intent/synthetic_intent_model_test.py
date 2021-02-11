@@ -6,7 +6,6 @@ from ds_discovery import SyntheticBuilder
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
-from ds_behavioral.intent.synthetic_intent_model import MappedSample
 
 
 class SyntheticIntentModelTest(unittest.TestCase):

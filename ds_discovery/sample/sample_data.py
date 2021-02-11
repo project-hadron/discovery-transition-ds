@@ -22,7 +22,7 @@ class AbstractSample(ABC):
     @staticmethod
     def _get_constant(reference: str, size: int=None, shuffle: bool=True, seed: int=None) -> [pd.DataFrame, list]:
         """private method to retrieve data constant"""
-        module = HandlerFactory.get_module(module_name=f"ds_behavioral.sample.{reference}")
+        module = HandlerFactory.get_module(module_name=f"ds_discovery.sample.{reference}")
         if reference.startswith("lookup_"):
             return AbstractSample._select_list(selection=module.data, size=size, seed=seed, shuffle=shuffle)
         df = pd.DataFrame.from_dict(module.data, orient='columns')

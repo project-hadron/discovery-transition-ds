@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from aistac.properties.property_manager import PropertyManager
-from ds_behavioral import SyntheticBuilder
+from ds_discovery import SyntheticBuilder
 
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModelModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager

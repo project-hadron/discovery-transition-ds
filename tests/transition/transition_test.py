@@ -7,7 +7,6 @@ from pprint import pprint
 import pandas as pd
 from aistac.handlers.abstract_handlers import ConnectorContract
 from aistac.properties.property_manager import PropertyManager
-from ds_behavioral import SyntheticBuilder
 
 from ds_discovery import Transition
 

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from aistac.components.aistac_commons import DataAnalytics
 from aistac.properties.property_manager import PropertyManager
-from ds_behavioral import SyntheticBuilder
+from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery

@@ -4,10 +4,10 @@ import unittest
 import pandas as pd
 
 from aistac.handlers.abstract_handlers import ConnectorContract
-from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 
 from ds_discovery.handlers.pandas_handlers import PandasSourceHandler, PandasPersistHandler
-from ds_behavioral import SyntheticBuilder
+from ds_discovery import SyntheticBuilder
 
 
 class PandasHandlerTest(unittest.TestCase):

@@ -835,7 +835,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         """ returns a sample set based on sector and name
         To see the sample sets available use the Sample class __dir__() method:
 
-            > from ds_behavioral.sample.sample_data import Sample
+            > from ds_discovery.sample.sample_data import Sample
             > Sample().__dir__()
 
         :param sample_name: The name of the Sample method to be used.
@@ -1049,7 +1049,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         """ builds a model of a Sample Mapped distribution.
         To see the sample maps available use the MappedSample class __dir__() method:
 
-            > from ds_behavioral.sample.sample_data import MappedSample
+            > from ds_discovery.sample.sample_data import MappedSample
             > MappedSample().__dir__()
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below

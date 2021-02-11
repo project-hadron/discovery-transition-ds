@@ -10,7 +10,7 @@ from aistac.properties.property_manager import PropertyManager
 from ds_discovery import Transition, FeatureCatalog
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
-from ds_behavioral import SyntheticBuilder
+from ds_discovery import SyntheticBuilder
 
 
 class TestDiscovery(unittest.TestCase):
