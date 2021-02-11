@@ -65,7 +65,7 @@ class SyntheticIntentModelTest(unittest.TestCase):
     def test_remove_unwanted_headers(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         builder.set_source_uri(uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        selection = [builder.tools.select2dict(column='survived', condition='==1')]
+        selection = [builder.tools.select2dict(column='survived', condition='@==1')]
         result = builder.tools.frame_selection(canonical=builder.CONNECTOR_SOURCE, selection=selection, headers=['survived', 'sex', 'fare'])
         self.assertCountEqual(['survived', 'sex', 'fare'], list(result.columns))
         self.assertEqual(1, result['survived'].min())
@@ -73,23 +73,16 @@ class SyntheticIntentModelTest(unittest.TestCase):
     def test_remove_unwanted_rows(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         builder.set_source_uri(uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        selection = [builder.tools.select2dict(column='survived', condition='==1')]
+        selection = [builder.tools.select2dict(column='survived', condition='@==1')]
         result = builder.tools.frame_selection(canonical=builder.CONNECTOR_SOURCE, selection=selection)
         self.assertEqual(1, result['survived'].min())
-
-    def test_model_us_zip(self):
-        builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
-        df = pd.DataFrame(index=range(300))
-        result = builder.tools.model_us_zip(df, state_code_filter=['NY', 'TX', 'FRED'])
-        self.assertCountEqual(['NY', 'TX'], result['StateCode'].value_counts().index.to_list())
-        self.assertCountEqual(['StateAbbrev', 'Zipcode', 'City', 'State', 'StateCode', 'Phone'], result.columns.to_list())
-        self.assertEqual(300, result.shape[0])
 
     def test_model_sample_map(self):
         builder = SyntheticBuilder.from_memory(default_save_intent=False)
         result = builder.tools.model_sample_map(pd.DataFrame(), sample_map='us_healthcare_practitioner')
-        self.assertEqual((70655, 10), result.shape)
+        self.assertEqual((192865, 6), result.shape)
         result = builder.tools.model_sample_map(pd.DataFrame(index=range(50)), sample_map='us_healthcare_practitioner')
+        self.assertEqual((50, 6), result.shape)
         result = builder.tools.model_sample_map(pd.DataFrame(index=range(50)), sample_map='us_healthcare_practitioner',
                                                 headers=['pcp_tax_id'])
         self.assertEqual((50, 1), result.shape)
