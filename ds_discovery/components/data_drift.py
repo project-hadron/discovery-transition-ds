@@ -5,18 +5,18 @@ from aistac import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
-from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
-from ds_discovery.intent.data_tolerance_intent import DataToleranceIntentModel
+from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
+from ds_discovery.intent.data_drift_intent import DataToleranceIntentModel
 
 
-class DataTolerance(AbstractComponent):
+class DataDrift(AbstractComponent):
     """Component providing data tolerance reporting"""
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
     DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
 
-    def __init__(self, property_manager: ToleranceCatalogPropertyManager, intent_model: DataToleranceIntentModel,
+    def __init__(self, property_manager: DataDriftPropertyManager, intent_model: DataToleranceIntentModel,
                  default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
@@ -43,7 +43,7 @@ class DataTolerance(AbstractComponent):
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
                  default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
-                 default_replace_intent: bool=None, has_contract: bool=None) -> DataTolerance:
+                 default_replace_intent: bool=None, has_contract: bool=None) -> DataDrift:
         """ Class Factory Method to instantiates the component's application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -74,7 +74,7 @@ class DataTolerance(AbstractComponent):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
-        _pm = ToleranceCatalogPropertyManager(task_name=task_name, username=username)
+        _pm = DataDriftPropertyManager(task_name=task_name, username=username)
         _intent_model = DataToleranceIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
                                                  default_intent_level=default_intent_level,
                                                  order_next_available=order_next_available,
@@ -98,7 +98,7 @@ class DataTolerance(AbstractComponent):
         return self._intent_model
 
     @property
-    def pm(self) -> ToleranceCatalogPropertyManager:
+    def pm(self) -> DataDriftPropertyManager:
         """The properties manager instance"""
         return self._component_pm
 

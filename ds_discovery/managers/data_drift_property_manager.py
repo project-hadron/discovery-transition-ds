@@ -4,12 +4,12 @@ from ds_discovery.components.commons import Commons
 __author__ = 'Darryl Oatridge'
 
 
-class ToleranceCatalogPropertyManager(AbstractPropertyManager):
+class DataDriftPropertyManager(AbstractPropertyManager):
 
     def __init__(self, task_name: str, username: str):
         # set additional keys
         root_keys = []
-        knowledge_keys = ['tolerance', 'observations', 'actions']
+        knowledge_keys = ['drift']
         super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
 
     @staticmethod

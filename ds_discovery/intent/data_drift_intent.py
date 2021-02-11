@@ -4,7 +4,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
-from ds_discovery.managers.tolerance_catalog_property_manager import ToleranceCatalogPropertyManager
+from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
@@ -12,7 +12,7 @@ __author__ = 'Darryl Oatridge'
 class DataToleranceIntentModel(AbstractCommonsIntentModel):
     """ The Data Tolerance intent modelling methods"""
 
-    def __init__(self, property_manager: ToleranceCatalogPropertyManager, default_save_intent: bool=None,
+    def __init__(self, property_manager: DataDriftPropertyManager, default_save_intent: bool=None,
                  default_intent_level: [str, int, float]=None, order_next_available: bool=None,
                  default_replace_intent: bool=None):
         """initialisation of the Intent class.
