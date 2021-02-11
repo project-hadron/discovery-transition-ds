@@ -155,7 +155,7 @@ class Wrangle(AbstractComponent):
                 self.set_persist()
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
-    def run_wrangle_pipeline(self, intent_levels: [str, int, list]=None):
+    def run_wrangler_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the components pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
