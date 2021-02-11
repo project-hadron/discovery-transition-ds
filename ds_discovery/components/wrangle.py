@@ -12,7 +12,7 @@ from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from ds_discovery.managers.wrangle_property_manager import WranglePropertyManager
 
 
-class Transition(AbstractComponent):
+class Wrangle(AbstractComponent):
 
     DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
     DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
