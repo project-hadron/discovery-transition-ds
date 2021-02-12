@@ -270,7 +270,11 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         if isinstance(data, dict):
             method = data.pop('method', None)
             if method is None:
-                raise ValueError(f"The data dictionary has no 'method' key.")
+                try:
+                    return pd.DataFrame.from_dict(data=data)
+                except ValueError:
+                    raise ValueError("The canonical data passed was of type 'dict' but did not contain a 'method' key "
+                                     "or was not convertible to Dataframe")
             if method in self.__dir__():
                 if str(method).startswith('model_') or str(method).startswith('frame_'):
                     data.update({'save_intent': False})

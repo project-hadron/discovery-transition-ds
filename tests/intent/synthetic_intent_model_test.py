@@ -61,6 +61,24 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertCountEqual(['survived', 'sex', 'fare'], list(result.columns))
         self.assertEqual(300, result.shape[0])
 
+    def test_model_merge(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={'A': [1,2,3,4,5], 'B': list('ABCDE')})
+        other = {'A': [5,2,3,1,4], 'X': list('VWXYZ'), 'Y': list('VWXYZ')}
+        # using left_on and right_on
+        result = tools.model_merge(canonical=df, other=other, right_on='A', left_on='A')
+        self.assertEqual((5, 4), result.shape)
+        self.assertEqual(['A', 'B', 'X', 'Y'], result.columns.to_list())
+        # using on
+        result = tools.model_merge(canonical=df, other=other, on='A')
+        self.assertEqual((5, 4), result.shape)
+        self.assertEqual(['A', 'B', 'X', 'Y'], result.columns.to_list())
+        # filter headers
+        result = tools.model_merge(canonical=df, other=other, on='A', headers=['X'])
+        self.assertEqual((5, 3), result.shape)
+        self.assertEqual(['A', 'B', 'X'], result.columns.to_list())
+
     def test_remove_unwanted_headers(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         builder.set_source_uri(uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")

@@ -623,16 +623,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
 
-    def _model_merge(self, canonical: Any, other: [str, dict], left_on: str, right_on: str, how: str=None,
-                     suffixes: tuple=None, indicator: bool=None, validate: str=None, seed: int=None) -> pd.DataFrame:
+    def _model_merge(self, canonical: Any, other: [str, dict], left_on: str=None, right_on: str=None, on: str=None,
+                     how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
+                     seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. see context notes below
         :param left_on: the canonical key column(s) to join on
         :param right_on: the merging dataset key column(s) to join on
+        :param on: if th left and right join have the same header name this can replace left_on and right_on
         :param how: (optional) One of 'left', 'right', 'outer', 'inner'. Defaults to inner. See below for more detailed
                     description of each method.
+        :param headers: (optional) a filter on the headers included from the right side
         :param suffixes: (optional) A tuple of string suffixes to apply to overlapping columns. Defaults ('', '_dup').
         :param indicator: (optional) Add a column to the output DataFrame called _merge with information on the source
                     of each row. _merge is Categorical-type and takes on a value of left_only for observations whose
@@ -675,11 +678,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         indicator = indicator if isinstance(indicator, bool) else False
         suffixes = suffixes if isinstance(suffixes, tuple) and len(suffixes) == 2 else ('', '_dup')
         # Filter on the columns
-        df_rtn = pd.merge(left=canonical, right=other, how=how, left_on=left_on, right_on=right_on,
+        if isinstance(headers, list):
+            headers.append(right_on if isinstance(right_on, str) else on)
+            other = Commons.filter_columns(other, headers=headers)
+        df_rtn = pd.merge(left=canonical, right=other, how=how, left_on=left_on, right_on=right_on, on=on,
                           suffixes=suffixes, indicator=indicator, validate=validate)
         return df_rtn
 
-    def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
+    def _model_concat(self, canonical: Any, other: [str, dict, list], as_rows: bool=None, headers: [str, list]=None,
                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                       re_ignore_case: bool=None, shuffle: bool=None, seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.

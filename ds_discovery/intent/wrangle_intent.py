@@ -335,9 +335,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_group(seed=seed, **params)
 
-    def model_merge(self, canonical: Any, other: [str, dict], left_on: str, right_on: str, how: str=None,
-                    suffixes: tuple=None, indicator: bool=None, validate: str=None, seed: int=None,
-                    save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+    def model_merge(self, canonical: Any, other: [str, dict], left_on: str=None, right_on: str=None, on: str=None,
+                    how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
+                    seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                     replace_intent: bool=None,  remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.
 
@@ -345,8 +345,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param other: a direct or generated pd.DataFrame. see context notes below
         :param left_on: the canonical key column(s) to join on
         :param right_on: the merging dataset key column(s) to join on
+        :param on: if th left and right join have the same header name this can replace left_on and right_on
         :param how: (optional) One of 'left', 'right', 'outer', 'inner'. Defaults to inner. See below for more detailed
                     description of each method.
+        :param headers: (optional) a filter on the headers included from the right side
         :param suffixes: (optional) A tuple of string suffixes to apply to overlapping columns. Defaults ('', '_dup').
         :param indicator: (optional) Add a column to the output DataFrame called _merge with information on the source
                     of each row. _merge is Categorical-type and takes on a value of left_only for observations whose
