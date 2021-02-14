@@ -518,7 +518,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_analysis(seed=seed, **params)
 
     def correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
-                            default_action: [str, int, float, dict]=None, seed: int=None,
+                            default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None,
                             save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                             replace_intent: bool=None, remove_duplicates: bool=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
@@ -535,6 +535,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                 {'method': 'get_category', 'selection': ['M', 'F', 'U']}
         :param default_action: (optional) a default action to take if the selection is not fulfilled
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -613,7 +615,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_selection(seed=seed, **params)
 
-    def correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None,
+    def correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None, rtn_type: str=None,
                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
@@ -625,6 +627,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param kwargs: a set of kwargs to include in any executable function
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -668,7 +672,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_custom(seed=seed, **params)
 
-    def correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None,
+    def correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, rtn_type: str=None,
                             save_intent: bool=None, precision: int=None, column_name: [int, str]=None,
                             intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
@@ -681,6 +685,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
         :param precision: the value precision of the return values
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -725,7 +731,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_aggregate(seed=seed, **params)
 
     def correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
-                         replace: bool=None, shuffle: bool=None, convert_str: bool=None,
+                         replace: bool=None, shuffle: bool=None, convert_str: bool=None, rtn_type: str=None,
                          seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
@@ -750,6 +756,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param shuffle: (optional) if the final list should be shuffled
         :param convert_str: if the header has the list as a string convert to list using ast.literal_eval()
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -793,7 +801,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_choice(seed=seed, **params)
 
-    def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None,
+    def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, rtn_type: str=None,
                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a column and join it with the result of the action
@@ -803,6 +811,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param action: (optional) a string or a single action whose outcome will be joined to the header value
         :param sep: (optional) a separator between the values
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -865,7 +875,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_join(seed=seed, **params)
 
-    def correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None,
+    def correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None,
                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
@@ -876,6 +886,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param header: the header in the DataFrame to correlate
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -919,8 +931,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_sigmoid(seed=seed, **params)
 
-    def correlate_polynomial(self, canonical: Any, header: str, coefficient: list,
-                             seed: int=None, keep_zero: bool=None, save_intent: bool=None, column_name: [int, str]=None,
+    def correlate_polynomial(self, canonical: Any, header: str, coefficient: list, rtn_type: str=None, seed: int=None,
+                             keep_zero: bool=None, save_intent: bool=None, column_name: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ creates a polynomial using the reference header values and apply the coefficients where the
         index of the list represents the degree of the term in reverse order.
@@ -931,6 +943,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param header: the header in the DataFrame to correlate
         :param coefficient: the reverse list of term coefficients
         :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -977,7 +991,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def correlate_numbers(self, canonical: Any, header: str, offset: float=None, jitter: float=None,
                           jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
-                          fill_nulls: bool=None, seed: int=None, keep_zero: bool=None,
+                          fill_nulls: bool=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                           remove_duplicates: bool=None):
@@ -993,6 +1007,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param precision: (optional) how many decimal places. default to 3
         :param fill_nulls: (optional) if True then fills nulls with the most common values
         :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param min_value: a minimum value not to go below
         :param max_value: a max value not to go above
@@ -1040,7 +1056,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_numbers(seed=seed, **params)
 
     def correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
-                             default_action: [str, int, float, dict]=None,
+                             default_action: [str, int, float, dict]=None, rtn_type: str=None,
                              seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
@@ -1062,6 +1078,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param actions: the correlated set of categories that should map to the index
         :param default_action: (optional) a default action to take if the selection is not fulfilled
         :param seed: a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -1129,7 +1147,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                         jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
                         min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
-                        year_first: bool=None, seed: int=None, save_intent: bool=None,
+                        year_first: bool=None, seed: int=None, rtn_type: str=None, save_intent: bool=None,
                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None):
         """ correlates dates to an existing date or list of dates. The return is a list of pd
@@ -1149,6 +1167,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
