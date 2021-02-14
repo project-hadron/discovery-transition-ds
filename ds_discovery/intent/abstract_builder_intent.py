@@ -933,10 +933,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_values = rtn_values.astype('object')
         rtn_values.update(self._apply_action(canonical, action=action, select_idx=select_idx, seed=_seed))
         if is_category:
-            rtn_values.astype('category')
+            rtn_values = rtn_values.astype('category')
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                rtn_values.astype(rtn_type)
+                rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
@@ -987,7 +987,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return pd.Series([np.nan] * canonical.shape[0])
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                rtn_values.astype(rtn_type)
+                rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
@@ -1037,12 +1037,12 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         precision = precision if isinstance(precision, int) else 3
         if agg == 'list':
             return canonical.loc[:, headers].values.tolist()
-        result = eval(f"canonical.loc[:, headers].{agg}(axis=1)", globals(), locals()).round(precision)
+        rtn_values = eval(f"canonical.loc[:, headers].{agg}(axis=1)", globals(), locals()).round(precision)
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                result.astype(rtn_type)
-            return result
-        return result.to_list()
+                rtn_values = rtn_values.astype(rtn_type)
+            return rtn_values
+        return rtn_values.to_list()
 
     def _correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
                           replace: bool=None, shuffle: bool=None, convert_str: bool=None, seed: int=None,
@@ -1122,7 +1122,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             s_values.iloc[s_idx] = [x[:list_size] if list_size > 1 else x[0] for x in s_values.iloc[s_idx]]
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                s_values.astype(rtn_type)
+                s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
 
@@ -1198,7 +1198,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             s_values.iloc[null_idx] = np.nan
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                s_values.astype(rtn_type)
+                s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
 
@@ -1246,7 +1246,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         rtn_values = np.round(1 / (1 + np.exp(-s_values)), precision)
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                rtn_values.astype(rtn_type)
+                rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
@@ -1306,7 +1306,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         rtn_values = s_values.apply(lambda x: _calc_polynomial(x, coefficient))
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                rtn_values.astype(rtn_type)
+                rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
@@ -1396,7 +1396,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             s_values.iloc[null_idx] = np.nan
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                s_values.astype(rtn_type)
+                s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
 
@@ -1490,7 +1490,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_values.update(self._apply_action(canonical, action=action, select_idx=corr_idx, seed=_seed))
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                rtn_values.astype(rtn_type)
+                rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
@@ -1621,7 +1621,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 s_values.iloc[null_idx].apply(lambda x: np.nan)
         if isinstance(rtn_type, str):
             if rtn_type in ['int', 'float', 'category', 'string', 'object']:
-                s_values.astype(rtn_type)
+                s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
 

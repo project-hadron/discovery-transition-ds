@@ -61,6 +61,25 @@ class SyntheticIntentCorrelateSelectionTest(unittest.TestCase):
         result = df[df['l2'] == 1].loc[:, 's2']
         self.assertEqual(['B', 'B', 'B'], list(result.values))
 
+    def test_selection_rtn_type(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['s1'] = pd.Series(list('AAAABBBBCCCCDDDD')).astype('category')
+        df['s2'] = pd.Series(list('ABCDABCDABCDABCD')).astype('category')
+        df['s3'] = pd.Series([1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8])
+        selection = [tools.select2dict(column='s1', condition="@ == 'A'"),
+                     tools.select2dict(column='s2', condition="@ == 'B'", logic='OR')]
+        action = tools.action2dict(method='@header', header='s1')
+        default = tools.action2dict(method='@header', header='s2')
+        result = tools.correlate_selection(df, selection=selection, action=action, default_action=default, rtn_type='category')
+        self.assertEqual('category', result.dtype)
+        result = tools.correlate_selection(df, selection=selection, action=action, default_action=default, rtn_type='as-is')
+        self.assertEqual('category', result.dtype)
+        action = tools.action2dict(method='@header', header='s3')
+        default = tools.action2dict(method='@constant', value=0)
+        result = tools.correlate_selection(df, selection=selection, action=action, default_action=default, rtn_type='int')
+        self.assertEqual('int', result.dtype)
+
     def test_action_value(self):
         tools = self.tools
         df = pd.DataFrame()

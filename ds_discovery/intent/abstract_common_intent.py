@@ -103,6 +103,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         if not isinstance(select_idx, pd.Int64Index):
             select_idx = canonical.index
         if isinstance(action, dict):
+            action = action.copy()
             method = action.pop('method', None)
             if method is None:
                 raise ValueError(f"The action dictionary has no 'method' key.")
@@ -268,6 +269,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                 return deepcopy(data)
             return data
         if isinstance(data, dict):
+            data = data.copy()
             method = data.pop('method', None)
             if method is None:
                 try:
