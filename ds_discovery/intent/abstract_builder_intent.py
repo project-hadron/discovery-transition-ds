@@ -935,7 +935,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if is_category:
             rtn_values = rtn_values.astype('category')
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
@@ -986,7 +986,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if rtn_values is None:
             return pd.Series([np.nan] * canonical.shape[0])
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
@@ -1039,7 +1039,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return canonical.loc[:, headers].values.tolist()
         rtn_values = eval(f"canonical.loc[:, headers].{agg}(axis=1)", globals(), locals()).round(precision)
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
@@ -1121,7 +1121,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         else:
             s_values.iloc[s_idx] = [x[:list_size] if list_size > 1 else x[0] for x in s_values.iloc[s_idx]]
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
@@ -1197,7 +1197,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if null_idx.size > 0:
             s_values.iloc[null_idx] = np.nan
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
@@ -1245,7 +1245,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         _seed = seed if isinstance(seed, int) else self._seed()
         rtn_values = np.round(1 / (1 + np.exp(-s_values)), precision)
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
@@ -1305,26 +1305,27 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         rtn_values = s_values.apply(lambda x: _calc_polynomial(x, coefficient))
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_numbers(self, canonical: Any, header: str, offset: float=None, jitter: float=None,
-                           jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
-                           fill_nulls: bool=None, seed: int=None,  keep_zero: bool=None, min_value: [int, float]=None,
-                           max_value: [int, float]=None, rtn_type: str=None):
+    def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
+                           jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
+                           replace_nulls: [int, float]=None, seed: int=None,  keep_zero: bool=None,
+                           min_value: [int, float]=None, max_value: [int, float]=None, rtn_type: str=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
         with the correlated value being the mean and the jitter its standard deviation from that mean
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
+        :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
         :param offset: (optional) how far from the value to offset. defaults to zero
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
         :param multiply_offset: (optional) if true then the offset is multiplied else added
         :param precision: (optional) how many decimal places. default to 3
-        :param fill_nulls: (optional) if True then fills nulls with the most common values
+        :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param min_value: a minimum value not to go below
@@ -1359,14 +1360,17 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         s_values = canonical[header].copy()
         if s_values.empty:
             return list()
-        fill_nulls = fill_nulls if isinstance(fill_nulls, bool) else False
+        if isinstance(to_numeric, bool) and to_numeric:
+            s_values = pd.to_numeric(s_values.apply(str).str.replace('[$£€, ]', '', regex=True), errors='coerce')
+        if not (s_values.dtype.name.startswith('int') or s_values.dtype.name.startswith('float')):
+            raise ValueError(f"The header column is of type '{s_values.dtype.name}' and not numeric. "
+                             f"Use the 'to_numeric' parameter if appropriate")
         keep_zero = keep_zero if isinstance(keep_zero, bool) else False
         precision = precision if isinstance(precision, int) else 3
         action = 'multiply' if isinstance(multiply_offset, bool) and multiply_offset else 'add'
         _seed = seed if isinstance(seed, int) else self._seed()
-        if fill_nulls:
-            generator = np.random.default_rng(seed=_seed)
-            s_values = s_values.fillna(generator.choice(s_values.mode(dropna=True)))
+        if isinstance(replace_nulls, (int, float)):
+            s_values[s_values.isna()] = replace_nulls
         null_idx = s_values[s_values.isna()].index
         zero_idx = s_values.where(s_values == 0).dropna().index if keep_zero else []
         if isinstance(offset, (int, float)) and offset != 0:
@@ -1395,7 +1399,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if null_idx.size > 0:
             s_values.iloc[null_idx] = np.nan
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
@@ -1489,7 +1493,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             corr_idx = s_values[s_values.isin(map(str, corr_list[i]))].index
             rtn_values.update(self._apply_action(canonical, action=action, select_idx=corr_idx, seed=_seed))
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
@@ -1620,7 +1624,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             if null_idx.size > 0:
                 s_values.iloc[null_idx].apply(lambda x: np.nan)
         if isinstance(rtn_type, str):
-            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
                 s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()

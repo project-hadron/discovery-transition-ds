@@ -220,7 +220,7 @@ class TransitionIntentModel(AbstractIntentModel):
                 df.rename(mapper=str.title, axis='columns', inplace=True)
         # replaces spaces at the end just in case title is used
         replace_spaces = '_' if not isinstance(replace_spaces, str) else replace_spaces
-        df.columns = df.columns.str.replace(' ', replace_spaces)
+        df.columns = df.columns.str.replace(' ', replace_spaces, regex=False)
         if not inplace:
             return df
         return
@@ -668,7 +668,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     precision = df[c].dropna().apply(str).str.extract('\.(.*)')[0].map(len).max()
                 except (ValueError, TypeError, IndexError, KeyError, ReferenceError, NameError, RecursionError):
                     precision = 15
-            df[c] = pd.to_numeric(df[c].apply(str).str.replace('[$£€, ]', ''), errors=errors)
+            df[c] = pd.to_numeric(df[c].apply(str).str.replace('[$£€, ]', '', regex=True), errors=errors)
             if fillna is None:
                 df[c] = df[c].fillna(np.nan)
             elif str(fillna).lower() == 'mean':

@@ -112,6 +112,17 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
             loss = abs(df['numbers'][index] - result[index])
             self.assertLessEqual(loss, 1)
 
+    def test_correlate_number_to_numeric(self):
+        tools = self.tools
+        df = pd.DataFrame(data=list("123") + ['4-5'], columns=['numbers'])
+        with self.assertRaises(ValueError) as context:
+            result = tools.correlate_numbers(df, header='numbers')
+        self.assertTrue("The header column is of type" in str(context.exception))
+        result = tools.correlate_numbers(df, header='numbers', to_numeric=True)
+        self.assertEqual([1.0, 2.0, 3.0], result[:3])
+        result = tools.correlate_numbers(df, header='numbers', to_numeric=True, replace_nulls=0, rtn_type='int')
+        self.assertEqual([1, 2, 3, 0], result.to_list())
+
     def test_correlate_number_extras(self):
         tools = self.tools
         # weighting
@@ -122,11 +133,11 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         self.assertCountEqual([0,1,2], list(pd.Series(result).value_counts().index))
         # fill nan
         df = pd.DataFrame(columns=['numbers'], data=[1,1,2,np.nan,3,1,np.nan,3,5,np.nan,7])
-        result = tools.correlate_numbers(df, 'numbers', fill_nulls=True, precision=0)
+        result = tools.correlate_numbers(df, 'numbers', replace_nulls=1, precision=0)
         self.assertEqual([1,1,2,1,3,1,1,3,5,1,7], result)
         df = pd.DataFrame(columns=['numbers'], data=[2] * 1000)
         # jitter, offset and fillna
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, fill_nulls=True, precision=0)
+        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, replace_nulls=2, precision=0)
         self.assertCountEqual([2,3,4,5,6], list(pd.Series(result).value_counts().index))
         # min
         df = pd.DataFrame(columns=['numbers'], data=[2] * 100)

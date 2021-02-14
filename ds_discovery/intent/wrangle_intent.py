@@ -989,9 +989,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_polynomial(seed=seed, **params)
 
-    def correlate_numbers(self, canonical: Any, header: str, offset: float=None, jitter: float=None,
-                          jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
-                          fill_nulls: bool=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,
+    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
+                          jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
+                          replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                           remove_duplicates: bool=None):
@@ -1000,12 +1000,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
+        :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
         :param offset: (optional) how far from the value to offset. defaults to zero
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
         :param multiply_offset: (optional) if true then the offset is multiplied else added
         :param precision: (optional) how many decimal places. default to 3
-        :param fill_nulls: (optional) if True then fills nulls with the most common values
+        :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
