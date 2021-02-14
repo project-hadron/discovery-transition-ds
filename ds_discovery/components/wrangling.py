@@ -130,6 +130,13 @@ class Wrangle(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
+    def add_column_description(self, column_name: str, description: str, save: bool=None):
+        """ adds a description note that is included in with the 'report_column_catalog'"""
+        if isinstance(description, str) and description:
+            self.pm.set_intent_description(level=column_name, text=description)
+            self.pm_persist(save)
+        return
+
     def load_source_canonical(self, **kwargs) -> pd.DataFrame:
         """returns the contracted source data as a DataFrame """
         return self.load_canonical(self.CONNECTOR_SOURCE, **kwargs)
@@ -249,6 +256,19 @@ class Wrangle(AbstractComponent):
         df = pd.DataFrame.from_dict(data=report)
         if stylise:
             return Commons.report(df, index_header='section', bold='label')
+        return df
+
+    def report_column_catalog(self, column_name: [str, list]=None, stylise: bool=True):
+        """ generates a report on the source contract
+
+        :param column_name: (optional) filters on specific column names.
+        :param stylise: (optional) returns a stylised DataFrame with formatting
+        :return: pd.DataFrame
+        """
+        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=column_name, as_description=True,
+                                                               level_label='column_name'))
+        if stylise:
+            return Commons.report(df, index_header='column_name', bold='label')
         return df
 
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):

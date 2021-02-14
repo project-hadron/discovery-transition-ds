@@ -12,6 +12,8 @@ scikit-learn
 matplotlib
 seaborn
 scipy
+boto3
+botocore
 
 
 # SQl and HTML libs
