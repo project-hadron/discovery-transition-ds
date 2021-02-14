@@ -1129,3 +1129,45 @@ class SyntheticIntentModel(WrangleIntentModel):
     def sample_maps(self) -> list:
         """A list of sample options"""
         return MappedSample().__dir__()
+
+    """
+        PRIVATE METHODS SECTION
+    """
+
+    def _set_quantity(self, selection, quantity, seed=None):
+        """Returns the quantity percent of good values in selection with the rest fill"""
+        if quantity == 1:
+            return selection
+        seed = self._seed(seed=seed)
+        generator = np.random.default_rng(seed=seed)
+
+        def replace_fill():
+            """Used to run through all the possible fill options for the list type"""
+            if isinstance(selection[i], float):
+                selection[i] = np.nan
+            elif isinstance(selection[i], str):
+                selection[i] = ''
+            else:
+                selection[i] = None
+            return
+
+        if len(selection) < 100:
+            for i in range(len(selection)):
+                if generator.random() > quantity:
+                    replace_fill()
+        else:
+            sample_count = int(round(len(selection) * (1 - quantity), 0))
+            generator = np.random.default_rng(seed=seed)
+            indices = generator.choice(list(range(len(selection))), sample_count)
+            for i in indices:
+                replace_fill()
+        return selection
+
+    @staticmethod
+    def _quantity(quantity: [float, int]) -> float:
+        """normalises quantity to a percentate float between 0 and 1.0"""
+        if not isinstance(quantity, (int, float)) or not 0 <= quantity <= 100:
+            return 1.0
+        if quantity > 1:
+            return round(quantity / 100, 2)
+        return float(quantity)

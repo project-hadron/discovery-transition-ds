@@ -6,4 +6,4 @@ from ds_discovery.components.feature_catalog import FeatureCatalog
 from ds_discovery.components.data_drift import DataDrift
 
 # release version number picked up in the setup.py
-__version__ = "3.01.008"
+__version__ = "3.01.009"

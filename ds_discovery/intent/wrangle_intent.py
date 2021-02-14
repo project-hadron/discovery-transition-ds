@@ -1,6 +1,4 @@
 import inspect
-import random
-import numpy as np
 import pandas as pd
 from typing import Any
 from ds_discovery.components.commons import Commons
@@ -520,7 +518,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_analysis(seed=seed, **params)
 
     def correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
-                            default_action: [str, int, float, dict]=None, quantity: float=None, seed: int=None,
+                            default_action: [str, int, float, dict]=None, seed: int=None,
                             save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                             replace_intent: bool=None, remove_duplicates: bool=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
@@ -536,7 +534,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                 An example of an action as a dict: (see 'action2dict(...)')
                 {'method': 'get_category', 'selection': ['M', 'F', 'U']}
         :param default_action: (optional) a default action to take if the selection is not fulfilled
-        :param quantity: (optional) a number between 0 and 1 presenting the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -611,13 +608,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_selection(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_selection(seed=seed, **params)
 
-    def correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, quantity: float=None, seed: int=None,
+    def correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None,
                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
@@ -628,7 +624,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param code_str: an action on those column values
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param kwargs: a set of kwargs to include in any executable function
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -668,13 +663,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_custom(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_custom(seed=seed, **params)
 
-    def correlate_aggregate(self, canonical: Any, headers: list, agg: str, quantity: float=None, seed: int=None,
+    def correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None,
                             save_intent: bool=None, precision: int=None, column_name: [int, str]=None,
                             intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
@@ -686,7 +680,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param agg: the aggregation function name enact. The available functions are:
                         'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
         :param precision: the value precision of the return values
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -726,14 +719,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_aggregate(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_aggregate(seed=seed, **params)
 
     def correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
-                         replace: bool=None, shuffle: bool=None, convert_str: bool=None, quantity: float=None,
+                         replace: bool=None, shuffle: bool=None, convert_str: bool=None,
                          seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
@@ -757,7 +749,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param replace: (optional) if the choice selection should be replaced or selected only once
         :param shuffle: (optional) if the final list should be shuffled
         :param convert_str: if the header has the list as a string convert to list using ast.literal_eval()
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -797,13 +788,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_choice(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_choice(seed=seed, **params)
 
-    def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, quantity: float=None,
+    def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None,
                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a column and join it with the result of the action
@@ -812,7 +802,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param header: an ordered list of columns to join
         :param action: (optional) a string or a single action whose outcome will be joined to the header value
         :param sep: (optional) a separator between the values
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -871,13 +860,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_join(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_join(seed=seed, **params)
 
-    def correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, quantity: float=None, seed: int=None,
+    def correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None,
                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
@@ -887,8 +875,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
         :param precision: (optional) how many decimal places. default to 3
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
-        :param seed: (optional) the random seed used with quantity. defaults to current datetime
+        :param seed: (optional) the random seed. defaults to current datetime
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -927,13 +914,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_sigmoid(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_sigmoid(seed=seed, **params)
 
-    def correlate_polynomial(self, canonical: Any, header: str, coefficient: list, quantity: float=None,
+    def correlate_polynomial(self, canonical: Any, header: str, coefficient: list,
                              seed: int=None, keep_zero: bool=None, save_intent: bool=None, column_name: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ creates a polynomial using the reference header values and apply the coefficients where the
@@ -944,8 +930,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
         :param coefficient: the reverse list of term coefficients
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
-        :param seed: (optional) the random seed used with quantity. defaults to current datetime
+        :param seed: (optional) the random seed. defaults to current datetime
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -985,15 +970,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_polynomial(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_polynomial(seed=seed, **params)
 
     def correlate_numbers(self, canonical: Any, header: str, offset: float=None, jitter: float=None,
                           jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
-                          fill_nulls: bool=None, quantity: float=None, seed: int=None, keep_zero: bool=None,
+                          fill_nulls: bool=None, seed: int=None, keep_zero: bool=None,
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                           remove_duplicates: bool=None):
@@ -1008,7 +992,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param multiply_offset: (optional) if true then the offset is multiplied else added
         :param precision: (optional) how many decimal places. default to 3
         :param fill_nulls: (optional) if True then fills nulls with the most common values
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) the random seed. defaults to current datetime
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param min_value: a minimum value not to go below
@@ -1051,14 +1034,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_numbers(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_numbers(seed=seed, **params)
 
     def correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
-                             default_action: [str, int, float, dict]=None, quantity: float=None,
+                             default_action: [str, int, float, dict]=None,
                              seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
@@ -1079,7 +1061,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param correlations: a list of categories (can also contain lists for multiple correlations.
         :param actions: the correlated set of categories that should map to the index
         :param default_action: (optional) a default action to take if the selection is not fulfilled
-        :param quantity: (optional) a number between 0 and 1 presenting the percentage quantity of the data
         :param seed: a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -1140,16 +1121,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_categories(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_categories(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                         jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
                         min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
-                        year_first: bool=None, quantity: float=None, seed: int=None, save_intent: bool=None,
+                        year_first: bool=None, seed: int=None, save_intent: bool=None,
                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None):
         """ correlates dates to an existing date or list of dates. The return is a list of pd
@@ -1168,7 +1148,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param day_first: (optional) if the dates given are day first firmat. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
-        :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -1208,11 +1187,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        rtn_list = self._correlate_dates(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+        return self._correlate_dates(seed=seed, **params)
 
     """
         PRIVATE METHODS SECTION
@@ -1242,40 +1220,3 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                       replace_intent=replace_intent, remove_duplicates=remove_duplicates,
                                       save_intent=save_intent)
         return
-
-    def _set_quantity(self, selection, quantity, seed=None):
-        """Returns the quantity percent of good values in selection with the rest fill"""
-        if quantity == 1:
-            return selection
-        seed = self._seed(seed=seed)
-        generator = np.random.default_rng(seed=seed)
-
-        def replace_fill():
-            """Used to run through all the possible fill options for the list type"""
-            if isinstance(selection[i], float):
-                selection[i] = np.nan
-            elif isinstance(selection[i], str):
-                selection[i] = ''
-            else:
-                selection[i] = None
-            return
-
-        if len(selection) < 100:
-            for i in range(len(selection)):
-                if generator.random() > quantity:
-                    replace_fill()
-        else:
-            sample_count = int(round(len(selection) * (1 - quantity), 0))
-            indices = random.sample(list(range(len(selection))), sample_count)
-            for i in indices:
-                replace_fill()
-        return selection
-
-    @staticmethod
-    def _quantity(quantity: [float, int]) -> float:
-        """normalises quantity to a percentate float between 0 and 1.0"""
-        if not isinstance(quantity, (int, float)) or not 0 <= quantity <= 100:
-            return 1.0
-        if quantity > 1:
-            return round(quantity / 100, 2)
-        return float(quantity)

@@ -836,7 +836,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
     def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
-                             default_action: [str, int, float, dict]=None, seed: int=None):
+                             default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
         the selection criteria is not fulfilled then the default_action is taken if specified, else null value.
 
@@ -851,6 +851,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 {'method': 'get_category', 'selection': ['M', 'F', 'U']}
         :param default_action: (optional) a default action to take if the selection is not fulfilled
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: value set based on the selection list and the action
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -924,10 +926,22 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if not isinstance(default_action, (str, int, float, dict)):
             default_action = None
         rtn_values = self._apply_action(canonical, action=default_action, seed=_seed)
+        # deal with categories
+        is_category = False
+        if rtn_values.dtype.name == 'category':
+            is_category = True
+            rtn_values = rtn_values.astype('object')
         rtn_values.update(self._apply_action(canonical, action=action, select_idx=select_idx, seed=_seed))
+        if is_category:
+            rtn_values.astype('category')
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                rtn_values.astype(rtn_type)
+            return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None, **kwargs):
+    def _correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None, rtn_type: str=None,
+                          **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
         as it's parameter name 'canonical'.
@@ -937,6 +951,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param kwargs: a set of kwargs to include in any executable function
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list or pandas.DataFrame
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -966,12 +982,17 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if 'canonical' not in local_kwargs:
             local_kwargs['canonical'] = canonical
 
-        result = exec(code_str, globals(), local_kwargs) if use_exec else eval(code_str, globals(), local_kwargs)
-        if result is None:
-            return canonical
-        return result
+        rtn_values = exec(code_str, globals(), local_kwargs) if use_exec else eval(code_str, globals(), local_kwargs)
+        if rtn_values is None:
+            return pd.Series([np.nan] * canonical.shape[0])
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                rtn_values.astype(rtn_type)
+            return rtn_values
+        return rtn_values.to_list()
 
-    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, precision: int=None):
+    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, precision: int=None,
+                             rtn_type: str=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
         aggregation function names are limited to 'sum', 'prod', 'count', 'min', 'max' and 'mean' for numeric columns
         and a special 'list' function name to combine the columns as a list
@@ -982,6 +1003,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                         'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
         :param precision: the value precision of the return values
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1013,13 +1036,17 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         _seed = seed if isinstance(seed, int) else self._seed()
         precision = precision if isinstance(precision, int) else 3
         if agg == 'list':
-            result = canonical.loc[:, headers].values.tolist()
-        else:
-            result = eval(f"canonical.loc[:, headers].{agg}(axis=1)", globals(), locals()).round(precision)
+            return canonical.loc[:, headers].values.tolist()
+        result = eval(f"canonical.loc[:, headers].{agg}(axis=1)", globals(), locals()).round(precision)
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                result.astype(rtn_type)
+            return result
         return result.to_list()
 
     def _correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
-                          replace: bool=None, shuffle: bool=None, convert_str: bool=None, seed: int=None):
+                          replace: bool=None, shuffle: bool=None, convert_str: bool=None, seed: int=None,
+                          rtn_type: str=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
         if the list_size == 1 then a single value is correlated otherwise a list is correlated
 
@@ -1042,6 +1069,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param shuffle: (optional) if the final list should be shuffled
         :param convert_str: if the header has the list as a string convert to list using ast.literal_eval()
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1091,9 +1120,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             s_values.iloc[s_idx] = [x[0] if list_size == 1 else list(x) for x in s_values.iloc[s_idx]]
         else:
             s_values.iloc[s_idx] = [x[:list_size] if list_size > 1 else x[0] for x in s_values.iloc[s_idx]]
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                s_values.astype(rtn_type)
+            return s_values
         return s_values.to_list()
 
-    def _correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, seed: int=None):
+    def _correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, seed: int=None,
+                        rtn_type: str=None):
         """ correlate a column and join it with the result of the action
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
@@ -1101,6 +1135,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param action: (optional) a string or a single action whose outcome will be joined to the header value
         :param sep: (optional) a separator between the values
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1160,9 +1196,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         s_values = pd.Series([f"{a}{sep}{b}" for (a, b) in zip(s_values, result)], dtype='object')
         if null_idx.size > 0:
             s_values.iloc[null_idx] = np.nan
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                s_values.astype(rtn_type)
+            return s_values
         return s_values.to_list()
 
-    def _correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None):
+    def _correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
         between (0,1) and is defined as
                                         f(x) = 1/(1+exp(-x)
@@ -1171,6 +1211,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param header: the header in the DataFrame to correlate
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1201,10 +1243,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return list()
         precision = precision if isinstance(precision, int) else 3
         _seed = seed if isinstance(seed, int) else self._seed()
-        result = np.round(1 / (1 + np.exp(-s_values)), precision)
-        return list(result)
+        rtn_values = np.round(1 / (1 + np.exp(-s_values)), precision)
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                rtn_values.astype(rtn_type)
+            return rtn_values
+        return rtn_values.to_list()
 
-    def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None,
+    def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None, rtn_type: str=None,
                               keep_zero: bool=None) -> list:
         """ creates a polynomial using the reference header values and apply the coefficients where the
         index of the list represents the degree of the term in reverse order.
@@ -1216,6 +1262,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param coefficient: the reverse list of term coefficients
         :param seed: (optional) the random seed. defaults to current datetime
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1255,13 +1303,17 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 res += coeff * x ** index
             return res
 
-        result = s_values.apply(lambda x: _calc_polynomial(x, coefficient))
-        return result.to_list()
+        rtn_values = s_values.apply(lambda x: _calc_polynomial(x, coefficient))
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                rtn_values.astype(rtn_type)
+            return rtn_values
+        return rtn_values.to_list()
 
     def _correlate_numbers(self, canonical: Any, header: str, offset: float=None, jitter: float=None,
                            jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
                            fill_nulls: bool=None, seed: int=None,  keep_zero: bool=None, min_value: [int, float]=None,
-                           max_value: [int, float]=None):
+                           max_value: [int, float]=None, rtn_type: str=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
         with the correlated value being the mean and the jitter its standard deviation from that mean
 
@@ -1277,6 +1329,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param min_value: a minimum value not to go below
         :param max_value: a max value not to go above
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1340,10 +1394,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             s_values = s_values.astype(int)
         if null_idx.size > 0:
             s_values.iloc[null_idx] = np.nan
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                s_values.astype(rtn_type)
+            return s_values
         return s_values.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
-                              default_action: [str, int, float, dict]=None, seed: int=None):
+                              default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
         Note. to use the current value in the passed values as a parameter value pass an empty dict {} as the keys
         value. If you want the action value to be the current value of the passed value then again pass an empty dict
@@ -1363,6 +1421,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param actions: the correlated set of categories that should map to the index
         :param default_action: (optional) a default action to take if the selection is not fulfilled
         :param seed: a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
 
 
@@ -1418,6 +1478,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if not isinstance(default_action, (str, int, float, dict)):
             default_action = None
         rtn_values = self._apply_action(canonical, action=default_action, seed=_seed)
+        # deal with categories
+        if rtn_values.dtype.name == 'category':
+            rtn_values = rtn_values.astype('object')
         s_values = canonical[header].copy().astype(str)
         for i in range(len(corr_list)):
             action = actions.get(i, actions.get(str(i), -1))
@@ -1425,12 +1488,16 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 continue
             corr_idx = s_values[s_values.isin(map(str, corr_list[i]))].index
             rtn_values.update(self._apply_action(canonical, action=action, select_idx=corr_idx, seed=_seed))
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                rtn_values.astype(rtn_type)
+            return rtn_values
         return rtn_values.to_list()
 
     def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                          jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
                          min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
-                         year_first: bool=None, seed: int=None):
+                         year_first: bool=None, seed: int=None, rtn_type: str=None):
         """ correlates dates to an existing date or list of dates. The return is a list of pd
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
@@ -1448,6 +1515,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
         :param seed: (optional) a seed value for the random function: default to None
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal size to that given
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
@@ -1550,6 +1619,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 s_values = s_values.dt.tz_convert(None)
             if null_idx.size > 0:
                 s_values.iloc[null_idx].apply(lambda x: np.nan)
+        if isinstance(rtn_type, str):
+            if rtn_type in ['int', 'float', 'category', 'string', 'object']:
+                s_values.astype(rtn_type)
+            return s_values
         return s_values.to_list()
 
     """
