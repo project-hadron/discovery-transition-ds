@@ -46,7 +46,7 @@ class Wrangle(AbstractComponent):
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
                  default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
-                 default_replace_intent: bool=None, has_contract: bool=None) -> Transition:
+                 default_replace_intent: bool=None, has_contract: bool=None) -> Wrangle:
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -265,14 +265,19 @@ class Wrangle(AbstractComponent):
         :param stylise: (optional) returns a stylised DataFrame with formatting
         :return: pd.DataFrame
         """
+        stylise = True if not isinstance(stylise, bool) else stylise
+        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
+                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=column_name, as_description=True,
                                                                level_label='column_name'))
         if stylise:
-            return Commons.report(df, index_header='column_name', bold='label')
+            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
+            _ = df_style.set_properties(subset=['column_name'], **{'font-weight': 'bold'})
+            return df_style
         return df
 
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
-        """ Creates a bootstrap Transition setup. Note this does not set the source
+        """ Creates a bootstrap Wrangle setup. Note this does not set the source
 
         :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
         :param project_name: (optional) a project name that will replace the hadron naming on file prefix
@@ -284,5 +289,5 @@ class Wrangle(AbstractComponent):
         file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,
                                          versioned=True)
         self.set_persist(uri_file=file_name)
-        self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
+        self.set_description(f"A domain specific {domain} wrangled {project_name} dataset for {self.pm.task_name}")
         return
