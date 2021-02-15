@@ -10,6 +10,8 @@ from scipy import stats
 from aistac.components.aistac_commons import DataAnalytics
 from ds_discovery.components.commons import Commons
 from aistac.properties.abstract_properties import AbstractPropertyManager
+
+from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 
 __author__ = 'Darryl Oatridge'
@@ -1309,6 +1311,79 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
+
+    def _correlate_missing(self, canonical: Any,header: str, granularity: [int, float]=None, as_type: str=None,
+                           lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
+                           exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
+                           day_first: bool=None, year_first: bool=None, seed: int=None, rtn_type: str=None):
+        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
+            column
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param header: the header in the DataFrame to correlate
+        :param granularity: (optional) the granularity of the analysis across the range. Default is 5
+                int passed - represents the number of periods
+                float passed - the length of each interval
+                list[tuple] - specific interval periods e.g []
+                list[float] - the percentile or quantities, All should fall between 0 and 1
+        :param as_type: (optional) specify the type to analyse
+        :param lower: (optional) the lower limit of the number value. Default min()
+        :param upper: (optional) the upper limit of the number value. Default max()
+        :param nulls_list: (optional) a list of nulls that should be considered null
+        :param exclude_dominant: (optional) if overly dominant are to be excluded from analysis to avoid bias (numbers)
+        :param replace_zero: (optional) with categories, a non-zero minimal chance relative frequency to replace zero
+                This is useful when the relative frequency of a category is so small the analysis returns zero
+        :param precision: (optional) by default set to 3.
+        :param day_first: (optional) if the date provided has day first
+        :param year_first: (optional) if the date provided has year first
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
+        :return:
+        """
+        canonical = self._get_canonical(canonical)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        s_values = canonical[header].copy()
+        if s_values.empty:
+            return list()
+        as_type = as_type if isinstance(as_type, str) else s_values.dtype.name
+        _seed = seed if isinstance(seed, int) else self._seed()
+        nulls_list = nulls_list if isinstance(nulls_list, list) else [np.nan, None, 'nan', '', ' ']
+        if isinstance(nulls_list, list):
+            s_values.replace(nulls_list, np.nan, inplace=True, regex=True)
+        null_idx = s_values[s_values.isna()].index
+        if as_type.startswith('int') or as_type.startswith('float') or as_type.startswith('num'):
+            _analysis = DataAnalytics(DataDiscovery.analyse_number(s_values, granularity=granularity, lower=lower,
+                                                                   upper=upper, precision=precision,
+                                                                   exclude_dominant=exclude_dominant))
+            s_values.iloc[null_idx] = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
+                                                          relative_freq=_analysis.patterns.relative_freq,
+                                                          precision=_analysis.params.precision,
+                                                          seed=_seed, size=len(null_idx))
+        elif as_type.startswith('cat'):
+            _analysis = DataAnalytics(DataDiscovery.analyse_category(s_values, replace_zero=replace_zero))
+            s_values.iloc[null_idx] = self._get_category(selection=_analysis.intent.categories,
+                                                         relative_freq=_analysis.patterns.relative_freq,
+                                                         seed=_seed, size=len(null_idx))
+        elif as_type.startswith('date'):
+            _analysis = DataAnalytics(DataDiscovery.analyse_date(s_values, granularity=granularity, lower=lower,
+                                                                 upper=upper, day_first=day_first,
+                                                                 year_first=year_first))
+            s_values.iloc[null_idx] = self._get_datetime(start=_analysis.intent.lowest,
+                                                         until=_analysis.intent.highest,
+                                                         relative_freq=_analysis.patterns.relative_freq,
+                                                         date_format=_analysis.params.data_format,
+                                                         day_first=_analysis.params.day_first,
+                                                         year_first=_analysis.params.year_first,
+                                                         seed=_seed, size=len(null_idx))
+        else:
+            raise ValueError(f"The data type '{as_type}' is not supported. Try using the 'as_type' parameter")
+        if isinstance(rtn_type, str):
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
+                s_values = s_values.astype(rtn_type)
+            return s_values
+        return s_values.to_list()
 
     def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
                            jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,

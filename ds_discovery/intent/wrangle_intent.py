@@ -989,6 +989,78 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_polynomial(seed=seed, **params)
 
+    def correlate_missing(self, canonical: Any,header: str, granularity: [int, float]=None, as_type: str=None,
+                          lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
+                          exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
+                          day_first: bool=None, year_first: bool=None, seed: int=None, rtn_type: str=None,
+                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None):
+        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
+            column
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param header: the header in the DataFrame to correlate
+        :param granularity: (optional) the granularity of the analysis across the range. Default is 5
+                int passed - represents the number of periods
+                float passed - the length of each interval
+                list[tuple] - specific interval periods e.g []
+                list[float] - the percentile or quantities, All should fall between 0 and 1
+        :param as_type: (optional) specify the type to analyse
+        :param lower: (optional) the lower limit of the number value. Default min()
+        :param upper: (optional) the upper limit of the number value. Default max()
+        :param nulls_list: (optional) a list of nulls that should be considered null
+        :param exclude_dominant: (optional) if overly dominant are to be excluded from analysis to avoid bias (numbers)
+        :param replace_zero: (optional) with categories, a non-zero minimal chance relative frequency to replace zero
+                This is useful when the relative frequency of a category is so small the analysis returns zero
+        :param precision: (optional) by default set to 3.
+        :param day_first: (optional) if the date provided has day first
+        :param year_first: (optional) if the date provided has year first
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: an equal length list of correlated values
+
+        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._correlate_missing(seed=seed, **params)
+
     def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
                           jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
                           replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,

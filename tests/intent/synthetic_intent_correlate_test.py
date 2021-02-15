@@ -269,7 +269,14 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         # control
         df = pd.DataFrame(columns=['dates'], data=['1964-01-14', '1967-09-28', '1996-05-22', '1997-12-11'])
         result = tools.correlate_dates(df, 'dates', now_delta='Y')
-        print(result)
+        self.assertEqual([57, 53, 24, 23], result)
+
+    def test_correlate_missing(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['cats'] = ['a', 'b', None, 'f', None, 'f', 'b', 'c', 'b', 'a']
+        result = tools.correlate_missing(df, header='cats', as_type='category', seed=1973)
+        self.assertEqual(['a', 'b', 'b', 'f', 'b', 'f', 'b', 'c', 'b', 'a'], result)
 
 
 if __name__ == '__main__':
