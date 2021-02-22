@@ -6,6 +6,7 @@ import numpy as np
 import pickle
 import json
 
+import requests
 from aistac.handlers.abstract_handlers import AbstractSourceHandler, AbstractPersistHandler
 from aistac.handlers.abstract_handlers import ConnectorContract, HandlerFactory
 

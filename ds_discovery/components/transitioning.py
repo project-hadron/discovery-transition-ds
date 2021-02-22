@@ -3,18 +3,16 @@ from __future__ import annotations
 import uuid
 import numpy as np
 import pandas as pd
-from aistac.components.abstract_component import AbstractComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
-
+from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
-from ds_discovery.components.discovery import DataDiscovery, Visualisation
 
 __author__ = 'Darryl Oatridge'
 
 
-class Transition(AbstractComponent):
+class Transition(AbstractCommonComponent):
 
     REPORT_DICTIONARY = 'dictionary'
     REPORT_ANALYSIS = 'analysis'
@@ -22,32 +20,6 @@ class Transition(AbstractComponent):
     REPORT_QUALITY = 'data_quality'
     REPORT_SUMMARY = 'data_quality_summary'
     REPORT_PROVENANCE = 'provenance'
-
-    DEFAULT_MODULE = 'ds_discovery.handlers.pandas_handlers'
-    DEFAULT_SOURCE_HANDLER = 'PandasSourceHandler'
-    DEFAULT_PERSIST_HANDLER = 'PandasPersistHandler'
-
-    def __init__(self, property_manager: TransitionPropertyManager, intent_model: TransitionIntentModel,
-                 default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
-                 template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
-        """ Encapsulation class for the components set of classes
-
-        :param property_manager: The contract property manager instance for this component
-        :param intent_model: the model codebase containing the parameterizable intent
-        :param default_save: The default behaviour of persisting the contracts:
-                    if False: The connector contracts are kept in memory (useful for restricted file systems)
-        :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
-        :param template_path: (optional) a template path to use if the environment variable does not exist
-        :param template_module: (optional) a template module to use if the environment variable does not exist
-        :param template_source_handler: (optional) a template source handler to use if no environment variable
-        :param template_persist_handler: (optional) a template persist handler to use if no environment variable
-        :param align_connectors: (optional) resets aligned connectors to the template
-        """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         reset_templates=reset_templates, template_path=template_path, template_module=template_module,
-                         template_source_handler=template_source_handler,
-                         template_persist_handler=template_persist_handler, align_connectors=align_connectors)
-        self._raw_attribute_list = []
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
@@ -104,16 +76,6 @@ class Transition(AbstractComponent):
         """ A class method to use the Components intent methods as a scratch pad"""
         return super().scratch_pad()
 
-    @classmethod
-    def discovery_pad(cls) -> DataDiscovery:
-        """ A class method to use the Components discovery methods as a scratch pad"""
-        return DataDiscovery()
-
-    @classmethod
-    def visual_pad(cls) -> Visualisation:
-        """ A class method to use the Components visualisation methods as a scratch pad"""
-        return Visualisation()
-
     @property
     def intent_model(self) -> TransitionIntentModel:
         """The intent model instance"""
@@ -128,16 +90,6 @@ class Transition(AbstractComponent):
     def pm(self) -> TransitionPropertyManager:
         """The properties manager instance"""
         return self._component_pm
-
-    @property
-    def discover(self) -> DataDiscovery:
-        """The components instance"""
-        return DataDiscovery()
-
-    @property
-    def visual(self) -> Visualisation:
-        """The visualisation instance"""
-        return Visualisation()
 
     def set_provenance(self, title: str=None, domain: str=None, description: str=None, license_type: str=None,
                        license_name: str=None, license_uri: str=None, cost_price: str = None, cost_code: str = None,
@@ -177,66 +129,6 @@ class Transition(AbstractComponent):
         """resets the provenance back to its default values"""
         self.pm.reset_provenance()
         self.pm_persist(save)
-
-    def set_report_persist(self, connector_name: [str, list]=None, uri_file: str=None, project: str=None,
-                           path: str=None, file_type: str=None, save: bool=None, **kwargs):
-        """sets the report persist using the TEMPLATE_PERSIST connector contract, there are preset constants that
-        should be used. These constance can be found using Transition.REPORT_<NAME> or <instance>.REPORT_<NAME>
-        where <name> is the name of the report. if no report connector name is given then all the report connectors
-        are set with default values.
-
-        :param connector_name: (optional) the name(s) of the report connector to set (see class REPORT constants)
-        :param uri_file: (optional) the uri_file is appended to the template path
-        :param project: (optional) a project name that will replace the hadron naming, if no uri_file
-        :param path: (optional) a path added to the template path default, if no uri_file
-        :param file_type: (optional) a file type of the report, if no uri_file
-        :param save: (optional) if True, save to file. Default is True
-        """
-        _default_reports = [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_QUALITY, self.REPORT_SUMMARY,
-                            self.REPORT_FIELDS, self.REPORT_PROVENANCE] + self.REPORTS_BASE_LIST
-        project = project if isinstance(project, str) else 'hadron'
-        if not isinstance(connector_name, (str, list)):
-            connector_name = _default_reports
-        for _report in self.pm.list_formatter(connector_name):
-            if _report not in _default_reports:
-                raise ValueError(f"Report name(s) {_report} must be from the report constants {_default_reports}")
-            file_pattern = uri_file
-            if not isinstance(uri_file, str):
-                file_type = file_type if isinstance(file_type, str) else 'csv'
-                if _report in [self.REPORT_ANALYSIS, self.REPORT_QUALITY]:
-                    file_type = file_type if isinstance(file_type, str) else 'json'
-                file_pattern = self.pm.file_pattern(name=_report, project=project, path=path,
-                                                    file_type=file_type, versioned=True)
-                if 'orient' not in kwargs.keys():
-                    kwargs.update({'orient': 'records'})
-            self.add_connector_from_template(connector_name=_report, uri_file=file_pattern,
-                                             template_name=self.TEMPLATE_PERSIST, save=save, **kwargs)
-        return
-
-    def load_source_canonical(self, **kwargs) -> pd.DataFrame:
-        """returns the contracted source data as a DataFrame """
-        return self.load_canonical(self.CONNECTOR_SOURCE, **kwargs)
-
-    def load_clean_canonical(self, **kwargs) -> pd.DataFrame:
-        """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_PERSIST, **kwargs)
-
-    def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
-        """returns the canonical of the referenced connector
-
-        :param connector_name: the name or label to identify and reference the connector
-        """
-        canonical = super().load_canonical(connector_name=connector_name, **kwargs)
-        if isinstance(canonical, dict):
-            canonical = pd.DataFrame.from_dict(data=canonical)
-        return canonical
-
-    def save_clean_canonical(self, canonical, auto_connectors: bool=None, **kwargs):
-        """Saves the canonical to the clean files folder, auto creating the connector from template if not set"""
-        if auto_connectors if isinstance(auto_connectors, bool) else True:
-            if not self.pm.has_connector(self.CONNECTOR_PERSIST):
-                self.set_persist()
-        self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
     def save_quality_report(self, canonical: pd.DataFrame=None, file_type: str=None, versioned: bool=None,
                             stamped: str=None):
@@ -279,18 +171,12 @@ class Transition(AbstractComponent):
         :param save: (optional) if True, save to file. Default is True
         """
         schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
-        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_clean_canonical()
+        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_persist_canonical()
         schema_tree = schema_tree if isinstance(schema_tree, list) else canonical.columns.to_list()
         analytics = self.discover.analyse_association(canonical, columns_list=schema_tree)
         self.pm.set_canonical_schema(name=schema_name, schema=analytics)
         self.pm_persist(save=save)
         return
-
-    def run_transition_pipeline(self, intent_levels: [str, int, list]=None):
-        """Runs the components pipeline from source to persist"""
-        canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
-        self.save_clean_canonical(result)
 
     def canonical_report(self, canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
@@ -343,69 +229,6 @@ class Transition(AbstractComponent):
                                                                                               'font-size': "120%"})
             return df_style
         return df_dd
-
-    def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
-                          stylise: bool=True):
-        """ generates a report on the source contract
-
-        :param connector_filter: (optional) filters on the connector name.
-        :param inc_pm: (optional) include the property manager connector
-        :param inc_template: (optional) include the template connectors
-        :param stylise: (optional) returns a stylised DataFrame with formatting
-        :return: pd.DataFrame
-        """
-        report = self.pm.report_connectors(connector_filter=connector_filter, inc_pm=inc_pm,
-                                           inc_template=inc_template)
-        df = pd.DataFrame.from_dict(data=report)
-        if stylise:
-            return Commons.report(df, index_header='connector_name')
-        return df
-
-    def report_run_book(self, stylise: bool=True):
-        """ generates a report on all the intent
-
-        :param stylise: returns a stylised dataframe with formatting
-        :return: pd.Dataframe
-        """
-        df = pd.DataFrame.from_dict(data=self.pm.report_run_book())
-        if stylise:
-            return Commons.report(df, index_header='name')
-        return df
-
-    def report_intent(self, levels: [str, int, list]=None, stylise: bool=True):
-        """ generates a report on all the intent
-
-        :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
-        :param stylise: (optional) returns a stylised dataframe with formatting
-        :return: pd.Dataframe
-        """
-        if isinstance(levels, (int, str)):
-            df = pd.DataFrame.from_dict(data=self.pm.report_intent_params(level=levels))
-            if stylise:
-                return Commons.report(df, index_header='order')
-        df = pd.DataFrame.from_dict(data=self.pm.report_intent(levels=levels))
-        if stylise:
-            return Commons.report(df, index_header='level')
-        return df
-
-    def report_notes(self, catalog: [str, list]=None, labels: [str, list]=None, regex: [str, list]=None,
-                     re_ignore_case: bool=False, stylise: bool=True, drop_dates: bool=False):
-        """ generates a report on the notes
-
-        :param catalog: (optional) the catalog to filter on
-        :param labels: (optional) s label or list of labels to filter on
-        :param regex: (optional) a regular expression on the notes
-        :param re_ignore_case: (optional) if the regular expression should be case sensitive
-        :param stylise: (optional) returns a stylised dataframe with formatting
-        :param drop_dates: (optional) excludes the 'date' column from the report
-        :return: pd.Dataframe
-        """
-        report = self.pm.report_notes(catalog=catalog, labels=labels, regex=regex, re_ignore_case=re_ignore_case,
-                                      drop_dates=drop_dates)
-        df = pd.DataFrame.from_dict(data=report)
-        if stylise:
-            return Commons.report(df, index_header='section', bold='label')
-        return df
 
     def report_provenance(self, as_dict: bool=None, stylise: bool=None):
         """ a report on the provenance set as part of the domain contract
@@ -607,8 +430,11 @@ class Transition(AbstractComponent):
         file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,
                                          versioned=True)
         self.set_persist(uri_file=file_name)
-        self.set_report_persist(connector_name=[self.REPORT_DICTIONARY, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
-                                                self.REPORT_FIELDS], project=project_name, path=path)
+        report_list = [{'report': self.REPORT_DICTIONARY, 'file_type': 'csv'},
+                       {'report': self.REPORT_SUMMARY, 'file_type': 'csv'},
+                       {'report': self.REPORT_PROVENANCE, 'file_type': 'csv'},
+                       {'report': self.REPORT_FIELDS, 'file_type': 'csv'}]
+        self.set_report_persist(reports=report_list, project=project_name, path=path)
         self.set_description(f"A domain specific {domain} transitioned {project_name} dataset for {self.pm.task_name}")
         self.set_provenance(title=f"{project_name.title()} {self.pm.task_name} Dataset ",
                             domain=domain,

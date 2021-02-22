@@ -51,7 +51,7 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
         result = Discover.analyse_category(dataset)
-        analytics = DataAnalytics(label='tester', analysis=result)
+        analytics = DataAnalytics(analysis=result)
         self.assertEqual(analytics.intent.selection, analytics.sample_map.index.to_list())
         self.assertEqual(analytics.patterns.sample_distribution, analytics.sample_map.to_list())
 

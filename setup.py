@@ -35,7 +35,7 @@ def find_version(*file_paths):
 
 
 setup(
-    name='discovery-transition-ds',
+    name='discovery-components-ds',
     version=find_version('ds_discovery', '__init__.py'),
     description='Advanced data cleaning, data wrangling and feature extraction tools for ML engineers',
     long_description=read('README.rst'),

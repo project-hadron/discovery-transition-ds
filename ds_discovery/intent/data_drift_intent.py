@@ -75,7 +75,7 @@ class DataToleranceIntentModel(AbstractCommonsIntentModel):
             return df_measure
         raise ValueError(f"The measure '{measure}, can't be found in the tolerance catalog")
 
-    def tolerate_analysis(self, canonical: Any, header: str, tolerance: dict, schema_name: str=None, dtype: str=None,
+    def tolerate_relation(self, canonical: Any, header: str, tolerance: dict, schema_name: str=None, dtype: str=None,
                           save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """"""
@@ -106,6 +106,7 @@ class DataToleranceIntentModel(AbstractCommonsIntentModel):
                                    measure_name=measure_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+
 
     def tolerate_condition(self, canonical: Any, header: str, analytics: dict, tolerance: dict,
                            save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,

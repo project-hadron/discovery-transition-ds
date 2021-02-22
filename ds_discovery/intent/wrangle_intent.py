@@ -472,7 +472,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         constructed association to be used as reference for a sub category.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param analytics_model: the analytics model from discovery-transition-ds discovery model train
+        :param analytics_model: the analytics model from discovery-components-ds discovery model train
         :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -804,7 +804,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, rtn_type: str=None,
                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None):
-        """ correlate a column and join it with the result of the action
+        """ correlate a column and join it with the result of the action, This allows for composite values to be
+        build from. an example might be to take a forename and add the surname with a space separator to create a
+        composite name field, of to join two primary keys to create a single composite key.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: an ordered list of columns to join

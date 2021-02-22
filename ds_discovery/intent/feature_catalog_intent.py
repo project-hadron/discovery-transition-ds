@@ -1,11 +1,9 @@
 import inspect
-from copy import deepcopy
 from typing import Any
 
 import numpy as np
 import pandas as pd
 from aistac.handlers.abstract_handlers import HandlerFactory
-from pandas.core.dtypes.common import is_numeric_dtype, is_datetime64_any_dtype
 
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
@@ -16,7 +14,7 @@ from ds_discovery.components.discovery import DataDiscovery
 __author__ = 'Darryl Oatridge'
 
 
-class FeatureCatalogIntentModelModel(AbstractCommonsIntentModel):
+class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
     """A set of methods to help build features as pandas.Dataframe"""
 
     def __init__(self, property_manager: FeatureCatalogPropertyManager, default_save_intent: bool=None,
@@ -690,7 +688,8 @@ class FeatureCatalogIntentModelModel(AbstractCommonsIntentModel):
         lower_quantile = lower_quantile if isinstance(lower_quantile, float) and 0 < lower_quantile < 1 else 0.00001
         upper_quantile = upper_quantile if isinstance(upper_quantile, float) and 0 < upper_quantile < 1 else 0.99999
 
-        result = DataDiscovery.analyse_number(df_rtn[column], granularity=[lower_quantile, upper_quantile])
+        result = DataDiscovery.analyse_number(df_rtn[column], granularity=[lower_quantile, upper_quantile],
+                                              detail_stats=False)
         analysis = DataAnalytics(result)
         df_rtn = df_rtn[(df_rtn[column] > analysis.intent.intervals[0][1]) & (df_rtn[column] <
                                                                               analysis.intent.intervals[2][0])]
@@ -956,96 +955,6 @@ class FeatureCatalogIntentModelModel(AbstractCommonsIntentModel):
         module.Transition.scratch_pad().auto_clean_header(dummy_df, case=title_case, rename_map=title_rename_map,
                                                           replace_spaces=title_replace_spaces, inplace=True)
         return dummy_df.set_index(key)
-
-    def apply_missing(self, canonical: Any, key: [str, list], headers: [str, list],
-                      inc_columns: list=None, granularity: [int, float]=None, lower: [int, float]=None,
-                      upper: [int, float]=None, nulls_list: list=None, replace_zero: [int, float]=None,
-                      precision: int=None, unindex: bool=None, day_first: bool=False, year_first: bool=False,
-                      save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
-                      replace_intent: bool=None, remove_duplicates: bool=None) -> [None, pd.DataFrame]:
-        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
-            column
-
-        :param canonical: the pd.DataFrame to replace missing values in
-        :param key: the key column
-        :param headers: the headers in the pd.DataFrame to apply the substitution too
-        :param inc_columns: (optional) return columns, the header must be listed to be included. If None then header
-        :param granularity: (optional) the granularity of the analysis across the range. Default is 3
-                int passed - represents the number of periods
-                float passed - the length of each interval
-                list[tuple] - specific interval periods e.g []
-                list[float] - the percentile or quantities, All should fall between 0 and 1
-        :param lower: (optional) the lower limit of the number value. Default min()
-        :param upper: (optional) the upper limit of the number value. Default max()
-        :param nulls_list: (optional) a list of nulls other than np.nan that should be considered null
-        :param replace_zero: (optional) if zero what to replace the weighting value with to avoid zero probability
-        :param precision: (optional) by default set to 3.
-        :param unindex: (optional) if the passed canonical should be un-index before processing
-        :param day_first: (optional) if the date provided has day first
-        :param year_first: (optional) if the date provided has year first
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param feature_name: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return:
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-
-        # intend code block on the canonical
-        canonical = self._get_canonical(canonical)
-        if isinstance(unindex, bool) and unindex:
-            canonical.reset_index(inplace=True)
-        key = Commons.list_formatter(key)
-        module = HandlerFactory.get_module(module_name='ds_discovery')
-        sim = module.SyntheticBuilder.scratch_pad()
-        tr = module.Transition.scratch_pad()
-        headers = self._pm.list_formatter(headers)
-        inc_columns = self._pm.list_formatter(inc_columns)
-        if not inc_columns:
-            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
-        if not isinstance(canonical, pd.DataFrame):
-            raise TypeError("The canonical given is not a pandas DataFrame")
-        nulls_list = nulls_list if isinstance(nulls_list, list) else ['nan', '']
-
-        df_rtn = Commons.filter_columns(canonical, headers=list(set(key + inc_columns + headers)))
-        for c in headers:
-            col = deepcopy(canonical[c])
-            # replace alternative nulls with pd.nan
-            if nulls_list is not None:
-                for null in self._pm.list_formatter(nulls_list):
-                    col.replace(null, np.nan, inplace=True)
-            size = len(col[col.isna()])
-            if size > 0:
-                if is_numeric_dtype(col):
-                    result = DataDiscovery.analyse_number(col, granularity=granularity, lower=lower, upper=upper,
-                                                          precision=precision)
-                    result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_number(from_value=result.intent.lowest, to_value=result.intent.highest,
-                                                     relative_freq=result.patterns.relative_freq, precision=0,
-                                                     size=size, save_intent=False)
-                elif is_datetime64_any_dtype(col):
-                    result = DataDiscovery.analyse_date(col, granularity=granularity, lower=lower, upper=upper,
-                                                        day_first=day_first, year_first=year_first)
-                    synthetic = sim.model_analysis(col, result,  save_intent=False)
-                    col = col.apply(lambda x:  synthetic.pop(0) if x == pd.to_datetime(pd.NaT) else x)
-                else:
-                    result = DataDiscovery.analyse_category(col, replace_zero=replace_zero)
-                    result = DataAnalytics(result)
-                    col[col.isna()] = sim.get_category(selection=result.intent.categories,
-                                                       relative_freq=result.patterns.relative_freq, size=size,
-                                                       save_intent=False)
-                    col = col.astype('category')
-            df_rtn[c] = col
-        return df_rtn.set_index(key)
 
     def custom_builder(self, canonical: Any, code_str: str, use_exec: bool=False,
                        save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,

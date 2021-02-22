@@ -1,16 +1,19 @@
 from __future__ import annotations
 
-from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
-from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
+import pandas as pd
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
+from ds_discovery.components.commons import Commons
+from ds_discovery.components.discovery import DataDiscovery
+from ds_discovery.intent.models_intent import ModelsIntentModel
+from ds_discovery.managers.models_property_manager import ModelsPropertyManager
 
 __author__ = 'Darryl Oatridge'
 
 
-class SyntheticBuilder(AbstractCommonComponent):
+class ModelsBuilder(AbstractCommonComponent):
 
-    REPORT_CATALOG = 'catalog'
-    REPORT_FIELDS = 'field_description'
+    CONNECTOR_TRAINED = 'trained_connector'
+    CONNECTOR_PREDICT = 'predict_connector'
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
@@ -18,7 +21,7 @@ class SyntheticBuilder(AbstractCommonComponent):
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
                  default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
-                 default_replace_intent: bool=None, has_contract: bool=None) -> SyntheticBuilder:
+                 default_replace_intent: bool=None, has_contract: bool=None) -> ModelsBuilder:
         """ Class Factory Method to instantiates the components application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -47,13 +50,14 @@ class SyntheticBuilder(AbstractCommonComponent):
          :return: the initialised class instance
          """
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
-        pm_module = pm_module if isinstance(pm_module, str) else cls.DEFAULT_MODULE
-        pm_handler = pm_handler if isinstance(pm_handler, str) else cls.DEFAULT_PERSIST_HANDLER
-        _pm = SyntheticPropertyManager(task_name=task_name, username=username)
-        _intent_model = SyntheticIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                             default_intent_level=default_intent_level,
-                                             order_next_available=order_next_available,
-                                             default_replace_intent=default_replace_intent)
+        pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
+        pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
+        username = username if isinstance(username, str) else 'Unknown'
+        _pm = ModelsPropertyManager(task_name=task_name, username=username)
+        _intent_model = ModelsIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                          default_intent_level=default_intent_level,
+                                          order_next_available=order_next_available,
+                                          default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
@@ -62,21 +66,16 @@ class SyntheticBuilder(AbstractCommonComponent):
                    template_source_handler=template_source_handler, template_persist_handler=template_persist_handler,
                    align_connectors=align_connectors)
 
-    @classmethod
-    def scratch_pad(cls) -> SyntheticIntentModel:
-        """ A class method to use the Components intent methods as a scratch pad"""
-        return super().scratch_pad()
-
     @property
-    def pm(self) -> SyntheticPropertyManager:
+    def pm(self) -> ModelsPropertyManager:
         return self._component_pm
 
     @property
-    def intent_model(self) -> SyntheticIntentModel:
+    def intent_model(self) -> ModelsIntentModel:
         return self._intent_model
 
     @property
-    def tools(self) -> SyntheticIntentModel:
+    def models(self) -> ModelsIntentModel:
         return self._intent_model
 
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
@@ -89,9 +88,9 @@ class SyntheticBuilder(AbstractCommonComponent):
         """
         file_type = file_type if isinstance(file_type, str) else 'parquet'
         project_name = project_name if isinstance(project_name, str) else 'hadron'
-        file_name = self.pm.file_pattern(name='dataset', project=project_name, path=path, file_type=file_type,
+        file_name = self.pm.file_pattern(name='complete', project=project_name.lower(), path=path, file_type=file_type,
                                          versioned=True)
         self.set_persist(uri_file=file_name)
-        report_list = [{'report': self.REPORT_CATALOG, 'file_type': 'csv'}]
-        self.set_report_persist(reports=report_list, project=project_name, path=path)
-        self.set_description(f"A domain specific {domain} simulated {project_name} dataset for {self.pm.task_name}")
+        self.set_report_persist(report_names=[self.REPORT_INTENT])
+        self.set_description(f"A domain specific {domain} Machine Learning {project_name} models for "
+                             f"{self.pm.task_name}")

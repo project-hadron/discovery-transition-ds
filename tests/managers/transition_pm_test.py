@@ -29,7 +29,7 @@ class TransitionPMTest(unittest.TestCase):
     def test_manager_name(self):
         pm = TransitionPropertyManager('test', username='TestUser')
         result = pm.manager_name()
-        self.assertEqual('transition', result)
+        self.assertEqual('components', result)
 
     def test_provenance_catalog(self):
         pm = TransitionPropertyManager('test', username='TestUser')

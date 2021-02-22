@@ -628,7 +628,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
     def _model_merge(self, canonical: Any, other: [str, dict], left_on: str=None, right_on: str=None, on: str=None,
                      how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
                      seed: int=None) -> pd.DataFrame:
-        """ returns the full column values directly from another connector data source.
+        """ returns the full column values directly from another connector data source. The indicator parameter can be
+        used to mark the merged items.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. see context notes below
@@ -748,7 +749,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         constructed association to be used as reference for a sub category.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param analytics_model: the analytics model from discovery-transition-ds discovery model train
+        :param analytics_model: the analytics model from discovery-components-ds discovery model train
         :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
         :param seed: seed: (optional) a seed value for the random function: default to None
         :return: a DataFrame
@@ -1130,7 +1131,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
     def _correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, seed: int=None,
                         rtn_type: str=None):
-        """ correlate a column and join it with the result of the action
+        """ correlate a column and join it with the result of the action, This allows for composite values to be
+        build from. an example might be to take a forename and add the surname with a space separator to create a
+        composite name field, of to join two primary keys to create a single composite key.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: an ordered list of columns to join
@@ -1312,10 +1315,11 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_missing(self, canonical: Any,header: str, granularity: [int, float]=None, as_type: str=None,
+    def _correlate_missing(self, canonical: Any, header: str, granularity: [int, float]=None, as_type: str=None,
                            lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                            exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
-                           day_first: bool=None, year_first: bool=None, seed: int=None, rtn_type: str=None):
+                           day_first: bool=None, year_first: bool=None, seed: int=None,
+                           rtn_type: str=None):
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
@@ -1355,7 +1359,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         null_idx = s_values[s_values.isna()].index
         if as_type.startswith('int') or as_type.startswith('float') or as_type.startswith('num'):
             _analysis = DataAnalytics(DataDiscovery.analyse_number(s_values, granularity=granularity, lower=lower,
-                                                                   upper=upper, precision=precision,
+                                                                   upper=upper, detail_stats=False, precision=precision,
                                                                    exclude_dominant=exclude_dominant))
             s_values.iloc[null_idx] = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
                                                           relative_freq=_analysis.patterns.relative_freq,

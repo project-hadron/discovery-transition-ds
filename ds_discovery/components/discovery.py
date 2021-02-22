@@ -992,14 +992,13 @@ class DataDiscovery(object):
         """
         categories = pd.Series(categories)
         freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
-        nulls_list = ['<NA>', '', ' ', 'NaN', 'nan'] if not isinstance(nulls_list, list) else nulls_list
+        nulls_list = ['<NA>', '', ' ', 'NaN', 'nan', None] if not isinstance(nulls_list, list) else nulls_list
         replace_zero = 0 if not isinstance(replace_zero, (int, float)) else replace_zero
         lower = None if not isinstance(lower, (int, float)) else lower
         upper = None if not isinstance(upper, (int, float)) else upper
 
         _original_size = categories.size
-        for item in nulls_list:
-            categories.replace(item, np.nan, inplace=True)
+        categories.replace(nulls_list, np.nan, inplace=True, regex=True)
         categories = categories.dropna()
         nulls_percent = np.round(((_original_size - categories.size) / _original_size) * 100,
                                  freq_precision) if _original_size > 0 else 0
@@ -1053,8 +1052,8 @@ class DataDiscovery(object):
     @staticmethod
     def analyse_number(values: Any, granularity: [int, float, list]=None, lower: [int, float]=None,
                        upper: [int, float]=None, precision: int=None, freq_precision: int=None,
-                       dominant: [int, float, list]=None, exclude_dominant: bool=None, p_percent: float=None,
-                       replicates: int=None):
+                       dominant: [int, float, list]=None, exclude_dominant: bool=None, detail_stats: bool=None,
+                       p_percent: float=None, replicates: int=None):
         """Analyses a set of values and returns a dictionary of analytical statistics. Unless zero is not common,
         to avoid zero values skewing the weighting you should always consider 0 as a dominant value
 
@@ -1070,6 +1069,7 @@ class DataDiscovery(object):
         :param freq_precision: (optional) The precision of the relative freq values. by default set to 2.
         :param dominant: (optional) identify dominant value or list of values, can be empty if None, mode is dominant
         :param exclude_dominant: (optional) if the dominant values should be excluded from the weighting. Default False
+        :param detail_stats: (optional) statistics use boostrap confidence intervals and include outliers algorithms
         :param p_percent: the confidence interval p percent confidence intervals. Default to 0.95 for 95% CI
         :param replicates: confidence interval the number of replicates to run. default 1,000
         :return: a dictionary of results
@@ -1079,6 +1079,7 @@ class DataDiscovery(object):
         precision = 3 if not isinstance(precision, int) else precision
         freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
         granularity = 3 if not isinstance(granularity, (int, float, list)) or granularity == 0 else granularity
+        detail_stats = detail_stats if isinstance(detail_stats, bool) else True
         replicates = replicates if isinstance(replicates, int) else 1000
         p_percent = p_percent if isinstance(p_percent, float) and 0 <= p_percent <= 1 else 0.95
         _intervals = granularity
@@ -1123,19 +1124,15 @@ class DataDiscovery(object):
         else:
             _dominant_percent = np.round((_dominant_size / _values_size) * 100,
                                          freq_precision) if _values_size > 0 else 0
-
         # if there are no samples remaining
         if values.size == 0:
             _intervals = [(lower, upper, 'both')]
             return {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
                                'lowest': round(lower, precision), 'highest': round(upper, precision)},
-                    'params': {'precision': precision, 'freq_precision': freq_precision, 'bci_replicates': replicates,
-                               'bci_p_percent': p_percent},
-                    'patterns': {'relative_freq': [1], 'freq_mean_ci': [0],
-                                 'freq_std_ci': [0], 'sample_distribution': [0]},
+                    'params': {'precision': precision, 'freq_precision': freq_precision},
+                    'patterns': {'relative_freq': [1], 'freq_mean': [0], 'freq_std': [0], 'sample_distribution': [0]},
                     'stats': {'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
-                              'excluded_percent': _excluded_percent, 'mean_ci': (0, 0), 'std_ci': (0, 0),
-                              'irq_outliers': (0, 0), 'emp_outliers': (0, 0)}}
+                              'excluded_percent': _excluded_percent, 'mean': (0, 0), 'std': (0, 0)}}
         # granularity
         if isinstance(_intervals, (int, float)):
             # if granularity float then convert frequency to intervals
@@ -1190,39 +1187,52 @@ class DataDiscovery(object):
                 _mean_weights.append(0.0)
                 _std_weights.append(0.0)
             else:
-                _mean_weights.append(
-                    DataDiscovery.bootstrap_confidence_interval(interval_values, func=np.mean, precision=freq_precision,
-                                                                replicates=replicates, p_percent=p_percent))
-                _std_weights.append(
-                    DataDiscovery.bootstrap_confidence_interval(interval_values, func=np.std, precision=freq_precision,
-                                                                replicates=replicates, p_percent=p_percent))
+                # interal patterns
+                if detail_stats:
+                    _mean_weights.append(
+                        DataDiscovery.bootstrap_confidence_interval(interval_values, func=np.mean, p_percent=p_percent,
+                                                                    precision=freq_precision, replicates=replicates))
+                    _std_weights.append(
+                        DataDiscovery.bootstrap_confidence_interval(interval_values, func=np.std, p_percent=p_percent,
+                                                                    precision=freq_precision, replicates=replicates))
+                else:
+                    _mean_weights.append(np.mean(interval_values))
+                    _std_weights.append(np.std(interval_values))
         if len(_values_weights) == 0:
             _values_weights = [0]
         _values_weights = pd.Series(_values_weights)
         if values.size > 0:
             _values_weights = _values_weights.apply(lambda x: np.round((x / values.size) * 100, freq_precision))
-
-        # statistics
-        _mean = DataDiscovery.bootstrap_confidence_interval(values, func=np.mean, precision=freq_precision,
-                                                            replicates=replicates, p_percent=p_percent)
-        _std = DataDiscovery.bootstrap_confidence_interval(values, func=np.std, precision=freq_precision,
-                                                           replicates=replicates, p_percent=p_percent)
-        _o_low, _o_high = DataDiscovery.interquartile_outliers(values)
-        _outliers_irq = (len(_o_low), len(_o_high))
-        _o_low, _o_high = DataDiscovery.empirical_outliers(values)
-        _outliers_emp = (len(_o_low), len(_o_high))
         _intervals = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in _intervals]
         rtn_dict = {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
                                'lowest': round(lower, precision), 'highest': round(upper, precision)},
-                    'params': {'precision': precision, 'freq_precision': freq_precision, 'bci_replicates': replicates,
-                               'bci_p_percent': p_percent},
-                    'patterns': {'relative_freq': _values_weights.to_list(), 'freq_mean_bci': _mean_weights,
-                                 'freq_std_bci': _std_weights, 'sample_distribution': _sample_dist},
+                    'params': {'precision': precision, 'freq_precision': freq_precision},
+                    'patterns': {'relative_freq': _values_weights.to_list(), 'sample_distribution': _sample_dist},
                     'stats': {'nulls_percent': _nulls_percent, 'sample_size': values.size,
-                              'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent,
-                              'bci_mean': _mean, 'bci_std': _std, 'outliers_irq': _outliers_irq,
-                              'outliers_emp': _outliers_emp}}
-        if values.size >= 10:
+                              'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent}}
+        # statistics
+        if detail_stats:
+            rtn_dict.get('params')['bci_replicates'] = replicates
+            rtn_dict.get('params')['bci_p_percent'] = p_percent
+            rtn_dict.get('patterns')['freq_mean_bci'] = _mean_weights
+            rtn_dict.get('patterns')['freq_std_bci'] = _std_weights
+            _mean = DataDiscovery.bootstrap_confidence_interval(values, func=np.mean, precision=freq_precision,
+                                                                replicates=replicates, p_percent=p_percent)
+            rtn_dict.get('stats')['bci_mean'] = _mean
+            _std = DataDiscovery.bootstrap_confidence_interval(values, func=np.std, precision=freq_precision,
+                                                               replicates=replicates, p_percent=p_percent)
+            rtn_dict.get('stats')['bci_std'] = _std
+            _o_low, _o_high = DataDiscovery.interquartile_outliers(values)
+            rtn_dict.get('stats')['outliers_iqr'] = (len(_o_low), len(_o_high))
+            _o_low, _o_high = DataDiscovery.empirical_outliers(values)
+            rtn_dict.get('stats')['outliers_emp'] = (len(_o_low), len(_o_high))
+        else:
+            rtn_dict.get('stats')['mean'] = np.mean(values)
+            rtn_dict.get('stats')['std'] = np.std(values)
+            rtn_dict.get('patterns')['freq_mean'] = _mean_weights
+            rtn_dict.get('patterns')['freq_std'] = _std_weights
+        # normality
+        if values.size >= 10 and detail_stats:
             if values.size < 5000:
                 _, _p_value = DataDiscovery.shapiro_wilk_normality(values, precision=freq_precision)
                 rtn_dict.get('stats')['p_value_sharpo'] = _p_value
@@ -1234,6 +1244,7 @@ class DataDiscovery(object):
             rtn_dict.get('stats')['anderson_expon'] = list(_level)
             _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='logistic', precision=freq_precision)
             rtn_dict.get('stats')['anderson_logistic'] = list(_level)
+        # dominance
         if exclude_dominant:
             rtn_dict.get('patterns')['dominant_excluded'] = dominant
         else:
@@ -1244,8 +1255,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def analyse_date(values: Any, granularity: [int, float, pd.Timedelta]=None, lower: Any=None, upper: Any=None,
-                     day_first: bool=None, year_first: bool=None, date_format: str=None,
-                     freq_precision: int=None):
+                     day_first: bool=None, year_first: bool=None, date_format: str=None, freq_precision: int=None):
         """Analyses a set of dates and returns a dictionary of selection and weighting
 
         :param values: the values to analyse
@@ -1273,7 +1283,7 @@ class DataDiscovery(object):
         if isinstance(granularity, pd.Timedelta):
             granularity = mdates.date2num(mdates.num2date(lower) + granularity) - lower
         rtn_dict = DataDiscovery.analyse_number(values, granularity=granularity, lower=lower, upper=upper,
-                                                precision=10, freq_precision=freq_precision)
+                                                precision=10, freq_precision=freq_precision, detail_stats=False)
         # add the specific data
         rtn_dict.get('params')['day_first'] = False if not isinstance(day_first, bool) else day_first
         rtn_dict.get('params')['year_first'] = False if not isinstance(year_first, bool) else year_first
@@ -1289,26 +1299,24 @@ class DataDiscovery(object):
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
         rtn_dict.get('intent')['oldest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('intent')['lowest']))
         rtn_dict.get('intent')['latest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('intent')['highest']))
-        _mean_low, _mean_high = rtn_dict.get('stats')['bci_mean']
-        _mean_low = pd.Timestamp(mdates.num2date(_mean_low))
-        _mean_high = pd.Timestamp(mdates.num2date(_mean_high))
-        rtn_dict.get('stats')['bci_mean'] = (_mean_low, _mean_high)
+        rtn_dict.get('stats')['mean'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['mean']))
         if isinstance(date_format, str):
             rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
                                                     p[2]) for p in rtn_dict.get('intent')['intervals']]
-            rtn_dict.get('intent')['oldest'] = rtn_dict.get('intent')['lowest'].strftime(date_format)
-            rtn_dict.get('intent')['latest'] = rtn_dict.get('intent')['highest'].strftime(date_format)
-            rtn_dict.get('stats')['mean'] = rtn_dict.get('stats')['bci_mean'].strftime(date_format)
+            rtn_dict.get('intent')['oldest'] = rtn_dict.get('intent')['oldest'].strftime(date_format)
+            rtn_dict.get('intent')['latest'] = rtn_dict.get('intent')['latest'].strftime(date_format)
+            rtn_dict.get('stats')['mean'] = rtn_dict.get('stats')['mean'].strftime(date_format)
         rtn_dict.get('intent')['dtype'] = 'date'
         # remove things that don't make sense to dates
         rtn_dict.get('params').pop('precision', None)
         for label in ['dominant_excluded', 'dominant_values', 'dominance_freq', 'dominant_percent',
-                      'freq_std_bci', 'freq_mean_bci']:
+                      'freq_std', 'freq_mean']:
             rtn_dict.get('patterns').pop(label, None)
         return rtn_dict
 
     @staticmethod
-    def analyse_association(df: pd.DataFrame, columns_list: list, exclude_associate: list=None):
+    def analyse_association(df: pd.DataFrame, columns_list: list, exclude_associate: list=None, 
+                            detail_numeric: bool=None):
         """ Analyses the association of Category against Values and returns a dictionary of resulting weighting
         the structure of the columns_list is a list of dictionaries with the key words
             - label: the label or name of the header in the DataFrame
@@ -1321,7 +1329,9 @@ class DataDiscovery(object):
 
         :param df: the DataFrame to take the columns from
         :param columns_list: a dictionary structure of columns to select for association
-        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration (e.g. [age.
+        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration 
+                (e.g. ['age.gender.salary']
+        :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
         :return: an analytics model dictionary
         """
         tools = DataDiscovery
@@ -1368,10 +1378,11 @@ class DataDiscovery(object):
                     precision = kwargs.get('precision')
                     dominant = kwargs.get('dominant')
                     exclude_dominant = kwargs.get('exclude_dominant')
+                    detail_stats = kwargs.get('detail_stats', detail_numeric)
                     selection = 'intervals'
                     section['insight'] = tools.analyse_number(_df[label], granularity=granularity, lower=lower,
-                                                              upper=upper, precision=precision,
-                                                              freq_precision=freq_precision,
+                                                              upper=upper, detail_stats=detail_stats, 
+                                                              precision=precision, freq_precision=freq_precision,
                                                               dominant=dominant, exclude_dominant=exclude_dominant)
 
                 elif dtype.startswith('date'):
@@ -1381,8 +1392,7 @@ class DataDiscovery(object):
                     selection = 'intervals'
                     section['insight'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
                                                             upper=upper, day_first=day_first, year_first=year_first,
-                                                            freq_precision=freq_precision,
-                                                            date_format=date_format)
+                                                            freq_precision=freq_precision, date_format=date_format)
                 elif dtype.startswith('category'):
                     top = kwargs.get('top')
                     replace_zero = kwargs.get('replace_zero')
@@ -1505,33 +1515,6 @@ class DataDiscovery(object):
         if ignorecase is True:
             return df[df['search'].str.contains(find_name.lower())]
         return df[df['name'].str.contains(find_name)]
-
-    @staticmethod
-    def data_schema(analysis: dict, stylise: bool=True):
-        """ returns the schema dictionary as the canonical with optional style"""
-        return DataAnalytics(analysis=analysis)
-        # TODO:
-        # for section in da.attributes:
-        #     for item in
-        # if stylise:
-        #     style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-        #              {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        #     pd.set_option('max_colwidth', 200)
-        #     df_style = df.style.set_table_styles(style)
-        #     _ = df_style.applymap(DataDiscovery._highlight_null_dom, subset=['%_Null', '%_Dom'])
-        #     _ = df_style.applymap(lambda x: 'color: white' if x > 0.98 else 'color: black', subset=['%_Null', '%_Dom'])
-        #     if '%_Nxt' in df.columns:
-        #         _ = df_style.applymap(DataDiscovery._highlight_next, subset=['%_Nxt'])
-        #         _ = df_style.applymap(lambda x: 'color: white' if x < 0.02 else 'color: black', subset=['%_Nxt'])
-        #     _ = df_style.applymap(DataDiscovery._dtype_color, subset=['dType'])
-        #     _ = df_style.applymap(DataDiscovery._color_unique, subset=['Unique'])
-        #     _ = df_style.applymap(lambda x: 'color: white' if x < 2 else 'color: black', subset=['Unique'])
-        #     _ = df_style.format({'%_Null': "{:.1%}", '%_Dom': '{:.1%}', '%_Nxt': '{:.1%}'})
-        #     _ = df_style.set_caption('%_Dom: The % most dominant element - %_Nxt: The % next most dominant element')
-        #     _ = df_style.set_properties(subset=[next(k for k in report.keys() if 'Attributes' in k)],
-        #                                 **{'font-weight': 'bold', 'font-size': "120%"})
-        #     return df_style
-        # return df
 
     @staticmethod
     def data_dictionary(df, stylise: bool=False, inc_next_dom: bool=False, report_header: str=None,
