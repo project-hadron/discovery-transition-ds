@@ -994,9 +994,11 @@ class DataDiscovery(object):
         freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
         nulls_list = ['<NA>', '', ' ', 'NaN', 'nan', None] if not isinstance(nulls_list, list) else nulls_list
         replace_zero = 0 if not isinstance(replace_zero, (int, float)) else replace_zero
-        lower = None if not isinstance(lower, (int, float)) else lower
-        upper = None if not isinstance(upper, (int, float)) else upper
-
+        lower = lower if isinstance(lower, (int, float)) else None
+        upper = upper if isinstance(upper, (int, float)) else None
+        param_lower = lower
+        param_upper = upper
+        param_top = top if isinstance(top, int) else None
         _original_size = categories.size
         categories.replace(nulls_list, np.nan, inplace=True, regex=True)
         categories = categories.dropna()
@@ -1034,14 +1036,18 @@ class DataDiscovery(object):
             _weighting = [0]
         _lower = lower if isinstance(lower, (int, float)) else _weighting[-1]
         _upper = upper if isinstance(upper, (int, float)) else _weighting[0]
-        rtn_dict = {'intent': {'categories': value_count.index.to_list(), 'dtype': 'category', 'highest_unique': _upper,
-                               'lowest_unique': _lower, 'category_count': _granularity},
+        rtn_dict = {'intent': {'categories': value_count.index.to_list(), 'dtype': 'category'},
                     'params': {'freq_precision': freq_precision},
                     'patterns': {'relative_freq': _weighting, 'sample_distribution': _sample_dist},
-                    'stats': {'nulls_percent': nulls_percent, 'sample_size': sub_categories.size,
+                    'stats': {'category_count': _granularity, 'highest_unique': _upper, 'lowest_unique': _lower,
+                              'nulls_percent': nulls_percent,  'sample_size': sub_categories.size,
                               'excluded_percent': _outlier_percent}}
-        if isinstance(top, int):
-            rtn_dict.get('intent')['top'] = top
+        if isinstance(param_top, int):
+            rtn_dict.get('params')['top'] = top
+        if isinstance(param_lower, (int, float)):
+            rtn_dict.get('params')['lower'] = param_lower
+        if isinstance(param_upper, (int, float)):
+            rtn_dict.get('params')['upper'] = param_upper
         if replace_zero != 0:
             rtn_dict.get('params')['replace_zero'] = replace_zero
         if _outlier_count != 0:
@@ -1084,6 +1090,8 @@ class DataDiscovery(object):
         p_percent = p_percent if isinstance(p_percent, float) and 0 <= p_percent <= 1 else 0.95
         _intervals = granularity
         exclude_dominant = False if not isinstance(exclude_dominant, bool) else exclude_dominant
+        param_lower = None if not isinstance(lower, (int, float)) else lower
+        param_upper = None if not isinstance(upper, (int, float)) else upper
         # limits
         if values.size > 0:
             lower = values.min() if not isinstance(lower, (int, float)) else lower
@@ -1127,11 +1135,12 @@ class DataDiscovery(object):
         # if there are no samples remaining
         if values.size == 0:
             _intervals = [(lower, upper, 'both')]
-            return {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
-                               'lowest': round(lower, precision), 'highest': round(upper, precision)},
-                    'params': {'precision': precision, 'freq_precision': freq_precision},
+            return {'intent': {'intervals': _intervals, 'dtype': 'number'},
+                    'params': {'precision': precision, 'freq_precision': freq_precision, 'granularity': granularity,
+                               'detail_stats': detail_stats},
                     'patterns': {'relative_freq': [1], 'freq_mean': [0], 'freq_std': [0], 'sample_distribution': [0]},
-                    'stats': {'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
+                    'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
+                              'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
                               'excluded_percent': _excluded_percent, 'mean': (0, 0), 'std': (0, 0)}}
         # granularity
         if isinstance(_intervals, (int, float)):
@@ -1204,12 +1213,18 @@ class DataDiscovery(object):
         if values.size > 0:
             _values_weights = _values_weights.apply(lambda x: np.round((x / values.size) * 100, freq_precision))
         _intervals = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in _intervals]
-        rtn_dict = {'intent': {'intervals': _intervals, 'granularity': granularity, 'dtype': 'number',
-                               'lowest': round(lower, precision), 'highest': round(upper, precision)},
-                    'params': {'precision': precision, 'freq_precision': freq_precision},
+        rtn_dict = {'intent': {'intervals': _intervals, 'dtype': 'number'},
+                    'params': {'precision': precision, 'freq_precision': freq_precision, 'granularity': granularity,
+                               'detail_stats': detail_stats},
                     'patterns': {'relative_freq': _values_weights.to_list(), 'sample_distribution': _sample_dist},
-                    'stats': {'nulls_percent': _nulls_percent, 'sample_size': values.size,
+                    'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
+                              'nulls_percent': _nulls_percent, 'sample_size': values.size,
                               'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent}}
+        # params
+        if isinstance(param_lower, (int, float)):
+            rtn_dict.get('params')['lower'] = param_lower
+        if isinstance(param_upper, (int, float)):
+            rtn_dict.get('params')['upper'] = param_upper
         # statistics
         if detail_stats:
             rtn_dict.get('params')['bci_replicates'] = replicates
@@ -1297,14 +1312,18 @@ class DataDiscovery(object):
         rtn_dict.get('intent')['intervals'] = [(pd.Timestamp(mdates.num2date(p[0])),
                                                 pd.Timestamp(mdates.num2date(p[1])),
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
-        rtn_dict.get('intent')['oldest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('intent')['lowest']))
-        rtn_dict.get('intent')['latest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('intent')['highest']))
+        rtn_dict.get('params')['lower'] = pd.Timestamp(mdates.num2date(rtn_dict.get('params')['lower']))
+        rtn_dict.get('params')['upper'] = pd.Timestamp(mdates.num2date(rtn_dict.get('params')['upper']))
+        rtn_dict.get('stats')['oldest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['lowest']))
+        rtn_dict.get('stats')['latest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['highest']))
         rtn_dict.get('stats')['mean'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['mean']))
         if isinstance(date_format, str):
             rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
                                                     p[2]) for p in rtn_dict.get('intent')['intervals']]
-            rtn_dict.get('intent')['oldest'] = rtn_dict.get('intent')['oldest'].strftime(date_format)
-            rtn_dict.get('intent')['latest'] = rtn_dict.get('intent')['latest'].strftime(date_format)
+            rtn_dict.get('params')['lower'] = rtn_dict.get('params')['lower'].strftime(date_format)
+            rtn_dict.get('params')['upper'] = rtn_dict.get('params')['upper'].strftime(date_format)
+            rtn_dict.get('stats')['oldest'] = rtn_dict.get('stats')['oldest'].strftime(date_format)
+            rtn_dict.get('stats')['latest'] = rtn_dict.get('stats')['latest'].strftime(date_format)
             rtn_dict.get('stats')['mean'] = rtn_dict.get('stats')['mean'].strftime(date_format)
         rtn_dict.get('intent')['dtype'] = 'date'
         # remove things that don't make sense to dates

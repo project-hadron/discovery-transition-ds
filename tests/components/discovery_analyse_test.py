@@ -167,17 +167,20 @@ class DiscoveryAnalysisMethod(unittest.TestCase):
         # Default
         dataset = list(range(1,10))
         result = DataAnalytics(Discover.analyse_number(dataset))
-        pprint(result)
-        self.assertEqual(1, result.intent.lowest)
-        self.assertEqual(9, result.intent.highest)
+        self.assertEqual(1, result.stats.lowest)
+        self.assertEqual(9, result.stats.highest)
         # Outer Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=0, upper=10))
-        self.assertEqual(0, result.intent.lowest)
-        self.assertEqual(10, result.intent.highest)
+        self.assertEqual(0, result.params.lower)
+        self.assertEqual(10, result.params.upper)
+        self.assertEqual(0, result.stats.lowest)
+        self.assertEqual(10, result.stats.highest)
         # Inner Boundaries
         result = DataAnalytics(Discover.analyse_number(dataset, lower=2, upper=8))
-        self.assertEqual(2, result.intent.lowest)
-        self.assertEqual(8, result.intent.highest)
+        self.assertEqual(2, result.params.lower)
+        self.assertEqual(8, result.params.upper)
+        self.assertEqual(2, result.stats.lowest)
+        self.assertEqual(8, result.stats.highest)
 
     def test_analyse_date(self):
         tools = SyntheticBuilder.scratch_pad()
