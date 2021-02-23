@@ -741,6 +741,42 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         axis = 'index' if as_rows else 'columns'
         return pd.concat([canonical, df_rtn], axis=axis)
 
+    def _model_explode(self, canonical: Any, header: str, seed: int=None) -> pd.DataFrame:
+        """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
+        in the row list
+
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param header: the header of the column to be exploded
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :return: a pd.DataFrame
+
+        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
+        """
+        canonical = self._get_canonical(canonical)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        _seed = self._seed() if seed is None else seed
+        return canonical.explode(column=header, ignore_index=True)
+
     def _model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None,
                         seed: int=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)

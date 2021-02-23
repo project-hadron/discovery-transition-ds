@@ -2,7 +2,7 @@ import unittest
 import os
 import shutil
 import pandas as pd
-from ds_discovery import SyntheticBuilder
+from ds_discovery import SyntheticBuilder, Wrangle
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
@@ -152,6 +152,13 @@ class SyntheticIntentModelTest(unittest.TestCase):
         df = tools.model_group('titanic', headers=['fare', 'survived'], group_by='sex', aggregator='sum', include_weighting=True)
         self.assertEqual((2, 4), df.shape)
         self.assertCountEqual(['survived', 'sex', 'fare', 'weighting'], df.columns.to_list())
+
+    def test_model_explode(self):
+        df = pd.DataFrame({'A': [1,2,3], 'B': [[2,2], [3], [7,8,9]]})
+        wr = Wrangle.from_memory(default_save_intent=False)
+        df = wr.tools.model_explode(df, header='B')
+        self.assertEqual([1, 1, 2, 3, 3, 3], df['A'].to_list())
+        self.assertEqual([2, 2, 3, 7, 8, 9], df['B'].to_list())
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

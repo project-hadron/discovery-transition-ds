@@ -209,6 +209,19 @@ class IntentModelTest(unittest.TestCase):
         self.assertEqual(control.iloc[0,0], result.iloc[0,0])
         self.assertEqual(control.iloc[3,0], result.iloc[3,0])
 
+    def test_to_list_type(self):
+        clean = self.clean
+        df = pd.DataFrame()
+        df['X'] = ["['A', 'B']", "[1, 2, 3]", "['Fred', 'Jim']", "", " ", 'bob', 23, np.nan]
+        df['X'] = clean.to_list_type(df, headers='X')
+        self.assertEqual(['A', 'B'], df['X'][0])
+        self.assertEqual([1, 2, 3], df['X'][1])
+        self.assertEqual([], df['X'][3])
+        self.assertEqual([], df['X'][4])
+        self.assertEqual(['bob'], df['X'][5])
+        self.assertEqual([23], df['X'][6])
+        self.assertEqual([], df['X'][7])
+
     def test_to_str_type(self):
         clean = self.clean
         df = pd.DataFrame()

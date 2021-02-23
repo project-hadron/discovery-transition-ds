@@ -194,17 +194,6 @@ class Transition(AbstractCommonComponent):
         return self.discover.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
                                              report_header=report_header, condition=condition)
 
-    def report_canonical_schema(self, schema_name: str=None, stylise: bool=True):
-        """ presents the current canonical schema
-
-        :param schema_name: (optional) the name of the schema
-        :param stylise: if True present the report stylised.
-        :return: pd.DataFrame
-        """
-        schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
-        analytics = self.pm.get_canonical_schema(name=schema_name)
-        return self.discover.data_schema(analysis=analytics, stylise=stylise)
-
     def report_attributes(self, canonical, stylise: bool=True):
         """ generates a report on the attributes and any description provided
 

@@ -25,7 +25,7 @@ class AbstractSample(ABC):
         module = HandlerFactory.get_module(module_name=f"ds_discovery.sample.{reference}")
         if reference.startswith("lookup_"):
             return AbstractSample._select_list(selection=module.data, size=size, seed=seed, shuffle=shuffle)
-        df = pd.DataFrame.from_dict(module.data, orient='columns')
+        df = pd.DataFrame.from_dict(module.data)
         idx = df.index.to_list()
         selection = AbstractSample._select_list(selection=idx, size=size, seed=seed, shuffle=shuffle)
         rtn_df: pd.DataFrame = df.iloc[selection].reset_index(drop=True)
@@ -206,6 +206,7 @@ class MappedSample(AbstractSample):
         else:
             df_rtn.sort_values(by=['state_abbr', 'county'], inplace=True)
         return df_rtn.iloc[:size]
+
     @staticmethod
     def us_phone_code(size: int=None, shuffle: bool=False, seed: int=None) -> pd.DataFrame:
         """returns the first 'size' dataframe

@@ -463,6 +463,46 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_concat(seed=seed, **params)
 
+    def model_explode(self, canonical: Any, header: str, seed: int=None, save_intent: bool=None,
+                      column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                      remove_duplicates: bool=None) -> pd.DataFrame:
+        """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
+        in the row list
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param header: the header of the column to be exploded
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :return: a pd.DataFrame
+
+        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_explode(seed=seed, **params)
+
     def model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None, seed: int=None,
                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
