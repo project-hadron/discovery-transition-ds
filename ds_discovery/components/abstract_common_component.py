@@ -238,6 +238,3 @@ class AbstractCommonComponent(AbstractComponent):
         if stylise:
             return Commons.report(df, index_header='section', bold='label')
         return df
-
-
-

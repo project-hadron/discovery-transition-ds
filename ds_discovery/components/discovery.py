@@ -1114,7 +1114,7 @@ class DataDiscovery(object):
         values = values.loc[values.between(lower, upper, inclusive=True).values]
         _excluded_size = _original_size - _nulls_size - _values_size
         _excluded_percent = np.round(((_values_size - values.size) / _values_size) * 100,
-                                    freq_precision) if _values_size > 0 else 0
+                                     freq_precision) if _values_size > 0 else 0
         # dominance
         dominant = values.mode(dropna=True).to_list()[:10] if not isinstance(dominant, (int, float, list)) else dominant
         dominant = Commons.list_formatter(dominant)
@@ -1141,7 +1141,7 @@ class DataDiscovery(object):
                     'patterns': {'relative_freq': [1], 'freq_mean': [0], 'freq_std': [0], 'sample_distribution': [0]},
                     'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
                               'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
-                              'excluded_percent': _excluded_percent, 'mean': (0, 0), 'std': (0, 0)}}
+                              'excluded_percent': _excluded_percent, 'mean': 0, 'std': 0}}
         # granularity
         if isinstance(_intervals, (int, float)):
             # if granularity float then convert frequency to intervals
@@ -1242,8 +1242,8 @@ class DataDiscovery(object):
             _o_low, _o_high = DataDiscovery.empirical_outliers(values)
             rtn_dict.get('stats')['outliers_emp'] = (len(_o_low), len(_o_high))
         else:
-            rtn_dict.get('stats')['mean'] = np.mean(values)
-            rtn_dict.get('stats')['std'] = np.std(values)
+            rtn_dict.get('stats')['mean'] = np.round(np.mean(values), freq_precision)
+            rtn_dict.get('stats')['std'] = np.round(np.std(values), freq_precision)
             rtn_dict.get('patterns')['freq_mean'] = _mean_weights
             rtn_dict.get('patterns')['freq_std'] = _std_weights
         # normality

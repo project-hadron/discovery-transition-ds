@@ -841,7 +841,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 else:
                     result = []
                 # if the analysis was done with excluding dominance then se if they should be added back
-                if apply_bias and _analysis.patterns.is_attribute('dominant_excluded'):
+                if apply_bias and _analysis.patterns.is_element('dominant_excluded'):
                     _dom_percent = _analysis.patterns.dominant_percent/100
                     _dom_values = _analysis.patterns.dominant_excluded
                     if len(_dom_values) > 0:

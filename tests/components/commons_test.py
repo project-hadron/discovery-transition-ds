@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 from ds_discovery import SyntheticBuilder
-from ds_discovery.intent.synthetic_intent_model import SyntheticIntentModel
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 
 from ds_discovery.components.commons import Commons
 

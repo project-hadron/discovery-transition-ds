@@ -301,7 +301,7 @@ class ControllerIntentModel(AbstractIntentModel):
                 canonical = ct.load_source_canonical()
             canonical = ct.intent_model.run_intent_pipeline(canonical=canonical, measure=measure)
             if ct.pm.has_connector(measure):
-                ct.save_catalog_feature(feature_name=measure, canonical=canonical)
+                ct.save_persist_canonical(feature_name=measure, canonical=canonical)
             return canonical
         return
 
