@@ -145,6 +145,12 @@ class FeatureCatalog(AbstractCommonComponent):
             self.remove_intent(level=feature_name)
         return
 
+    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+        """Runs the components pipeline from source to persist"""
+        canonical = self.load_source_canonical()
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        self.save_persist_canonical(result)
+
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
         """ Creates a bootstrap Wrangle setup. Note this does not set the source
 

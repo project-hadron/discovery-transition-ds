@@ -178,6 +178,12 @@ class Transition(AbstractCommonComponent):
         self.pm_persist(save=save)
         return
 
+    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+        """Runs the components pipeline from source to persist"""
+        canonical = self.load_source_canonical()
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        self.save_persist_canonical(result)
+
     def canonical_report(self, canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's

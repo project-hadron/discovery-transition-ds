@@ -70,12 +70,6 @@ class AbstractCommonComponent(AbstractComponent):
                 self.set_persist()
         self.persist_canonical(connector_name=self.CONNECTOR_PERSIST, canonical=canonical, **kwargs)
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None):
-        """Runs the components pipeline from source to persist"""
-        canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
-        self.save_persist_canonical(result)
-
     def add_column_description(self, column_name: str, description: str, save: bool=None):
         """ adds a description note that is included in with the 'report_column_catalog'"""
         if isinstance(description, str) and description:

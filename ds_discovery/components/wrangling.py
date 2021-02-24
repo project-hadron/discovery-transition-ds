@@ -89,6 +89,12 @@ class Wrangle(AbstractCommonComponent):
             self.pm_persist(save)
         return
 
+    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+        """Runs the components pipeline from source to persist"""
+        canonical = self.load_source_canonical()
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        self.save_persist_canonical(result)
+
     def report_column_catalog(self, column_name: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract
 

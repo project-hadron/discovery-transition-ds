@@ -78,6 +78,12 @@ class ModelsBuilder(AbstractCommonComponent):
     def models(self) -> ModelsIntentModel:
         return self._intent_model
 
+    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+        """Runs the components pipeline from source to persist"""
+        canonical = self.load_source_canonical()
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        self.save_persist_canonical(result)
+
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
         """ Creates a bootstrap simulator with a SyntheticBuilder. Note this does not set the source
 
