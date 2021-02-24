@@ -31,13 +31,14 @@ class SyntheticIntentModel(WrangleIntentModel):
                          default_intent_level=default_intent_level, order_next_available=order_next_available,
                          default_replace_intent=default_replace_intent)
 
-    def run_intent_pipeline(self, size: int=None, columns: [str, list]=None, seed: int=None) -> pd.DataFrame:
+    def run_intent_pipeline(self, size: int=None, intent_levels: [str, int, list]=None, seed: int=None,
+                            **kwargs) -> pd.DataFrame:
         """Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract. The whole run can be seeded though any parameterised seeding in the intent
         contracts will take precedence
 
         :param size: the size of the outcome data set
-        :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param intent_levels: (optional) a single or list of intent_level to run, if list, run in order given
         :param seed: a seed value that will be applied across the run: default to None
         :return: a pandas dataframe
         """
@@ -47,8 +48,8 @@ class SyntheticIntentModel(WrangleIntentModel):
             # size
             size = size if isinstance(size, int) else 1000
             # get the list of levels to run
-            if isinstance(columns, (str, list)):
-                column_names = self._pm.list_formatter(columns)
+            if isinstance(intent_levels, (str, list)):
+                column_names = self._pm.list_formatter(intent_levels)
             else:
                 # put all the intent in order of model, get, correlate, associate
                 _model = []

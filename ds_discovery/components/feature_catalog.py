@@ -4,6 +4,7 @@ import pandas as pd
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 from aistac.handlers.abstract_handlers import ConnectorContract
 
+from ds_discovery.components.commons import Commons
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
 from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 
@@ -145,11 +146,30 @@ class FeatureCatalog(AbstractCommonComponent):
             self.remove_intent(level=feature_name)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
-        """Runs the components pipeline from source to persist"""
-        canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
-        self.save_persist_canonical(result)
+    def run_component_pipeline(self, canonical: pd.DataFrame=None, feature_names: [str, list]=None,
+                               auto_connectors: bool=None, save: bool=None):
+        """runs all features within the feature catalog or an optional set of features
+
+        :param canonical: (optional) A canonical if the source canonical isn't to be used
+        :param feature_names: (optional) a single or list of features to run
+        :param auto_connectors: (optional) Adds a versioned feature connector if not yet added. Default to True
+        :param save: (optional) if True, persist changes to property manager. Default is True
+        """
+        auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
+        if isinstance(feature_names, (str, list)):
+            feature_names = Commons.list_formatter(feature_names)
+        else:
+            feature_names = Commons.list_formatter(self.pm.get_intent())
+        if not isinstance(canonical, (pd.DataFrame, str)):
+            canonical = self.load_source_canonical()
+        for feature in feature_names:
+            if not self.pm.has_connector(feature):
+                if not auto_connectors:
+                    continue
+                self.set_feature_bootstrap(feature_name=feature, versioned=True, save=save)
+            result = self.intent_model.run_intent_pipeline(canonical, feature)
+            self.save_catalog_feature(feature_name=feature, canonical=result)
+        return
 
     def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
         """ Creates a bootstrap Wrangle setup. Note this does not set the source

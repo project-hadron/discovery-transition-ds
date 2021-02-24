@@ -17,29 +17,6 @@ class EventBookPortfolio(AbstractCommonComponent):
     __book_portfolio = dict()
     BOOK_TEMPLATE_CONNECTOR = 'book_template_connector'
 
-    def __init__(self, property_manager: EventBookPropertyManager, intent_model: EventBookIntentModel,
-                 default_save=None, reset_templates: bool = None, template_path: str = None,
-                 template_module: str = None,
-                 template_source_handler: str = None, template_persist_handler: str = None,
-                 align_connectors: bool = None):
-        """ Encapsulation class for the components set of classes
-
-        :param property_manager: The contract property manager instance for this component
-        :param intent_model: the model codebase containing the parameterizable intent
-        :param default_save: The default behaviour of persisting the contracts:
-                    if False: The connector contracts are kept in memory (useful for restricted file systems)
-        :param reset_templates: (optional) reset connector templates from environ variables (see `report_environ()`)
-        :param template_path: (optional) a template path to use if the environment variable does not exist
-        :param template_module: (optional) a template module to use if the environment variable does not exist
-        :param template_source_handler: (optional) a template source handler to use if no environment variable
-        :param template_persist_handler: (optional) a template persist handler to use if no environment variable
-        :param align_connectors: (optional) resets aligned connectors to the template
-        """
-        super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
-                         reset_templates=reset_templates, template_path=template_path, template_module=template_module,
-                         template_source_handler=template_source_handler,
-                         template_persist_handler=template_persist_handler, align_connectors=align_connectors)
-
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
@@ -241,44 +218,6 @@ class EventBookPortfolio(AbstractCommonComponent):
 
     def decrement_event(self, book_name: str, event: Any):
         return self.get_active_book(book_name=book_name).decrement_event(event=event)
-
-    def report_connectors(self, connector_filter: [str, list]=None, stylise: bool=True):
-        """ generates a report on the source contract
-
-        :param connector_filter: (optional) filters on the connector name.
-        :param stylise: (optional) returns a stylised DataFrame with formatting
-        :return: pd.DataFrame
-        """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        df = pd.DataFrame.from_dict(data=self.pm.report_connectors(connector_filter=connector_filter), orient='columns')
-        if stylise:
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['connector_name'], **{'font-weight': 'bold'})
-            return df_style
-        else:
-            df.set_index(keys='connector_name', inplace=True)
-        return df
-
-    def report_run_book(self, stylise: bool=True):
-        """ generates a report on all the intent
-
-        :param stylise: returns a stylised dataframe with formatting
-        :return: pd.Dataframe
-        """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
-                 {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
-        df = pd.DataFrame.from_dict(data=self.pm.report_run_book(), orient='columns')
-        if stylise:
-            index = df[df['name'].duplicated()].index.to_list()
-            df.loc[index, 'name'] = ''
-            df = df.reset_index(drop=True)
-            df_style = df.style.set_table_styles(style).set_properties(**{'text-align': 'left'})
-            _ = df_style.set_properties(subset=['name'],  **{'font-weight': 'bold', 'font-size': "120%"})
-            return df_style
-        return df
 
     def report_portfolio(self, stylise: bool=True):
         """ generates a report on all the intent

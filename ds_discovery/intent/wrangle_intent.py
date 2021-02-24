@@ -30,21 +30,22 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                          default_intent_level=default_intent_level, default_intent_order=default_intent_order,
                          default_replace_intent=default_replace_intent)
 
-    def run_intent_pipeline(self, columns: [str, list]=None, seed: int=None, **kwargs) -> pd.DataFrame:
+    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, seed: int=None,
+                            **kwargs) -> pd.DataFrame:
         """Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract. The whole run can be seeded though any parameterised seeding in the intent
         contracts will take precedence
 
-        :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param canonical: this is the iterative value all intent are applied to and returned.
+        :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
         :param seed: a seed value that will be applied across the run: default to None
         :return: a pandas dataframe
         """
-        df = pd.DataFrame()
         # test if there is any intent to run
         if self._pm.has_intent():
             # get the list of levels to run
-            if isinstance(columns, (str, list)):
-                column_names = self._pm.list_formatter(columns)
+            if isinstance(intent_levels, (int, str, list)):
+                column_names = self._pm.list_formatter(intent_levels)
             else:
                 # put all the intent in order of model, get, correlate, associate
                 _model = []
@@ -91,8 +92,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                 df = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
                                           globals(), locals())
                                 continue
-                            df[column] = result
-        return df
+                            canonical[column] = result
+        return canonical
 
     def frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,

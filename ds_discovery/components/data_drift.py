@@ -98,7 +98,7 @@ class DataDrift(AbstractCommonComponent):
         """The properties manager instance"""
         return self._component_pm
 
-    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the components pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)

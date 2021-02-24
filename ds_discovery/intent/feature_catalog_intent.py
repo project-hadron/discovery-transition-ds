@@ -40,9 +40,8 @@ class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: Any, feature_name: [int, str],
-                            train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
-                            **kwargs) -> [pd.DataFrame, pd.Series]:
+    def run_intent_pipeline(self, canonical: Any, feature_name: [int, str], train_size: [float, int]=None,
+                            seed: int=None, shuffle: bool=None, **kwargs) -> [pd.DataFrame, pd.Series]:
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
