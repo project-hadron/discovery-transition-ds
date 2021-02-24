@@ -221,6 +221,10 @@ class IntentModelTest(unittest.TestCase):
         self.assertEqual(['bob'], df['X'][5])
         self.assertEqual([23], df['X'][6])
         self.assertEqual([], df['X'][7])
+        # test it is idempotent
+        df['X'] = clean.to_list_type(df, headers='X')
+        self.assertEqual(['A', 'B'], df['X'][0])
+        self.assertEqual([1, 2, 3], df['X'][1])
 
     def test_to_str_type(self):
         clean = self.clean

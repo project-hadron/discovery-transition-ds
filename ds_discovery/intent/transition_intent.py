@@ -639,7 +639,11 @@ class TransitionIntentModel(AbstractIntentModel):
             for item in nulls_list:
                 df[c] = df[c].replace(item, fill_nulls)
             df[c].loc[df[c].isna()] = '[]'
-            df[c] = [ast.literal_eval(x) if isinstance(x, str) and x.startswith('[') and x.endswith(']') else [x] for x in df[c]]
+
+            df[c] = [ast.literal_eval(x) if isinstance(x, str) and
+                                            x.startswith('[') and x.endswith(']') else x for x in df[c]]
+            # replace all other items with list
+            df[c] = [x if isinstance(x, list) else [x] for x in df[c]]
             df[c] = df[c].astype('object')
         if not inplace:
             return df
