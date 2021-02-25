@@ -88,10 +88,13 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         df = pd.DataFrame(data=[1, 2, 3, 4, 5, 6, 7, 8, 9, 0], columns=['numbers'])
         result = tools.correlate_numbers(df, 'numbers', offset=1, precision=0)
         self.assertEqual([2,3,4,5,6,7,8,9,10,1], result)
-        # multiply offset
+        # str offset
         df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', offset=2, multiply_offset=True, precision=0)
-        self.assertEqual([2,4,6,8], result)
+        result = tools.correlate_numbers(df, 'numbers', offset='1-@', precision=0)
+        self.assertEqual([0,-1,-2,-3], result)
+        # complex str offset
+        result = tools.correlate_numbers(df, 'numbers', offset='x + 2 if x <= 2 else x', precision=0)
+        self.assertEqual([3, 4, 3, 4], result)
         # jitter
         df = pd.DataFrame(data=[2] * 1000, columns=['numbers'])
         result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=0)

@@ -35,7 +35,7 @@ def find_version(*file_paths):
 
 
 setup(
-    name='discovery-components-ds',
+    name='discovery-transition-ds',
     version=find_version('ds_discovery', '__init__.py'),
     description='Advanced data cleaning, data wrangling and feature extraction tools for ML engineers',
     long_description=read('README.rst'),
@@ -46,10 +46,9 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
         'Intended Audience :: Science/Research',
-        'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Adaptive Technologies',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
@@ -63,7 +62,7 @@ setup(
         # If any package contains *.yaml or *.csv files, include them:
         '': ['*.yaml', '*.csv'],
     },
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     install_requires=[
         'aistac-foundation',
         'pandas',

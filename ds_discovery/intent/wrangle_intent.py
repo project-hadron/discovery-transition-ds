@@ -1104,8 +1104,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_missing(seed=seed, **params)
 
-    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
-                          jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
+    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: [int, float, str]=None,
+                          jitter: float=None, jitter_freq: list=None, precision: int=None,
                           replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -1116,10 +1116,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
         :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
-        :param offset: (optional) how far from the value to offset. defaults to zero
+        :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
-        :param multiply_offset: (optional) if true then the offset is multiplied else added
         :param precision: (optional) how many decimal places. default to 3
         :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
@@ -1139,6 +1138,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
+
+        The offset can be a numeric offset that is added to the value, e.g. passing 2 will add 2 to all values.
+        If a string is passed if format should be a calculation with the '@' character used to represent the column
+        value. e.g.
+            '1-@' would subtract the column value from 1,
+            '@*0.5' would multiply the column value by 0.5
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:

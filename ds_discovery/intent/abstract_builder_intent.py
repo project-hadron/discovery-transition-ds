@@ -1425,8 +1425,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: float=None,
-                           jitter: float=None, jitter_freq: list=None, multiply_offset: bool=None, precision: int=None,
+    def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: [int, float, str]=None,
+                           jitter: float=None, jitter_freq: list=None, precision: int=None,
                            replace_nulls: [int, float]=None, seed: int=None,  keep_zero: bool=None,
                            min_value: [int, float]=None, max_value: [int, float]=None, rtn_type: str=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
@@ -1435,10 +1435,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
         :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
-        :param offset: (optional) how far from the value to offset. defaults to zero
+        :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
-        :param multiply_offset: (optional) if true then the offset is multiplied else added
         :param precision: (optional) how many decimal places. default to 3
         :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
@@ -1448,6 +1447,12 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
+
+        The offset can be a numeric offset that is added to the value, e.g. passing 2 will add 2 to all values.
+        If a string is passed if format should be a calculation with the '@' character used to represent the column
+        value. e.g.
+            '1-@' would subtract the column value from 1,
+            '@*0.5' would multiply the column value by 0.5
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
@@ -1482,14 +1487,16 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                              f"Use the 'to_numeric' parameter if appropriate")
         keep_zero = keep_zero if isinstance(keep_zero, bool) else False
         precision = precision if isinstance(precision, int) else 3
-        action = 'multiply' if isinstance(multiply_offset, bool) and multiply_offset else 'add'
         _seed = seed if isinstance(seed, int) else self._seed()
         if isinstance(replace_nulls, (int, float)):
             s_values[s_values.isna()] = replace_nulls
         null_idx = s_values[s_values.isna()].index
         zero_idx = s_values.where(s_values == 0).dropna().index if keep_zero else []
         if isinstance(offset, (int, float)) and offset != 0:
-            s_values = s_values.mul(offset) if action == 'multiply' else s_values.add(offset)
+            s_values = s_values.add(offset)
+        elif isinstance(offset, str):
+            offset = offset.replace("@", 'x')
+            s_values = s_values.apply(lambda x: eval(offset))
         if isinstance(jitter, (int, float)) and jitter != 0:
             sample = self._get_number(-abs(jitter) / 2, abs(jitter) / 2, relative_freq=jitter_freq,
                                       size=s_values.size, seed=_seed)
