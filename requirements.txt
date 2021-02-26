@@ -5,16 +5,20 @@
 ###### Requirements without Version Specifiers ######
 setuptools
 aistac-foundation
-pyyaml
+# Data Science packages
 pandas
 numpy
 scikit-learn
 matplotlib
 seaborn
 scipy
+# S3 packages
 boto3
 botocore
-
+fsspec
+s3fs
+#
+pyyaml
 
 # SQl and HTML libs
 #sqlalchemy
