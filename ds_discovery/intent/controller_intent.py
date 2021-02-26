@@ -209,8 +209,8 @@ class ControllerIntentModel(AbstractIntentModel):
         # create the event book
         if isinstance(run_task, bool) and run_task:
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
-            wr: Wrangle = eval(f"Transition.from_env(task_name=task_name, default_save=False, has_contract=True, "
-                                  f"**{params})", globals(), locals())
+            wr: Wrangle = eval(f"Wrangle.from_env(task_name=task_name, default_save=False, has_contract=True, "
+                               f"**{params})", globals(), locals())
             if canonical.shape == (0, 0):
                 canonical = wr.load_source_canonical()
             canonical = wr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
