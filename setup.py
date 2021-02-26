@@ -73,8 +73,8 @@ setup(
         'scipy',
         'boto3',
         'botocore',
-        'fsspec'
-        's3fs'
+        'fsspec',
+        's3fs',
         'pyyaml',
     ],
     extras_require={},
