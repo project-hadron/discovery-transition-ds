@@ -82,15 +82,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                 result = eval(f"self.{method}(size=size, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('correlate_'):
-                                result = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
+                                result = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('model_'):
-                                df = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
-                                          globals(), locals())
+                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                 globals(), locals())
                                 continue
                             elif str(method).startswith('frame_'):
-                                df = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
-                                          globals(), locals())
+                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                 globals(), locals())
                                 continue
                             canonical[column] = result
         return canonical
@@ -473,6 +473,16 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header of the column to be exploded
         :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of

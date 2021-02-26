@@ -441,7 +441,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        return Commons.filter_columns(df=canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+        return Commons.filter_columns(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                       regex=regex, re_ignore_case=re_ignore_case)
 
     def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None, selection: list=None,

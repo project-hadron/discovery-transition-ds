@@ -49,7 +49,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             size = size if isinstance(size, int) else 1000
             # get the list of levels to run
             if isinstance(intent_levels, (str, list)):
-                column_names = self._pm.list_formatter(intent_levels)
+                column_names = Commons.list_formatter(intent_levels)
             else:
                 # put all the intent in order of model, get, correlate, associate
                 _model = []

@@ -9,4 +9,4 @@ from ds_discovery.components.models_builder import ModelsBuilder
 from ds_discovery.components.controller import Controller
 
 # release version number picked up in the setup.py
-__version__ = "3.02.008"
+__version__ = "3.02.010"

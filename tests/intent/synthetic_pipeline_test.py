@@ -39,14 +39,16 @@ class SyntheticPipelineTest(unittest.TestCase):
         tools.get_number(1, 2, size=size, column_name='numbers')
         tools.get_category(selection=['M'], column_name='gender')
         sb.set_persist()
-        sb.run_synthetic_pipeline(size=size)
-        result = sb.load_synthetic_canonical()
+        sb.run_component_pipeline(size=size)
+        result = sb.load_persist_canonical()
         self.assertEqual((size, 2), result.shape)
         self.assertCountEqual(['numbers', 'gender'], result.columns)
         self.assertEqual('M', result['gender'].value_counts().index[0])
         self.assertEqual(size, result['gender'].value_counts().values[0])
         self.assertEqual(1, result['numbers'].value_counts().index[0])
         self.assertEqual(size, result['numbers'].value_counts().values[0])
+        tools.frame_selection(result, headers=['numbers', 'gender'], column_name='selection')
+        sb.run_component_pipeline(size=size)
 
     def test_run_intent_pipeline_get(self):
         sb = self.builder

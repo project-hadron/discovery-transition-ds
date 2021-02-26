@@ -285,7 +285,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                 task_name = data.pop('task_name', None)
                 if task_name is None:
                     raise ValueError(f"The data method '@generate' requires a 'task_name' key.")
-                uri_pm_repo = data.pop('uri_pm_repo', None)
+                uri_pm_repo = data.pop('repo_uri', None)
                 module = HandlerFactory.get_module(module_name='ds_discovery')
                 inst = module.SyntheticBuilder.from_env(task_name=task_name, uri_pm_repo=uri_pm_repo,
                                                         default_save=False)
