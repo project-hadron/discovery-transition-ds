@@ -263,6 +263,56 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         rtn_list = list(generator.normal(loc=mean, scale=std, size=size))
         return rtn_list
 
+    def _get_dist_logistic(self, mean: float, std: float, size: int=None, seed: int=None) -> list:
+        """A logistic continuous random distribution.
+
+        :param mean: The mean (“centre”) of the distribution.
+        :param std: The standard deviation (jitter or “width”) of the distribution. Must be >= 0
+        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+        :param seed: a seed value for the random function: default to None
+        :return: a random number
+        """
+        size = 1 if size is None else size
+        _seed = self._seed() if seed is None else seed
+        generator = np.random.default_rng(seed=_seed)
+        rtn_list = list(generator.logistic(loc=mean, scale=std, size=size))
+        return rtn_list
+
+    def _get_dist_exponential(self, scale: [int, float], size: int=None, seed: int=None) -> list:
+        """An exponential continuous random distribution.
+
+        :param mean: The mean (“centre”) of the distribution.
+        :param std: The standard deviation (jitter or “width”) of the distribution. Must be >= 0
+        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+        :param seed: a seed value for the random function: default to None
+        :return: a random number
+        """
+        size = 1 if size is None else size
+        _seed = self._seed() if seed is None else seed
+        generator = np.random.default_rng(seed=_seed)
+        rtn_list = list(generator.exponential(scale=scale, size=size))
+        return rtn_list
+
+    def _get_dist_gumbel(self, mean: float, std: float, size: int=None, seed: int=None) -> list:
+        """An gumbel continuous random distribution.
+
+        The Gumbel (or Smallest Extreme Value (SEV) or the Smallest Extreme Value Type I) distribution is one of
+        a class of Generalized Extreme Value (GEV) distributions used in modeling extreme value problems.
+        The Gumbel is a special case of the Extreme Value Type I distribution for maximums from distributions
+        with “exponential-like” tails.
+
+        :param mean: The mean (“centre”) of the distribution.
+        :param std: The standard deviation (jitter or “width”) of the distribution. Must be >= 0
+        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+        :param seed: a seed value for the random function: default to None
+        :return: a random number
+        """
+        size = 1 if size is None else size
+        _seed = self._seed() if seed is None else seed
+        generator = np.random.default_rng(seed=_seed)
+        rtn_list = list(generator.gumbel(loc=mean, scale=std, size=size))
+        return rtn_list
+
     def _get_dist_binomial(self, trials: int, probability: float, size: int=None, seed: int=None) -> list:
         """A binomial discrete random distribution. The Binomial Distribution represents the number of
            successes and failures in n independent Bernoulli trials for some given value of n
@@ -1815,7 +1865,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return result
 
     @staticmethod
-    def _seed(seed: int, increment: bool=False):
+    def _seed(seed: int=None, increment: bool=False):
         if not isinstance(seed, int):
             return int(time.time() * np.random.default_rng().random())
         if increment:

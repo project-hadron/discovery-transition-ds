@@ -46,11 +46,11 @@ class TestDiscovery(unittest.TestCase):
         # print(result)
         # result = DataDiscovery.dagostinos_k2_normality(norm)
         # print(result)
-        result = DataDiscovery.anderson_darling_normality(norm, dist='norm')
+        result = DataDiscovery.anderson_darling_tests(norm, dist='norm')
         print(result)
-        result = DataDiscovery.anderson_darling_normality(expo, dist='expon')
+        result = DataDiscovery.anderson_darling_tests(expo, dist='expon')
         print(result)
-        result = DataDiscovery.anderson_darling_normality(logistic, dist='logistic')
+        result = DataDiscovery.anderson_darling_tests(logistic, dist='logistic')
         print(result)
 
     def test_interquartile_outliers(self):

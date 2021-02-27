@@ -12,6 +12,17 @@ __author__ = 'Darryl Oatridge'
 
 class AbstractCommonsIntentModel(AbstractIntentModel):
 
+    @classmethod
+    def __dir__(cls):
+        """returns the list of available methods associated with the parameterized intent"""
+        rtn_list = []
+        for m in dir(cls):
+            if m.startswith('_get'):
+                rtn_list.append(m)
+            elif not m.startswith('_'):
+                rtn_list.append(m)
+        return rtn_list
+
     @abstractmethod
     def run_intent_pipeline(self, *args, **kwargs) -> [None, tuple]:
         """ Collectively runs all parameterised intent taken from the property manager against the code base as

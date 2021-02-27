@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 from aistac import ConnectorContract
 
-from ds_discovery import SyntheticBuilder
-from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+from ds_discovery import Wrangle, SyntheticBuilder
+from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from aistac.properties.property_manager import PropertyManager
 
 
-class SyntheticIntentCorrelateTest(unittest.TestCase):
+class WrangleIntentCorrelateTest(unittest.TestCase):
 
     def setUp(self):
         os.environ['HADRON_PM_PATH'] = os.path.join('work', 'config')
@@ -29,14 +29,14 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
             pass
 
     @property
-    def tools(self) -> SyntheticIntentModel:
-        return SyntheticBuilder.scratch_pad()
+    def tools(self) -> WrangleIntentModel:
+        return Wrangle.scratch_pad()
 
     def test_runs(self):
         """Basic smoke test"""
-        im = SyntheticBuilder.from_env('tester', default_save=False, default_save_intent=False,
-                                       reset_templates=False, has_contract=False).intent_model
-        self.assertTrue(SyntheticIntentModel, type(im))
+        im = Wrangle.from_env('tester', default_save=False, default_save_intent=False,
+                              reset_templates=False, has_contract=False).intent_model
+        self.assertTrue(WrangleIntentModel, type(im))
 
     def test_correlate_choice(self):
         tools = self.tools
@@ -100,14 +100,14 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=0)
         self.assertLessEqual(max(result), 4)
         self.assertGreaterEqual(min(result), 0)
-        df = pd.DataFrame(data=tools.get_number(99999, size=5000), columns=['numbers'])
+        df = pd.DataFrame(data=tools._get_number(99999, size=5000), columns=['numbers'])
         result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=1)
         self.assertNotEqual(df['numbers'].to_list(), result)
         self.assertEqual(5000, len(result))
         for index in range(len(result)):
             loss = abs(df['numbers'][index] - result[index])
             self.assertLessEqual(loss, 5)
-        df = pd.DataFrame(data=tools.get_number(99999, size=5000), columns=['numbers'])
+        df = pd.DataFrame(data=tools._get_number(99999, size=5000), columns=['numbers'])
         result = tools.correlate_numbers(df, 'numbers', jitter=1, precision=1)
         self.assertNotEqual(df['numbers'].to_list(), result)
         self.assertEqual(5000, len(result))
@@ -172,25 +172,22 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action)
         self.assertIn(result[0], list("HIJ"))
         self.assertTrue(0 <= result[3] < 10)
-        df = pd.DataFrame(columns=['cat'], data=tools.get_category(selection=list("ABCDE"), size=5000))
+        df = pd.DataFrame(columns=['cat'], data=tools._get_category(selection=list("ABCDE"), size=5000))
         result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action)
         self.assertEqual(5000, len(result))
 
     def test_correlate_categories_builder(self):
-        builder = SyntheticBuilder.from_env('test', has_contract=False)
-        from ds_engines.handlers.event_handlers import EventPersistHandler
+        builder = Wrangle.from_env('test', has_contract=False)
         builder.set_persist_contract(ConnectorContract(uri="eb://synthetic_members", module_name='ds_engines.handlers.event_handlers', handler='EventPersistHandler'))
-        sample_size = 10
         df = pd.DataFrame()
-        df['pcp_tax_id'] = builder.tools.get_category(selection=[993406113, 133757370, 260089066, 448512481, 546434723],
-                                                      size=sample_size, column_name='pcp_tax_id')
+        df['pcp_tax_id'] = [993406113, 133757370, 260089066, 448512481, 546434723] * 2
         correlations = [993406113, 133757370, 260089066, 448512481, 546434723]
         actions = {0: 'LABCORP OF AMERICA', 1: 'LPCH MEDICAL GROUP', 2: 'ST JOSEPH HERITAGE MEDICAL',
                    3: 'MONARCH HEALTHCARE', 4: 'PRIVIA MEICAL GROUP'}
         df['pcp_name'] = builder.tools.correlate_categories(df, header='pcp_tax_id', correlations=correlations,
                                                             actions=actions, column_name='pcp_name')
-        df = builder.tools.run_intent_pipeline(size=100)
-        self.assertEqual((100,2), df.shape)
+        result = builder.tools.run_intent_pipeline(df)
+        self.assertEqual((10,2), result.shape)
 
     def test_correlate_categories_multi(self):
         tools = self.tools
@@ -203,9 +200,10 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
 
     def test_correlate_categories_nulls(self):
         tools = self.tools
+        builder = SyntheticBuilder.from_memory().tools
         df = pd.DataFrame()
-        df['pcp_tax_id'] = tools.get_category(selection=['993406113', '133757370', '260089066', '448512481', '546434723'],
-                                              quantity=0.9, size=100, column_name='pcp_tax_id')
+        df['pcp_tax_id'] = builder.get_category(selection=['993406113', '133757370', '260089066', '448512481', '546434723'],
+                                                quantity=0.9, size=100, column_name='pcp_tax_id')
         correlations = ['993406113', '133757370', '260089066', '448512481', '546434723']
         actions = {0: 'LABCORP OF AMERICA', 1: 'LPCH MEDICAL GROUP', 2: 'ST JOSEPH HERITAGE MEDICAL',
                    3: 'MONARCH HEALTHCARE', 4: 'PRIVIA MEICAL GROUP'}
@@ -234,7 +232,7 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_dates(df, 'dates', offset={'years': -1, 'months': 2}, date_format='%Y/%m/%d')
         self.assertEqual(['2018/03/30', '2018/04/12', '2018/05/07', '2018/05/07'], result)
         # jitter
-        df = pd.DataFrame(columns=['dates'], data=tools.get_datetime("2018/01/01,", '2018/01/02', size=1000))
+        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01,", '2018/01/02', size=1000))
         result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D')
         loss = pd.Series(result) - df['dates']
         self.assertEqual(5, loss.value_counts().size)
@@ -255,7 +253,7 @@ class SyntheticIntentCorrelateTest(unittest.TestCase):
     def test_correlate_date_min_max(self):
         tools = self.tools
         # control
-        df = pd.DataFrame(columns=['dates'], data=tools.get_datetime("2018/01/01", '2018/01/02', size=1000))
+        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01", '2018/01/02', size=1000))
         result = tools.correlate_dates(df, 'dates', jitter=5, date_format='%Y/%m/%d')
         self.assertEqual("2017/12/30", pd.Series(result).min())
         # min

@@ -627,7 +627,7 @@ class DataDiscovery(object):
         return stats, p_values
 
     @staticmethod
-    def anderson_darling_normality(values: pd.Series, dist: str=None, precision: int=None) -> (float, list, list):
+    def anderson_darling_tests(values: pd.Series, dist: str=None, precision: int=None) -> (float, list, list):
         """Anderson-Darling Test is a statistical test that can be used to evaluate whether a data sample comes from
         one of among many known data samples, named for Theodore Anderson and Donald Darling.
 
@@ -1222,9 +1222,9 @@ class DataDiscovery(object):
                               'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent}}
         # params
         if isinstance(param_lower, (int, float)):
-            rtn_dict.get('params')['lower'] = param_lower
+            rtn_dict.get('params')['lower'] = round(param_lower, freq_precision)
         if isinstance(param_upper, (int, float)):
-            rtn_dict.get('params')['upper'] = param_upper
+            rtn_dict.get('params')['upper'] = round(param_upper, freq_precision)
         # statistics
         if detail_stats:
             rtn_dict.get('params')['bci_replicates'] = replicates
@@ -1253,12 +1253,14 @@ class DataDiscovery(object):
                 rtn_dict.get('stats')['p_value_sharpo'] = _p_value
             _, _p_value = DataDiscovery.dagostinos_k2_normality(values, precision=freq_precision)
             rtn_dict.get('stats')['p_value_k2'] = _p_value
-            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='norm', precision=freq_precision)
-            rtn_dict.get('stats')['anderson_norm'] = list(_level)
-            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='expon', precision=freq_precision)
-            rtn_dict.get('stats')['anderson_expon'] = list(_level)
-            _, _level, _ = DataDiscovery.anderson_darling_normality(values, dist='logistic', precision=freq_precision)
-            rtn_dict.get('stats')['anderson_logistic'] = list(_level)
+            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='norm')
+            rtn_dict.get('stats')['anderson_norm'] = [round(x - _stats, freq_precision) for x in _level]
+            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='expon')
+            rtn_dict.get('stats')['anderson_expon'] = [round(x - _stats, freq_precision) for x in _level]
+            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='logistic')
+            rtn_dict.get('stats')['anderson_logistic'] = [round(x - _stats, freq_precision) for x in _level]
+            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='gumbel')
+            rtn_dict.get('stats')['anderson_gumbel'] = [round(x - _stats, freq_precision) for x in _level]
         # dominance
         if exclude_dominant:
             rtn_dict.get('patterns')['dominant_excluded'] = dominant
