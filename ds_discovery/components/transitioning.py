@@ -148,57 +148,11 @@ class Transition(AbstractCommonComponent):
         self.save_report_canonical(report_connector_name=self.REPORT_QUALITY, report=report, auto_connectors=True)
         return
 
-    def save_report_canonical(self, report_connector_name: str, report: [dict, pd.DataFrame],
-                              auto_connectors: bool=None, **kwargs):
-        """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
-        if report_connector_name not in [self.REPORT_DICTIONARY, self.REPORT_ANALYSIS, self.REPORT_INTENT,
-                                         self.REPORT_QUALITY, self.REPORT_SUMMARY, self.REPORT_PROVENANCE,
-                                         self.REPORT_FIELDS] + self.REPORTS_BASE_LIST:
-            raise ValueError("Report name must be one of the class report constants")
-        if auto_connectors if isinstance(auto_connectors, bool) else True:
-            if not self.pm.has_connector(report_connector_name):
-                self.set_report_persist(connector_name=report_connector_name)
-        self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
-
-    def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
-                              save: bool=None):
-        """ Saves the canonical schema to the Property contract. The default loads the clean canonical but optionally
-        a canonical can be passed to base the schema on and optionally a name given other than the default
-
-        :param schema_name: (optional) the name of the schema to save
-        :param canonical: (optional) the canonical to base the schema on
-        :param schema_tree: (optional) an analytics dict (see Discovery.analyse_association(...)
-        :param save: (optional) if True, save to file. Default is True
-        """
-        schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
-        canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_persist_canonical()
-        schema_tree = schema_tree if isinstance(schema_tree, list) else canonical.columns.to_list()
-        analytics = self.discover.analyse_association(canonical, columns_list=schema_tree)
-        self.pm.set_canonical_schema(name=schema_name, schema=analytics)
-        self.pm_persist(save=save)
-        return
-
     def run_component_pipeline(self, intent_levels: [str, int, list]=None):
         """Runs the components pipeline from source to persist"""
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_persist_canonical(result)
-
-    def canonical_report(self, canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
-                         condition: str=None):
-        """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
-        attribute properties
-
-        :param canonical: the DataFrame to view
-        :param stylise: if True present the report stylised.
-        :param inc_next_dom: (optional) if to include the next dominate element column
-        :param report_header: (optional) filter on a header where the condition is true. Condition must exist
-        :param condition: (optional) the condition to apply to the header. Header must exist. examples:
-                ' > 0.95', ".str.contains('shed')"
-        :return:
-        """
-        return self.discover.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
-                                             report_header=report_header, condition=condition)
 
     def report_attributes(self, canonical, stylise: bool=True):
         """ generates a report on the attributes and any description provided

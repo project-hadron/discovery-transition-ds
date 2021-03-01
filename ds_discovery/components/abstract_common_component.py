@@ -77,6 +77,15 @@ class AbstractCommonComponent(AbstractComponent):
             self.pm_persist(save)
         return
 
+    def save_report_canonical(self, report_connector_name: str, report: [dict, pd.DataFrame],
+                              auto_connectors: bool=None, **kwargs):
+        """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
+        auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
+        if auto_connectors:
+            if not self.pm.has_connector(report_connector_name):
+                self.set_report_persist(connector_name=report_connector_name)
+        self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
+
     def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
                               save: bool=None):
         """ Saves the canonical schema to the Property contract. The default loads the clean canonical but optionally
