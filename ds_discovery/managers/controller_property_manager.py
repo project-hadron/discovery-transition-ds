@@ -20,7 +20,7 @@ class ControllerPropertyManager(AbstractPropertyManager):
         return self.get(self.KEY.use_case_key, {})
 
     def report_use_case(self) -> dict:
-        """Return the use case report"""
+        """Return the use case report_canonical"""
         report = dict()
         for catalog in self.get(self.KEY.use_case_key, {}).keys():
             _key = self.join(self.KEY.use_case_key, catalog)

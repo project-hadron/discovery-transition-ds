@@ -14,11 +14,11 @@ class TransitionPropertyManager(AbstractPropertyManager):
 
     @property
     def provenance(self) -> dict:
-        """Return the provenance report"""
+        """Return the provenance report_canonical"""
         return self.get(self.KEY.provenance_key, {})
 
     def report_provenance(self) -> dict:
-        """Return the provenance report"""
+        """Return the provenance report_canonical"""
         report = dict()
         for catalog in self.get(self.KEY.provenance_key, {}).keys():
             _key = self.join(self.KEY.provenance_key, catalog)

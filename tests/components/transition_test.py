@@ -126,8 +126,8 @@ class TransitionTest(unittest.TestCase):
     #                            module_name=instance.PYTHON_MODULE_NAME,
     #                            handler=instance.PYTHON_HANDLER)
     #     instance.set_persist_contract(connector_contract=pc)
-    #     report = instance.report_connectors(stylise=True)
-    #     print(report.columns)
+    #     report_canonical = instance.report_connectors(stylise=True)
+    #     print(report_canonical.columns)
     #
     # def test_keys(self):
     #     tr = Transition.from_env('Example01', has_contract=False)
@@ -161,8 +161,8 @@ class TransitionTest(unittest.TestCase):
 #     def test_source_report(self):
 #         tr = Transition.from_env('synthetic', has_contract=False)
 #         tr.set_source_contract(uri='synthetic.csv', encoding='latin1', load=False)
-#         report = tr.report_connectors(stylise=False)
-#         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report.columns))
+#         report_canonical = tr.report_connectors(stylise=False)
+#         self.assertEqual(['param', 'Property Source', 'Data Source'], list(report_canonical.columns))
 #
 #     def test_load_clean_file(self):
 #         tr = Transition.from_env('Example01', has_contract=False)
@@ -326,9 +326,9 @@ class TransitionTest(unittest.TestCase):
 #         tr.add_attribute_notes(attribute='weight_cat', text="Demonstration of removal of columns with predominant values")
 #         tr.add_attribute_notes(attribute='weight_cat', text="the value 'A' is over 95% predominant")
 #         tr.add_attribute_notes(attribute='start', text="changing this to start_date so it being a date is obvious")
-#         report = tr.report_notes(regex="'A'", stylise=False, drop_dates=True)
+#         report_canonical = tr.report_notes(regex="'A'", stylise=False, drop_dates=True)
 #         control = {'section': ['attribute'], 'label': ['weight_cat'], 'text': ["the value 'A' is over 95% predominant"]}
-#         self.assertEqual(control, report.to_dict(orient='list'))
+#         self.assertEqual(control, report_canonical.to_dict(orient='list'))
 #
 #     def test_is_raw_modified(self):
 #         tr = Transition.from_env('synthetic')

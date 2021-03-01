@@ -77,14 +77,48 @@ class AbstractCommonComponent(AbstractComponent):
             self.pm_persist(save)
         return
 
-    def save_report_canonical(self, report_connector_name: str, report: [dict, pd.DataFrame],
-                              auto_connectors: bool=None, **kwargs):
-        """Saves the canonical to the data quality folder, auto creating the connector from template if not set"""
+    def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame], auto_connectors: bool=None,
+                              save: bool=None, **kwargs):
+        """saves one or a list of reports using the TEMPLATE_PERSIST connector contract. Though a report can be of any
+         name, for convention and consistency each component has a set of REPORT constants <Component>.REPORT_<NAME>
+         where <Component> is the component Class name and <name> is the name of the report_canonical.
+
+         The reports can be a simple string name or a list of names. The name list can be a string or a dictionary
+         providing more detailed parameters on how to represent the report. These parameters keys are
+            :key report: the name of the report
+            :key file_type: (optional) a file type other than the default .json
+            :key versioned: (optional) if the filename should be versioned
+            :key stamped: (optional) if the filename should be timestamped
+
+        Some examples
+            self.REPORT_SCHEMA
+            [self.REPORT_NOTES, self.REPORT_SCHEMA]
+            [self.REPORT_NOTES, {'report': self.REPORT_SCHEMA, 'uri_file': '<file_name>'}]
+            [{'report': self.REPORT_NOTES, 'file_type': 'json', 'orient': 'records'}]
+            [{'report': self.REPORT_SCHEMA, 'file_type': 'csv', 'versioned': True, 'stamped': True}]
+
+        :param reports: a report name or list of report names to save
+        :param report_canonical: the canonical to save
+        :param auto_connectors: if a connector should be created automatically
+        :param save: if True, save to file. Default is True
+        :param kwargs: additional kwargs to pass to a Connector Contract
+        """
         auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
         if auto_connectors:
-            if not self.pm.has_connector(report_connector_name):
-                self.set_report_persist(connector_name=report_connector_name)
-        self.persist_canonical(connector_name=report_connector_name, canonical=report, **kwargs)
+            _report_list = self.set_report_persist(reports=reports, save=save)
+        else:
+            _report_list = []
+            for _report in self.pm.list_formatter(reports):
+                if not isinstance(_report, (str, dict)):
+                    raise TypeError(f"The report type {type(_report)} is an unsupported type. Must be string or dict")
+                if isinstance(_report, str):
+                    _report = {'report': _report}
+                if not _report.get('report', None):
+                    raise ValueError(f"The report {_report} must have a 'report' key representing the ref report name")
+                _report_list.append(_report.get('report'))
+        for report_name in _report_list:
+            self.persist_canonical(connector_name=report_name, canonical=report_canonical, **kwargs)
+        return
 
     def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
                               save: bool=None):
