@@ -114,11 +114,11 @@ class ControllerIntentModel(AbstractIntentModel):
                 builder.save_persist_canonical(canonical=canonical)
             # create reports
             if builder.pm.has_connector(builder.REPORT_SCHEMA):
-                builder.save_report_canonical(report_connector_name=builder.REPORT_SCHEMA,
-                                              report=builder.report_canonical_schema(stylise=False))
+                builder.save_report_canonical(reports=builder.REPORT_SCHEMA,
+                                              report_canonical=builder.report_canonical_schema(stylise=False))
             if builder.pm.has_connector(builder.REPORT_CATALOG):
-                builder.save_report_canonical(report_connector_name=builder.REPORT_CATALOG,
-                                              report=builder.report_column_catalog(stylise=False))
+                builder.save_report_canonical(reports=builder.REPORT_CATALOG,
+                                              report_canonical=builder.report_column_catalog(stylise=False))
             return canonical
         return
 
@@ -161,23 +161,23 @@ class ControllerIntentModel(AbstractIntentModel):
                 tr.save_persist_canonical(canonical=canonical)
             # create reports
             if tr.pm.has_connector(tr.REPORT_SCHEMA):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_SCHEMA,
-                                         report=tr.report_canonical_schema(stylise=False))
+                tr.save_report_canonical(reports=tr.REPORT_SCHEMA,
+                                         report_canonical=tr.report_canonical_schema(stylise=False))
             if tr.pm.has_connector(tr.REPORT_SUMMARY):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_SUMMARY,
-                                         report=tr.report_quality_summary(stylise=False))
+                tr.save_report_canonical(reports=tr.REPORT_SUMMARY,
+                                         report_canonical=tr.report_quality_summary(stylise=False))
             if tr.pm.has_connector(tr.REPORT_PROVENANCE):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_PROVENANCE,
-                                         report=tr.report_provenance(stylise=False))
+                tr.save_report_canonical(reports=tr.REPORT_PROVENANCE,
+                                         report_canonical=tr.report_provenance(stylise=False))
             if tr.pm.has_connector(tr.REPORT_FIELDS):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_FIELDS,
-                                         report=tr.report_attributes(canonical=canonical, stylise=False))
+                tr.save_report_canonical(reports=tr.REPORT_FIELDS,
+                                         report_canonical=tr.report_attributes(canonical=canonical, stylise=False))
             if tr.pm.has_connector(tr.REPORT_DICTIONARY):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_DICTIONARY,
-                                         report=tr.canonical_report(canonical=canonical, stylise=False))
+                tr.save_report_canonical(reports=tr.REPORT_DICTIONARY,
+                                         report_canonical=tr.canonical_report(canonical=canonical, stylise=False))
             if tr.pm.has_connector(tr.REPORT_QUALITY):
-                tr.save_report_canonical(report_connector_name=tr.REPORT_QUALITY,
-                                         report=tr.report_quality(canonical=canonical))
+                tr.save_report_canonical(reports=tr.REPORT_QUALITY,
+                                         report_canonical=tr.report_quality(canonical=canonical))
             return canonical
         return
 

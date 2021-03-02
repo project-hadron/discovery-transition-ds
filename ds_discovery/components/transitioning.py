@@ -145,7 +145,7 @@ class Transition(AbstractCommonComponent):
                                                 stamped=stamped)
             self.set_report_persist(self.REPORT_QUALITY, uri_file=file_pattern)
         report = self.report_quality(canonical=canonical)
-        self.save_report_canonical(report_connector_name=self.REPORT_QUALITY, report=report, auto_connectors=True)
+        self.save_report_canonical(reports=self.REPORT_QUALITY, report_canonical=report, auto_connectors=True)
         return
 
     def run_component_pipeline(self, intent_levels: [str, int, list]=None):
