@@ -82,13 +82,16 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                 result = eval(f"self.{method}(size=size, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('correlate_'):
-                                result = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                subset = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
+                                result = eval(f"self.{method}(canonical=subset, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('model_'):
+                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
                                 canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
                                                  globals(), locals())
                                 continue
                             elif str(method).startswith('frame_'):
+                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
                                 canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
                                                  globals(), locals())
                                 continue

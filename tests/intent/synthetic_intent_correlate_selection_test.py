@@ -147,7 +147,7 @@ class SyntheticIntentCorrelateSelectionTest(unittest.TestCase):
         df['letters'] = ['A', 'B', 'A', 'B', 'B', 'C']
         df['value'] = [1, 4, 2, 1, 6, 1]
         selection = [tools.select2dict(column='value', condition="@ > 1")]
-        action = tools.action2dict(method='correlate_numbers', header='value', offset=0.8, multiply_offset=True)
+        action = tools.action2dict(method='correlate_numbers', header='value', offset="@*0.8")
         default_action = tools.action2dict(method="@header", header='value')
         result = tools.correlate_selection(df, selection=selection, action=action, default_action=default_action)
         self.assertEqual([1.0, 3.2, 1.6, 1.0, 4.8, 1.0], result)

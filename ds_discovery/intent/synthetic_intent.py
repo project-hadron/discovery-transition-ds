@@ -42,7 +42,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param seed: a seed value that will be applied across the run: default to None
         :return: a pandas dataframe
         """
-        df = pd.DataFrame()
+        canonical = pd.DataFrame()
         # test if there is any intent to run
         if self._pm.has_intent():
             # size
@@ -86,20 +86,23 @@ class SyntheticIntentModel(WrangleIntentModel):
                                 result = eval(f"self.{method}(size=size, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('correlate_'):
-                                result = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
+                                subset = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
+                                result = eval(f"self.{method}(canonical=subset, save_intent=False, **params)",
                                               globals(), locals())
                             elif str(method).startswith('model_'):
-                                df = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
-                                          globals(), locals())
+                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
+                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                 globals(), locals())
                                 continue
                             elif str(method).startswith('frame_'):
-                                df = eval(f"self.{method}(canonical=df, save_intent=False, **params)",
-                                          globals(), locals())
+                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
+                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                 globals(), locals())
                                 continue
                             if len(result) != size:
                                 raise IndexError(f"The index size of '{column}' is '{len(result)}', should be {size}")
-                            df[column] = result
-        return df
+                            canonical[column] = result
+        return canonical
 
     def get_number(self, from_value: [int, float]=None, to_value: [int, float]=None, relative_freq: list=None,
                    precision: int=None, ordered: str=None, at_most: int=None, size: int=None, quantity: float=None,
