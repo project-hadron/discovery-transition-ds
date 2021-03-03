@@ -41,7 +41,7 @@ class Controller(AbstractComponent):
                          reset_templates=reset_templates, template_path=template_path, template_module=template_module,
                          template_source_handler=template_source_handler,
                          template_persist_handler=template_persist_handler, align_connectors=align_connectors)
-        self._raw_attribute_list = []
+
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
@@ -154,6 +154,11 @@ class Controller(AbstractComponent):
     def pm(self) -> ControllerPropertyManager:
         """The properties manager instance"""
         return self._component_pm
+
+    def remove_all_tasks(self, save: bool=None):
+        """removes all tasks"""
+        self.pm.remove_intent()
+        self.pm_persist(save)
 
     def set_use_case(self, title: str=None, domain: str=None, overview: str=None, scope: str=None,
                      situation: str=None, opportunity: str=None, actions: str=None, project_name: str=None,

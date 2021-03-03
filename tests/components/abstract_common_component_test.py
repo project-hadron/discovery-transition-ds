@@ -1,12 +1,18 @@
 import unittest
 import os
 import shutil
+from pprint import pprint
 import pandas as pd
-from ds_behavioral import SyntheticBuilder
-from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
+from aistac.properties.abstract_properties import AbstractPropertyManager
+from ds_discovery import *
 
-from ds_discovery import Transition
+pd.set_option('max_colwidth', 200)
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 99)
+pd.set_option('expand_frame_repr', True)
+# Limiting floats output to 3 decimal points
+pd.set_option('display.float_format', lambda x: '{:.3f}'.format(x))
 
 
 class AbstractCommonComponentTest(unittest.TestCase):
@@ -40,9 +46,19 @@ class AbstractCommonComponentTest(unittest.TestCase):
         except:
             pass
 
-    @property
-    def tools(self) -> SyntheticIntentModel:
-        return SyntheticBuilder.scratch_pad()
+    def test_multi_environments_from_env(self):
+        os.environ['HADRON_TRANSITION_PATH'] = "hadron/transition/path"
+        os.environ['HADRON_TRANSITION_PERSIST_PATH'] = "hadron/transition/persist/path"
+        tr = Transition.from_memory()
+        tr.set_source('source.csv')
+        tr.set_persist('persist.p')
+        self.assertEqual('hadron/transition/path/source.csv', tr.pm.get_connector_contract('primary_source').uri)
+        self.assertEqual('hadron/transition/persist/path/persist.p', tr.pm.get_connector_contract('primary_persist').uri)
+        wr = Wrangle.from_memory()
+        wr.set_source('source.csv')
+        wr.set_persist('persist.p')
+        self.assertEqual('work/data/source.csv', wr.pm.get_connector_contract('primary_source').uri)
+        self.assertEqual('work/data/persist.p', wr.pm.get_connector_contract('primary_persist').uri)
 
     def test_save_report_canonical(self):
         tr = Transition.from_memory()
