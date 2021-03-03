@@ -157,7 +157,8 @@ class Controller(AbstractComponent):
 
     def remove_all_tasks(self, save: bool=None):
         """removes all tasks"""
-        self.pm.remove_intent()
+        for level in self.pm.get_intent():
+            self.pm.remove_intent(level=level)
         self.pm_persist(save)
 
     def set_use_case(self, title: str=None, domain: str=None, overview: str=None, scope: str=None,
