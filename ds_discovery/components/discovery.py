@@ -1391,7 +1391,7 @@ class DataDiscovery(object):
                     dtype = df[label].dtype.name
                     dtype = 'number' if dtype.startswith('int') or dtype.startswith('float') else dtype
                 dtype = dtype.lower()
-                if not strict_typing and dtype.startswith('object') or dtype.startswith('string'):
+                if not strict_typing and (dtype.startswith('object') or dtype.startswith('string')):
                     dtype = 'category'
                 lower = kwargs.get('lower')
                 upper = kwargs.get('upper')
