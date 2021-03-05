@@ -14,7 +14,6 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import scipy.stats
 import seaborn as sns
-from aistac.components.aistac_commons import DataAnalytics
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
@@ -998,12 +997,12 @@ class DataDiscovery(object):
         upper = upper if isinstance(upper, (int, float)) else None
         param_lower = lower
         param_upper = upper
-        param_top = top if isinstance(top, int) else None
+        param_top = top if isinstance(top, int) else 0
         _original_size = categories.size
         categories.replace(nulls_list, np.nan, inplace=True, regex=True)
         categories = categories.dropna()
-        nulls_percent = np.round(((_original_size - categories.size) / _original_size) * 100,
-                                 freq_precision) if _original_size > 0 else 0
+        nulls_percent = round(((_original_size - categories.size) / _original_size) * 100,
+                              freq_precision) if _original_size > 0 else 0
         _categories_size = categories.size
         value_count = categories.value_counts(sort=True, normalize=False, dropna=True)
         _granularity = value_count.nunique()
@@ -1024,8 +1023,8 @@ class DataDiscovery(object):
             value_count = value_count.iloc[:top]
         _granularity = value_count.nunique()
         sub_categories = sub_categories[sub_categories.isin(value_count.index)]
-        _outlier_percent = np.round(((_categories_size - sub_categories.size) / _categories_size) * 100,
-                                    freq_precision) if _categories_size > 0 else 0
+        _outlier_percent = round(((_categories_size - sub_categories.size) / _categories_size) * 100,
+                                   freq_precision) if _categories_size > 0 else 0
         _outlier_count = len(set(set(categories).symmetric_difference(set(sub_categories))))
         _sample_dist = sub_categories.value_counts(sort=True, normalize=False, dropna=True).to_list()
         if isinstance(top, int) and top > 0:
@@ -1042,7 +1041,7 @@ class DataDiscovery(object):
                     'stats': {'category_count': _granularity, 'highest_unique': _upper, 'lowest_unique': _lower,
                               'nulls_percent': nulls_percent,  'sample_size': sub_categories.size,
                               'excluded_percent': _outlier_percent}}
-        if isinstance(param_top, int):
+        if isinstance(param_top, int) and param_top > 0:
             rtn_dict.get('params')['top'] = top
         if isinstance(param_lower, (int, float)):
             rtn_dict.get('params')['lower'] = param_lower
@@ -1107,14 +1106,14 @@ class DataDiscovery(object):
         _values_size = values.size
         values = values.dropna()
         _nulls_size = _original_size - values.size
-        _nulls_percent = np.round(((_values_size - values.size) / _values_size) * 100,
-                                  freq_precision) if _values_size > 0 else 0
+        _nulls_percent = round(((_values_size - values.size) / _values_size) * 100,
+                               freq_precision) if _values_size > 0 else 0
         # outliers
         _values_size = values.size
         values = values.loc[values.between(lower, upper, inclusive=True).values]
         _excluded_size = _original_size - _nulls_size - _values_size
-        _excluded_percent = np.round(((_values_size - values.size) / _values_size) * 100,
-                                     freq_precision) if _values_size > 0 else 0
+        _excluded_percent = round(((_values_size - values.size) / _values_size) * 100,
+                                  freq_precision) if _values_size > 0 else 0
         # dominance
         dominant = values.mode(dropna=True).to_list()[:10] if not isinstance(dominant, (int, float, list)) else dominant
         dominant = Commons.list_formatter(dominant)
@@ -1130,8 +1129,7 @@ class DataDiscovery(object):
         if _dominant_size == _values_size:
             _dominant_percent = 1
         else:
-            _dominant_percent = np.round((_dominant_size / _values_size) * 100,
-                                         freq_precision) if _values_size > 0 else 0
+            _dominant_percent = round((_dominant_size / _values_size) * 100, freq_precision) if _values_size > 0 else 0
         # if there are no samples remaining
         if values.size == 0:
             _intervals = [(lower, upper, 'both')]
@@ -1211,8 +1209,8 @@ class DataDiscovery(object):
             _values_weights = [0]
         _values_weights = pd.Series(_values_weights)
         if values.size > 0:
-            _values_weights = _values_weights.apply(lambda x: np.round((x / values.size) * 100, freq_precision))
-        _intervals = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in _intervals]
+            _values_weights = _values_weights.apply(lambda x: round((x / values.size) * 100, freq_precision))
+        _intervals = [(round(p[0], precision), round(p[1], precision), p[2]) for p in _intervals]
         rtn_dict = {'intent': {'intervals': _intervals, 'dtype': 'number'},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'granularity': granularity,
                                'detail_stats': detail_stats},
@@ -1337,7 +1335,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def analyse_association(df: pd.DataFrame, columns_list: list, exclude_associate: list=None, 
-                            detail_numeric: bool=None, strict_typing: bool=None):
+                            detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None):
         """ Analyses the association of Category against Values and returns a dictionary of resulting weighting
         the structure of the columns_list is a list of dictionaries with the key words
             - label: the label or name of the header in the DataFrame
@@ -1354,6 +1352,7 @@ class DataDiscovery(object):
                 (e.g. ['age.gender.salary']
         :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
         :param strict_typing: (optional) stops objects and string types being seen as categories
+        :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
         :return: an analytics model dictionary
         """
         tools = DataDiscovery
@@ -1418,7 +1417,7 @@ class DataDiscovery(object):
                                                             upper=upper, day_first=day_first, year_first=year_first,
                                                             freq_precision=freq_precision, date_format=date_format)
                 elif dtype.startswith('category') or dtype.startswith('bool'):
-                    top = kwargs.get('top')
+                    top = kwargs.get('top', category_limit)
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
                     selection = 'categories'
@@ -1455,6 +1454,7 @@ class DataDiscovery(object):
                 weighting[label] = section
             return
 
+        category_limit = category_limit if isinstance(category_limit, int) else 0
         strict_typing = strict_typing if isinstance(strict_typing, bool) else False
         exclude_associate = list() if not isinstance(exclude_associate, list) else exclude_associate
         rtn_dict = {}

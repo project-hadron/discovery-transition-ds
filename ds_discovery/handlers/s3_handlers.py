@@ -1,10 +1,10 @@
 import threading
 from io import StringIO, BytesIO
 import pandas as pd
+import numpy as np
 import pickle
 import json
 import os
-import urllib3
 import boto3
 from botocore.exceptions import ClientError
 from aistac.handlers.abstract_handlers import AbstractSourceHandler, AbstractPersistHandler
@@ -241,7 +241,7 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
                     body = byte_obj.getvalue()
                 else:
                     encode = write_params.pop('encode', 'UTF-8')
-                    body = (bytes(json.dumps(canonical, **s3_put_params).encode(encode)))
+                    body = (bytes(json.dumps(canonical, cls=NpEncoder, **s3_put_params).encode(encode)))
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=body, **s3_put_params)
         # parquet
         elif file_type.lower() in ['parquet', 'pq', 'pqt']:
@@ -277,3 +277,18 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
         if response.get('RequestCharged') is None:
             return False
         return True
+
+
+class NpEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        else:
+            return super(NpEncoder, self).default(obj)

@@ -121,19 +121,31 @@ class AbstractCommonComponent(AbstractComponent):
         return
 
     def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
-                              save: bool=None):
+                              exclude_associate: list=None, detail_numeric: bool=None, strict_typing: bool=None,
+                              category_limit: int=None, save: bool=None):
         """ Saves the canonical schema to the Property contract. The default loads the clean canonical but optionally
         a canonical can be passed to base the schema on and optionally a name given other than the default
 
         :param schema_name: (optional) the name of the schema to save
         :param canonical: (optional) the canonical to base the schema on
         :param schema_tree: (optional) an analytics dict (see Discovery.analyse_association(...)
+        :param exclude_associate: (optional) a list of dot notation tree of items to exclude from iteration
+                (e.g. ['age.gender.salary']  will cut 'salary' branch from gender and all sub branches)
+        :param detail_numeric: (optional) if numeric columns should have detail stats, slowing analysis. default False
+        :param strict_typing: (optional) stops objects and string types being seen as categories. default True
+        :param category_limit: (optional) a global cap on categories captured. default is 10
         :param save: (optional) if True, save to file. Default is True
         """
         schema_name = schema_name if isinstance(schema_name, str) else self.REPORT_SCHEMA
         canonical = canonical if isinstance(canonical, pd.DataFrame) else self.load_persist_canonical()
         schema_tree = schema_tree if isinstance(schema_tree, list) else canonical.columns.to_list()
-        analytics = DataDiscovery.analyse_association(canonical, columns_list=schema_tree)
+        detail_numeric = detail_numeric if isinstance(detail_numeric, bool) else False
+        strict_typing = strict_typing if isinstance(strict_typing, bool) else True
+        category_limit = category_limit if isinstance(category_limit, int) else 10
+        analytics = DataDiscovery.analyse_association(canonical, columns_list=schema_tree,
+                                                      exclude_associate=exclude_associate,
+                                                      detail_numeric=detail_numeric, strict_typing=strict_typing,
+                                                      category_limit=category_limit)
         self.pm.set_canonical_schema(name=schema_name, schema=analytics)
         self.pm_persist(save=save)
         return

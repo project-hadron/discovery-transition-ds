@@ -308,4 +308,19 @@ class PandasPersistHandler(PandasSourceHandler, AbstractPersistHandler):
         """ dumps a pickle file"""
         with threading.Lock():
             with closing(open(path_file, mode='w')) as f:
-                json.dump(data, f, **kwargs)
+                json.dump(data, f, cls=NpEncoder, **kwargs)
+
+
+class NpEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        else:
+            return super(NpEncoder, self).default(obj)
