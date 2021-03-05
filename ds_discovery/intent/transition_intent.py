@@ -906,7 +906,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                    exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                    exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, fixed_len_pad: str=None,
                     use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=None,
                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                     replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
@@ -919,6 +919,7 @@ class TransitionIntentModel(AbstractIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param fixed_len_pad: a padding character that when passed pads all values to the length of the longest
         :param use_string_type: if the dtype 'string' should be used or keep as object type
         :param fill_nulls: a value to fill nulls that then can be identified as a category type
         :param nulls_list:  potential null values to replace.
@@ -962,7 +963,10 @@ class TransitionIntentModel(AbstractIntentModel):
                 df[c] = df[c].replace(item, fill_nulls)
             if isinstance(use_string_type, bool) and use_string_type:
                 df[c] = df[c].astype('string', errors='ignore')
-
+            if isinstance(fixed_len_pad, str) and len(fixed_len_pad) > 0:
+                idx = df[c].dropna().index
+                max_len = len(max(df[c].iloc[idx], key=len))
+                df[c].iloc[idx] = [x.rjust(max_len, fixed_len_pad[0]) for x in df[c].iloc[idx]]
         if not inplace:
             return df
         return

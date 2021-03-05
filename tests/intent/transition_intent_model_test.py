@@ -230,9 +230,11 @@ class IntentModelTest(unittest.TestCase):
         clean = self.clean
         df = pd.DataFrame()
         df['X'] = [1,2,3,4]
-        print(df['X'])
-        df['X'] = clean.to_str_type(df, headers='X')
-        print(df['X'])
+        df = clean.to_str_type(df, headers='X')
+        self.assertCountEqual(['1','2','3','4'], df['X'])
+        df['Y'] = ['ABC', 'ABCD', '', 'A']
+        df = clean.to_str_type(df, headers='Y', fixed_len_pad='0')
+        self.assertCountEqual(['0ABC', 'ABCD', np.nan, '000A'], df['Y'])
 
     def test_make_list(self):
         for value in ['', 0, 0.0, pd.Timestamp(2018,1,1), [], (), pd.Series(dtype=str), list(), tuple(),
