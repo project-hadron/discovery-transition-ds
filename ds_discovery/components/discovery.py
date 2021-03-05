@@ -1031,7 +1031,7 @@ class DataDiscovery(object):
         if isinstance(top, int) and top > 0:
             _sample_dist = _sample_dist[:top]
         value_count = value_count.replace(np.nan, 0).replace(0, replace_zero)*100
-        _weighting = value_count.round(freq_precision).to_list()
+        _weighting = [round(x, freq_precision) for x in value_count.to_list()]
         if len(_weighting) == 0:
             _weighting = [0]
         _lower = lower if isinstance(lower, (int, float)) else _weighting[-1]
