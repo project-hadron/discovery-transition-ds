@@ -2,12 +2,10 @@ version: '3.8'
 services:
   domain-controller:
     image: projecthadron/controller:0.1.5
-#    volumes:
-#      - ../data/members:/var/data
     environment:
       # Hadron Domain config
-      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/datalake_gen/healthcare/members
-      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/datalake_gen/members/
+      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/datalake_sim/members/
+      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/helloworld/datalake_gen/flu_risk
       # Hadron Controller Config use
       HADRON_CONTROLLER_SIZE_MEMBERS_GEN: '100000'
       # AWS envs

@@ -4,8 +4,8 @@ services:
     image: projecthadron/controller:0.1.5
     environment:
       # Hadron Domain config
-      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/factory/healthcare/members
-      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/factory/members/
+      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/profileai/
+      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/helloworld/profileai
       # Hadron Controller Config use
       HADRON_CONTROLLER_SIZE_MEMBERS_GEN: '100000'
       # AWS envs

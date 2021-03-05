@@ -1337,7 +1337,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def analyse_association(df: pd.DataFrame, columns_list: list, exclude_associate: list=None, 
-                            detail_numeric: bool=None):
+                            detail_numeric: bool=None, strict_typing: bool=None):
         """ Analyses the association of Category against Values and returns a dictionary of resulting weighting
         the structure of the columns_list is a list of dictionaries with the key words
             - label: the label or name of the header in the DataFrame
@@ -1353,6 +1353,7 @@ class DataDiscovery(object):
         :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration 
                 (e.g. ['age.gender.salary']
         :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
+        :param strict_typing: (optional) stops objects and string types being seen as categories
         :return: an analytics model dictionary
         """
         tools = DataDiscovery
@@ -1391,6 +1392,8 @@ class DataDiscovery(object):
                     dtype = df[label].dtype.name
                     dtype = 'number' if dtype.startswith('int') or dtype.startswith('float') else dtype
                 dtype = dtype.lower()
+                if not strict_typing and dtype.startswith('object') or dtype.startswith('string'):
+                    dtype = 'category'
                 lower = kwargs.get('lower')
                 upper = kwargs.get('upper')
                 granularity = kwargs.get('granularity')
@@ -1414,7 +1417,7 @@ class DataDiscovery(object):
                     section['insight'] = tools.analyse_date(_df[label], granularity=granularity, lower=lower,
                                                             upper=upper, day_first=day_first, year_first=year_first,
                                                             freq_precision=freq_precision, date_format=date_format)
-                elif dtype.startswith('category'):
+                elif dtype.startswith('category') or dtype.startswith('bool'):
                     top = kwargs.get('top')
                     replace_zero = kwargs.get('replace_zero')
                     nulls_list = kwargs.get('nulls_list')
@@ -1422,10 +1425,8 @@ class DataDiscovery(object):
                     section['insight'] = tools.analyse_category(_df[label], lower=lower, upper=upper, top=top,
                                                                 replace_zero=replace_zero, nulls_list=nulls_list,
                                                                 freq_precision=freq_precision)
-                elif dtype.startswith('object') or dtype.startswith('string'):
-                    continue
                 else:
-                    raise ValueError(f"The column '{label}' has an unrecognised dtype '{dtype}'")
+                    continue
                 # check if we trim the branch
                 if kwargs.get('trim', False):
                     continue
@@ -1454,6 +1455,7 @@ class DataDiscovery(object):
                 weighting[label] = section
             return
 
+        strict_typing = strict_typing if isinstance(strict_typing, bool) else False
         exclude_associate = list() if not isinstance(exclude_associate, list) else exclude_associate
         rtn_dict = {}
         _get_weights(df, columns=columns_list, index=0, weighting=rtn_dict, parent=list())

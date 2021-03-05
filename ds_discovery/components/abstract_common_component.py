@@ -77,8 +77,8 @@ class AbstractCommonComponent(AbstractComponent):
             self.pm_persist(save)
         return
 
-    def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame], auto_connectors: bool=None,
-                              save: bool=None, **kwargs):
+    def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame],
+                              auto_connectors: bool=None, save: bool=None, **kwargs):
         """saves one or a list of reports using the TEMPLATE_PERSIST connector contract. Though a report can be of any
          name, for convention and consistency each component has a set of REPORT constants <Component>.REPORT_<NAME>
          where <Component> is the component Class name and <name> is the name of the report_canonical.
@@ -94,7 +94,7 @@ class AbstractCommonComponent(AbstractComponent):
             self.REPORT_SCHEMA
             [self.REPORT_NOTES, self.REPORT_SCHEMA]
             [self.REPORT_NOTES, {'report': self.REPORT_SCHEMA, 'uri_file': '<file_name>'}]
-            [{'report': self.REPORT_NOTES, 'file_type': 'json', 'orient': 'records'}]
+            [{'report': self.REPORT_NOTES, 'file_type': 'json'}]
             [{'report': self.REPORT_SCHEMA, 'file_type': 'csv', 'versioned': True, 'stamped': True}]
 
         :param reports: a report name or list of report names to save

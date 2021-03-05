@@ -43,7 +43,7 @@ class TransitionTest(unittest.TestCase):
 
     def test_provenance_from_bootstrap(self):
         tr: Transition = Transition.from_memory()
-        tr.setup_bootstrap(domain='heathcare', project_name='factory')
+        tr.setup_bootstrap(domain='heathcare', project_name='datalake_gen')
         tr.set_provenance(provider_name="Project Hadron", author_name='doatridge', cost_price="$0.00")
         report = tr.report_provenance(stylise=False).index.to_list()
         control = ['title', 'domain', 'description', 'license_type', 'license_name', 'license_uri', 'cost_price', 'provider_name', 'author_name']
