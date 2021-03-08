@@ -293,5 +293,7 @@ class NpEncoder(json.JSONEncoder):
             return bool(obj)
         elif isinstance(obj, np.datetime64):
             return np.datetime_as_string(obj, unit='s')
+        elif isinstance(obj, pd.Timestamp):
+            return np.datetime_as_string(obj.to_datetime64(), unit='s')
         else:
             return super(NpEncoder, self).default(obj)
