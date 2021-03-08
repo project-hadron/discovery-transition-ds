@@ -1,3 +1,4 @@
+import datetime
 import threading
 from io import StringIO, BytesIO
 import pandas as pd
@@ -290,5 +291,7 @@ class NpEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, np.bool_):
             return bool(obj)
+        elif isinstance(obj, np.datetime64):
+            return np.datetime_as_string(obj, unit='s')
         else:
             return super(NpEncoder, self).default(obj)
