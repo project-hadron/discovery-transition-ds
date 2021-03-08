@@ -83,20 +83,3 @@ class ModelsBuilder(AbstractCommonComponent):
         canonical = self.load_source_canonical()
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_persist_canonical(result)
-
-    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
-        """ Creates a bootstrap simulator with a SyntheticBuilder. Note this does not set the source
-
-        :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
-        :param project_name: (optional) a project name that will replace the hadron naming on file prefix
-        :param path: (optional) a path added to the template path default
-        :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
-        """
-        file_type = file_type if isinstance(file_type, str) else 'parquet'
-        project_name = project_name if isinstance(project_name, str) else 'hadron'
-        file_name = self.pm.file_pattern(name='complete', project=project_name.lower(), path=path, file_type=file_type,
-                                         versioned=True)
-        self.set_persist(uri_file=file_name)
-        self.set_report_persist(report_names=[self.REPORT_INTENT])
-        self.set_description(f"A domain specific {domain} Machine Learning {project_name} models for "
-                             f"{self.pm.task_name}")

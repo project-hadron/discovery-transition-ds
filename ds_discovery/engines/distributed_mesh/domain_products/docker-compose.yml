@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   domain-controller:
-    image: projecthadron/controller:0.1.5
+    image: projecthadron/controller:0.1.6
 #    volumes:
 #      - ../data/members:/var/data
     environment:

@@ -51,9 +51,9 @@ class FeatureCatalog(AbstractCommonComponent):
         username = username if isinstance(username, str) else 'Unknown'
         _pm = FeatureCatalogPropertyManager(task_name=task_name, username=username)
         _intent_model = FeatureCatalogIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                                       default_intent_level=default_intent_level,
-                                                       order_next_available=order_next_available,
-                                                       default_replace_intent=default_replace_intent)
+                                                  default_intent_level=default_intent_level,
+                                                  order_next_available=order_next_available,
+                                                  default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
@@ -169,20 +169,4 @@ class FeatureCatalog(AbstractCommonComponent):
                 self.set_feature_bootstrap(feature_name=feature, versioned=True, save=save)
             result = self.intent_model.run_intent_pipeline(canonical, feature)
             self.save_catalog_feature(feature_name=feature, canonical=result)
-        return
-
-    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
-        """ Creates a bootstrap Wrangle setup. Note this does not set the source
-
-        :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
-        :param project_name: (optional) a project name that will replace the hadron naming on file prefix
-        :param path: (optional) a path added to the template path default
-        :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
-        """
-        file_type = file_type if isinstance(file_type, str) else 'parquet'
-        project_name = project_name if isinstance(project_name, str) else 'hadron'
-        file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,
-                                         versioned=True)
-        self.set_persist(uri_file=file_name)
-        self.set_description(f"A domain specific {domain} wrangled {project_name} dataset for {self.pm.task_name}")
         return

@@ -117,21 +117,3 @@ class Wrangle(AbstractCommonComponent):
             _ = df_style.set_properties(subset=['column_name'], **{'font-weight': 'bold'})
             return df_style
         return df
-
-    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
-        """ Creates a bootstrap Wrangle setup. Note this does not set the source
-
-        :param domain: (optional) The domain this simulator sits within for example 'Healthcare' or 'Financial Services'
-        :param project_name: (optional) a project name that will replace the hadron naming on file prefix
-        :param path: (optional) a path added to the template path default
-        :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
-        """
-        file_type = file_type if isinstance(file_type, str) else 'parquet'
-        project_name = project_name if isinstance(project_name, str) else 'hadron'
-        file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,
-                                         versioned=True)
-        self.set_persist(uri_file=file_name)
-        report_list = [{'report': self.REPORT_CATALOG, 'file_type': 'csv'}]
-        self.set_report_persist(reports=report_list, project=project_name, path=path)
-        self.set_description(f"A domain specific {domain} wrangled {project_name} dataset for {self.pm.task_name}")
-        return

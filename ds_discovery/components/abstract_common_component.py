@@ -77,6 +77,23 @@ class AbstractCommonComponent(AbstractComponent):
             self.pm_persist(save)
         return
 
+    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
+        """ Creates a bootstrap Transition setup. Note this does not set the source
+
+        :param domain: (optional) The domain this simulators sits within e.g. 'Healthcare' or 'Financial Services'
+        :param project_name: (optional) a project name that will replace the hadron naming on file prefix
+        :param path: (optional) a path added to the template path default
+        :param file_type: (optional) a file_type for the persisted file, default is 'parguet'
+        """
+        domain = domain.title() if isinstance(domain, str) else 'Unspecified'
+        file_type = file_type if isinstance(file_type, str) else 'parquet'
+        project_name = project_name if isinstance(project_name, str) else 'hadron'
+        file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,
+                                         versioned=True)
+        self.set_persist(uri_file=file_name)
+        component = self.pm.manager_name()
+        self.set_description(f"{domain} domain {component} component for {project_name} {self.pm.task_name} contract")
+
     def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame],
                               auto_connectors: bool=None, save: bool=None, **kwargs):
         """saves one or a list of reports using the TEMPLATE_PERSIST connector contract. Though a report can be of any
@@ -172,8 +189,8 @@ class AbstractCommonComponent(AbstractComponent):
 
         :param schema: (optional) the name of the schema
         :param roots: (optional) one or more tree roots
-        :param sections: (optional)
-        :param elements: (optional)
+        :param sections: (optional) the section under the root
+        :param elements: (optional) the element in the section
         :param stylise: if True present the report stylised.
         :return: pd.DataFrame
         """

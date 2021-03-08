@@ -6,6 +6,7 @@ import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from aistac.properties.abstract_properties import AbstractPropertyManager
 from ds_discovery import *
+from ds_discovery.components.commons import Commons
 
 pd.set_option('max_colwidth', 200)
 pd.set_option('display.max_rows', 500)
@@ -66,6 +67,14 @@ class AbstractCommonComponentTest(unittest.TestCase):
         tr.save_report_canonical(reports=tr.REPORT_SUMMARY, report_canonical=df)
         result = tr.load_canonical(connector_name=tr.REPORT_SUMMARY)
         self.assertEqual(df.shape, result.shape)
+
+    def test_save_report_canonical_params(self):
+        tr = Transition.from_memory()
+        df = pd.DataFrame({'A': [1,2,3,4]})
+        reports = [Commons.param2dict(reports=tr.REPORT_SUMMARY, )]
+        tr.save_report_canonical(reports=tr.REPORT_SUMMARY, report_canonical=df)
+
+
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

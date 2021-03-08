@@ -1,6 +1,5 @@
 # Project hadron
 aistac-foundation
-discovery-engines
 discovery-transition-ds
 requests
 pyarrow
