@@ -1,0 +1,24 @@
+camel: 1.0.0
+name: hadron/controller-skill
+title:  PreProcess Social Posts
+description: Pre Process Social Posts
+inputs:
+  - name: controler-run-params
+    title:
+    parameters:
+      - name: HADRON_DEFAULT_PATH
+        type: string
+        description: Update this description
+        required: true
+      - name: HADRON_PM_REPO
+        type: string
+        description: Update this description
+        required: true
+    routing:
+      all:
+        action  : projecthadron/cortex_skill
+        runtime: cortex/functions
+        output: response
+outputs:
+  - name: hadron_controller_out
+    title: Controller output

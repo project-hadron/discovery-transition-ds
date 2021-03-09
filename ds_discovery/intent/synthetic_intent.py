@@ -99,7 +99,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                 canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
                                                  globals(), locals())
                                 continue
-                            if len(result) != size:
+                            if 0 < size != len(result):
                                 raise IndexError(f"The index size of '{column}' is '{len(result)}', should be {size}")
                             canonical[column] = result
         return canonical

@@ -115,6 +115,25 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 5), df.shape)
         print(df['gender'].value_counts().loc['F'])
 
+    def test_model_iterator_with_pipeline(self):
+        builder = SyntheticBuilder.from_env('test', has_contract=False)
+        builder.setup_bootstrap()
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri(connector_name='feedback',
+                                  uri="s3://project-hadron-cs-repo/domain/helloworld/data/feedback/watchlist/plan_executor_results_09-03-2021.parquet",
+                                  template_aligned=False)
+        df = tools.model_iterator(canonical='feedback', column_name='watchlist')
+        # Selection
+        selection = ['Outreach nurse contacts high flu risk member',
+                     'Prompt member to call the nurseline for information about flu shots']
+        actions = {
+            0: tools.action2dict(method='get_datetime', start=-6, until=-5, ignore_time=True, date_format="%Y-%m-%d"),
+            1: tools.action2dict(method='get_datetime', start=-19, until=-18, ignore_time=True, date_format="%Y-%m-%d")}
+        df['action_dt'] = tools.correlate_categories(df, header='intervention_id', correlations=selection,
+                                                     actions=actions,default_action='', column_name='action_dt')
+        builder.run_component_pipeline(size=0)
+
+
     def test_model_iterator(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tools: SyntheticIntentModel = builder.tools

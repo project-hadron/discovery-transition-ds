@@ -1350,6 +1350,21 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         PRIVATE METHODS SECTION
     """
 
+    def _intent_builder(self, method: str, params: dict, exclude: list=None) -> dict:
+        """builds the intent_params. Pass the method name and local() parameters
+            Example:
+                self._intent_builder(inspect.currentframe().f_code.co_name, **locals())
+
+        :param method: the name of the method (intent). can use 'inspect.currentframe().f_code.co_name'
+        :param params: the parameters passed to the method. use `locals()` in the caller method
+        :param exclude: (optional) convenience parameter identifying param keys to exclude.
+        :return: dict of the intent
+        """
+        exclude = []
+        if 'canonical' in params.keys() and not isinstance(params.get('canonical'), (str, dict, list)):
+            exclude.append('canonical')
+        return super()._intent_builder(method=method, params=params, exclude=exclude)
+
     def _set_intend_signature(self, intent_params: dict, column_name: [int, str]=None, intent_order: int=None,
                               replace_intent: bool=None, remove_duplicates: bool=None, save_intent: bool=None):
         """ sets the intent section in the configuration file. Note: by default any identical intent, e.g.

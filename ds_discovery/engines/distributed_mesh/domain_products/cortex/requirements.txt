@@ -1,0 +1,9 @@
+# Project hadron
+aistac-foundation
+discovery-transition-ds
+requests
+pyarrow
+fsspec
+s3fs
+boto3
+cortex-python

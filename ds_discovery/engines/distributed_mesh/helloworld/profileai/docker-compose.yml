@@ -4,8 +4,8 @@ services:
     image: projecthadron/controller:0.1.6
     environment:
       # Hadron Domain config
-      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/profileai/
-      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/helloworld/profileai
+      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/profile_ai/
+      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/profile_ai
       # AWS envs
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}

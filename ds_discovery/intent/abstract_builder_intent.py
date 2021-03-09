@@ -37,7 +37,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         default_replace_intent = default_replace_intent if isinstance(default_replace_intent, bool) else True
         default_intent_level = default_intent_level if isinstance(default_intent_level, (str, int, float)) else 'A'
         default_intent_order = default_intent_order if isinstance(default_intent_order, int) else 0
-        intent_param_exclude = ['canonical', 'size']
+        intent_param_exclude = ['size']
         intent_type_additions = [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64, pd.Timestamp]
         super().__init__(property_manager=property_manager, default_save_intent=default_save_intent,
                          intent_param_exclude=intent_param_exclude, default_intent_level=default_intent_level,

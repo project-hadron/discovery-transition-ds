@@ -20,3 +20,32 @@ services:
 # >>> controller = Controller.from_env(uri_pm_repo="", default_save=False)
 # >>> controller.report_tasks(stylise=False)
 # >>> controller.report_run_book(stylise=False)
+
+"""
+$> cortex secrets save AWS_ACCESS_KEY_ID <key> --project <project_name>
+$> cortex secrets save AWS_SECRET_ACCESS_KEY <secret> --project <project_name>
+
+Deploy:
+$> deploy.sh
+
+runtime configuration Yaml:
+$> vi skill.yaml
+
+save the skill:
+$> cortex skills save -y skill.yaml --project <project_name>
+
+Now go to the UI and create the Agent with that skill inside.
+
+
+RUNNING LOCAL:
+pass dictionary for payload in the main method of the controller.py -e.g.
+params = {
+    "token": "",
+    "payload": {
+     },
+      "apiEndpoint": ""
+        }
+     main(params)
+}
+
+"""
