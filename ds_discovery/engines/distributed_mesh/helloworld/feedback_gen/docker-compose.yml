@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  domain-controller:
+    image: projecthadron/controller:0.1.6
+    environment:
+      # Hadron Domain config
+      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/feedback_gen/
+      HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/feedback_gen/
+      # AWS envs
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+
+### To look at the content of a Domain Contract instantiate the controller
+# $> python
+# >>> from ds_engines import Controller
+# >>> controller = Controller.from_env(uri_pm_repo="", default_save=False)
+# >>> controller.report_tasks(stylise=False)
+# >>> controller.report_run_book(stylise=False)

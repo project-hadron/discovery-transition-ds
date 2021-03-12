@@ -34,8 +34,8 @@ class ControllerIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, intent_level: [int, str]=None, synthetic_size: int=None,
-                            controller_repo: str=None, **kwargs):
+    def run_intent_pipeline(self, intent_level: [int, str]=None, synthetic_size: int=None, controller_repo: str=None,
+                            **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -71,7 +71,7 @@ class ControllerIntentModel(AbstractIntentModel):
                             params.update({'uri_pm_repo': controller_repo})
                         if method == 'synthetic_builder':
                             if isinstance(synthetic_size, int):
-                                params['size'] = synthetic_size
+                                params['canonical'] = synthetic_size
                             canonical = eval(f"self.{method}(**{params})", globals(), locals())
                         else:
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())

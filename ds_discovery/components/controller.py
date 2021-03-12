@@ -222,7 +222,7 @@ class Controller(AbstractComponent):
         :return: pd.Dataframe
         """
         report = pd.DataFrame.from_dict(data=self.pm.report_intent())
-        intent_replace = {'components': 'Transition', 'synthetic_builder': 'SyntheticBuilder', 'wrangle': 'Wrangle',
+        intent_replace = {'transition': 'Transition', 'synthetic_builder': 'SyntheticBuilder', 'wrangle': 'Wrangle',
                           'feature_catalog': 'FeatureCatalog', 'data_tolerance': 'DataTolerance'}
         report['component'] = report.intent.replace(to_replace=intent_replace)
         report['task'] = [x[0][10:] for x in report['parameters']]

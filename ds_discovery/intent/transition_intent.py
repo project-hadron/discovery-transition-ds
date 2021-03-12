@@ -1122,6 +1122,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
+            df[c] = df[c].astype('object')
             df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
                                    dayfirst=day_first, yearfirst=year_first, format=date_format)
             if as_num:
