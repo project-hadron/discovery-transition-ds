@@ -89,16 +89,13 @@ class Wrangle(AbstractCommonComponent):
             self.pm_persist(save)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None, seed: int=None,
-                               show_results: bool=None) -> pd.DataFrame:
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, seed: int=None, **kwargs):
         """Runs the components pipeline from source to persist. if show_results is True then additionally returns
         the raults"""
-        show_results = show_results if isinstance(show_results, bool) else False
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, seed=seed)
+        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels, seed=seed,
+                                                       **kwargs)
         self.save_persist_canonical(result)
-        if show_results:
-            return result
 
     def report_column_catalog(self, column_name: [str, list]=None, stylise: bool=True):
         """ generates a report on the source contract

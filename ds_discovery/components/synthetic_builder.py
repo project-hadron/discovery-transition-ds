@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
@@ -79,7 +81,18 @@ class SyntheticBuilder(AbstractCommonComponent):
     def tools(self) -> SyntheticIntentModel:
         return self._intent_model
 
-    def run_component_pipeline(self, size: int, intent_levels: [str, int, list]=None, seed: int=None):
-        """Runs the components pipeline from source to persist"""
-        result = self.intent_model.run_intent_pipeline(size=size, intent_levels=intent_levels, seed=seed)
+    def run_component_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, seed: int=None,
+                               **kwargs):
+        """ runs the synthetic component pipeline. By passing an int value as the canonical will generate a synthetic
+        file of that size,
+
+        :param canonical: an optional starting canonical
+        :param intent_levels: the column
+        :param seed:
+        :return:
+        """
+        if 'size' in kwargs.keys() and canonical is None:
+            canonical = kwargs.pop('size')
+        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels, seed=seed,
+                                                       **kwargs)
         self.save_persist_canonical(result)

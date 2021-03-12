@@ -1,7 +1,6 @@
 import inspect
 import pandas as pd
 from typing import Any
-from ds_discovery.components.commons import Commons
 from ds_discovery.intent.abstract_builder_intent import AbstractBuilderIntentModel
 from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
 from ds_discovery.managers.wrangle_property_manager import WranglePropertyManager
@@ -30,78 +29,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                          default_intent_level=default_intent_level, default_intent_order=default_intent_order,
                          default_replace_intent=default_replace_intent)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, seed: int=None,
-                            **kwargs) -> pd.DataFrame:
-        """Collectively runs all parameterised intent taken from the property manager against the code base as
-        defined by the intent_contract. The whole run can be seeded though any parameterised seeding in the intent
-        contracts will take precedence
-
-        :param canonical: this is the iterative value all intent are applied to and returned.
-        :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
-        :param seed: a seed value that will be applied across the run: default to None
-        :return: a pandas dataframe
-        """
-        # test if there is any intent to run
-        if self._pm.has_intent():
-            # get the list of levels to run
-            if isinstance(intent_levels, (int, str, list)):
-                column_names = self._pm.list_formatter(intent_levels)
-            else:
-                # put all the intent in order of model, get, correlate, associate
-                _model = []
-                _get = []
-                _correlate = []
-                _frame = []
-                for column in self._pm.get_intent().keys():
-                    for order in self._pm.get(self._pm.join(self._pm.KEY.intent_key, column), {}):
-                        for method in self._pm.get(self._pm.join(self._pm.KEY.intent_key, column, order), {}).keys():
-                            if str(method).startswith('get_'):
-                                _get.append(column)
-                            elif str(method).startswith('model_'):
-                                _model.append(column)
-                            elif str(method).startswith('correlate_'):
-                                if column in _get:
-                                    _get.remove(column)
-                                _correlate.append(column)
-                            elif str(method).startswith('frame_'):
-                                if column in _get:
-                                    _get.remove(column)
-                                _frame.append(column)
-                column_names = Commons.list_unique(_get + _model + _correlate + _frame)
-            for column in column_names:
-                level_key = self._pm.join(self._pm.KEY.intent_key, column)
-                for order in sorted(self._pm.get(level_key, {})):
-                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
-                        if method in self.__dir__():
-                            result = []
-                            params.update(params.pop('kwargs', {}))
-                            if isinstance(seed, int):
-                                params.update({'seed': seed})
-                            _ = params.pop('intent_creator', 'Unknown')
-                            if str(method).startswith('get_'):
-                                result = eval(f"self.{method}(size=size, save_intent=False, **params)",
-                                              globals(), locals())
-                            elif str(method).startswith('correlate_'):
-                                subset = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
-                                result = eval(f"self.{method}(canonical=subset, save_intent=False, **params)",
-                                              globals(), locals())
-                            elif str(method).startswith('model_'):
-                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
-                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
-                                                 globals(), locals())
-                                continue
-                            elif str(method).startswith('frame_'):
-                                canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
-                                canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
-                                                 globals(), locals())
-                                continue
-                            canonical[column] = result
-        return canonical
-
-    def frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
-                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    def frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
+                      dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                      seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
@@ -135,6 +66,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         - pd.Dataframe -> a deep copy of the pd.DataFrame
         - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and parameters
@@ -147,6 +79,61 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                     :size (optional) a size to generate
                     :seed (optional) if a seed should be applied
                     :run_book (optional) if specific intent should be run only
+
+        Selections are a list of dictionaries of conditions and optional additional parameters to filter.
+        To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
+        options available to build a condition.
+        An example of a condition with the minimum requirements is
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+
+        an example of using the helper method
+                selection = [inst.select2dict(column='gender', condition="=='M'"),
+                             inst.select2dict(column='age', condition=">65", logic='XOR')]
+
+        Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed. It also
+        helps with building the logic that is executed in order
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._frame_starter(seed=seed, **params)
+
+    def frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
+                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
+        Rows are filtered before the column filter so columns can be referenced even though they might not be included
+        the final column list.
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param selection: a list of selections where conditions are filtered on, executed in list order
+                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param seed: this is a place holder, here for compatibility across methods
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: pd.DataFrame
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
@@ -173,7 +160,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._frame_selection(seed=seed, **params)
 
-    def model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None, selection: list=None,
+    def model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: Any=None, selection: list=None,
                        default_action: dict=None, iteration_actions: dict=None, iter_start: int=None,
                        iter_stop: int=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -205,8 +192,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd.DataFrame
 
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The starting_frame is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
@@ -305,26 +291,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -337,7 +303,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_group(seed=seed, **params)
 
-    def model_merge(self, canonical: Any, other: [str, dict], left_on: str=None, right_on: str=None, on: str=None,
+    def model_merge(self, canonical: Any, other: Any, left_on: str=None, right_on: str=None, on: str=None,
                     how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
                     seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                     replace_intent: bool=None,  remove_duplicates: bool=None) -> pd.DataFrame:
@@ -375,7 +341,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
@@ -436,7 +402,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
@@ -487,25 +453,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
         """
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
@@ -540,26 +487,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
@@ -602,25 +529,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: value set based on the selection list and the action
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
@@ -694,26 +602,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list or pandas.DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -752,26 +640,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -823,26 +691,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -880,25 +728,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Actions are the resulting outcome of the selection (or the default). An action can be just a value or a dict
         that executes a intent method such as get_number(). To help build actions there is a helper function called
@@ -955,26 +784,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1013,26 +822,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1045,7 +834,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_polynomial(seed=seed, **params)
 
-    def correlate_missing(self, canonical: Any,header: str, granularity: [int, float]=None, as_type: str=None,
+    def correlate_missing(self, canonical: Any, header: str, granularity: [int, float]=None, as_type: str=None,
                           lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                           exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
                           day_first: bool=None, year_first: bool=None, seed: int=None, rtn_type: str=None,
@@ -1085,26 +874,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1157,26 +926,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         value. e.g.
             '1-@' would subtract the column value from 1,
             '@*0.5' would multiply the column value by 0.5
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1225,26 +974,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
-
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Actions are the resulting outcome of the selection (or the default). An action can be just a value or a dict
         that executes a intent method such as get_number(). To help build actions there is a helper function called
@@ -1314,26 +1043,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal size to that given
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),

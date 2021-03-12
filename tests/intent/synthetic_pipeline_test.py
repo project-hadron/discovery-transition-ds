@@ -9,6 +9,8 @@ from ds_discovery import SyntheticBuilder
 from ds_discovery.components.commons import Commons
 from aistac.properties.property_manager import PropertyManager
 
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+
 
 class SyntheticPipelineTest(unittest.TestCase):
 
@@ -39,7 +41,7 @@ class SyntheticPipelineTest(unittest.TestCase):
         tools.get_number(1, 2, size=size, column_name='numbers')
         tools.get_category(selection=['M'], column_name='gender')
         sb.set_persist()
-        sb.run_component_pipeline(size=size)
+        sb.run_component_pipeline(canonical=size)
         result = sb.load_persist_canonical()
         self.assertEqual((size, 2), result.shape)
         self.assertCountEqual(['numbers', 'gender'], result.columns)
@@ -48,7 +50,7 @@ class SyntheticPipelineTest(unittest.TestCase):
         self.assertEqual(1, result['numbers'].value_counts().index[0])
         self.assertEqual(size, result['numbers'].value_counts().values[0])
         tools.frame_selection(result, headers=['numbers', 'gender'], column_name='selection')
-        sb.run_component_pipeline(size=size)
+        sb.run_component_pipeline(canonical=size)
 
     def test_run_intent_pipeline_get(self):
         sb = self.builder
@@ -59,7 +61,7 @@ class SyntheticPipelineTest(unittest.TestCase):
         self.assertEqual(['get_number'], result.get('intent'))
         self.assertEqual([['from_value=1', 'to_value=2', "column_name='numbers'"]], result.get('parameters'))
         sb.tools.get_category(selection=['M'], column_name='gender')
-        result = sb.tools.run_intent_pipeline(size=10, columns=['numbers', 'gender', 'jim'])
+        result = sb.tools.run_intent_pipeline(canonical=10, columns=['numbers', 'gender', 'jim'])
         self.assertEqual((10, 2), result.shape)
         self.assertCountEqual(['numbers', 'gender'], result.columns)
         self.assertEqual('M', result['gender'].value_counts().index[0])
@@ -73,7 +75,7 @@ class SyntheticPipelineTest(unittest.TestCase):
         df['numbers'] = tools.get_number(1, 2, column_name='numbers', intent_order=0)
         df['corr_num'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='numbers', intent_order=1)
         df['corr_plus'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='corr_plus')
-        result = tools.run_intent_pipeline(size=10)
+        result = tools.run_intent_pipeline(canonical=10)
         self.assertCountEqual(['numbers', 'corr_plus'], result.columns)
         self.assertEqual(1, result['numbers'].value_counts().size)
         self.assertEqual(2, result['numbers'].value_counts().index[0])
@@ -89,6 +91,26 @@ class SyntheticPipelineTest(unittest.TestCase):
         _ = inst.tools.get_category(selection=['A', 'B'], column_name='value')
         sub_set = Commons.param2dict()
         df['corr_num'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='numbers', intent_order=1)
+
+    def test_canonical_run_pipeline_str(self):
+        builder = SyntheticBuilder.from_env('test', has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri('titanic', uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        # do nothing
+        df = tools.frame_starter(canonical='titanic', column_name='titanic')
+        # The response feedback to the intervention from the member
+        selection = [builder.tools.select2dict(column='alive', condition="@ == 1")]
+        action = builder.tools.action2dict(method='get_category',
+                                           selection=['Positive', 'Negative', 'Neutral', 'No Response'],
+                                           relative_freq=[5, 2, 10, 50])
+        default = builder.tools.action2dict(method='@constant', value='NA')
+        df['profile_feedback'] = builder.tools.correlate_selection(df, selection=selection, action=action,
+                                                                   default_action=default,
+                                                                   column_name='profile_feedback', intent_order=0)
+        result = tools.run_intent_pipeline(canonical=0)
+        print(result)
+        print(result.shape)
+
 
 
 

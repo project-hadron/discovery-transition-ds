@@ -115,14 +115,17 @@ class TransitionIntentModel(AbstractIntentModel):
         _cat_headers = []
         _num_headers = []
         for c in Commons.filter_headers(df, dtype=object):
-            if all(Commons.valid_date(x) for x in df[c].dropna()):
-                _date_headers.append(c)
-            elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
-                _bool_headers.append(c)
-            elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
-                _cat_headers.append(c)
-            elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
-                _num_headers.append(c)
+            try:
+                if all(Commons.valid_date(x) for x in df[c].dropna()):
+                    _date_headers.append(c)
+                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
+                    _bool_headers.append(c)
+                elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
+                    _cat_headers.append(c)
+                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+                    _num_headers.append(c)
+            except TypeError:
+                pass
         if len(_bool_headers) > 0:
             bool_map = {1: True}
             df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)

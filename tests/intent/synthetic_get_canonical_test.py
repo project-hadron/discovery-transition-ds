@@ -53,6 +53,14 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         result = tools._get_canonical(data='test')
         self.assertDictEqual(df.to_dict(), result.to_dict())
 
+    def test_dict_int(self):
+        builder = SyntheticBuilder.from_memory()
+        tools = builder.tools
+        result = tools._get_canonical(data=0)
+        self.assertEqual((0, 0), result.shape)
+        result = tools._get_canonical(data=2)
+        self.assertEqual((2, 0), result.shape)
+
     def test_list(self):
         builder = SyntheticBuilder.from_memory()
         tools = builder.tools

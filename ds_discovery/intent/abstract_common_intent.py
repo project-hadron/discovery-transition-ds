@@ -248,13 +248,14 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         # find the selection index
         return eval(f"canonical[{_condition}].index", globals(), locals())
 
-    def _get_canonical(self, data: [pd.DataFrame, pd.Series, list, str, dict], header: str=None, size: int=None,
+    def _get_canonical(self, data: [pd.DataFrame, pd.Series, list, str, dict, int], header: str=None, size: int=None,
                        deep_copy: bool=None) -> pd.DataFrame:
         """ Used to return or generate a pandas Dataframe from a number of different methods.
         The following can be passed and their returns
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use the canonical2dict(...) method to construct a dict with a method and related parameters
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and paramters
@@ -318,8 +319,6 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                 data = deepcopy(data)
             return pd.DataFrame(data=data, columns=[header])
         elif isinstance(data, str):
-            if data == '@empty':
-                return pd.DataFrame()
             if not self._pm.has_connector(connector_name=data):
                 raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
             handler = self._pm.get_connector_handler(data)
@@ -327,6 +326,8 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
             if isinstance(canonical, dict):
                 canonical = pd.DataFrame.from_dict(data=canonical)
             return canonical
+        elif isinstance(data, int):
+            return pd.DataFrame(index=range(data)) if data > 0 else pd.DataFrame()
         elif not data:
             return pd.DataFrame()
         raise ValueError(f"The canonical format is not recognised, pd.DataFrame, pd.Series, "

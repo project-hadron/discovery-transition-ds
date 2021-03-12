@@ -42,7 +42,8 @@ class SyntheticIntentModelTest(unittest.TestCase):
     def test_complex_sample_modelling(self):
         tools = SyntheticBuilder.from_memory().tools
         state_code = ['CA', 'NY', 'LA', 'NJ', 'VA', 'CO', 'NV', 'GA', 'IN', 'OH', 'KY', 'ME', 'MO', 'WI']
-        df = tools.model_sample_map(canonical={'method': '@empty', 'size':100}, sample_map='us_zipcode',
+        df = pd.DataFrame(index=range(100))
+        df = tools.model_sample_map(canonical=df, sample_map='us_zipcode',
                                     state_filter=state_code, column_name='zipcodes')
         sample_data = tools.action2dict(method='model_sample_map', canonical=tools.action2dict(method='@empty'),
                                         sample_map='us_healthcare_practitioner', headers=['city', 'pcp_tax_id'],

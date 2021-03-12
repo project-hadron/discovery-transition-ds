@@ -1,6 +1,5 @@
 import ast
 import time
-from abc import abstractmethod
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -44,11 +43,100 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    @abstractmethod
-    def run_intent_pipeline(self, *args, **kwargs) -> [None, tuple]:
-        """ Collectively runs all parameterised intent taken from the property manager against the code base as
-        defined by the intent_contract.
+    def run_intent_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, seed: int=None,
+                            simulate: bool=None, **kwargs) -> pd.DataFrame:
+        """Collectively runs all parameterised intent taken from the property manager against the code base as
+        defined by the intent_contract. The whole run can be seeded though any parameterised seeding in the intent
+        contracts will take precedence
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param intent_levels: (optional) a single or list of intent_level to run in order given
+        :param seed: (optional) a seed value that will be applied across the run: default to None
+        :param simulate: (optional) returns a report of the order of run and return the indexed column order of run
+        :return: a pandas dataframe
         """
+        simulate = simulate if isinstance(simulate, bool) else False
+        col_sim = {"column": [], "order": [], "method": []}
+        canonical = self._get_canonical(canonical)
+        size = canonical.shape[0] if canonical.shape[0] > 0 else 1000
+        # test if there is any intent to run
+        if self._pm.has_intent():
+            # get the list of levels to run
+            if isinstance(intent_levels, (str, list)):
+                column_names = Commons.list_formatter(intent_levels)
+            else:
+                # put all the intent in order of model, get, correlate, associate
+                _model = []
+                _get = []
+                _correlate = []
+                _frame_start = []
+                _frame_end = []
+                for column in self._pm.get_intent().keys():
+                    for order in self._pm.get(self._pm.join(self._pm.KEY.intent_key, column), {}):
+                        for method in self._pm.get(self._pm.join(self._pm.KEY.intent_key, column, order), {}).keys():
+                            if str(method).startswith('get_'):
+                                if column in _correlate + _frame_start + _frame_end:
+                                    continue
+                                _get.append(column)
+                            elif str(method).startswith('model_'):
+                                _model.append(column)
+                            elif str(method).startswith('correlate_'):
+                                if column in _get:
+                                    _get.remove(column)
+                                _correlate.append(column)
+                            elif str(method).startswith('frame_'):
+                                if column in _get:
+                                    _get.remove(column)
+                                if str(method).startswith('frame_starter'):
+                                    _frame_start.append(column)
+                                else:
+                                    _frame_end.append(column)
+                column_names = Commons.list_unique(_frame_start + _get + _model + _correlate + _frame_end)
+            for column in column_names:
+                level_key = self._pm.join(self._pm.KEY.intent_key, column)
+                for order in sorted(self._pm.get(level_key, {})):
+                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                        try:
+                            if method in self.__dir__():
+                                if simulate:
+                                    col_sim['column'].append(column)
+                                    col_sim['order'].append(order)
+                                    col_sim['method'].append(method)
+                                    continue
+                                result = []
+                                params.update(params.pop('kwargs', {}))
+                                if isinstance(seed, int):
+                                    params.update({'seed': seed})
+                                _ = params.pop('intent_creator', 'Unknown')
+                                if str(method).startswith('get_'):
+                                    result = eval(f"self.{method}(size=size, save_intent=False, **params)",
+                                                  globals(), locals())
+                                elif str(method).startswith('correlate_'):
+                                    result = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                  globals(), locals())
+                                elif str(method).startswith('model_'):
+                                    canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                     globals(), locals())
+                                    continue
+                                elif str(method).startswith('frame_starter'):
+                                    canonical = self._get_canonical(params.pop('canonical', canonical), deep_copy=False)
+                                    size = canonical.shape[0]
+                                    canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                     globals(), locals())
+                                    continue
+                                elif str(method).startswith('frame_'):
+                                    canonical = eval(f"self.{method}(canonical=canonical, save_intent=False, **params)",
+                                                     globals(), locals())
+                                    continue
+                                if 0 < size != len(result):
+                                    raise IndexError(f"The index size of '{column}' is '{len(result)}', "
+                                                     f"should be {size}")
+                                canonical[column] = result
+                        except ValueError as ve:
+                            raise ValueError(f"intent '{column}', order '{order}', method '{method}' failed with: {ve}")
+        if simulate:
+            return pd.DataFrame.from_dict(col_sim)
+        return canonical
 
     def _get_number(self, from_value: [int, float]=None, to_value: [int, float]=None, relative_freq: list=None,
                     precision: int=None, ordered: str=None, at_most: int=None, size: int=None,
@@ -281,8 +369,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
     def _get_dist_exponential(self, scale: [int, float], size: int=None, seed: int=None) -> list:
         """An exponential continuous random distribution.
 
-        :param mean: The mean (“centre”) of the distribution.
-        :param std: The standard deviation (jitter or “width”) of the distribution. Must be >= 0
+        :param scale: The scale of the distribution.
         :param size: the size of the sample. if a tuple of intervals, size must match the tuple
         :param seed: a seed value for the random function: default to None
         :return: a random number
@@ -402,7 +489,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                        seed: int=None) -> list:
         """ returns a random list of values where the selection of those values is taken from a connector source.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param column_header: the name of the column header to correlate
         :param relative_freq: (optional) a weighting pattern of the final selection
         :param selection_size: (optional) the selection to take from the sample size, normally used with shuffle
@@ -427,14 +514,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return self._get_category(selection=_values.to_list(), relative_freq=relative_freq, size=size, at_most=at_most,
                                   seed=_seed)
 
-    def _frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
-                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                         re_ignore_case: bool=None, seed: int=None) -> pd.DataFrame:
+    def _frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
+                       dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
+                       seed: int=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
@@ -447,12 +534,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: this is a place holder, here for compatibility across methods
         :return: pd.DataFrame
 
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The starter is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
         - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and parameters
@@ -494,15 +582,52 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return Commons.filter_columns(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                       regex=regex, re_ignore_case=re_ignore_case)
 
-    def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None, selection: list=None,
-                        default_action: dict=None, iteration_actions: dict=None, iter_start: int=None,
-                        iter_stop: int=None, seed: int=None) -> pd.DataFrame:
+    def _frame_selection(self, canonical: pd.DataFrame, selection: list=None, headers: [str, list]=None,
+                         drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                         re_ignore_case: bool=None, seed: int=None) -> pd.DataFrame:
+        """ This method always runs at the start of the pipeline, taking a direct or generated pd.DataFrame,
+        see context notes below, as the foundation canonical of all subsequent steps of the pipeline.
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param selection: a list of selections where conditions are filtered on, executed in list order
+                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param seed: this is a place holder, here for compatibility across methods
+        :return: pd.DataFrame
+
+        Selections are a list of dictionaries of conditions and optional additional parameters to filter.
+        To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
+        options available to build a condition.
+        An example of a condition with the minimum requirements is
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+
+        an example of using the helper method
+                selection = [inst.select2dict(column='gender', condition="=='M'"),
+                             inst.select2dict(column='age', condition=">65", logic='XOR')]
+
+        Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed. It also
+        helps with building the logic that is executed in order
+        """
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
+        return self._frame_starter(canonical=canonical, selection=selection, headers=headers, drop=drop, dtype=dtype,
+                                   exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
+
+    def _model_iterator(self, canonical: pd.DataFrame, marker_col: str=None, starting_frame: str=None,
+                        selection: list=None, default_action: dict=None, iteration_actions: dict=None,
+                        iter_start: int=None, iter_stop: int=None, seed: int=None) -> pd.DataFrame:
         """ This method allows one to model repeating data subset that has some form of action applied per iteration.
         The optional marker column must be included in order to apply actions or apply an iteration marker
         An example of use might be a recommender generator where a cohort of unique users need to be selected, for
         different recommendation strategies but users can be repeated across recommendation strategy
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param marker_col: (optional) the marker column name for the action outcome. default is to not include
         :param starting_frame: (optional) a str referencing an existing connector contract name as the base DataFrame
         :param selection: (optional) a list of selections where conditions are filtered on, executed in list order
@@ -515,13 +640,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: (optional) this is a place holder, here for compatibility across methods
         :return: pd.DataFrame
 
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+        The starting_frame can be a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a
+        set of parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
         - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and parameters
@@ -571,7 +696,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         We can even execute some sort of evaluation at run time:
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         rtn_frame = self._get_canonical(starting_frame)
         _seed = self._seed() if seed is None else seed
         iter_start = iter_start if isinstance(iter_start, int) else 0
@@ -593,7 +719,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_frame = pd.concat([rtn_frame, df_count], ignore_index=True)
         return rtn_frame
 
-    def _model_group(self, canonical: Any, headers: [str, list], group_by: [str, list], aggregator: str=None,
+    def _model_group(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
                      list_choice: int=None, list_max: int=None, drop_group_by: bool=False, seed: int=None,
                      include_weighting: bool=False, freq_precision: int=None, remove_weighting_zeros: bool=False,
                      remove_aggregated: bool=False) -> pd.DataFrame:
@@ -602,7 +728,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         These can be using in conjunction with 'list_choice' and 'list_size' allows control of the return values.
         if list_max is set to 1 then a single value is returned rather than a list of size 1.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the column headers to apply the aggregation too
         :param group_by: the column headers to group by
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby' or 'list' or 'set'
@@ -615,28 +741,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param remove_weighting_zeros: (optional) removes zero values
         :param seed: (optional) this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         _seed = self._seed() if seed is None else seed
         generator = np.random.default_rng(seed=_seed)
         freq_precision = freq_precision if isinstance(freq_precision, int) else 3
@@ -675,13 +782,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
 
-    def _model_merge(self, canonical: Any, other: [str, dict], left_on: str=None, right_on: str=None, on: str=None,
-                     how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
-                     seed: int=None) -> pd.DataFrame:
+    def _model_merge(self, canonical: pd.DataFrame, other: Any, left_on: str=None, right_on: str=None,
+                     on: str=None, how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None,
+                     validate: str=None, seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source. The indicator parameter can be
         used to mark the merged items.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param other: a direct or generated pd.DataFrame. see context notes below
         :param left_on: the canonical key column(s) to join on
         :param right_on: the merging dataset key column(s) to join on
@@ -703,12 +810,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
 
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
         - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and parameters
@@ -724,7 +832,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         """
         # Code block for intent
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         other = self._get_canonical(other, size=canonical.shape[0])
         _seed = self._seed() if seed is None else seed
         how = how if isinstance(how, str) and how in ['left', 'right', 'outer', 'inner'] else 'inner'
@@ -738,12 +847,12 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                           suffixes=suffixes, indicator=indicator, validate=validate)
         return df_rtn
 
-    def _model_concat(self, canonical: Any, other: [str, dict, list], as_rows: bool=None, headers: [str, list]=None,
+    def _model_concat(self, canonical: pd.DataFrame, other: Any, as_rows: bool=None, headers: [str, list]=None,
                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                       re_ignore_case: bool=None, shuffle: bool=None, seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param other: a direct or generated pd.DataFrame. see context notes below
         :param as_rows: (optional) how to concatenate, True adds the connector dataset as rows, False as columns
         :param headers: (optional) a filter of headers from the 'other' dataset
@@ -756,12 +865,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
 
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
         - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
                 - model_*(...) -> one of the SyntheticBuilder model methods and parameters
@@ -776,7 +886,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                     :run_book (optional) if specific intent should be run only
 
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         other = self._get_canonical(other, size=canonical.shape[0])
         _seed = self._seed() if seed is None else seed
         shuffle = shuffle if isinstance(shuffle, bool) else False
@@ -791,74 +902,38 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         axis = 'index' if as_rows else 'columns'
         return pd.concat([canonical, df_rtn], axis=axis)
 
-    def _model_explode(self, canonical: Any, header: str, seed: int=None) -> pd.DataFrame:
+    def _model_explode(self, canonical: pd.DataFrame, header: str, seed: int=None) -> pd.DataFrame:
         """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
         in the row list
 
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header of the column to be exploded
         :param seed: (optional) this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
 
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         _seed = self._seed() if seed is None else seed
         return canonical.explode(column=header, ignore_index=True)
 
-    def _model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None,
+    def _model_analysis(self, canonical: pd.DataFrame, analytics_model: dict, apply_bias: bool=None,
                         seed: int=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
         value will be taken as the reference to the sub category and not the random value. This allows already
         constructed association to be used as reference for a sub category.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param analytics_model: the analytics model from discovery-components-ds discovery model train
         :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
         :param seed: seed: (optional) a seed value for the random function: default to None
         :return: a DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
 
         def get_level(analysis: dict, sample_size: int, _seed: int=None):
@@ -914,7 +989,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                         get_level(next_item, section_size, _seed)
             return
 
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         apply_bias = apply_bias if isinstance(apply_bias, bool) else False
         row_dict = dict()
         seed = self._seed() if seed is None else seed
@@ -924,14 +1000,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
-    def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
+    def _correlate_selection(self, canonical: pd.DataFrame, selection: list, action: [str, int, float, dict],
                              default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
         the selection criteria is not fulfilled then the default_action is taken if specified, else null value.
 
         If a DataFrame is not passed, the values column is referenced by the header '_default'
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
@@ -943,25 +1019,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: value set based on the selection list and the action
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
@@ -999,7 +1056,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         We can even execute some sort of evaluation at run time:
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         if len(canonical) == 0:
             raise TypeError("The canonical given is empty")
         if not isinstance(selection, list):
@@ -1029,13 +1087,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None, rtn_type: str=None,
-                          **kwargs):
+    def _correlate_custom(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=None, seed: int=None,
+                          rtn_type: str=None, **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
         as it's parameter name 'canonical'.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param code_str: an action on those column values
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param kwargs: a set of kwargs to include in any executable function
@@ -1043,28 +1101,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list or pandas.DataFrame
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         _seed = seed if isinstance(seed, int) else self._seed()
         use_exec = use_exec if isinstance(use_exec, bool) else False
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
@@ -1080,13 +1119,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, precision: int=None,
-                             rtn_type: str=None):
+    def _correlate_aggregate(self, canonical: pd.DataFrame, headers: list, agg: str, seed: int=None,
+                             precision: int=None, rtn_type: str=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
         aggregation function names are limited to 'sum', 'prod', 'count', 'min', 'max' and 'mean' for numeric columns
         and a special 'list' function name to combine the columns as a list
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: a list of headers to correlate
         :param agg: the aggregation function name enact. The available functions are:
                         'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
@@ -1095,32 +1134,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         if not isinstance(headers, list) or len(headers) < 2:
             raise ValueError("The headers value must be a list of at least two header str")
         if agg not in ['sum', 'prod', 'count', 'min', 'max', 'mean', 'list']:
             raise ValueError("The only allowed func values are 'sum', 'prod', 'count', 'min', 'max', 'mean', 'list'")
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         # Code block for intent
         _seed = seed if isinstance(seed, int) else self._seed()
         precision = precision if isinstance(precision, int) else 3
@@ -1133,7 +1153,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
+    def _correlate_choice(self, canonical: pd.DataFrame, header: str, list_size: int=None, random_choice: bool=None,
                           replace: bool=None, shuffle: bool=None, convert_str: bool=None, seed: int=None,
                           rtn_type: str=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
@@ -1150,7 +1170,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         In addition 'convert_str' allows lists that have been formatted as a string can be converted from a string
         to a list using 'ast.literal_eval(x)'
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: The header containing a list to chose from.
         :param list_size: (optional) the number of elements to return, if more than 1 then list
         :param random_choice: (optional) if the choice should be a random choice.
@@ -1161,26 +1181,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -1215,13 +1215,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, seed: int=None,
+    def _correlate_join(self, canonical: pd.DataFrame, header: str, action: [str, dict], sep: str=None, seed: int=None,
                         rtn_type: str=None):
         """ correlate a column and join it with the result of the action, This allows for composite values to be
         build from. an example might be to take a forename and add the surname with a space separator to create a
         composite name field, of to join two primary keys to create a single composite key.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: an ordered list of columns to join
         :param action: (optional) a string or a single action whose outcome will be joined to the header value
         :param sep: (optional) a separator between the values
@@ -1229,25 +1229,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Actions are the resulting outcome of the selection (or the default). An action can be just a value or a dict
         that executes a intent method such as get_number(). To help build actions there is a helper function called
@@ -1293,38 +1274,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None):
+    def _correlate_sigmoid(self, canonical: pd.DataFrame, header: str, precision: int=None, seed: int=None,
+                           rtn_type: str=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
         between (0,1) and is defined as
                                         f(x) = 1/(1+exp(-x)
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -1341,14 +1303,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None, rtn_type: str=None,
-                              keep_zero: bool=None) -> list:
+    def _correlate_polynomial(self, canonical: pd.DataFrame, header: str, coefficient: list, seed: int=None,
+                              rtn_type: str=None, keep_zero: bool=None) -> list:
         """ creates a polynomial using the reference header values and apply the coefficients where the
         index of the list represents the degree of the term in reverse order.
 
                   e.g  [6, -2, 0, 4] => f(x) = 4x**3 - 2x + 6
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param coefficient: the reverse list of term coefficients
         :param seed: (optional) the random seed. defaults to current datetime
@@ -1356,26 +1318,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -1401,15 +1343,15 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_missing(self, canonical: Any, header: str, granularity: [int, float]=None, as_type: str=None,
-                           lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
+    def _correlate_missing(self, canonical: pd.DataFrame, header: str, granularity: [int, float]=None,
+                           as_type: str=None, lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                            exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
                            day_first: bool=None, year_first: bool=None, seed: int=None,
                            rtn_type: str=None):
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param granularity: (optional) the granularity of the analysis across the range. Default is 5
                 int passed - represents the number of periods
@@ -1431,7 +1373,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return:
         """
-        canonical = self._get_canonical(canonical)
+        if not isinstance(canonical, pd.DataFrame):
+            raise ValueError("The canonical passed is not a pandas Dataframe")
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         s_values = canonical[header].copy()
@@ -1475,14 +1418,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: [int, float, str]=None,
-                           jitter: float=None, jitter_freq: list=None, precision: int=None,
-                           replace_nulls: [int, float]=None, seed: int=None,  keep_zero: bool=None,
+    def _correlate_numbers(self, canonical: pd.DataFrame, header: str, to_numeric: bool=None,
+                           offset: [int, float, str]=None, jitter: float=None, jitter_freq: list=None,
+                           precision: int=None, replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None,
                            min_value: [int, float]=None, max_value: [int, float]=None, rtn_type: str=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
         with the correlated value being the mean and the jitter its standard deviation from that mean
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
@@ -1503,26 +1446,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         value. e.g.
             '1-@' would subtract the column value from 1,
             '@*0.5' would multiply the column value by 0.5
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -1576,7 +1499,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
+    def _correlate_categories(self, canonical: pd.DataFrame, header: str, correlations: list, actions: dict,
                               default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
         Note. to use the current value in the passed values as a parameter value pass an empty dict {} as the keys
@@ -1591,7 +1514,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             you can also use the action to specify a specific value:
                 {0: 'F', 1: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param correlations: a list of categories (can also contain lists for multiple correlations.
         :param actions: the correlated set of categories that should map to the index
@@ -1600,26 +1523,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
-
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
 
         Actions are the resulting outcome of the selection (or the default). An action can be just a value or a dict
         that executes a intent method such as get_number(). To help build actions there is a helper function called
@@ -1670,13 +1573,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
+    def _correlate_dates(self, canonical: pd.DataFrame, header: str, offset: [int, dict]=None, jitter: int=None,
                          jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
                          min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
                          year_first: bool=None, seed: int=None, rtn_type: str=None):
         """ correlates dates to an existing date or list of dates. The return is a list of pd
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param offset: (optional) and offset to the date. if int then assumed a 'days' offset
                 int or dictionary associated with pd. eg {'days': 1}
@@ -1694,26 +1597,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal size to that given
-
-        The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
