@@ -45,6 +45,7 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
+        'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -64,7 +65,7 @@ setup(
     },
     python_requires='>=3.7',
     install_requires=[
-        'aistac-foundation',
+        'aistac-foundation>=2.12',
         'pandas>=1.1',
         'numpy',
         'matplotlib',

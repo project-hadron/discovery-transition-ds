@@ -6,6 +6,7 @@ services:
       # Hadron Domain config
       HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/domain/helloworld/data/feedback_gen/
       HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/feedback_gen/
+      PLAN_WATCHLIST: plan_executor_results_09-03-2021.parquet
       # AWS envs
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
