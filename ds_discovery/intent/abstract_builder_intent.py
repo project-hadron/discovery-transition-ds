@@ -582,7 +582,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return Commons.filter_columns(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                       regex=regex, re_ignore_case=re_ignore_case)
 
-    def _frame_selection(self, canonical: pd.DataFrame, selection: list=None, headers: [str, list]=None,
+    def _frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None,
                          drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                          re_ignore_case: bool=None, seed: int=None) -> pd.DataFrame:
         """ This method always runs at the start of the pipeline, taking a direct or generated pd.DataFrame,
@@ -614,12 +614,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed. It also
         helps with building the logic that is executed in order
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
         return self._frame_starter(canonical=canonical, selection=selection, headers=headers, drop=drop, dtype=dtype,
                                    exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
 
-    def _model_iterator(self, canonical: pd.DataFrame, marker_col: str=None, starting_frame: str=None,
+    def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None,
                         selection: list=None, default_action: dict=None, iteration_actions: dict=None,
                         iter_start: int=None, iter_stop: int=None, seed: int=None) -> pd.DataFrame:
         """ This method allows one to model repeating data subset that has some form of action applied per iteration.
@@ -696,8 +694,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         We can even execute some sort of evaluation at run time:
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         rtn_frame = self._get_canonical(starting_frame)
         _seed = self._seed() if seed is None else seed
         iter_start = iter_start if isinstance(iter_start, int) else 0
@@ -719,7 +716,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_frame = pd.concat([rtn_frame, df_count], ignore_index=True)
         return rtn_frame
 
-    def _model_group(self, canonical: pd.DataFrame, headers: [str, list], group_by: [str, list], aggregator: str=None,
+    def _model_group(self, canonical: Any, headers: [str, list], group_by: [str, list], aggregator: str=None,
                      list_choice: int=None, list_max: int=None, drop_group_by: bool=False, seed: int=None,
                      include_weighting: bool=False, freq_precision: int=None, remove_weighting_zeros: bool=False,
                      remove_aggregated: bool=False) -> pd.DataFrame:
@@ -742,8 +739,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: (optional) this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         _seed = self._seed() if seed is None else seed
         generator = np.random.default_rng(seed=_seed)
         freq_precision = freq_precision if isinstance(freq_precision, int) else 3
@@ -782,7 +778,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
 
-    def _model_merge(self, canonical: pd.DataFrame, other: Any, left_on: str=None, right_on: str=None,
+    def _model_merge(self, canonical: Any, other: Any, left_on: str=None, right_on: str=None,
                      on: str=None, how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None,
                      validate: str=None, seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source. The indicator parameter can be
@@ -832,8 +828,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         """
         # Code block for intent
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _seed = self._seed() if seed is None else seed
         how = how if isinstance(how, str) and how in ['left', 'right', 'outer', 'inner'] else 'inner'
@@ -847,7 +842,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                           suffixes=suffixes, indicator=indicator, validate=validate)
         return df_rtn
 
-    def _model_concat(self, canonical: pd.DataFrame, other: Any, as_rows: bool=None, headers: [str, list]=None,
+    def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                       re_ignore_case: bool=None, shuffle: bool=None, seed: int=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.
@@ -886,8 +881,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                     :run_book (optional) if specific intent should be run only
 
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _seed = self._seed() if seed is None else seed
         shuffle = shuffle if isinstance(shuffle, bool) else False
@@ -902,7 +896,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         axis = 'index' if as_rows else 'columns'
         return pd.concat([canonical, df_rtn], axis=axis)
 
-    def _model_explode(self, canonical: pd.DataFrame, header: str, seed: int=None) -> pd.DataFrame:
+    def _model_explode(self, canonical: Any, header: str, seed: int=None) -> pd.DataFrame:
         """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
         in the row list
 
@@ -915,14 +909,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         The canonical is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         _seed = self._seed() if seed is None else seed
         return canonical.explode(column=header, ignore_index=True)
 
-    def _model_analysis(self, canonical: pd.DataFrame, analytics_model: dict, apply_bias: bool=None,
+    def _model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None,
                         seed: int=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
@@ -989,8 +982,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                         get_level(next_item, section_size, _seed)
             return
 
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         apply_bias = apply_bias if isinstance(apply_bias, bool) else False
         row_dict = dict()
         seed = self._seed() if seed is None else seed
@@ -1000,7 +992,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
-    def _correlate_selection(self, canonical: pd.DataFrame, selection: list, action: [str, int, float, dict],
+    def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
                              default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
         the selection criteria is not fulfilled then the default_action is taken if specified, else null value.
@@ -1056,8 +1048,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         We can even execute some sort of evaluation at run time:
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         if len(canonical) == 0:
             raise TypeError("The canonical given is empty")
         if not isinstance(selection, list):
@@ -1087,7 +1078,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_custom(self, canonical: pd.DataFrame, code_str: str, use_exec: bool=None, seed: int=None,
+    def _correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None,
                           rtn_type: str=None, **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
@@ -1102,8 +1093,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list or pandas.DataFrame
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical)
         _seed = seed if isinstance(seed, int) else self._seed()
         use_exec = use_exec if isinstance(use_exec, bool) else False
         local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
@@ -1119,7 +1109,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_aggregate(self, canonical: pd.DataFrame, headers: list, agg: str, seed: int=None,
+    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None,
                              precision: int=None, rtn_type: str=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
         aggregation function names are limited to 'sum', 'prod', 'count', 'min', 'max' and 'mean' for numeric columns
@@ -1135,12 +1125,11 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
         """
+        canonical = self._get_canonical(canonical)
         if not isinstance(headers, list) or len(headers) < 2:
             raise ValueError("The headers value must be a list of at least two header str")
         if agg not in ['sum', 'prod', 'count', 'min', 'max', 'mean', 'list']:
             raise ValueError("The only allowed func values are 'sum', 'prod', 'count', 'min', 'max', 'mean', 'list'")
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
         # Code block for intent
         _seed = seed if isinstance(seed, int) else self._seed()
         precision = precision if isinstance(precision, int) else 3
@@ -1153,7 +1142,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_choice(self, canonical: pd.DataFrame, header: str, list_size: int=None, random_choice: bool=None,
+    def _correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
                           replace: bool=None, shuffle: bool=None, convert_str: bool=None, seed: int=None,
                           rtn_type: str=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
@@ -1215,7 +1204,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_join(self, canonical: pd.DataFrame, header: str, action: [str, dict], sep: str=None, seed: int=None,
+    def _correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, seed: int=None,
                         rtn_type: str=None):
         """ correlate a column and join it with the result of the action, This allows for composite values to be
         build from. an example might be to take a forename and add the surname with a space separator to create a
@@ -1274,7 +1263,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_sigmoid(self, canonical: pd.DataFrame, header: str, precision: int=None, seed: int=None,
+    def _correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None,
                            rtn_type: str=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
         between (0,1) and is defined as
@@ -1303,7 +1292,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_polynomial(self, canonical: pd.DataFrame, header: str, coefficient: list, seed: int=None,
+    def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None,
                               rtn_type: str=None, keep_zero: bool=None) -> list:
         """ creates a polynomial using the reference header values and apply the coefficients where the
         index of the list represents the degree of the term in reverse order.
@@ -1343,7 +1332,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_missing(self, canonical: pd.DataFrame, header: str, granularity: [int, float]=None,
+    def _correlate_missing(self, canonical: Any, header: str, granularity: [int, float]=None,
                            as_type: str=None, lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                            exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
                            day_first: bool=None, year_first: bool=None, seed: int=None,
@@ -1373,8 +1362,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return:
         """
-        if not isinstance(canonical, pd.DataFrame):
-            raise ValueError("The canonical passed is not a pandas Dataframe")
+        canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         s_values = canonical[header].copy()
@@ -1418,7 +1406,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_numbers(self, canonical: pd.DataFrame, header: str, to_numeric: bool=None,
+    def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None,
                            offset: [int, float, str]=None, jitter: float=None, jitter_freq: list=None,
                            precision: int=None, replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None,
                            min_value: [int, float]=None, max_value: [int, float]=None, rtn_type: str=None):
@@ -1499,7 +1487,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_categories(self, canonical: pd.DataFrame, header: str, correlations: list, actions: dict,
+    def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
                               default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
         Note. to use the current value in the passed values as a parameter value pass an empty dict {} as the keys
@@ -1573,7 +1561,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_dates(self, canonical: pd.DataFrame, header: str, offset: [int, dict]=None, jitter: int=None,
+    def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                          jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
                          min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
                          year_first: bool=None, seed: int=None, rtn_type: str=None):

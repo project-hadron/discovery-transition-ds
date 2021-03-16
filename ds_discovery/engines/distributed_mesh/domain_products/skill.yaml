@@ -1,19 +1,19 @@
 camel: 1.0.0
-name: hadron/controller-skill
-title:  PreProcess Social Posts
-description: Pre Process Social Posts
+name: hadron/controller_skill
+title:  Project Hadron Domain Contract execution
+description: Reusable to run Project Hadron Domain Contracts stored in a remote repository
 inputs:
-  - name: controler-run-params
-    title:
+  - name: hadron_component_run_params
+    title: run parameters for the controller and components in the pipeline
     parameters:
-      - name: HADRON_DEFAULT_PATH
+      - name: domain_contract_repo
         type: string
-        description: Update this description
+        description: The location of the Project Hadron Controller Domain Contract repository
         required: true
-      - name: HADRON_PM_REPO
-        type: string
-        description: Update this description
-        required: true
+      - name: hadron_kwargs
+        type: object
+        description: an optional dictionary of kwargs to pass to the Project Hadron Controller
+        required: false
     routing:
       all:
         action  : projecthadron/cortex_skill
