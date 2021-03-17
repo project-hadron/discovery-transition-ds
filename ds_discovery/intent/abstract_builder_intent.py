@@ -57,6 +57,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         """
         simulate = simulate if isinstance(simulate, bool) else False
         col_sim = {"column": [], "order": [], "method": []}
+        #legacy
+        if 'size' in kwargs.keys():
+            canonical = kwargs.pop('size')
         canonical = self._get_canonical(canonical)
         size = canonical.shape[0] if canonical.shape[0] > 0 else 1000
         # test if there is any intent to run

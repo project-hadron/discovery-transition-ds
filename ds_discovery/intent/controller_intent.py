@@ -71,23 +71,23 @@ class ControllerIntentModel(AbstractIntentModel):
                             params.update({'uri_pm_repo': controller_repo})
                         if method == 'synthetic_builder':
                             if isinstance(synthetic_size, int):
-                                params['canonical'] = synthetic_size
-                            canonical = eval(f"self.{method}(**{params})", globals(), locals())
-                        else:
-                            canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
+                                canonical = synthetic_size
+                        canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def synthetic_builder(self, task_name: str, size: int, columns: [str, list]=None, uri_pm_repo: str=None,
-                          run_task: bool=None, persist: bool=None, save_intent: bool=None, intent_order: int=None,
-                          intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, uri_pm_repo: str=None,
+                          run_task: bool=None, persist: bool=None, size: int=None, save_intent: bool=None,
+                          intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
+                          remove_duplicates: bool=None):
         """ register a synthetic component task pipeline
 
+        :param canonical: this can be a size integer or a starting canonical size is based upon
         :param task_name: the task_name reference for this component
-        :param size: the size of the outcome data set
         :param columns: (optional) a single or list of intent_level to run, if list, run in order given
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task
         :param persist: (optional) if the outcome should be persisted. This does not terminate the pipeline
+        :param size: (optional) legacy size parameter now replaced by passing an int as the canonical
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -108,7 +108,7 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             builder: SyntheticBuilder = eval(f"SyntheticBuilder.from_env(task_name=task_name, default_save=False, "
                                              f"has_contract=True, **{params})", globals(), locals())
-            canonical = builder.intent_model.run_intent_pipeline(size, columns)
+            canonical = builder.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=columns)
             # persist the canonical
             if builder.pm.has_connector(builder.CONNECTOR_PERSIST):
                 builder.save_persist_canonical(canonical=canonical)
