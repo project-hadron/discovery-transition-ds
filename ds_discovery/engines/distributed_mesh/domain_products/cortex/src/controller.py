@@ -16,10 +16,10 @@ def domain_controller(prams: dict):
     # getting payload
     msg = Message(prams)
     # initialise the Cortex client
-    # api_endpoint = msg.get('apiEndpoint')
-    # token = msg.get('token')
-    # project_id = msg.get('projectId')
-    # client = Cortex.client(api_endpoint=api_endpoint, token=token, project=project_id)
+    api_endpoint = msg.get('apiEndpoint')
+    token = msg.get('token')
+    project_id = msg.get('projectId')
+    client = Cortex.client(api_endpoint=api_endpoint, token=token, project=project_id)
     # just in case there are old environment variables for hadron
     for key in os.environ.keys():
         if key.startswith('HADRON'):
@@ -45,26 +45,8 @@ def domain_controller(prams: dict):
     controller.run_controller(intent_levels=intent_levels, synthetic_sizes=synthetic_size_map)
 
 
-# if __name__ == '__main__':
-#     if len(sys.argv) < 2:
-#         print("Message/payload commandline is required")
-#         exit(1)
-#     domain_controller(json.loads(sys.argv[-1]))
-
 if __name__ == '__main__':
-    params = {
-        "token": "qe4aef556yegsfdwf4356yheyhy7867",
-        "payload": {
-            'domain_contract_repo': 'https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/'
-                                    'contracts/healthcare/factory/members/',
-            'hadron_kwargs': {
-                'HADRON_DEFAULT_PATH' : 's3://project-hadron-cs-repo/datalake_gen/healthcare/members',
-                'AWS_ACCESS_KEY_ID': '${AWS_ACCESS_KEY_ID}',
-                'AWS_SECRET_ACCESS_KEY': '${AWS_SECRET_ACCESS_KEY}',
-                },
-            },
-        "apiEndpoint": "http://someendpoint.com",
-        "projectId": "123435"
-    }
-    domain_controller(params)
-
+    if len(sys.argv) < 2:
+        print("Message/payload commandline is required")
+        exit(1)
+    domain_controller(json.loads(sys.argv[-1]))
