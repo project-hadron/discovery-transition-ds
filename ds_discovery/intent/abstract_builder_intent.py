@@ -43,21 +43,22 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, seed: int=None,
-                            simulate: bool=None, **kwargs) -> pd.DataFrame:
+    def run_intent_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, run_book: str=None,
+                            seed: int=None, simulate: bool=None, **kwargs) -> pd.DataFrame:
         """Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract. The whole run can be seeded though any parameterised seeding in the intent
         contracts will take precedence
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param intent_levels: (optional) a single or list of intent_level to run in order given
+        :param run_book: (optional) a preset runbook of intent_level to run in order
         :param seed: (optional) a seed value that will be applied across the run: default to None
         :param simulate: (optional) returns a report of the order of run and return the indexed column order of run
         :return: a pandas dataframe
         """
         simulate = simulate if isinstance(simulate, bool) else False
         col_sim = {"column": [], "order": [], "method": []}
-        #legacy
+        # legacy
         if 'size' in kwargs.keys():
             canonical = kwargs.pop('size')
         canonical = self._get_canonical(canonical)
@@ -67,6 +68,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             # get the list of levels to run
             if isinstance(intent_levels, (str, list)):
                 column_names = Commons.list_formatter(intent_levels)
+            elif isinstance(run_book, str) and self._pm.has_run_book(book_name=run_book):
+                column_names = self._pm.get_run_book(book_name=run_book)
             else:
                 # put all the intent in order of model, get, correlate, associate
                 _model = []
@@ -620,9 +623,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return self._frame_starter(canonical=canonical, selection=selection, headers=headers, drop=drop, dtype=dtype,
                                    exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
 
-    def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None,
-                        selection: list=None, default_action: dict=None, iteration_actions: dict=None,
-                        iter_start: int=None, iter_stop: int=None, seed: int=None) -> pd.DataFrame:
+    def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None, selection: list=None,
+                        default_action: dict=None, iteration_actions: dict=None, iter_start: int=None,
+                        iter_stop: int=None, seed: int=None) -> pd.DataFrame:
         """ This method allows one to model repeating data subset that has some form of action applied per iteration.
         The optional marker column must be included in order to apply actions or apply an iteration marker
         An example of use might be a recommender generator where a cohort of unique users need to be selected, for

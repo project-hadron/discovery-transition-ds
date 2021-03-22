@@ -16,9 +16,14 @@ inputs:
         required: false
     routing:
       all:
-        action  : projecthadron/cortex_skill
+        action  : hadron/controller_skill
         runtime: cortex/functions
         output: response
 outputs:
   - name: hadron_controller_out
     title: Controller output
+    parameters:
+      - name: output
+        type: string
+        description: output
+        required: false

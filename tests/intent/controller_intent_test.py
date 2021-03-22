@@ -1,7 +1,6 @@
 import unittest
 import os
 import shutil
-from pprint import pprint
 
 from ds_discovery import SyntheticBuilder
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel

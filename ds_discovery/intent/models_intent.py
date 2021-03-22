@@ -1,13 +1,13 @@
 import inspect
 from copy import deepcopy
-from typing import Any
 
 import numpy as np
 import pandas as pd
 from aistac.handlers.abstract_handlers import HandlerFactory
 from aistac.intent.abstract_intent import AbstractIntentModel
+
+from ds_discovery.components.commons import Commons
 from ds_discovery.managers.models_property_manager import ModelsPropertyManager
-from sklearn.model_selection import train_test_split
 
 __author__ = 'Darryl Oatridge'
 
@@ -89,8 +89,8 @@ class ModelsIntentModel(AbstractIntentModel):
         if model_name and self._pm.has_intent(model_name):
             local_intent = self._pm.get_intent(level=model_name, intent=_method)
         module_name = module_name if isinstance(module_name, str) else local_intent.get('module_name', None)
-        X = ModelsCommons.filter_columns(canonical, headers=headers)
-        y = ModelsCommons.filter_columns(canonical, headers=target)
+        X = Commons.filter_columns(canonical, headers=headers)
+        y = Commons.filter_columns(canonical, headers=target)
         module = HandlerFactory.get_module(module_name='ds_behavioral')
 
 

@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
+from ds_discovery.managers import FeatureCatalogPropertyManager
 
 
 class FeaturePMTest(unittest.TestCase):

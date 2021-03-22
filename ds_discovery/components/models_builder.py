@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import pandas as pd
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
-from ds_discovery.components.commons import Commons
-from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.intent.models_intent import ModelsIntentModel
 from ds_discovery.managers.models_property_manager import ModelsPropertyManager
 

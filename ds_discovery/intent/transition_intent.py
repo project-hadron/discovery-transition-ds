@@ -41,7 +41,8 @@ class TransitionIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, **kwargs):
+    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, run_book: str=None,
+                            **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
@@ -50,6 +51,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
         :param canonical: this is the iterative value all intent are applied to and returned.
         :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
+        :param run_book: (optional) a preset runbook of intent_level to run in order
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied or None if inplace is True
         """
@@ -58,6 +60,8 @@ class TransitionIntentModel(AbstractIntentModel):
             # get the list of levels to run
             if isinstance(intent_levels, (int, str, list)):
                 intent_levels = Commons.list_formatter(intent_levels)
+            elif isinstance(run_book, str) and self._pm.has_run_book(book_name=run_book):
+                intent_levels = self._pm.get_run_book(book_name=run_book)
             else:
                 intent_levels = sorted(self._pm.get_intent().keys())
             for level in intent_levels:

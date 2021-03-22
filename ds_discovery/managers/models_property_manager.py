@@ -16,4 +16,3 @@ class ModelsPropertyManager(AbstractPropertyManager):
     def list_formatter(value) -> list:
         """override of the list_formatter to include Pandas types"""
         return Commons.list_formatter(value=value)
-

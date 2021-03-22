@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-import pandas as pd
-from aistac import ConnectorContract
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
-from ds_discovery.components.commons import Commons
-from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
 from ds_discovery.intent.data_drift_intent import DataToleranceIntentModel
 
