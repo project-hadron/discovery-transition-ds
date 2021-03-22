@@ -89,12 +89,13 @@ class Wrangle(AbstractCommonComponent):
             self.pm_persist(save)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None, seed: int=None, **kwargs):
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, seed: int=None,
+                               **kwargs):
         """Runs the components pipeline from source to persist. if show_results is True then additionally returns
         the raults"""
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels, seed=seed,
-                                                       **kwargs)
+        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
+                                                       run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)
 
     def report_column_catalog(self, column_name: [str, list]=None, stylise: bool=True):

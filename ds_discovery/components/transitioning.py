@@ -148,10 +148,11 @@ class Transition(AbstractCommonComponent):
         self.save_report_canonical(reports=self.REPORT_QUALITY, report_canonical=report, auto_connectors=True)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None):
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None):
         """Runs the components pipeline from source to persist"""
         canonical = self.load_source_canonical()
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, run_book=run_book,
+                                                       inplace=False)
         self.save_persist_canonical(result)
 
     def report_attributes(self, canonical, stylise: bool=True):

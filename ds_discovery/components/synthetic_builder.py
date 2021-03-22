@@ -81,18 +81,12 @@ class SyntheticBuilder(AbstractCommonComponent):
     def tools(self) -> SyntheticIntentModel:
         return self._intent_model
 
-    def run_component_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, seed: int=None,
-                               **kwargs):
+    def run_component_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, run_book: str=None,
+                               seed: int=None, **kwargs):
         """ runs the synthetic component pipeline. By passing an int value as the canonical will generate a synthetic
-        file of that size,
-
-        :param canonical: an optional starting canonical
-        :param intent_levels: the column
-        :param seed:
-        :return:
-        """
+        file of that size"""
         if 'size' in kwargs.keys() and canonical is None:
             canonical = kwargs.pop('size')
-        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels, seed=seed,
-                                                       **kwargs)
+        result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
+                                                       run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)
