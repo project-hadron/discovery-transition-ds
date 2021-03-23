@@ -129,6 +129,16 @@ class SyntheticIntentGetTest(unittest.TestCase):
         result = pd.Series(result)
         self.assertEqual(sample_size, pd.Series(result).nunique())
 
+    def test_get_datetime_until_delta(self):
+        tools = self.tools
+        sample_size = 10000
+        result = tools.get_datetime(0, {'seconds': 1}, at_most=1, size=sample_size)
+        result = pd.Series(result)
+        self.assertLess(result.max() - result.min(), pd.Timedelta(seconds=1))
+        result = tools.get_datetime(0, {'minutes': 1, 'seconds': -1}, at_most=1, size=sample_size)
+        result = pd.Series(result)
+        self.assertLess(result.max() - result.min(), pd.Timedelta(minutes=1))
+
     def test_get_datetime(self):
         tools = self.tools
         sample_size = 10000

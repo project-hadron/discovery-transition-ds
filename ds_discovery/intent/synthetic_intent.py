@@ -1,6 +1,7 @@
 import inspect
 import re
 import string
+from uuid import uuid1, uuid3, uuid4, uuid5, UUID
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -160,71 +161,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         seed = self._seed(seed=seed)
         rtn_list = self._get_datetime(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
-
-    # def get_datetime_pattern(self, start: Any, until: Any, default: Any=None, ordered: bool=None,
-    #                          year_pattern: list=None, month_pattern: list=None, weekday_pattern: list=None,
-    #                          hour_pattern: list=None, minute_pattern: list=None, quantity: float=None,
-    #                          date_format: str=None, size: int=None, seed: int=None, day_first: bool=None,
-    #                          year_first: bool=None, save_intent: bool=None, column_name: [int, str]=None,
-    #                          intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-    #     """ returns a random date between two date and times. weighted patterns can be applied to the overall date
-    #     range, the year, month, day-of-week, hours and minutes to create a fully customised random set of dates.
-    #     Note: If no patterns are set this will return a linearly random number between the range boundaries.
-    #           Also if no patterns are set and a default date is given, that default date will be returnd each time
-    #
-    #     :param start: the start boundary of the date range can be str, datetime, pd.datetime, pd.Timestamp
-    #     :param until: then up until boundary of the date range can be str, datetime, pd.datetime, pd.Timestamp
-    #     :param default: (optional) a fixed starting date that patterns are applied too.
-    #     :param ordered: (optional) if the return list should be date ordered. Default is True
-    #     :param year_pattern: (optional) adjusts the year selection to this pattern
-    #     :param month_pattern: (optional) adjusts the month selection to this pattern. Must be of length 12
-    #     :param weekday_pattern: (optional) adjusts the weekday selection to this pattern. Must be of length 7
-    #     :param hour_pattern: (optional) adjusts the hours selection to this pattern. must be of length 24
-    #     :param minute_pattern: (optional) adjusts the minutes selection to this pattern
-    #     :param quantity: the quantity of values that are not null. Number between 0 and 1
-    #     :param date_format: the string format of the date to be returned. if not set then pd.Timestamp returned
-    #     :param size: the size of the sample to return. Default to 1
-    #     :param seed: a seed value for the random function: default to None
-    #     :param year_first: specifies if to parse with the year first
-    #             If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
-    #             If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
-    #     :param day_first: specifies if to parse with the day first
-    #             If True, parses dates with the day first, eg %d-%m-%Y.
-    #             If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
-    #     :param save_intent (optional) if the intent contract should be saved to the property manager
-    #     :param column_name: (optional) the column name that groups intent to create a column
-    #     :param intent_order: (optional) the order in which each intent should run.
-    #                     If None: default's to -1
-    #                     if -1: added to a level above any current instance of the intent section, level 0 if not found
-    #                     if int: added to the level specified, overwriting any that already exist
-    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
-    #                     True - replaces the current intent method with the new
-    #                     False - leaves it untouched, disregarding the new intent
-    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-    #     :return: a date or size of dates in the format given.
-    #      """
-    #     # intent persist options
-    #    self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-    #                                column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
-    #     # Code block for intent
-    #     # TODO: All this data pattern could be replaced by correlation layering, needs investigating
-    #     ordered = ordered if isinstance(ordered, bool) else True
-    #     if start is None or until is None:
-    #         raise ValueError("The start or until parameters cannot be of NoneType")
-    #     quantity = self._quantity(quantity)
-    #     size = size if isinstance(size, int) else 1
-    #     _seed = seed if isinstance(seed, int) else self._seed()
-    #     if default:
-    #         date_values = [pd.to_datetime(default, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-    #                                       yearfirst=year_first)] * size
-    #     else:
-    #         date_values = self.get_datetime(start=start, until=until, date_format=date_format, day_first=day_first,
-    #                                         year_first=year_first, seed=_seed, size=size, save_intent=False)
-    #     date_values = pd.Series(date_values)
-    #     # filter by year
-    #     for _year in date_values.dt.year.unique():
-    #         yr_idx = date_values.where(date_values.dt.year == _year).dropna().index
 
     # def get_datetime_pattern(self, start: Any, until: Any, default: Any = None, ordered: bool = None,
     #                          date_pattern: list = None, year_pattern: list = None, month_pattern: list = None,
@@ -843,7 +779,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         as_hex = as_hex if isinstance(as_hex, bool) else False
         version = version if isinstance(version, int) and version in [1, 3, 4, 5] else 4
         kwargs = kwargs if isinstance(kwargs, dict) else {}
-
         rtn_list = [eval(f'uuid{version}(**{kwargs})', globals(), locals()) for x in range(size)]
         rtn_list = [x.hex if as_hex else str(x) for x in rtn_list]
         return self._set_quantity(rtn_list, quantity=quantity, seed=_seed)

@@ -244,11 +244,13 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         range.
         if a signed 'int' type is passed to the start and/or until dates, the inferred date will be the current date
         time with the integer being the offset from the current date time in 'days'.
+        if a dictionary of time delta name values is passed this is treated as a time delta from the start time.
+        for example if start = 0, until = {days=1, hours=3} the date range will be between now and 1 days and 3 hours
 
         Note: If no patterns are set this will return a linearly random number between the range boundaries.
 
         :param start: the start boundary of the date range can be str, datetime, pd.datetime, pd.Timestamp or int
-        :param until: up until boundary of the date range can be str, datetime, pd.datetime, pd.Timestamp or int
+        :param until: up until boundary of the date range can be str, datetime, pd.datetime, pd.Timestamp, pd.delta, int
         :param relative_freq: (optional) A pattern across the whole date range.
         :param at_most: the most times a selection should be chosen
         :param ordered: order the data ascending 'asc' or descending 'dec', values accepted 'asc' or 'des'
@@ -277,6 +279,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             start = (pd.Timestamp.now() + pd.Timedelta(days=start))
         if isinstance(until, int):
             until = (pd.Timestamp.now() + pd.Timedelta(days=until))
+        if isinstance(until, dict):
+            until = (start + pd.Timedelta(**until))
         _dt_start = self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]
         _dt_until = self._convert_date2value(until, day_first=day_first, year_first=year_first)[0]
         precision = 15
