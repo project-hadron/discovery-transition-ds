@@ -526,7 +526,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
     def _frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                       seed: int=None) -> pd.DataFrame:
+                       rename_map: dict=None, seed: int=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
@@ -541,6 +541,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param rename_map: a from: to dictionary of headers to rename
         :param seed: this is a place holder, here for compatibility across methods
         :return: pd.DataFrame
 
@@ -589,8 +590,11 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        return Commons.filter_columns(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
-                                      regex=regex, re_ignore_case=re_ignore_case)
+        rtn_frame = Commons.filter_columns(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+                                           regex=regex, re_ignore_case=re_ignore_case)
+        if isinstance(rename_map, dict):
+            rtn_frame.rename(mapper=rename_map, axis='columns', inplace=True)
+        return rtn_frame
 
     def _frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None,
                          drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,

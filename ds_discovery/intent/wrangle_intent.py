@@ -31,8 +31,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
                       dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                      seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                      replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+                      rename_map: dict=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
@@ -48,6 +48,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param seed: this is a place holder, here for compatibility across methods
+        :param rename_map: a from: to dictionary of headers to rename
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.

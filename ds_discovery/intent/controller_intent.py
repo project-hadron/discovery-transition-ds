@@ -76,9 +76,8 @@ class ControllerIntentModel(AbstractIntentModel):
         return canonical
 
     def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, uri_pm_repo: str=None,
-                          run_task: bool=None, persist: bool=None, size: int=None, save_intent: bool=None,
-                          intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
-                          remove_duplicates: bool=None):
+                          run_task: bool=None, size: int=None, save_intent: bool=None, intent_order: int=None,
+                          intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a synthetic component task pipeline
 
         :param canonical: this can be a size integer or a starting canonical size is based upon
@@ -86,7 +85,6 @@ class ControllerIntentModel(AbstractIntentModel):
         :param columns: (optional) a single or list of intent_level to run, if list, run in order given
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task
-        :param persist: (optional) if the outcome should be persisted. This does not terminate the pipeline
         :param size: (optional) legacy size parameter now replaced by passing an int as the canonical
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -267,7 +265,7 @@ class ControllerIntentModel(AbstractIntentModel):
         return
 
     def data_drift(self, canonical: Any, task_name: str, measure: [int, str], uri_pm_repo: str=None,
-                   run_task: bool=None, persist: bool=None, save_intent: bool=None, intent_order: int=None,
+                   run_task: bool=None, save_intent: bool=None, intent_order: int=None,
                    intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a data tolerance component task pipeline
 
@@ -276,7 +274,6 @@ class ControllerIntentModel(AbstractIntentModel):
         :param measure: a single measure to fun
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task
-        :param persist: (optional) if the outcome should be persisted. This does not terminate the pipeline
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
