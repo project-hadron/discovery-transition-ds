@@ -258,7 +258,8 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use the canonical2dict(...) method to construct a dict with a method and related parameters
             methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and paramters
+                - model_*(...) -> one of the builder model methods and paramters
+                - *_selection(...) -> one of the builder selection methods (get_, correlate_, frame_) and paramters
                 - @empty -> generates an empty pd.DataFrame where size and headers can be passed
                     :size sets the index size of the dataframe
                     :headers any initial headers for the dataframe
@@ -290,9 +291,18 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                     raise ValueError("The canonical data passed was of type 'dict' but did not contain a 'method' key "
                                      "or was not convertible to Dataframe")
             if method in self.__dir__():
-                if str(method).startswith('model_') or str(method).startswith('frame_'):
+                if str(method).startswith('model_') or method == 'frame_selection':
                     data.update({'save_intent': False})
                     return eval(f"self.{method}(**data)", globals(), locals())
+                if str(method).endswith('_selection'):
+                    if not isinstance(header, str):
+                        raise ValueError(f"The canonical type 'dict' method '{method}' must have a header parameter.")
+                    data.update({'save_intent': False})
+                    if method == 'get_selection':
+                        if not isinstance(size, int):
+                            raise ValueError(f"The canonical type 'dict' method '{method}' must have a size parameter.")
+                        data.update({'size': size})
+                    return pd.DataFrame(data=eval(f"self.{method}(**data)", globals(), locals()), columns=[header])
             elif str(method).startswith('@generate'):
                 task_name = data.pop('task_name', None)
                 if task_name is None:
@@ -320,6 +330,8 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
             return pd.DataFrame(data=data, columns=[header])
         elif isinstance(data, str):
             if not self._pm.has_connector(connector_name=data):
+                if isinstance(size, int):
+                    return pd.DataFrame(index=range(size))
                 raise ValueError(f"The data connector name '{data}' is not in the connectors catalog")
             handler = self._pm.get_connector_handler(data)
             canonical = handler.load_canonical()

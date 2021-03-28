@@ -104,7 +104,7 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
             result = tools._get_canonical(data=df)
         self.assertTrue("The canonical data passed was of type 'dict'" in str(context.exception))
 
-    def test_dict_method(self):
+    def test_dict_method_model(self):
         builder = SyntheticBuilder.from_env('generator', has_contract=False)
         tools: SyntheticIntentModel = builder.tools
         action = tools.canonical2dict(method='model_sample_map', canonical=tools.action2dict(method='@empty', size=100),
@@ -112,6 +112,25 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         result = tools._get_canonical(data=action)
         self.assertEqual((100, 5), result.shape)
         self.assertEqual(30, result['gender'].value_counts().loc['F'])
+
+    def test_dict_method_selection(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri('titanic', "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        # frame selection
+        action = tools.canonical2dict(method='frame_selection', canonical='titanic', headers=['survived', 'sex', 'fare'])
+        result = tools._get_canonical(data=action)
+        self.assertEqual((891, 3), result.shape)
+        # correlate selection
+        action = tools.action2dict(method='@header', header='sex')
+        action = tools.canonical2dict(method='correlate_selection', canonical='titanic', selection=[], action=action)
+        result = tools._get_canonical(data=action, header='default')
+        self.assertEqual((891, 1), result.shape)
+        # get selection
+        sample_size = builder.load_canonical('titanic').shape[0]
+        action = tools.canonical2dict(method='get_selection', canonical='titanic', column_header='survived')
+        result = tools._get_canonical(data=action, header='default', size=sample_size)
+        self.assertEqual((891, 1), result.shape)
 
     def test_dict_empty(self):
         builder = SyntheticBuilder.from_env('generator', has_contract=False)

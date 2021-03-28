@@ -87,6 +87,8 @@ class SyntheticIntentModelTest(unittest.TestCase):
         result = builder.tools.frame_selection(canonical=builder.CONNECTOR_SOURCE, selection=selection, headers=['survived', 'sex', 'fare'])
         self.assertCountEqual(['survived', 'sex', 'fare'], list(result.columns))
         self.assertEqual(1, result['survived'].min())
+        result = builder.tools.frame_selection(canonical=builder.CONNECTOR_SOURCE, headers=['survived', 'sex', 'fare'])
+        self.assertEqual((891, 3), result.shape)
 
     def test_remove_unwanted_rows(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)

@@ -508,7 +508,27 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param shuffle: (optional) if the selection should be shuffled before selection. Default is true
         :param size: (optional) size of the return. default to 1
         :param seed: (optional) a seed value for the random function: default to None
-        :return:
+        :return: list
+
+        The canonical is normally a connector contract str reference or a set of parameter instructions on how to
+        generate a pd.Dataframe but can be a pd.DataFrame. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
         """
         canonical = self._get_canonical(canonical)
         _seed = self._seed() if seed is None else seed
@@ -526,7 +546,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
     def _frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                       rename_map: dict=None, seed: int=None) -> pd.DataFrame:
+                       rename_map: dict=None, default_size: int=None, seed: int=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
@@ -542,6 +562,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param rename_map: a from: to dictionary of headers to rename
+        :param default_size: if the canonical fails return an empty dataframe with the default index size
         :param seed: this is a place holder, here for compatibility across methods
         :return: pd.DataFrame
 
@@ -579,7 +600,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         helps with building the logic that is executed in order
 
         """
-        canonical = self._get_canonical(canonical)
+        canonical = self._get_canonical(canonical, size=default_size)
         # not used but in place form method consistency
         _seed = self._seed() if seed is None else seed
         if isinstance(selection, list):
@@ -1123,8 +1144,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None,
-                             precision: int=None, rtn_type: str=None):
+    def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, precision: int=None,
+                             rtn_type: str=None):
         """ correlate two or more columns with each other through a finite set of aggregation functions. The
         aggregation function names are limited to 'sum', 'prod', 'count', 'min', 'max' and 'mean' for numeric columns
         and a special 'list' function name to combine the columns as a list

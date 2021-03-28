@@ -655,13 +655,13 @@ class SyntheticIntentModel(WrangleIntentModel):
             rtn_list = [i + j for i, j in zip(rtn_list, result)] if len(rtn_list) > 0 else result
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_selection(self, connector_name: str, column_header: str, relative_freq: list=None, sample_size: int=None,
+    def get_selection(self, canonical: str, column_header: str, relative_freq: list=None, sample_size: int=None,
                       selection_size: int=None, size: int=None, at_most: bool=None, shuffle: bool=None,
                       quantity: float=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a random list of values where the selection of those values is taken from a connector source.
 
-        :param connector_name: a connector_name for a connector to a data source
+        :param canonical: the canonical
         :param column_header: the name of the column header to correlate
         :param relative_freq: (optional) a weighting pattern of the final selection
         :param selection_size: (optional) the selection to take from the sample size, normally used with shuffle
@@ -681,7 +681,28 @@ class SyntheticIntentModel(WrangleIntentModel):
                         True - replaces the current intent method with the new
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return:
+        :return: list
+
+        The canonical is normally a connector contract str reference or a set of parameter instructions on how to
+        generate a pd.Dataframe but can be a pd.DataFrame. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
