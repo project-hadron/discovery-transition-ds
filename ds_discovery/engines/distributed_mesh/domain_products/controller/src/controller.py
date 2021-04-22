@@ -9,16 +9,13 @@ __author__ = 'Darryl Oatridge'
 
 
 def domain_controller():
-    controller = Controller.from_env(default_save=False, has_contract=True)
+    # Controller
+    uri_pm_repo = os.environ.get('HADRON_PM_REPO', None)
+    controller = Controller.from_env(uri_pm_repo=uri_pm_repo, default_save=False, has_contract=True)
     run_book = os.environ.get('HADRON_CONTROLLER_RUNBOOK', None)
-    synthetic_size_map = dict([(k[23:].lower(), int(v))
-                               for k, v in os.environ.items()
-                               if k.startswith('HADRON_CONTROLLER_SIZE_')])
-    intent_levels = None
-    if isinstance(run_book, str) and controller.pm.has_run_book(run_book):
-        intent_levels = controller.pm.get_run_book(run_book)
-    synthetic_size_map = synthetic_size_map if isinstance(synthetic_size_map, dict) else None
-    controller.run_controller(intent_levels=intent_levels, synthetic_sizes=synthetic_size_map)
+    repeat = os.environ.get('HADRON_CONTROLLER_REPEAT', None)
+    wait = os.environ.get('HADRON_CONTROLLER_WAIT', None)
+    controller.run_controller(run_book=run_book, repeat=repeat, wait=wait)
 
 
 if __name__ == '__main__':

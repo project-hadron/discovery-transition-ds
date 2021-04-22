@@ -370,7 +370,6 @@ class Controller(AbstractComponent):
                 canonical = self.intent_model.run_intent_pipeline(canonical=canonical, intent_level=task,
                                                                   persist_result=to_persist,
                                                                   controller_repo=self.URI_PM_REPO)
-                print(f"{task} -> {canonical.shape}")
                 if to_persist:
                     continue
                 if self.eb_portfolio.is_event_book(task):
