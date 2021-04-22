@@ -264,7 +264,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
         :param day_first: specifies if to parse with the day first
                 If True, parses dates with the day first, eg %d-%m-%Y.
-                If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+                If False default to the a preferred preference, normally %m-%d-%Y (but not strict)
         :return: a date or size of dates in the format given.
          """
         # pre check
@@ -524,7 +524,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         generate a pd.Dataframe but can be a pd.DataFrame. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
@@ -567,7 +567,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclusive. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
@@ -580,7 +580,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
@@ -639,7 +639,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
+        :param dtype: the column types to include or exclusive. Default None else int, float, bool, object, 'number'
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt' columns
         :param re_ignore_case: true if the regex should ignore case. Default is False
@@ -687,7 +687,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         set of parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
@@ -779,7 +779,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param drop_group_by: (optional) drops the group by headers
         :param include_weighting: (optional) include a percentage weighting column for each
         :param freq_precision: (optional) a precision for the relative_freq values
-        :param remove_aggregated: (optional) if used in conjunction with the weighting then drops the aggrigator column
+        :param remove_aggregated: (optional) if used in conjunction with the weighting then drops the aggregator column
         :param remove_weighting_zeros: (optional) removes zero values
         :param seed: (optional) this is a place holder, here for compatibility across methods
         :return: a pd.DataFrame
@@ -855,7 +855,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
@@ -909,7 +909,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
@@ -1081,7 +1081,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return
 
         canonical = self._get_canonical(canonical)
-        apply_bias = apply_bias if isinstance(apply_bias, bool) else False
+        apply_bias = apply_bias if isinstance(apply_bias, bool) else True
         row_dict = dict()
         seed = self._seed() if seed is None else seed
         size = canonical.shape[0]
@@ -1152,7 +1152,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if not isinstance(selection, list):
             raise ValueError("The 'selection' parameter must be a 'list' of 'dict' types")
         if not isinstance(action, (str, int, float, dict)) or (isinstance(action, dict) and len(action) == 0):
-            raise TypeError("The 'action' parameter is not of an acepted format or is empty")
+            raise TypeError("The 'action' parameter is not of an accepted format or is empty")
         _seed = seed if isinstance(seed, int) else self._seed()
         # prep the values to be a DataFrame if it isn't already
         action = deepcopy(action)
@@ -1676,7 +1676,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param min_date: (optional)a minimum date not to go below
         :param max_date: (optional)a max date not to go above
         :param fill_nulls: (optional) if no date values should remain untouched or filled based on the list mode date
-        :param day_first: (optional) if the dates given are day first firmat. Default to True
+        :param day_first: (optional) if the dates given are day first format. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
         :param seed: (optional) a seed value for the random function: default to None
@@ -1798,7 +1798,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param relative_freq: a list of int or float values representing a relative distribution frequency
         :param size: the size to be distributed
         :param seed: (optional) a seed value for the random function: default to None
-        :return: an integer list of the distrubution that sum to the size
+        :return: an integer list of the distribution that sum to the size
         """
         if not isinstance(relative_freq, list) or not all(isinstance(x, (int, float)) for x in relative_freq):
             raise ValueError("The weighted pattern must be an list of numbers")

@@ -1,9 +1,6 @@
 from __future__ import annotations
-import concurrent.futures
 import threading
 import time
-from typing import Any
-
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 
@@ -50,7 +47,6 @@ class Controller(AbstractComponent):
                          reset_templates=reset_templates, template_path=template_path, template_module=template_module,
                          template_source_handler=template_source_handler,
                          template_persist_handler=template_persist_handler, align_connectors=align_connectors)
-
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
@@ -294,7 +290,7 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, run_book: [str, list]=None, repeat: int=None, wait: int=None):
+    def run_controller(self, run_book: [str, list]=None, repeat: int=None, sleep: int=None):
         """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
         controller registered task name that will run in the given order passing the resulting outcome of one to the
         input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
@@ -311,7 +307,7 @@ class Controller(AbstractComponent):
 
         :param run_book: (optional) a run_book reference, a list of task names (intent levels) or task dict
         :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
-        :param wait: (optional) number of seconds to wait before repeating
+        :param sleep: (optional) number of seconds to sleep before repeating
         """
         _lock = threading.Lock()
 
@@ -378,8 +374,8 @@ class Controller(AbstractComponent):
                 self.eb_portfolio.add_book_to_portfolio(book_name=task, event_book=eb)
                 self.eb_portfolio.add_event(book_name=task, event=canonical)
             self.eb_portfolio.reset_portfolio()
-            if isinstance(wait, int) and count < repeat-1:
-                time.sleep(wait)
+            if isinstance(sleep, int) and count < repeat-1:
+                time.sleep(sleep)
         return
 
     def _report(self, canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):

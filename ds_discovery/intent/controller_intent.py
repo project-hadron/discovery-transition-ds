@@ -131,8 +131,9 @@ class ControllerIntentModel(AbstractIntentModel):
         return
 
     def transition(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                   transition_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
-                   intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                   transition_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None,
+                   intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
+                   remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
@@ -194,8 +195,9 @@ class ControllerIntentModel(AbstractIntentModel):
         return
 
     def wrangle(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                wrangled_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
-                intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                wrangled_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None,
+                intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
+                remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
@@ -241,8 +243,8 @@ class ControllerIntentModel(AbstractIntentModel):
 
     def feature_catalog(self, canonical: Any, task_name: str, feature_name: [int, str]=None, uri_pm_repo: str=None,
                         run_task: bool=None, train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
-                        persist_result: bool=None, save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None):
+                        persist_result: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Feature Catalog component task pipeline
 
         :param canonical: the canonical to run through the component pipeline

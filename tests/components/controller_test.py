@@ -55,14 +55,14 @@ class ControllerTest(unittest.TestCase):
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
         roadmap = [
             controller.runbook2dict(task='members_sim', source=1000),
-            controller.runbook2dict(task='pcp_sim', source=100),
             controller.runbook2dict(task='members_gen', source='members_sim', persist=True),
-            controller.runbook2dict(task='cln_members_gen', source='members_sim', persist=True),
-            controller.runbook2dict(task='prf_members_gen', source='members_sim', persist=True),
-            controller.runbook2dict(task='ins_members_gen', source='members_sim', persist=True),
-            controller.runbook2dict(task='pcp_gen', source='pcp_sim', persist=True),
+            # controller.runbook2dict(task='cln_members_gen', source='members_sim', persist=True),
+            # controller.runbook2dict(task='prf_members_gen', source='members_sim', persist=True),
+            # controller.runbook2dict(task='ins_members_gen', source='members_sim', persist=True),
+            # controller.runbook2dict(task='pcp_sim', source=100),
+            # controller.runbook2dict(task='pcp_gen', source='pcp_sim', persist=True),
         ]
-        controller.run_controller(run_book=roadmap, repeat=2, wait=2)
+        controller.run_controller(run_book=roadmap, repeat=2, sleep=2)
 
     def test_run_intent_pipeline(self):
         uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
@@ -73,7 +73,7 @@ class ControllerTest(unittest.TestCase):
         self.assertEqual((100, 25), result.shape)
 
     def test_report_tasks(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/factory/members/"
+        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
         result = controller.report_tasks(stylise=False)
         self.assertEqual(['level', 'order', 'component', 'task', 'parameters', 'creator'], list(result.columns))
