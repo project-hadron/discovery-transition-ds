@@ -1,5 +1,4 @@
 import re
-import threading
 from copy import deepcopy
 import pandas as pd
 from aistac.components.aistac_commons import AistacCommons
@@ -140,8 +139,7 @@ class Commons(AistacCommons):
         """
         copy = copy if isinstance(copy, bool) else True
         if copy:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                           regex=regex, re_ignore_case=re_ignore_case)
         return df.loc[:, obj_cols]

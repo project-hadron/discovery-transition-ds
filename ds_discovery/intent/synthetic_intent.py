@@ -1024,6 +1024,8 @@ class SyntheticIntentModel(WrangleIntentModel):
         """Returns the quantity percent of good values in selection with the rest fill"""
         if quantity == 1:
             return selection
+        if quantity == 0:
+            return [np.nan] * len(selection)
         seed = self._seed(seed=seed)
         generator = np.random.default_rng(seed=seed)
 

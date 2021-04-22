@@ -465,7 +465,74 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_explode(seed=seed, **params)
 
-    def model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None, seed: int=None,
+    def model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
+                     detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
+                     apply_bias: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                     intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """
+
+        :param canonical:
+        :param sample:
+        :param columns_list:
+        :param exclude_associate:
+        :param detail_numeric:
+        :param strict_typing:
+        :param category_limit:
+        :param apply_bias:
+        :param seed: seed: (optional) a seed value for the random function: default to None
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_sample(seed=seed, **params)
+
+    def model_script(self, canonical: Any, script_contract: str, seed: int=None, save_intent: bool=None,
+                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None) -> pd.DataFrame:
+        """
+
+        :param canonical:
+        :param script_contract:
+        :param seed: seed: (optional) a seed value for the random function: default to None
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_script(seed=seed, **params)
+
+    def model_analysis(self, canonical: Any, analytics_blob: dict, apply_bias: bool=None, seed: int=None,
                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
@@ -474,7 +541,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         constructed association to be used as reference for a sub category.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param analytics_model: the analytics model from discovery-components-ds discovery model train
+        :param analytics_blob: the analytics blob from discovery-components-ds discovery model train
         :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager

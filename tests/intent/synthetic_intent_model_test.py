@@ -163,6 +163,14 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual([1, 1, 2, 3, 3, 3], df['A'].to_list())
         self.assertEqual([2, 2, 3, 7, 8, 9], df['B'].to_list())
 
+    def test_model_sample(self):
+        builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri(connector_name='titanic', uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        df = pd.DataFrame(index=range(300))
+        df = tools.model_sample(df, sample='titanic')
+        self.assertEqual((300, 15), df.shape)
+
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
             env = os.environ['NoEnvValueTest']

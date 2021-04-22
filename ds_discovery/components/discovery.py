@@ -1091,6 +1091,12 @@ class DataDiscovery(object):
         exclude_dominant = False if not isinstance(exclude_dominant, bool) else exclude_dominant
         param_lower = None if not isinstance(lower, (int, float)) else lower
         param_upper = None if not isinstance(upper, (int, float)) else upper
+        # nulls
+        _values_size = values.size
+        values = values.dropna()
+        _nulls_size = _original_size - values.size
+        _nulls_percent = round(((_values_size - values.size) / _values_size) * 100,
+                               freq_precision) if _values_size > 0 else 0
         # limits
         if values.size > 0:
             lower = values.min() if not isinstance(lower, (int, float)) else lower
@@ -1102,12 +1108,6 @@ class DataDiscovery(object):
             lower = 0
             upper = 0
             _intervals = [(lower, upper, 'both')]
-        # nulls
-        _values_size = values.size
-        values = values.dropna()
-        _nulls_size = _original_size - values.size
-        _nulls_percent = round(((_values_size - values.size) / _values_size) * 100,
-                               freq_precision) if _values_size > 0 else 0
         # outliers
         _values_size = values.size
         values = values.loc[values.between(lower, upper, inclusive=True).values]
@@ -1135,7 +1135,7 @@ class DataDiscovery(object):
             _intervals = [(lower, upper, 'both')]
             return {'intent': {'intervals': _intervals, 'dtype': 'number'},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'granularity': granularity,
-                               'detail_stats': detail_stats},
+                               'detail_stats': detail_stats, 'lower': param_lower, 'upper': param_upper},
                     'patterns': {'relative_freq': [1], 'freq_mean': [0], 'freq_std': [0], 'sample_distribution': [0]},
                     'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
                               'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
@@ -1287,12 +1287,14 @@ class DataDiscovery(object):
         """
         values = pd.to_datetime(values, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                 yearfirst=year_first)
-        values = mdates.date2num(values)
-        values = pd.Series(values)
         lower = pd.to_datetime(lower, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                yearfirst=year_first)
         upper = pd.to_datetime(upper, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                yearfirst=year_first)
+        params_lower = lower if isinstance(lower, pd.Timestamp) else None
+        params_upper = upper if isinstance(upper, pd.Timestamp) else None
+        values = mdates.date2num(values)
+        values = pd.Series(values)
         lower = values.min() if not isinstance(lower, pd.Timestamp) else mdates.date2num(lower)
         upper = values.max() if not isinstance(upper, pd.Timestamp) else mdates.date2num(upper)
         if isinstance(granularity, pd.Timedelta):
@@ -1312,18 +1314,22 @@ class DataDiscovery(object):
         rtn_dict.get('intent')['intervals'] = [(pd.Timestamp(mdates.num2date(p[0])),
                                                 pd.Timestamp(mdates.num2date(p[1])),
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
-        rtn_dict.get('params')['lower'] = pd.Timestamp(mdates.num2date(rtn_dict.get('params')['lower']))
-        rtn_dict.get('params')['upper'] = pd.Timestamp(mdates.num2date(rtn_dict.get('params')['upper']))
-        rtn_dict.get('stats')['oldest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['lowest']))
-        rtn_dict.get('stats')['latest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['highest']))
+        if params_lower:
+            rtn_dict.get('params')['lower'] = params_lower
+        if params_upper:
+            rtn_dict.get('params')['upper'] = params_upper
+        rtn_dict.get('stats')['lowest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['lowest']))
+        rtn_dict.get('stats')['highest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['highest']))
         rtn_dict.get('stats')['mean'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['mean']))
         if isinstance(date_format, str):
             rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
                                                     p[2]) for p in rtn_dict.get('intent')['intervals']]
-            rtn_dict.get('params')['lower'] = rtn_dict.get('params')['lower'].strftime(date_format)
-            rtn_dict.get('params')['upper'] = rtn_dict.get('params')['upper'].strftime(date_format)
-            rtn_dict.get('stats')['oldest'] = rtn_dict.get('stats')['oldest'].strftime(date_format)
-            rtn_dict.get('stats')['latest'] = rtn_dict.get('stats')['latest'].strftime(date_format)
+            if params_lower:
+                rtn_dict.get('params')['lower'] = rtn_dict.get('params')['lower'].strftime(date_format)
+            if params_upper:
+                rtn_dict.get('params')['upper'] = rtn_dict.get('params')['upper'].strftime(date_format)
+            rtn_dict.get('stats')['lowest'] = rtn_dict.get('stats')['lowest'].strftime(date_format)
+            rtn_dict.get('stats')['highest'] = rtn_dict.get('stats')['highest'].strftime(date_format)
             rtn_dict.get('stats')['mean'] = rtn_dict.get('stats')['mean'].strftime(date_format)
         rtn_dict.get('intent')['dtype'] = 'date'
         # remove things that don't make sense to dates

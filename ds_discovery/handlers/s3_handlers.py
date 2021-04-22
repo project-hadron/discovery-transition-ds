@@ -1,4 +1,3 @@
-import datetime
 import threading
 from io import StringIO, BytesIO
 import pandas as pd
@@ -44,6 +43,7 @@ class S3SourceHandler(AbstractSourceHandler):
                                       aws_session_token=aws_session_token)
         self._file_state = 0
         self._changed_flag = True
+        self._lock = threading.Lock()
 
     def supported_types(self) -> list:
         """ The source types supported with this module"""
@@ -150,7 +150,7 @@ class S3SourceHandler(AbstractSourceHandler):
                                   "Key '{}' with error code '{}'".format(self._session.region_name, _cc.netloc,
                                                                          _cc.path[1:], code))
         resource_body = s3_object['Body'].read()
-        with threading.Lock():
+        with self._lock:
             if file_type.lower() in ['parquet', 'pq', 'pqt']:
                 return pd.read_parquet(BytesIO(resource_body), **read_params)
             if file_type.lower() in ['csv', 'tsv', 'txt']:
@@ -223,20 +223,20 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
             byte_obj = StringIO()
             _mode = write_params.pop('mode', 'wb')
             _index = write_params.pop('index', False)
-            with threading.Lock():
+            with self._lock:
                 canonical.to_csv(byte_obj, mode=_mode, index=_index, **write_params)
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         # pickle
         elif file_type.lower() in ['pkl ', 'pickle']:
             _protocol = write_params.pop('protocol', pickle.HIGHEST_PROTOCOL)
             _fix_imports = write_params.pop('fix_imports', True)
-            with threading.Lock():
+            with self._lock:
                 byte_obj = pickle.dumps(canonical, protocol=_protocol, fix_imports=_fix_imports)
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj, **s3_put_params)
         # json
         elif file_type.lower() in ['json']:
             byte_obj = StringIO()
-            with threading.Lock():
+            with self._lock:
                 if isinstance(canonical, pd.DataFrame):
                     canonical.to_json(byte_obj, **write_params)
                     body = byte_obj.getvalue()
@@ -248,7 +248,7 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
         elif file_type.lower() in ['parquet', 'pq', 'pqt']:
             _index = write_params.pop('index', False)
             byte_obj = BytesIO()
-            with threading.Lock():
+            with self._lock:
                 # table = pa.Table.from_pandas(df=canonical, **write_params)
                 canonical.to_parquet(byte_obj, index=_index, **write_params)
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)

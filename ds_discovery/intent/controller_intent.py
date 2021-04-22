@@ -3,6 +3,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
+from ds_discovery.components.abstract_common_component import AbstractCommonComponent
+
 from ds_discovery import FeatureCatalog, Transition, DataDrift, Wrangle, SyntheticBuilder
 from ds_discovery.managers.controller_property_manager import ControllerPropertyManager
 
@@ -34,21 +36,22 @@ class ControllerIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, intent_level: [int, str]=None, synthetic_size: int=None, controller_repo: str=None,
-                            **kwargs):
+    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_level: [int, str]=None, synthetic_size: int=None,
+                            controller_repo: str=None, persist_result: bool=None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
         and will contain 'save_intent' as parameters.
 
-        :param intent_level: The intent_level to run. if none is given then
+        :param canonical: this is the iterative value all intent are applied to and returned.
+        :param intent_level: (optional) The intent_level to run. if none then assume pm constant DEFAULT_INTENT_LEVEL
+        :param synthetic_size: (optional) a size to pass to any synthetic intent
+        :param controller_repo: (optional) the controller repo to use if no uri_pm_repo is within the intent parameters
+        :param persist_result: (optional) if the intent results should be persisted as well as returned in memory
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
-        :param synthetic_size: a size to pass to any synthetic intent
-        :param controller_repo: the controller repo to use if no uri_pm_repo is within the intent parameters
         :return Canonical with parameterised intent applied
         """
-        canonical = pd.DataFrame()
         # test if there is any intent to run
         if self._pm.has_intent():
             # get the list of levels to run
@@ -69,6 +72,8 @@ class ControllerIntentModel(AbstractIntentModel):
                         # add the controller_repo if given
                         if isinstance(controller_repo, str) and 'uri_pm_repo' not in params.keys():
                             params.update({'uri_pm_repo': controller_repo})
+                        if isinstance(persist_result, bool):
+                            params.update({'persist_result': persist_result})
                         if method == 'synthetic_builder':
                             if isinstance(synthetic_size, int):
                                 canonical = synthetic_size
@@ -76,15 +81,17 @@ class ControllerIntentModel(AbstractIntentModel):
         return canonical
 
     def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, uri_pm_repo: str=None,
-                          run_task: bool=None, size: int=None, save_intent: bool=None, intent_order: int=None,
-                          intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                          run_task: bool=None, persist_result: bool=None, size: int=None, save_intent: bool=None,
+                          intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
+                          remove_duplicates: bool=None):
         """ register a synthetic component task pipeline
 
         :param canonical: this can be a size integer or a starting canonical size is based upon
         :param task_name: the task_name reference for this component
         :param columns: (optional) a single or list of intent_level to run, if list, run in order given
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param run_task: (optional) if when adding the task
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+        :param persist_result: (optional) if the resulting canonical should be persisted.
         :param size: (optional) legacy size parameter now replaced by passing an int as the canonical
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -103,14 +110,17 @@ class ControllerIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # create the event book
         if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             builder: SyntheticBuilder = eval(f"SyntheticBuilder.from_env(task_name=task_name, default_save=False, "
                                              f"has_contract=True, **{params})", globals(), locals())
             canonical = builder.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=columns)
             # persist the canonical
-            if builder.pm.has_connector(builder.CONNECTOR_PERSIST):
+            if persist_result and builder.pm.has_connector(builder.CONNECTOR_PERSIST):
                 builder.save_persist_canonical(canonical=canonical)
             # create reports
+            self._common_reports(builder)
+            # customer reports
             if builder.pm.has_connector(builder.REPORT_SCHEMA):
                 builder.save_report_canonical(reports=builder.REPORT_SCHEMA,
                                               report_canonical=builder.report_canonical_schema(stylise=False))
@@ -121,15 +131,16 @@ class ControllerIntentModel(AbstractIntentModel):
         return
 
     def transition(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                   transition_intent: [int, str, list]=None, save_intent: bool=None, intent_order: int=None,
+                   transition_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
                    intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
         :param task_name: the task_name reference for this component
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param run_task: (optional) if when adding the task
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
         :param transition_intent: (optional) a single or list of components levels to run, if list, run in order given
+        :param persist_result: (optional) if the resulting canonical should be persisted.
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -145,8 +156,8 @@ class ControllerIntentModel(AbstractIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # create the event book
         if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             tr: Transition = eval(f"Transition.from_env(task_name=task_name, default_save=False, has_contract=True, "
                                   f"**{params})", globals(), locals())
@@ -155,9 +166,12 @@ class ControllerIntentModel(AbstractIntentModel):
             canonical = tr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
                                                             inplace=False)
             # persist the canonical
-            if tr.pm.has_connector(tr.CONNECTOR_PERSIST):
+            if persist_result and tr.pm.has_connector(tr.CONNECTOR_PERSIST):
                 tr.save_persist_canonical(canonical=canonical)
+
             # create reports
+            self._common_reports(tr)
+            # customer reports
             if tr.pm.has_connector(tr.REPORT_SCHEMA):
                 tr.save_report_canonical(reports=tr.REPORT_SCHEMA,
                                          report_canonical=tr.report_canonical_schema(stylise=False))
@@ -180,15 +194,16 @@ class ControllerIntentModel(AbstractIntentModel):
         return
 
     def wrangle(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                wrangled_intent: [int, str, list]=None, save_intent: bool=None, intent_order: int=None,
+                wrangled_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
                 intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
         :param task_name: the task_name reference for this component
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param run_task: (optional) if when adding the task
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
         :param wrangled_intent: (optional) an single or list of wrangled levels to run, if list, run in order given
+        :param persist_result: (optional) if the resulting canonical should be persisted.
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -206,6 +221,7 @@ class ControllerIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # create the event book
         if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             wr: Wrangle = eval(f"Wrangle.from_env(task_name=task_name, default_save=False, has_contract=True, "
                                f"**{params})", globals(), locals())
@@ -214,14 +230,18 @@ class ControllerIntentModel(AbstractIntentModel):
             canonical = wr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
                                                             inplace=False)
             # persist the canonical
-            if wr.pm.has_connector(wr.CONNECTOR_PERSIST):
+            if persist_result and wr.pm.has_connector(wr.CONNECTOR_PERSIST):
                 wr.save_persist_canonical(canonical=canonical)
+            # create reports
+            self._common_reports(wr)
+            # customer reports
+
             return canonical
         return
 
     def feature_catalog(self, canonical: Any, task_name: str, feature_name: [int, str]=None, uri_pm_repo: str=None,
                         run_task: bool=None, train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
-                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                        persist_result: bool=None, save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Feature Catalog component task pipeline
 
@@ -234,7 +254,8 @@ class ControllerIntentModel(AbstractIntentModel):
                             samples. If None, then not used
         :param seed: (optional) if shuffle is True a seed value for the choice
         :param shuffle: (optional) Whether or not to shuffle the data before splitting or just split on train size.
-        :param run_task: (optional) if when adding the task
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+        :param persist_result: (optional) if the resulting canonical should be persisted.
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -252,6 +273,7 @@ class ControllerIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # create the event book
         if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             fc: FeatureCatalog = eval(f"FeatureCatalog.from_env(task_name=task_name, default_save=False, "
                                       f"has_contract=True, **{params})", globals(), locals())
@@ -259,13 +281,17 @@ class ControllerIntentModel(AbstractIntentModel):
                 canonical = fc.load_source_canonical()
             canonical = fc.intent_model.run_intent_pipeline(canonical=canonical, feature_name=feature_name,
                                                             train_size=train_size, seed=seed, shuffle=shuffle)
-            if fc.pm.has_connector(feature_name):
+            if persist_result and fc.pm.has_connector(feature_name):
                 fc.save_catalog_feature(feature_name=feature_name, canonical=canonical)
+            # create reports
+            self._common_reports(fc)
+            # customer reports
+
             return canonical
         return
 
     def data_drift(self, canonical: Any, task_name: str, measure: [int, str], uri_pm_repo: str=None,
-                   run_task: bool=None, save_intent: bool=None, intent_order: int=None,
+                   run_task: bool=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
                    intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a data tolerance component task pipeline
 
@@ -273,7 +299,8 @@ class ControllerIntentModel(AbstractIntentModel):
         :param task_name: the task_name reference for this component
         :param measure: a single measure to fun
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param run_task: (optional) if when adding the task
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+        :param persist_result: (optional) if the resulting canonical should be persisted.
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -291,14 +318,19 @@ class ControllerIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # create the event book
         if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             ct: DataDrift = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
                                  f"has_contract=True, **{params})", globals(), locals())
             if canonical.shape == (0, 0):
                 canonical = ct.load_source_canonical()
             canonical = ct.intent_model.run_intent_pipeline(canonical=canonical, measure=measure)
-            if ct.pm.has_connector(measure):
+            if persist_result and ct.pm.has_connector(measure):
                 ct.save_persist_canonical(feature_name=measure, canonical=canonical)
+            # create reports
+            self._common_reports(ct)
+            # customer reports
+
             return canonical
         return
 
@@ -332,3 +364,20 @@ class ControllerIntentModel(AbstractIntentModel):
                                       replace_intent=replace_intent, remove_duplicates=remove_duplicates,
                                       save_intent=save_intent)
         return
+
+    @staticmethod
+    def _common_reports(inst: AbstractCommonComponent):
+        """all the common reports to all components"""
+        if inst.pm.has_connector(inst.REPORT_SCHEMA):
+            inst.save_report_canonical(reports=inst.REPORT_SCHEMA,
+                                       report_canonical=inst.report_canonical_schema(stylise=False))
+            inst.save_report_canonical(reports=inst.REPORT_INTENT,
+                                       report_canonical=inst.report_intent(stylise=False))
+            inst.save_report_canonical(reports=inst.REPORT_NOTES,
+                                       report_canonical=inst.report_notes(stylise=False))
+            inst.save_report_canonical(reports=inst.REPORT_RUNBOOK,
+                                       report_canonical=inst.report_run_book(stylise=False))
+            inst.save_report_canonical(reports=inst.REPORT_CONNECTORS,
+                                       report_canonical=inst.report_connectors(stylise=False))
+            inst.save_report_canonical(reports=inst.REPORT_ENVIRON,
+                                       report_canonical=inst.report_environ(stylise=False))

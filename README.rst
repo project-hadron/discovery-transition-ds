@@ -3,9 +3,6 @@ AI-STAC Discovery Transition and Feature Catalog
 
 .. class:: no-web no-pdf
 
-|pypi| |license| |wheel|
-
-
 .. contents::
 
 .. section-numbering::
@@ -782,8 +779,8 @@ Reference
 Python version
 --------------
 
-Python 2.6,  2.7 or 3.5 are not supported. Although Python 3.6 is supported, it is recommended to install
-``discovery-transition-ds`` against the latest Python 3.8.x whenever possible.
+Python 3.6 or less is not supported. Although Python 3.7 is supported, it is recommended to
+install ``discovery-transition-ds`` against the latest Python 3.8.x or greater whenever possible.
 
 Pandas version
 --------------
@@ -818,18 +815,4 @@ Authors
 .. _Gigas64: http://opengrass.io
 .. _@gigas64: https://twitter.com/gigas64
 
-
-.. |pypi| image:: https://img.shields.io/pypi/pyversions/Django.svg
-    :alt: PyPI - Python Version
-
-.. |rdt| image:: https://readthedocs.org/projects/discovery-transition-ds/badge/?version=latest
-    :target: http://discovery-transition-ds.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-
-.. |license| image:: https://img.shields.io/pypi/l/Django.svg
-    :target: https://github.com/Gigas64/discovery-transition-ds/blob/master/LICENSE.txt
-    :alt: PyPI - License
-
-.. |wheel| image:: https://img.shields.io/pypi/wheel/Django.svg
-    :alt: PyPI - Wheel
 

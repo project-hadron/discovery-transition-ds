@@ -13,7 +13,7 @@ from ds_discovery.components.discovery import DataDiscovery as Discover, DataDis
 from ds_discovery import SyntheticBuilder
 
 
-class TestDiscovery(unittest.TestCase):
+class DiscoveryTest(unittest.TestCase):
     """Test: """
 
     def setUp(self):

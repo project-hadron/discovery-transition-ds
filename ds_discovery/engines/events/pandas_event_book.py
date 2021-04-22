@@ -95,11 +95,11 @@ class PandasEventBook(AbstractEventBook):
                 df[col].fillna('', inplace=True)
         return df
 
-    def add_event(self, event: pd.DataFrame(), fix_index: bool=True) -> datetime:
+    def add_event(self, event: pd.DataFrame(), fix_index: bool=None) -> datetime:
         _time = datetime.now()
         if self.events_log_distance > 0:
             self.__events_log.update({_time.strftime('%Y%m%d%H%M%S%f'): ['add', event]})
-        fix_index = fix_index if isinstance(fix_index, bool) else True
+        fix_index = fix_index if isinstance(fix_index, bool) else False
         if fix_index:
             event = event.loc[event.index.isin(self.__book_state.index), :]
         intersect = set(self.__book_state.columns).intersection(set(event.columns))

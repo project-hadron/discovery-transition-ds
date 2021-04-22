@@ -281,15 +281,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             until = (pd.Timestamp.now() + pd.Timedelta(days=until))
         if isinstance(until, dict):
             until = (start + pd.Timedelta(**until))
-        _dt_start = self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]
-        _dt_until = self._convert_date2value(until, day_first=day_first, year_first=year_first)[0]
-        precision = 15
-        if ignore_time:
-            _dt_start = int(_dt_start)
-            _dt_until = int(_dt_until)
-            precision = 0
-        rtn_list = self._get_number(from_value=_dt_start, to_value=_dt_until, relative_freq=relative_freq,
-                                    at_most=at_most, ordered=ordered, precision=precision, size=size, seed=seed)
+        if start == until:
+            rtn_list = [self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]] * size
+        else:
+            _dt_start = self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]
+            _dt_until = self._convert_date2value(until, day_first=day_first, year_first=year_first)[0]
+            precision = 15
+            if ignore_time:
+                _dt_start = int(_dt_start)
+                _dt_until = int(_dt_until)
+                precision = 0
+
+            rtn_list = self._get_number(from_value=_dt_start, to_value=_dt_until, relative_freq=relative_freq,
+                                        at_most=at_most, ordered=ordered, precision=precision, size=size, seed=seed)
         if not as_num:
             rtn_list = mdates.num2date(rtn_list)
             if isinstance(date_format, str):
@@ -331,6 +335,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                     closed = 'right'
             else:
                 (lower, upper, closed) = index
+            if lower == upper:
+                rtn_list += [round(lower, precision)] * size
+                continue
             if precision == 0:
                 margin = 1
             else:
@@ -342,6 +349,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 lower += margin
             elif str.lower(closed) == 'both':
                 upper += margin
+            # correct adjustments
+            if lower >= upper:
+                upper = lower + margin
             rtn_list += self._get_number(lower, upper, precision=precision, size=size, seed=_seed)
         np.random.default_rng(seed=_seed).shuffle(rtn_list)
         return rtn_list
@@ -950,7 +960,57 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         _seed = self._seed() if seed is None else seed
         return canonical.explode(column=header, ignore_index=True)
 
-    def _model_analysis(self, canonical: Any, analytics_model: dict, apply_bias: bool=None,
+    def _model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
+                      detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
+                      apply_bias: bool=None, seed: int = None) -> pd.DataFrame:
+        """
+
+        :param canonical:
+        :param sample:
+        :param columns_list:
+        :param exclude_associate:
+        :param detail_numeric:
+        :param strict_typing:
+        :param category_limit:
+        :param apply_bias:
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :return: a pd.DataFrame
+        """
+        canonical = self._get_canonical(canonical)
+        sample = self._get_canonical(sample)
+        columns_list = columns_list if isinstance(columns_list, list) else list(sample.columns)
+        blob = DataDiscovery.analyse_association(sample, columns_list=columns_list, exclude_associate=exclude_associate,
+                                                 detail_numeric=detail_numeric, strict_typing=strict_typing,
+                                                 category_limit=category_limit)
+        return self._model_analysis(canonical=canonical, analytics_blob=blob, apply_bias=apply_bias, seed=seed)
+
+    def _model_script(self, canonical: Any, script_contract: str, seed: int = None) -> pd.DataFrame:
+        """
+
+        :param canonical:
+        :param script_contract:
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :return: a pd.DataFrame
+        """
+        canonical = self._get_canonical(canonical)
+        script = self._get_canonical(script_contract)
+        type_options = {'number': '_get_number', 'date': '_get_datetime', 'category': 'get_category',
+                        'selection': 'get_selection', 'intervals': 'get_intervals', 'distribution': 'get_distribution'}
+        script['params'] = script['params'].replace(['', ' '], np.nan)
+        script['params'].loc[script['params'].isna()] = '[]'
+        script['params'] = [ast.literal_eval(x) if isinstance(x, str) and x.startswith('[') and x.endswith(']')
+                            else x for x in script['params']]
+        # replace all other items with list
+        script['params'] = [x if isinstance(x, list) else [x] for x in script['params']]
+        script['params'] = script['params'].astype('object')
+
+        for index, row in script.iterrows():
+            method = type_options.get(row['type'])
+            params = row['params']
+            canonical[row['name']] = eval(f"self.{method}(size={canonical.shape[0]}, **params)", globals(), locals())
+        return canonical
+
+    def _model_analysis(self, canonical: Any, analytics_blob: dict, apply_bias: bool=None,
                         seed: int=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
@@ -958,7 +1018,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         constructed association to be used as reference for a sub category.
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param analytics_model: the analytics model from discovery-components-ds discovery model train
+        :param analytics_blob: the analytics blob from DataDiscovery.analyse_association(...)
         :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
         :param seed: seed: (optional) a seed value for the random function: default to None
         :return: a DataFrame
@@ -974,22 +1034,22 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 if str(_analysis.intent.dtype).startswith('cat'):
                     result_type = 'category'
                     result = self._get_category(selection=_analysis.intent.categories,
-                                                relative_freq=_analysis.patterns.relative_freq,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
                                                 seed=_seed, size=sample_size)
                 elif str(_analysis.intent.dtype).startswith('num'):
                     result_type = 'int' if _analysis.params.precision == 0 else 'float'
                     result = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
-                                                 relative_freq=_analysis.patterns.relative_freq,
-                                                 precision=_analysis.params.precision,
+                                                 relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                 precision=_analysis.params.get('precision', None),
                                                  seed=_seed, size=sample_size)
                 elif str(_analysis.intent.dtype).startswith('date'):
-                    result_type = 'object' if isinstance(_analysis.params.data_format, str) else 'date'
-                    result = self._get_datetime(start=_analysis.intent.lowest,
-                                                until=_analysis.intent.highest,
-                                                relative_freq=_analysis.patterns.relative_freq,
-                                                date_format=_analysis.params.data_format,
-                                                day_first=_analysis.params.day_first,
-                                                year_first=_analysis.params.year_first,
+                    result_type = 'object' if _analysis.params.is_element('data_format') else 'date'
+                    result = self._get_datetime(start=_analysis.stats.lowest,
+                                                until=_analysis.stats.highest,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                date_format=_analysis.params.get('data_format', None),
+                                                day_first=_analysis.params.get('day_first', None),
+                                                year_first=_analysis.params.get('year_first', None),
                                                 seed=_seed, size=sample_size)
                 else:
                     result = []
@@ -1008,7 +1068,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                             result = s_values.to_list()
                 # now add the result to the row_dict
                 row_dict[name] += result
-                unit = sample_size / sum(_analysis.patterns.relative_freq)
+                if sum(_analysis.patterns.relative_freq) == 0:
+                    unit = 0
+                else:
+                    unit = sample_size / sum(_analysis.patterns.relative_freq)
                 if values.get('sub_category'):
                     leaves = values.get('branch', {}).get('leaves', {})
                     for idx in range(len(leaves)):
@@ -1022,7 +1085,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         row_dict = dict()
         seed = self._seed() if seed is None else seed
         size = canonical.shape[0]
-        get_level(analytics_model, sample_size=size, _seed=seed)
+        get_level(analytics_blob, sample_size=size, _seed=seed)
         for key in row_dict.keys():
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)

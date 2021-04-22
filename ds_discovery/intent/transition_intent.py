@@ -1,7 +1,6 @@
 import ast
 import datetime
 import inspect
-import threading
 from builtins import staticmethod
 from copy import deepcopy
 
@@ -112,8 +111,7 @@ class TransitionIntentModel(AbstractIntentModel):
         null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         _date_headers = []
         _bool_headers = []
         _cat_headers = []
@@ -172,8 +170,7 @@ class TransitionIntentModel(AbstractIntentModel):
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         for c in df.columns:
             for item in nulls_list:
                 df[c] = df[c].replace(item, np.nan)
@@ -211,8 +208,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         if isinstance(rename_map, dict):
             df.rename(mapper=rename_map, axis='columns', inplace=True)
         # removes any hidden characters
@@ -265,8 +261,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         unique_max = 100 if not isinstance(unique_max, int) else unique_max
         null_max = 0.8 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
@@ -281,18 +276,19 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drop column that only have 1 value in them
-    def auto_remove_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                            drop_empty_row: bool=None, inplace: bool=None,
-                            save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                            replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+    def auto_drop_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
+                          drop_predominant: bool=None, drop_empty_row: bool=None, inplace: bool=None,
+                          save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
 
         :param df: the pandas.DataFrame to auto remove
         :param null_min: the minimum number of null values default to 0.998 (99.8%) nulls
-        :param predominant_max: the percentage max a single field predominates default is 0.998
+        :param predominant_max: the percentage max a single field predominates default is 0.998 (99.8%) unique value
         :param nulls_list: can be boolean or a list:
                     if boolean and True then null_list equals ['NaN', 'nan', 'null', '', 'None', ' ']
                     if list then this is considered potential null values.
+        :param drop_predominant: drop columns that have a predominant value of the given predominant max
         :param drop_empty_row: also drop any rows where all the values are empty
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -314,10 +310,10 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
+        drop_predominant = drop_predominant if isinstance(drop_predominant, bool) else True
         if isinstance(nulls_list, bool) and nulls_list:
             nulls_list = ['NaN', 'nan', 'null', '', 'None', ' ']
         elif not isinstance(nulls_list, list):
@@ -330,10 +326,10 @@ class TransitionIntentModel(AbstractIntentModel):
                 df_filter[c].replace(nulls_list, np.nan, inplace=True)
             if round(df_filter[c].isnull().sum() / df_len, 5) > null_min:
                 col_drop.append(c)
-            elif df_filter[c].nunique() == 1:
+            elif drop_predominant and df_filter[c].nunique() == 1:
                 col_drop.append(c)
-            elif round((df_filter[c].value_counts() / np.float(len(df_filter[c].dropna()))).sort_values(
-                    ascending=False).values[0], 5) >= predominant_max:
+            elif drop_predominant and round((df_filter[c].value_counts() / np.float(len(df_filter[c].dropna()))).
+                                            sort_values(ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
         if isinstance(drop_empty_row, bool) and drop_empty_row:
@@ -373,8 +369,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
         df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
         if isinstance(inc_category, bool) and inc_category:
@@ -429,8 +424,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         df.drop(obj_cols, axis=1, inplace=True)
@@ -475,8 +469,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
 
@@ -515,8 +508,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         shuffle = shuffle if isinstance(shuffle, bool) else False
         if isinstance(sample_size, float):
             if not 0 < sample_size < 1:
@@ -580,8 +572,7 @@ class TransitionIntentModel(AbstractIntentModel):
         if not isinstance(bool_map, dict):
             raise TypeError("The map attribute must be of type 'dict'")
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         if not bool_map:  # map is empty so nothing to map
             return df
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
@@ -638,8 +629,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else '[]'
 
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -700,8 +690,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -725,8 +714,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
@@ -959,8 +947,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1038,8 +1025,7 @@ class TransitionIntentModel(AbstractIntentModel):
         year_first = year_first if isinstance(year_first, bool) else False
         infer_datetime_format = date_format is None
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1120,8 +1106,7 @@ class TransitionIntentModel(AbstractIntentModel):
         year_first = year_first if isinstance(year_first, bool) else False
         infer_datetime_format = date_format is None
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1174,8 +1159,7 @@ class TransitionIntentModel(AbstractIntentModel):
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         infer_datetime_format = date_format is None
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1235,8 +1219,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            with threading.Lock():
-                df = deepcopy(df)
+            df = deepcopy(df)
         if dtype is None:
             dtype = ['float64']
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,

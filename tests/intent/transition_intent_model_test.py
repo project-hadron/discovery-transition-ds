@@ -13,7 +13,7 @@ from ds_discovery.managers.transition_property_manager import TransitionProperty
 from ds_discovery.components.commons import Commons
 
 
-class IntentModelTest(unittest.TestCase):
+class TransitionIntentModelTest(unittest.TestCase):
     """Test: """
 
     def setUp(self):
@@ -49,19 +49,19 @@ class IntentModelTest(unittest.TestCase):
 
     def test_to_sample(self):
         tools = self.tools
-        df = pd.DataFrame(tools.model_sample_map({'@empty'}, sample_map='us_zipcode_primary').iloc[:200])
+        df = tools.model_sample_map(200, sample_map='us_zipcode')
         result = self.clean.to_sample(df, sample_size=100)
-        self.assertEqual((100, 13), result.shape)
+        self.assertEqual((100, 6), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=100, shuffle=True)
-        self.assertEqual((100, 13), result.shape)
+        self.assertEqual((100, 6), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
         result = self.clean.to_sample(df, sample_size=0.2)
-        self.assertEqual((200, 13), result.shape)
+        self.assertEqual((40, 6), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
         result = self.clean.to_sample(df, sample_size=0.2, shuffle=True)
-        self.assertEqual((200, 13), result.shape)
+        self.assertEqual((40, 6), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
     def test_to_date_from_mdates(self):
@@ -102,7 +102,7 @@ class IntentModelTest(unittest.TestCase):
         df['none_num'] = tools.get_number(1, 2, quantity=0.7, size=100)
         df.loc[1:4, 'none_num'] = 'None'
         df.loc[7:9, 'none_num'] = ''
-        self.clean.auto_remove_columns(df, nulls_list=True, inplace=True)
+        self.clean.auto_drop_columns(df, nulls_list=True, inplace=True)
         self.assertEqual(['two_num', 'normal'], df.columns.tolist())
 
     def test_auto_remove_predom(self):
@@ -117,46 +117,49 @@ class IntentModelTest(unittest.TestCase):
         df['two_cat'] = tools.get_category(['A', 'B'], quantity=0.9, size=100)
         df['weight_cat'] = tools.get_category(['A', 'B'], relative_freq=[95, 1], size=100)
         df['normal_cat'] = tools.get_category(list('ABCDE'), size=100)
-        self.clean.auto_remove_columns(df, predominant_max=0.8, inplace=True)
-        self.assertEqual(['two_num', 'normal_num', 'two_cat', 'normal_cat'], df.columns.tolist())
+        result = self.clean.auto_drop_columns(df, predominant_max=0.8)
+        self.assertEqual(['two_num', 'normal_num', 'two_cat', 'normal_cat'], result.columns.tolist())
+        result = self.clean.auto_drop_columns(df, drop_predominant=False)
+        self.assertEqual(8, len(result.columns))
+        self.assertNotIn('null_num', result.columns.tolist())
 
     def test_clean_headers(self):
         tools = self.tools
-        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
-        control = ['City', 'State', 'Zipcode']
+        df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
+        control = ['city', 'state', 'Zipcode']
         result = df.columns
         self.assertTrue(control, result)
-        rename = {'City': 'town'}
-        control = {'clean_header': {'case': 'title', 'rename': {'City': 'town'}}}
+        rename = {'city': 'town'}
+        control = {'clean_header': {'case': 'title', 'rename': {'city': 'town'}}}
         result = self.clean.auto_clean_header(df, rename_map=rename, case='title', inplace=True)
         self.assertTrue(control, result)
-        control = ['town', 'State', 'Zipcode']
+        control = ['town', 'state', 'Zipcode']
         self.assertTrue(control, df.columns)
 
     def test_remove_columns(self):
         tools = self.tools
         clean = self.clean
-        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
-        result = clean.to_remove(df, headers=['City'])
-        self.assertNotIn('City', result.columns.values)
+        df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
+        result = clean.to_remove(df, headers=['city'])
+        self.assertNotIn('city', result.columns.values)
 
-        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
-        clean.to_remove(df, headers=['City', 'State'], inplace=True)
-        self.assertNotIn('City', df.columns.values)
-        self.assertNotIn('State', df.columns.values)
+        df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
+        clean.to_remove(df, headers=['city', 'state'], inplace=True)
+        self.assertNotIn('city', df.columns.values)
+        self.assertNotIn('state', df.columns.values)
 
     def test_select_columns(self):
         tools = self.tools
         clean = self.clean
-        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary'))
-        control = ['City']
-        result = clean.to_select(df, headers=['City'])
-        self.assertEqual(['City'], result.columns.values)
+        df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
+        control = ['city']
+        result = clean.to_select(df, headers=['city'])
+        self.assertEqual(['city'], result.columns.values)
 
-        df = pd.DataFrame(tools.model_sample_map('@empty', sample_map='us_zipcode_primary').iloc[:10])
-        clean.to_select(df, headers=['City', 'State'], inplace=True)
-        self.assertIn('City', df.columns.values)
-        self.assertIn('State', df.columns.values)
+        df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode').iloc[:10])
+        clean.to_select(df, headers=['city', 'state'], inplace=True)
+        self.assertIn('city', df.columns.values)
+        self.assertIn('state', df.columns.values)
         self.assertEqual((10,2), df.shape)
 
     def test_contract_pipeline(self):

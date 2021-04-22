@@ -270,6 +270,19 @@ class AbstractCommonComponent(AbstractComponent):
             return Commons.report(df, index_header='name')
         return df
 
+    def report_environ(self, hide_not_set: bool=True, stylise: bool=True):
+        """ generates a report on all the intent
+
+        :param hide_not_set: hide environ's that are not set.
+        :param stylise: returns a stylised dataframe with formatting
+        :return: pd.Dataframe
+        """
+        df = pd.DataFrame.from_dict(data=super().report_environ(hide_not_set), orient='index').reset_index()
+        df.columns = ["environ", "value"]
+        if stylise:
+            return Commons.report(df, index_header='environ')
+        return df
+
     def report_intent(self, levels: [str, int, list]=None, stylise: bool=True):
         """ generates a report on all the intent
 

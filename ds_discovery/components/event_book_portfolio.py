@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from typing import Any
 import pandas as pd
+from aistac.handlers.abstract_event_book import AbstractEventBook
 from aistac.handlers.abstract_handlers import ConnectorContract
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 from ds_discovery.managers.event_book_property_manager import EventBookPropertyManager
@@ -81,7 +82,7 @@ class EventBookPortfolio(AbstractCommonComponent):
     def get_active_book(self, book_name: str):
         """retrieves an event book instance from the report_portfolio by name"""
         if not self.is_active_book(book_name=book_name):
-            raise ValueError(f"The event book instance '{book_name}' cis not active.")
+            raise ValueError(f"The event book instance '{book_name}' is not active.")
         return self.__book_portfolio.get(book_name)
 
     def is_active_book(self, book_name: str) -> bool:
@@ -89,6 +90,19 @@ class EventBookPortfolio(AbstractCommonComponent):
         if book_name in self.__book_portfolio.keys():
             return True
         return False
+
+    def add_book_to_portfolio(self, book_name: str, event_book: Any):
+        """
+
+        :param book_name: the unique name of event book
+        :param event_book: a concrete implementation of an AbstractEventBook
+        """
+        if not isinstance(event_book, AbstractEventBook):
+            raise ValueError(f"The event book '{event_book}' must be a concrete implementation of an AbstractEventBook")
+        if self.is_event_book(book_name):
+            self.remove_event_books(book_names=book_name)
+        self.__book_portfolio[book_name] = event_book
+        return
 
     def start_portfolio(self, exclude_books: [str, list]=None,):
         """runs the intent pipeline

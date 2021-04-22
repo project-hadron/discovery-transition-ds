@@ -63,7 +63,7 @@ class EventBookIntentModel(AbstractIntentModel):
     def add_event_book(self, book_name: str, module_name: str=None, event_book_cls: str=None, start_book: bool=None,
                        save_intent: bool=None, intent_order: int=None, replace_intent: bool=None,
                        remove_duplicates: bool=None, **kwargs):
-        """ Adds an Event Book to the intent portfolio. Not that if multiple Event Books are referenced from a single
+        """ Adds an Event Book to the intent portfolio. Note that if multiple Event Books are referenced from a single
         Event Intent, use book_name to uniquely identify each event_book within the event intent.
 
         :param book_name: The unique reference name for the Event Book.

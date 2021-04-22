@@ -13,7 +13,7 @@ from ds_discovery import Transition
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
 
 
-class DiscoveryAnalysisMethod(unittest.TestCase):
+class DiscoveryAnalysisTest(unittest.TestCase):
 
     def setUp(self):
         # set environment variables

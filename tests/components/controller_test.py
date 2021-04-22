@@ -4,11 +4,11 @@ import shutil
 import pandas as pd
 from pprint import pprint
 
-from ds_behavioral import SyntheticBuilder
-from ds_behavioral.intent.synthetic_intent_model import SyntheticIntentModel
+from ds_discovery import SyntheticBuilder
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
 
-from ds_engines import Controller
+from ds_discovery import Controller
 
 
 class ControllerTest(unittest.TestCase):
@@ -51,7 +51,21 @@ class ControllerTest(unittest.TestCase):
         Controller.from_env(has_contract=False)
 
     def test_run_controller(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/factory/members/"
+        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
+        controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
+        roadmap = [
+            controller.runbook2dict(task='members_sim', source=1000),
+            controller.runbook2dict(task='pcp_sim', source=100),
+            controller.runbook2dict(task='members_gen', source='members_sim', persist=True),
+            controller.runbook2dict(task='cln_members_gen', source='members_sim', persist=True),
+            controller.runbook2dict(task='prf_members_gen', source='members_sim', persist=True),
+            controller.runbook2dict(task='ins_members_gen', source='members_sim', persist=True),
+            controller.runbook2dict(task='pcp_gen', source='pcp_sim', persist=True),
+        ]
+        controller.run_controller(run_book=roadmap, repeat=2, wait=2)
+
+    def test_run_intent_pipeline(self):
+        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
         # os.environ['HADRON_PM_REPO'] = uri_pm_repo
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
         result = controller.intent_model.run_intent_pipeline(intent_level='generator', synthetic_size=100,

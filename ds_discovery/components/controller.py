@@ -1,7 +1,14 @@
 from __future__ import annotations
+import concurrent.futures
+import threading
+import time
+from typing import Any
 
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
+
+from ds_discovery import EventBookPortfolio
+from ds_discovery.components.commons import Commons
 from ds_discovery.managers.controller_property_manager import ControllerPropertyManager
 from ds_discovery.intent.controller_intent import ControllerIntentModel
 
@@ -19,11 +26,12 @@ class Controller(AbstractComponent):
 
     URI_PM_REPO = None
 
+    eb_portfolio: EventBookPortfolio
+
     def __init__(self, property_manager: ControllerPropertyManager, intent_model: ControllerIntentModel,
-                 default_save=None, reset_templates: bool = None, template_path: str = None,
-                 template_module: str = None,
-                 template_source_handler: str = None, template_persist_handler: str = None,
-                 align_connectors: bool = None):
+                 default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
+                 template_source_handler: str=None, template_persist_handler: str=None,
+                 align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
 
         :param property_manager: The contract property manager instance for this component
@@ -37,6 +45,7 @@ class Controller(AbstractComponent):
         :param template_persist_handler: (optional) a template persist handler to use if no environment variable
         :param align_connectors: (optional) resets aligned connectors to the template
         """
+        self.eb_portfolio = EventBookPortfolio.from_memory(has_contract=False)
         super().__init__(property_manager=property_manager, intent_model=intent_model, default_save=default_save,
                          reset_templates=reset_templates, template_path=template_path, template_module=template_module,
                          template_source_handler=template_source_handler,
@@ -243,7 +252,7 @@ class Controller(AbstractComponent):
             return self._report(df, index_header='name')
         return df
 
-    def report_intent(self, levels: [str, int, list] = None, stylise: bool = True):
+    def report_intent(self, levels: [str, int, list]=None, stylise: bool = True):
         """ generates a report on all the intent
 
         :param levels: (optional) a filter on the levels. passing a single value will report a single parameterised view
@@ -285,27 +294,93 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, intent_levels: [str, int, list]=None, synthetic_sizes: dict=None):
-        """ Runs the components pipeline from source to persist. The synthetic_intent_sizes allows the additional
-        inclusion of the special case SyntheticBuilder dataset size to be specified and applied to the different intent
-        levels. If two or more Synthetic Builds are within one intent the values will be applied to all. If no size
-        is given then the default saved size is used
+    def run_controller(self, run_book: [str, list]=None, repeat: int=None, wait: int=None):
+        """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
+        controller registered task name that will run in the given order passing the resulting outcome of one to the
+        input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
+        mixture of task names and task dictionaries. If no runbook is given,  all registered task names are taken from
+        the intent list and run in no particular order and independent of each other using their connector source and
+        persist as data input
 
-        :param intent_levels: (optional) list of intent labels to run in the order given
-        :param synthetic_sizes: (optional) a dictionary keyed by intent level with a synthetic size parameter
+        run book elements can be a dictionary contain more detailed run commands for a particular task.
+        The dictionary keys are as follows:
+            - task_name: The task name (intent level) this run detail is applied to
+            - source: (optional) The task name of the source or '@<intent_name>' to reference a known event book
+            - persist: (optional) if true persist to an event book named after the intent. if False do nothing
+            - end_source (optional) if this task will be the last to use the source, remove it from memory on completion
+
+        :param run_book: (optional) a run_book reference, a list of task names (intent levels) or task dict
+        :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
+        :param wait: (optional) number of seconds to wait before repeating
         """
+        _lock = threading.Lock()
+
         if not self.pm.has_intent():
             return
-        if isinstance(intent_levels, (int, str, list)):
-            intent_levels = self.pm.list_formatter(intent_levels)
+        if isinstance(run_book, str):
+            if not self.pm.has_run_book(run_book):
+                raise ValueError(f"The run book '{run_book}' can not be found in the controller")
+            intent_levels = self.pm.get_run_book(run_book)
+        elif isinstance(run_book, list):
+            intent_levels = run_book
         else:
             intent_levels = self.pm.list_formatter(self.pm.get_intent().keys())
+            # always put the DEFAULT_INTENT_LEVEL first
             if self.pm.DEFAULT_INTENT_LEVEL in intent_levels:
                 intent_levels.insert(0, intent_levels.pop(intent_levels.index(self.pm.DEFAULT_INTENT_LEVEL)))
-        for intent in intent_levels:
-            synthetic_size = synthetic_sizes.get(intent, None) if isinstance(synthetic_sizes, dict) else None
-            self.intent_model.run_intent_pipeline(intent_level=intent, controller_repo=self.URI_PM_REPO,
-                                                  synthetic_size=synthetic_size)
+        for idx in range(len(intent_levels)):
+            if isinstance(intent_levels[idx], str):
+                intent_levels[idx] = {'task': intent_levels[idx]}
+            if 'end_source' not in intent_levels[idx].keys():
+                intent_levels[idx].update({'end_source': False})
+            if 'persist' not in intent_levels[idx].keys():
+                _persist = True if idx == len(intent_levels) - 1 else False
+                intent_levels[idx].update({'persist': _persist})
+            if 'source' not in intent_levels[idx].keys():
+                _level0 = self.pm.get_intent(intent_levels[idx].get('task')).get('0', {})
+                if 'synthetic_builder' in _level0.keys():
+                    _source = int(_level0.get('synthetic_builder', {}).get('size', 1000))
+                else:
+                    _source = f'@{self.CONNECTOR_SOURCE}' if idx == 0 else intent_levels[idx - 1].get('task')
+                intent_levels[idx].update({'source': _source})
+            if intent_levels[idx].get('source') == '@':
+                intent_levels[idx].update({'source': f'@{self.CONNECTOR_SOURCE}'})
+        repeat = repeat if isinstance(repeat, int) and repeat > 0 else 1
+        for count in range(repeat):
+            for intent in intent_levels:
+                task = intent.get('task')
+                source = intent.get('source')
+                to_persist = intent.get('persist')
+                end_source = intent.get('end_source')
+                if isinstance(source, str) and source.startswith('@'):
+                    if self.pm.has_connector(source[1:]):
+                        canonical = self.load_canonical(source[1:])
+                    else:
+                        raise ValueError(f"The task '{task}' source connector '{source[1:]}' has not been set")
+                elif isinstance(source, int):
+                    canonical = source
+                else:
+                    if self.eb_portfolio.is_active_book(source):
+                        canonical = self.eb_portfolio.current_state(source)
+                        if end_source:
+                            self.eb_portfolio.remove_event_books(book_names=task)
+                    else:
+                        raise ValueError(f"The task '{task}' source event book '{source}' does not exist")
+                # get the result
+                canonical = self.intent_model.run_intent_pipeline(canonical=canonical, intent_level=task,
+                                                                  persist_result=to_persist,
+                                                                  controller_repo=self.URI_PM_REPO)
+                print(f"{task} -> {canonical.shape}")
+                if to_persist:
+                    continue
+                if self.eb_portfolio.is_event_book(task):
+                    self.eb_portfolio.remove_event_books(task)
+                eb = self.eb_portfolio.intent_model.add_event_book(book_name=task, start_book=True)
+                self.eb_portfolio.add_book_to_portfolio(book_name=task, event_book=eb)
+                self.eb_portfolio.add_event(book_name=task, event=canonical)
+            self.eb_portfolio.reset_portfolio()
+            if isinstance(wait, int) and count < repeat-1:
+                time.sleep(wait)
         return
 
     def _report(self, canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):
@@ -335,3 +410,16 @@ class Controller(AbstractComponent):
         if len(large_font) > 0:
             _ = df_style.set_properties(subset=large_font, **{'font-size': "120%"})
         return df_style
+
+    @staticmethod
+    def runbook2dict(task: str, source: [str, int]=None, persist: bool=None) -> dict:
+        """ a utility method to help build feature conditions by aligning method parameters with dictionary format.
+
+        :param task: the task name (intent level) name this runbook is applied too or a number if synthetic generation
+        :param source: (optional) a task name indicating where the source of this task will come from. Optionally:
+                            '@' will use the source contract of this task as the source input.
+                            '@<connector>' will use the connector contract that must exist in the task connectors
+        :param persist: (optional) if true persist to an event book named after the intent. if False do nothing
+        :return: dictionary of the parameters
+        """
+        return Commons.param2dict(**locals())
