@@ -178,7 +178,7 @@ class ControllerIntentModel(AbstractIntentModel):
                                          report_canonical=tr.report_canonical_schema(stylise=False))
             if tr.pm.has_connector(tr.REPORT_SUMMARY):
                 tr.save_report_canonical(reports=tr.REPORT_SUMMARY,
-                                         report_canonical=tr.report_quality_summary(stylise=False))
+                                         report_canonical=tr.report_quality_summary(canonical=canonical, stylise=False))
             if tr.pm.has_connector(tr.REPORT_PROVENANCE):
                 tr.save_report_canonical(reports=tr.REPORT_PROVENANCE,
                                          report_canonical=tr.report_provenance(stylise=False))
