@@ -105,14 +105,14 @@ class AbstractCommonComponent(AbstractComponent):
             :key report: the name of the report
             :key file_type: (optional) a file type other than the default .json
             :key versioned: (optional) if the filename should be versioned
-            :key stamped: (optional) if the filename should be timestamped
+            :key stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
 
         Some examples
             self.REPORT_SCHEMA
             [self.REPORT_NOTES, self.REPORT_SCHEMA]
             [self.REPORT_NOTES, {'report': self.REPORT_SCHEMA, 'uri_file': '<file_name>'}]
             [{'report': self.REPORT_NOTES, 'file_type': 'json'}]
-            [{'report': self.REPORT_SCHEMA, 'file_type': 'csv', 'versioned': True, 'stamped': True}]
+            [{'report': self.REPORT_SCHEMA, 'file_type': 'csv', 'versioned': True, 'stamped': days}]
 
         :param reports: a report name or list of report names to save
         :param report_canonical: the canonical to save
@@ -120,21 +120,24 @@ class AbstractCommonComponent(AbstractComponent):
         :param save: if True, save to file. Default is True
         :param kwargs: additional kwargs to pass to a Connector Contract
         """
+        if not isinstance(reports, (str, list)):
+            raise TypeError(f"The reports type must be a str or list, {type(reports)} type passed")
         auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
+        _report_list = []
+        for _report in self.pm.list_formatter(reports):
+            if not isinstance(_report, (str, dict)):
+                raise TypeError(f"The report type {type(_report)} is an unsupported type. Must be string or dict")
+            if isinstance(_report, str):
+                _report = {'report': _report}
+            if not _report.get('report', None):
+                raise ValueError(f"if not a string the reports list dict elements must have a 'report' key")
+            _report_list.append(_report)
         if auto_connectors:
-            _report_list = self.set_report_persist(reports=reports, save=save)
-        else:
-            _report_list = []
-            for _report in self.pm.list_formatter(reports):
-                if not isinstance(_report, (str, dict)):
-                    raise TypeError(f"The report type {type(_report)} is an unsupported type. Must be string or dict")
-                if isinstance(_report, str):
-                    _report = {'report': _report}
-                if not _report.get('report', None):
-                    raise ValueError(f"The report {_report} must have a 'report' key representing the ref report name")
-                _report_list.append(_report.get('report'))
+            self.set_report_persist(reports=reports, save=save)
         for report_name in _report_list:
-            self.persist_canonical(connector_name=report_name, canonical=report_canonical, **kwargs)
+            connector_name = report_name.get('report')
+            if self.pm.has_connector(connector_name):
+                self.persist_canonical(connector_name=connector_name, canonical=report_canonical, **kwargs)
         return
 
     def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
@@ -167,7 +170,8 @@ class AbstractCommonComponent(AbstractComponent):
         self.pm_persist(save=save)
         return
 
-    def canonical_report(self, canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
+    @staticmethod
+    def canonical_report(canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
                          condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
         attribute properties

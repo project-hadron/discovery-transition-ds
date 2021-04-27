@@ -14,8 +14,8 @@ def domain_controller():
     controller = Controller.from_env(uri_pm_repo=uri_pm_repo, default_save=False, has_contract=True)
     run_book = os.environ.get('HADRON_CONTROLLER_RUNBOOK', None)
     repeat = os.environ.get('HADRON_CONTROLLER_REPEAT', None)
-    wait = os.environ.get('HADRON_CONTROLLER_WAIT', None)
-    controller.run_controller(run_book=run_book, repeat=repeat, wait=wait)
+    sleep = os.environ.get('HADRON_CONTROLLER_SLEEP', None)
+    controller.run_controller(run_book=run_book, repeat=repeat, sleep=sleep)
 
 
 if __name__ == '__main__':

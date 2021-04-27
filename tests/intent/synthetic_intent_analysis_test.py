@@ -52,7 +52,7 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         analysis_blob = discover.analyse_association(sample, columns_list=columns_list)
         builder = SyntheticBuilder.from_memory()
         canonical = builder.tools.canonical2dict(method='@empty', size=1000)
-        df = builder.tools.model_analysis(canonical, analytics_model=analysis_blob, apply_bias=True)
+        df = builder.tools.model_analysis(canonical, analysis_blob=analysis_blob, apply_bias=True)
         self.assertAlmostEqual(df['values'].value_counts().iloc[0]/df.shape[0], sample['values'].value_counts().iloc[0]/sample.shape[0], places=2)
 
     def test_associate_analysis_complex(self):
@@ -66,7 +66,7 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         df_clinical = builder.load_canonical('clinical_health')
         analysis_blob = discover.analyse_association(df_clinical, columns_list=columns_list)
         canonical = pd.DataFrame(index=range(1973))
-        df = builder.tools.model_analysis(canonical, analytics_model=analysis_blob, column_name='clinical')
+        df = builder.tools.model_analysis(canonical, analysis_blob=analysis_blob, column_name='clinical')
         self.assertEqual((1973, 2), df.shape)
         pregnancies = Commons.list_standardize(Commons.list_formatter(df_clinical.pregnancies))
         low, high = discover.bootstrap_confidence_interval(pd.Series(pregnancies), func=np.mean)

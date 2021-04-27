@@ -6,8 +6,8 @@ services:
 #      - ../data/members:/var/data
     environment:
       # Hadron Domain config
-      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/datalake_gen/healthcare/members
       HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/datalake_gen/members/
+      HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/datalake_gen/healthcare/members
       # Hadron Controller Config use
       HADRON_CONTROLLER_SIZE_MEMBERS_GEN: '100000'
       # AWS envs

@@ -316,9 +316,11 @@ class Controller(AbstractComponent):
         if isinstance(run_book, str):
             if not self.pm.has_run_book(run_book):
                 raise ValueError(f"The run book '{run_book}' can not be found in the controller")
-            intent_levels = self.pm.get_run_book(run_book)
+            intent_levels = self.pm.get_run_book(book_name=run_book)
         elif isinstance(run_book, list):
             intent_levels = run_book
+        elif self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
+            intent_levels = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
         else:
             intent_levels = self.pm.list_formatter(self.pm.get_intent().keys())
             # always put the DEFAULT_INTENT_LEVEL first

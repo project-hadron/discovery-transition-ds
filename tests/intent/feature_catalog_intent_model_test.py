@@ -7,8 +7,8 @@ import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from ds_discovery import SyntheticBuilder
 
-from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModelModel
-from ds_discovery.managers import FeatureCatalogPropertyManager
+from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
+from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalogPropertyManager
 from ds_discovery.components.feature_catalog import FeatureCatalog
 
 
@@ -25,7 +25,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
             pass
         PropertyManager._remove_all()
         self.tools = SyntheticBuilder.scratch_pad()
-        self.fc: FeatureCatalogIntentModelModel = FeatureCatalog.scratch_pad()
+        self.fc: FeatureCatalogIntentModel = FeatureCatalog.scratch_pad()
 
     def tearDown(self):
         try:
@@ -35,7 +35,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        FeatureCatalogIntentModelModel(property_manager=FeatureCatalogPropertyManager('test', username='UserTest'), default_save_intent=False)
+        FeatureCatalogIntentModel(property_manager=FeatureCatalogPropertyManager('test', username='UserTest'), default_save_intent=False)
 
     def test_run_pipeline(self):
         local_fc = FeatureCatalog.from_env('tester', default_save=False, has_contract=False)
