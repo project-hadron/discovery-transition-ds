@@ -1,6 +1,7 @@
 from __future__ import annotations
 import threading
 import time
+import numpy as np
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 
@@ -182,7 +183,7 @@ class Controller(AbstractComponent):
         :param actions: (optional) the actions to fulfil the opportunity
         :param project_name: (optional) the name of the project this use case is for
         :param project_lead: (optional) the person who is project lead
-        :param project_contact: (optional) the conact information for the project lead
+        :param project_contact: (optional) the contact information for the project lead
         :param stakeholder_domain: (optional) the domain of the stakeholders
         :param stakeholder_group: (optional) the stakeholder group name
         :param stakeholder_lead: (optional) the stakeholder lead
