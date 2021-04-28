@@ -1,4 +1,5 @@
 from abc import abstractmethod
+import numpy as np
 import pandas as pd
 from aistac.components.abstract_component import AbstractComponent
 from aistac.components.aistac_commons import DataAnalytics

@@ -243,10 +243,12 @@ class Controller(AbstractComponent):
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """
-        df = pd.DataFrame.from_dict(data=self.pm.report_run_book())
+        report = pd.DataFrame(self.pm.report_run_book())
+        explode = report.explode(column='run_book', ignore_index=True)
+        canonical = explode.join(pd.json_normalize(explode['run_book'])).drop(columns=['run_book']).replace(np.nan, '')
         if stylise:
-            return self._report(df, index_header='name')
-        return df
+            return Commons.report(canonical, index_header='name')
+        return canonical
 
     def report_intent(self, levels: [str, int, list]=None, stylise: bool = True):
         """ generates a report on all the intent
