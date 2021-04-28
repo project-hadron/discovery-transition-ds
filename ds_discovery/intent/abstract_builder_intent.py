@@ -941,15 +941,17 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         axis = 'index' if as_rows else 'columns'
         return pd.concat([canonical, df_rtn], axis=axis)
 
-    def _model_dict_column(self, canonical: Any, header: str, convert_str: bool=None, seed: int=None):
+    def _model_dict_column(self, canonical: Any, header: str, convert_str: bool=None, replace_null: Any=None,
+                           seed: int=None) -> pd.DataFrame:
         """ takes a column that contains dict and expands them into columns. Note, the column must be a flat dictionary.
         Complex structures will not work.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header of the column to be convert
         :param convert_str: (optional) if the header has the dict as a string convert to dict using ast.literal_eval()
+        :param replace_null: (optional) after conversion, replace null values with this value
         :param seed: (optional) this is a place holder, here for compatibility across methods
-        :return:
+        :return: pd.DataFrame
         """
         canonical = self._get_canonical(canonical)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -961,9 +963,11 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             canonical[header] = canonical[header].fillna('{}').apply(ast.literal_eval)
         else:
             canonical[header] = canonical[header].fillna({i: {} for i in canonical.index})
-        canonical = canonical.join(pd.json_normalize(canonical[header]))
-        canonical.drop(columns=[header], inplace=True)
-        return canonical
+        # convert the key/values into columns (this is the fasted code)
+        result = pd.json_normalize(canonical[header])
+        if isinstance(replace_null, (int, float, str)):
+            result.replace(np.nan, replace_null, inplace=True)
+        return canonical.join(result).drop(columns=[header])
 
     def _model_explode(self, canonical: Any, header: str, seed: int=None) -> pd.DataFrame:
         """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
