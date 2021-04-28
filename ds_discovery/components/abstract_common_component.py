@@ -95,7 +95,7 @@ class AbstractCommonComponent(AbstractComponent):
         self.set_description(f"{domain} domain {component} component for {project_name} {self.pm.task_name} contract")
 
     def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame],
-                              auto_connectors: bool=None, save: bool=None, **kwargs):
+                              replace_connectors: bool=None, auto_connectors: bool=None, save: bool=None, **kwargs):
         """saves one or a list of reports using the TEMPLATE_PERSIST connector contract. Though a report can be of any
          name, for convention and consistency each component has a set of REPORT constants <Component>.REPORT_<NAME>
          where <Component> is the component Class name and <name> is the name of the report_canonical.
@@ -115,14 +115,16 @@ class AbstractCommonComponent(AbstractComponent):
             [{'report': self.REPORT_SCHEMA, 'file_type': 'csv', 'versioned': True, 'stamped': days}]
 
         :param reports: a report name or list of report names to save
-        :param report_canonical: the canonical to save
-        :param auto_connectors: if a connector should be created automatically
-        :param save: if True, save to file. Default is True
+        :param report_canonical: a relating canonical to base the report on
+        :param auto_connectors: (optional) if a connector should be created automatically
+        :param replace_connectors: (optional) replace any existing report connectors with these reports
+        :param save: (optional) if True, save to file. Default is True
         :param kwargs: additional kwargs to pass to a Connector Contract
         """
         if not isinstance(reports, (str, list)):
             raise TypeError(f"The reports type must be a str or list, {type(reports)} type passed")
         auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
+        replace_connectors = replace_connectors if isinstance(replace_connectors, bool) else False
         _report_list = []
         for _report in self.pm.list_formatter(reports):
             if not isinstance(_report, (str, dict)):
@@ -132,6 +134,8 @@ class AbstractCommonComponent(AbstractComponent):
             if not _report.get('report', None):
                 raise ValueError(f"if not a string the reports list dict elements must have a 'report' key")
             _report_list.append(_report)
+        if replace_connectors:
+            self.set_report_persist(reports=_report_list, save=save)
         for _report in _report_list:
             connector_name = _report.get('report')
             if not self.pm.has_connector(connector_name):
