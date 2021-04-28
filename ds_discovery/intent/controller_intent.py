@@ -121,8 +121,6 @@ class ControllerIntentModel(AbstractIntentModel):
             # create reports
             self._common_reports(builder)
             # customer reports
-            builder.save_report_canonical(reports=builder.REPORT_SCHEMA, auto_connectors=False,
-                                          report_canonical=builder.report_canonical_schema(stylise=False))
             builder.save_report_canonical(reports=builder.REPORT_CATALOG, auto_connectors=False,
                                           report_canonical=builder.report_column_catalog(stylise=False))
             return canonical
