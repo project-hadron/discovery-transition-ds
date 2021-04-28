@@ -362,8 +362,9 @@ class ControllerIntentModel(AbstractIntentModel):
     @staticmethod
     def _common_reports(inst: AbstractCommonComponent):
         """all the common reports to all components"""
-        inst.save_report_canonical(reports=inst.REPORT_SCHEMA, auto_connectors=False,
-                                   report_canonical=inst.report_canonical_schema(stylise=False))
+        if inst.pm.has_canonical_schema(inst.REPORT_SCHEMA):
+            inst.save_report_canonical(reports=inst.REPORT_SCHEMA, auto_connectors=False,
+                                       report_canonical=inst.report_canonical_schema(stylise=False))
         inst.save_report_canonical(reports=inst.REPORT_INTENT, auto_connectors=False,
                                    report_canonical=inst.report_intent(stylise=False))
         inst.save_report_canonical(reports=inst.REPORT_NOTES, auto_connectors=False,
