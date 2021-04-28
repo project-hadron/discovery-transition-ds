@@ -941,6 +941,30 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         axis = 'index' if as_rows else 'columns'
         return pd.concat([canonical, df_rtn], axis=axis)
 
+    def _model_dict_column(self, canonical: Any, header: str, convert_str: bool=None, seed: int=None):
+        """ takes a column that contains dict and expands them into columns. Note, the column must be a flat dictionary.
+        Complex structures will not work.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header of the column to be convert
+        :param convert_str: (optional) if the header has the dict as a string convert to dict using ast.literal_eval()
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :return:
+        """
+        canonical = self._get_canonical(canonical)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        _seed = self._seed() if seed is None else seed
+        convert_str = convert_str if isinstance(convert_str, bool) else False
+        # replace NaN with '{}' if the column is strings, otherwise replace with {}
+        if convert_str:
+            canonical[header] = canonical[header].fillna('{}').apply(ast.literal_eval)
+        else:
+            canonical[header] = canonical[header].fillna({i: {} for i in canonical.index})
+        canonical = canonical.join(pd.json_normalize(canonical[header]))
+        canonical.drop(columns=[header], inplace=True)
+        return canonical
+
     def _model_explode(self, canonical: Any, header: str, seed: int=None) -> pd.DataFrame:
         """ takes a single column of list values and explodes the DataFrame so row is represented by each elements
         in the row list

@@ -171,6 +171,19 @@ class SyntheticIntentModelTest(unittest.TestCase):
         df = tools.model_sample(df, sample='titanic')
         self.assertEqual((300, 15), df.shape)
 
+    def test_model_dict(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        sample = [{'task': 'members_sim', 'source': 100000}, {'task': 'pcp_sim', 'source': 0}, {'task': 'members_gen', 'source': 'members_sim', 'persist': True}, None]
+        df = pd.DataFrame(data={'A': [5,2,3,4], 'X': sample, 'Y': list('VWXY')})
+        df = tools._model_dict_column(df, header='X')
+        self.assertCountEqual(['A', 'Y', 'task', 'source', 'persist'], df.columns.to_list())
+        # as strings
+        sample = ["{'task': 'members_sim', 'source': 100000}", "{'task': 'pcp_sim', 'source': 0}", "{'task': 'members_gen', 'source': 'members_sim', 'persist': True}", None]
+        df = pd.DataFrame(data={'A': [5,2,3,4], 'X': sample, 'Y': list('VWXY')})
+        df = tools._model_dict_column(df, header='X', convert_str=True)
+        self.assertCountEqual(['A', 'Y', 'task', 'source', 'persist'], df.columns.to_list())
+
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
             env = os.environ['NoEnvValueTest']

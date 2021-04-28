@@ -434,6 +434,38 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_concat(seed=seed, **params)
 
+    def model_dict_column(self, canonical: Any, header: str, convert_str: bool=None, seed: int=None,
+                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ takes a column that contains dict and expands them into columns. Note, the column must be a flat dictionary.
+        Complex structures will not work.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header of the column to be convert
+        :param convert_str: (optional) if the header has the dict as a string convert to dict using ast.literal_eval()
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_dict_column(seed=seed, **params)
+
     def model_explode(self, canonical: Any, header: str, seed: int=None, save_intent: bool=None,
                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                       remove_duplicates: bool=None) -> pd.DataFrame:
