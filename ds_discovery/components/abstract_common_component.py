@@ -83,7 +83,7 @@ class AbstractCommonComponent(AbstractComponent):
         :param domain: (optional) The domain this simulators sits within e.g. 'Healthcare' or 'Financial Services'
         :param project_name: (optional) a project name that will replace the hadron naming on file prefix
         :param path: (optional) a path added to the template path default
-        :param file_type: (optional) a file_type for the persisted file, default is 'parguet'
+        :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
         """
         domain = domain.title() if isinstance(domain, str) else 'Unspecified'
         file_type = file_type if isinstance(file_type, str) else 'parquet'
@@ -132,12 +132,14 @@ class AbstractCommonComponent(AbstractComponent):
             if not _report.get('report', None):
                 raise ValueError(f"if not a string the reports list dict elements must have a 'report' key")
             _report_list.append(_report)
-        if auto_connectors:
-            self.set_report_persist(reports=reports, save=save)
-        for report_name in _report_list:
-            connector_name = report_name.get('report')
-            if self.pm.has_connector(connector_name):
-                self.persist_canonical(connector_name=connector_name, canonical=report_canonical, **kwargs)
+        for _report in _report_list:
+            connector_name = _report.get('report')
+            if not self.pm.has_connector(connector_name):
+                if auto_connectors:
+                    self.set_report_persist(reports=_report, save=save)
+                else:
+                    continue
+            self.persist_canonical(connector_name=connector_name, canonical=report_canonical, **kwargs)
         return
 
     def save_canonical_schema(self, schema_name: str=None, canonical: pd.DataFrame=None, schema_tree: list=None,
@@ -277,7 +279,7 @@ class AbstractCommonComponent(AbstractComponent):
     def report_environ(self, hide_not_set: bool=True, stylise: bool=True):
         """ generates a report on all the intent
 
-        :param hide_not_set: hide environ's that are not set.
+        :param hide_not_set: hide environ keys that are not set.
         :param stylise: returns a stylised dataframe with formatting
         :return: pd.Dataframe
         """

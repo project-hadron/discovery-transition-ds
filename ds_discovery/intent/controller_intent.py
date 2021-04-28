@@ -121,12 +121,10 @@ class ControllerIntentModel(AbstractIntentModel):
             # create reports
             self._common_reports(builder)
             # customer reports
-            if builder.pm.has_connector(builder.REPORT_SCHEMA):
-                builder.save_report_canonical(reports=builder.REPORT_SCHEMA,
-                                              report_canonical=builder.report_canonical_schema(stylise=False))
-            if builder.pm.has_connector(builder.REPORT_CATALOG):
-                builder.save_report_canonical(reports=builder.REPORT_CATALOG,
-                                              report_canonical=builder.report_column_catalog(stylise=False))
+            builder.save_report_canonical(reports=builder.REPORT_SCHEMA, auto_connectors=False,
+                                          report_canonical=builder.report_canonical_schema(stylise=False))
+            builder.save_report_canonical(reports=builder.REPORT_CATALOG, auto_connectors=False,
+                                          report_canonical=builder.report_column_catalog(stylise=False))
             return canonical
         return
 
@@ -173,24 +171,18 @@ class ControllerIntentModel(AbstractIntentModel):
             # create reports
             self._common_reports(tr)
             # customer reports
-            if tr.pm.has_connector(tr.REPORT_SCHEMA):
-                tr.save_report_canonical(reports=tr.REPORT_SCHEMA,
-                                         report_canonical=tr.report_canonical_schema(stylise=False))
-            if tr.pm.has_connector(tr.REPORT_SUMMARY):
-                tr.save_report_canonical(reports=tr.REPORT_SUMMARY,
-                                         report_canonical=tr.report_quality_summary(canonical=canonical, stylise=False))
-            if tr.pm.has_connector(tr.REPORT_PROVENANCE):
-                tr.save_report_canonical(reports=tr.REPORT_PROVENANCE,
-                                         report_canonical=tr.report_provenance(stylise=False))
-            if tr.pm.has_connector(tr.REPORT_FIELDS):
-                tr.save_report_canonical(reports=tr.REPORT_FIELDS,
-                                         report_canonical=tr.report_attributes(canonical=canonical, stylise=False))
-            if tr.pm.has_connector(tr.REPORT_DICTIONARY):
-                tr.save_report_canonical(reports=tr.REPORT_DICTIONARY,
-                                         report_canonical=tr.canonical_report(canonical=canonical, stylise=False))
-            if tr.pm.has_connector(tr.REPORT_QUALITY):
-                tr.save_report_canonical(reports=tr.REPORT_QUALITY,
-                                         report_canonical=tr.report_quality(canonical=canonical))
+            tr.save_report_canonical(reports=tr.REPORT_SCHEMA, auto_connectors=False,
+                                     report_canonical=tr.report_canonical_schema(stylise=False))
+            tr.save_report_canonical(reports=tr.REPORT_SUMMARY, auto_connectors=False,
+                                     report_canonical=tr.report_quality_summary(canonical=canonical, stylise=False))
+            tr.save_report_canonical(reports=tr.REPORT_PROVENANCE, auto_connectors=False,
+                                     report_canonical=tr.report_provenance(stylise=False))
+            tr.save_report_canonical(reports=tr.REPORT_FIELDS, auto_connectors=False,
+                                     report_canonical=tr.report_attributes(canonical=canonical, stylise=False))
+            tr.save_report_canonical(reports=tr.REPORT_DICTIONARY, auto_connectors=False,
+                                     report_canonical=tr.canonical_report(canonical=canonical, stylise=False))
+            tr.save_report_canonical(reports=tr.REPORT_QUALITY, auto_connectors=False,
+                                     report_canonical=tr.report_quality(canonical=canonical))
             return canonical
         return
 
@@ -370,16 +362,15 @@ class ControllerIntentModel(AbstractIntentModel):
     @staticmethod
     def _common_reports(inst: AbstractCommonComponent):
         """all the common reports to all components"""
-        if inst.pm.has_connector(inst.REPORT_SCHEMA):
-            inst.save_report_canonical(reports=inst.REPORT_SCHEMA,
-                                       report_canonical=inst.report_canonical_schema(stylise=False))
-            inst.save_report_canonical(reports=inst.REPORT_INTENT,
-                                       report_canonical=inst.report_intent(stylise=False))
-            inst.save_report_canonical(reports=inst.REPORT_NOTES,
-                                       report_canonical=inst.report_notes(stylise=False))
-            inst.save_report_canonical(reports=inst.REPORT_RUNBOOK,
-                                       report_canonical=inst.report_run_book(stylise=False))
-            inst.save_report_canonical(reports=inst.REPORT_CONNECTORS,
-                                       report_canonical=inst.report_connectors(stylise=False))
-            inst.save_report_canonical(reports=inst.REPORT_ENVIRON,
-                                       report_canonical=inst.report_environ(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_SCHEMA, auto_connectors=False,
+                                   report_canonical=inst.report_canonical_schema(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_INTENT, auto_connectors=False,
+                                   report_canonical=inst.report_intent(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_NOTES, auto_connectors=False,
+                                   report_canonical=inst.report_notes(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_RUNBOOK, auto_connectors=False,
+                                   report_canonical=inst.report_run_book(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_CONNECTORS, auto_connectors=False,
+                                   report_canonical=inst.report_connectors(stylise=False))
+        inst.save_report_canonical(reports=inst.REPORT_ENVIRON, auto_connectors=False,
+                                   report_canonical=inst.report_environ(stylise=False))
