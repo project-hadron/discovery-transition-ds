@@ -293,7 +293,7 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, run_book: [str, list]=None, repeat: int=None, sleep: int=None):
+    def run_controller(self, run_book: str=None, mod_scripts: list=None, repeat: int=None, sleep: int=None):
         """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
         controller registered task name that will run in the given order passing the resulting outcome of one to the
         input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
@@ -309,11 +309,12 @@ class Controller(AbstractComponent):
             - end_source (optional) if this task will be the last to use the source, remove it from memory on completion
 
         :param run_book: (optional) a run_book reference, a list of task names (intent levels) or task dict
+        :param mod_scripts: (optional) a list of modification dicts that override an existing task in the runbook
         :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
         :param sleep: (optional) number of seconds to sleep before repeating
         """
         _lock = threading.Lock()
-
+        mod_scripts = mod_scripts if isinstance(mod_scripts, list) else []
         if not self.pm.has_intent():
             return
         if isinstance(run_book, str):

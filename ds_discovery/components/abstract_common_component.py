@@ -140,7 +140,7 @@ class AbstractCommonComponent(AbstractComponent):
             connector_name = _report.get('report')
             if not self.pm.has_connector(connector_name):
                 if auto_connectors:
-                    self.set_report_persist(reports=_report, save=save)
+                    self.set_report_persist(reports=[_report], save=save)
                 else:
                     continue
             self.persist_canonical(connector_name=connector_name, canonical=report_canonical, **kwargs)
