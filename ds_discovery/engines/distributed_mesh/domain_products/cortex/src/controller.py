@@ -54,7 +54,7 @@ if __name__ == '__main__':
     # domain_controller(json.loads(sys.argv[-1]))
     # Local test
     asset_bank_uri = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts"
-    contract = "factory/healthcare"
+    contract = "factory/autogen"
     PAT = {"jwk": {"crv": "Ed25519",
                    "x": "OXdyU11SG10iRiaYststIz5sSt7Dk0qWd-AEdVW-CA0",
                    "d": "HgCri9Xw33SC3qCQMG5Q1dcixv7OgU9lf91OCeiK7-g",
@@ -66,15 +66,15 @@ if __name__ == '__main__':
            "url": "https://api.dci-dev.dev-eks.insights.ai"}
     params = {
         "token": generate_token(PAT),
+        "apiEndpoint": PAT.get("url"),
+        "projectId": "helloworld-new-3832b",
+
         "payload": {
             "domain_contract_repo": os.path.join(asset_bank_uri, contract),
             "hadron_kwargs": {
-                "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/datalake_gen/healthcare/members",
-                "HADRON_DEFAULT_MODULE": "ds_discovery.handlers.s3_handlers",
-                "HADRON_DEFAULT_HANDLER": "S3PersistHandler",
+                "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/factory/autogen",
+                "HADRON_GEN_SAMPLE_URI": "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"
             },
         },
-        "apiEndpoint": PAT.get("url"),
-        "projectId": "helloworld-new-3832b"
     }
     domain_controller(params)

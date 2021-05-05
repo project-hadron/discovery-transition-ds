@@ -7,6 +7,8 @@ from typing import Any
 from matplotlib import dates as mdates
 from scipy import stats
 from aistac.components.aistac_commons import DataAnalytics
+
+from ds_discovery.components.transitioning import Transition
 from ds_discovery.components.commons import Commons
 from aistac.properties.abstract_properties import AbstractPropertyManager
 
@@ -989,14 +991,16 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return canonical.explode(column=header, ignore_index=True)
 
     def _model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
-                      detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
-                      apply_bias: bool=None, seed: int = None) -> pd.DataFrame:
-        """
+                      auto_transition: bool=None, detail_numeric: bool=None, strict_typing: bool=None,
+                      category_limit: int=None, apply_bias: bool=None, seed: int = None) -> pd.DataFrame:
+        """ Takes a sample dataset and using analytics, builds a set of synthetic columns that are representative of
+        the sample but scaled to the size of the canonical
 
         :param canonical:
         :param sample:
         :param columns_list:
         :param exclude_associate:
+        :param auto_transition:
         :param detail_numeric:
         :param strict_typing:
         :param category_limit:
@@ -1006,14 +1010,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         """
         canonical = self._get_canonical(canonical)
         sample = self._get_canonical(sample)
+        auto_transition = auto_transition if isinstance(auto_transition, bool) else True
         columns_list = columns_list if isinstance(columns_list, list) else list(sample.columns)
+        sample = Commons.filter_columns(sample, headers=columns_list)
+        if auto_transition:
+            Transition.from_memory().cleaners.auto_transition(sample, inplace=True)
         blob = DataDiscovery.analyse_association(sample, columns_list=columns_list, exclude_associate=exclude_associate,
                                                  detail_numeric=detail_numeric, strict_typing=strict_typing,
                                                  category_limit=category_limit)
         return self._model_analysis(canonical=canonical, analytics_blob=blob, apply_bias=apply_bias, seed=seed)
 
     def _model_script(self, canonical: Any, script_contract: str, seed: int = None) -> pd.DataFrame:
-        """
+        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are that are
+         defined by the build script and scaled to the size of the canonical
 
         :param canonical:
         :param script_contract:

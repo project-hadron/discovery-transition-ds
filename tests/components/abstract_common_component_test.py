@@ -68,13 +68,14 @@ class AbstractCommonComponentTest(unittest.TestCase):
         result = tr.load_canonical(connector_name=tr.REPORT_SUMMARY)
         self.assertEqual(df.shape, result.shape)
 
-    def test_save_report_canonical_params(self):
-        tr = Transition.from_memory()
-        df = pd.DataFrame({'A': [1,2,3,4]})
-        reports = [Commons.param2dict(reports=tr.REPORT_SUMMARY, )]
-        tr.save_report_canonical(reports=tr.REPORT_SUMMARY, report_canonical=df)
-
-
+    def test_default_handler(self):
+        tr = Transition.from_env('tester', has_contract=False, default_save=False)
+        tr.set_source_uri("s3://project-hadron-cs-repo/factory/tester")
+        self.assertEqual("ds_discovery.handlers.s3_handlers", tr.pm.get_connector_contract(tr.CONNECTOR_SOURCE).module_name)
+        self.assertEqual("S3PersistHandler", tr.pm.get_connector_contract(tr.CONNECTOR_SOURCE).handler)
+        tr.add_connector_uri("tester", "s3://project-hadron-cs-repo/factory/tester")
+        self.assertEqual("ds_discovery.handlers.s3_handlers", tr.pm.get_connector_contract("tester").module_name)
+        self.assertEqual("S3PersistHandler", tr.pm.get_connector_contract("tester").handler)
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

@@ -8,8 +8,7 @@ services:
       # Hadron Domain config
       HADRON_PM_REPO: https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/healthcare/datalake_gen/members/
       HADRON_DEFAULT_PATH: s3://project-hadron-cs-repo/datalake_gen/healthcare/members
-      # Hadron Controller Config use
-      HADRON_CONTROLLER_SIZE_MEMBERS_GEN: '100000'
+
       # AWS envs
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -35,17 +34,5 @@ save the skill:
 $> cortex skills save -y skill.yaml --project <project_name>
 
 Now go to the UI and create the Agent with that skill inside.
-
-
-RUNNING LOCAL:
-pass dictionary for payload in the main method of the controller.py -e.g.
-params = {
-    "token": "",
-    "payload": {
-     },
-      "apiEndpoint": ""
-        }
-     main(params)
-}
 
 """

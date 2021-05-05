@@ -498,15 +498,18 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_explode(seed=seed, **params)
 
     def model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
-                     detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
-                     apply_bias: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                     intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """
+                     auto_transition: bool=None, detail_numeric: bool=None, strict_typing: bool=None,
+                     category_limit: int=None, apply_bias: bool=None, seed: int=None, save_intent: bool=None,
+                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None) -> pd.DataFrame:
+        """Takes a sample dataset and using analytics, builds a set of synthetic columns that are representative of
+        the sample but scaled to the size of the canonical
 
         :param canonical:
         :param sample:
         :param columns_list:
         :param exclude_associate:
+        :param auto_transition:
         :param detail_numeric:
         :param strict_typing:
         :param category_limit:
@@ -537,7 +540,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_script(self, canonical: Any, script_contract: str, seed: int=None, save_intent: bool=None,
                      column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                      remove_duplicates: bool=None) -> pd.DataFrame:
-        """
+        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are that are
+         defined by the build script and scaled to the size of the canonical
 
         :param canonical:
         :param script_contract:

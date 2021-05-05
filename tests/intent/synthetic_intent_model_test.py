@@ -166,10 +166,14 @@ class SyntheticIntentModelTest(unittest.TestCase):
     def test_model_sample(self):
         builder = SyntheticBuilder.from_env('test', default_save=False, default_save_intent=False, has_contract=False)
         tools: SyntheticIntentModel = builder.tools
-        builder.add_connector_uri(connector_name='titanic', uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        df = pd.DataFrame(index=range(300))
-        df = tools.model_sample(df, sample='titanic')
-        self.assertEqual((300, 15), df.shape)
+        builder.add_connector_persist(connector_name='sample', uri_file='sample.parquet')
+        sample = pd.DataFrame()
+        sample['age'] = [20, 34, 50, 75]
+        sample['gender'] = list("MMFM")
+        builder.persist_canonical(connector_name='sample', canonical=sample)
+        df = pd.DataFrame(index=range(10))
+        df = tools.model_sample(df, sample='sample')
+        print(df)
 
     def test_model_dict(self):
         builder = SyntheticBuilder.from_memory()
