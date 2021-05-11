@@ -1213,36 +1213,35 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None,
-                          rtn_type: str=None, **kwargs):
-        """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
-        the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
-        as it's parameter name 'canonical'.
+    def _correlate_custom(self, canonical: Any, code_str: str, seed: int=None, **kwargs):
+        """ Commonly used for custom list comprehension, takes code string that when evaluated returns a list of values
+        When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
+        or the short cut '@' symbol.
+        for example:
+            code_str = "[x + 2 for x in @['A']]" # where 'A' is a header in the canonical
+
+        kwargs can also be passed into the code string but must be preceded by a '$' symbol
+        for example:
+            code_str = "[True if x == $v1 else False for x in @['A']]" # where 'v1' is a kwargs
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param code_str: an action on those column values
+        :param code_str: an action on those column values. to reference the canonical use '@'
         :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
-        :param kwargs: a set of kwargs to include in any executable function
         :param seed: (optional) a seed value for the random function: default to None
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
-        :return: a list or pandas.DataFrame
+        :param kwargs: a set of kwargs to include in any executable function
+        :return: a list (optionally a pd.DataFrame
         """
         canonical = self._get_canonical(canonical)
         _seed = seed if isinstance(seed, int) else self._seed()
-        use_exec = use_exec if isinstance(use_exec, bool) else False
-        local_kwargs = locals().get('kwargs') if 'kwargs' in locals() else dict()
-        if 'canonical' not in local_kwargs:
-            local_kwargs['canonical'] = canonical
-
-        rtn_values = exec(code_str, globals(), local_kwargs) if use_exec else eval(code_str, globals(), local_kwargs)
+        local_kwargs = locals()
+        for k, v in local_kwargs.pop('kwargs', {}).items():
+            local_kwargs.update({k: v})
+            code_str = code_str.replace(f'${k}', str(v))
+        code_str = code_str.replace('@', 'canonical')
+        rtn_values = eval(code_str, globals(), local_kwargs)
         if rtn_values is None:
-            return pd.Series([np.nan] * canonical.shape[0])
-        if isinstance(rtn_type, str):
-            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
-                rtn_values = rtn_values.astype(rtn_type)
-            return rtn_values
-        return rtn_values.to_list()
+            return [np.nan] * canonical.shape[0]
+        return rtn_values
 
     def _correlate_aggregate(self, canonical: Any, headers: list, agg: str, seed: int=None, precision: int=None,
                              rtn_type: str=None):

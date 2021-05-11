@@ -681,20 +681,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_selection(seed=seed, **params)
 
-    def correlate_custom(self, canonical: Any, code_str: str, use_exec: bool=None, seed: int=None, rtn_type: str=None,
-                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                         replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
+    def correlate_custom(self, canonical: Any, code_str: str, seed: int=None, save_intent: bool=None,
+                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None, **kwargs):
         """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
         the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
         as it's parameter name 'canonical'.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param code_str: an action on those column values
-        :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param kwargs: a set of kwargs to include in any executable function
         :param seed: (optional) a seed value for the random function: default to None
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -714,6 +711,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         # remove intent params
         params = locals()
         [params.pop(k) for k in self._INTENT_PARAMS]
+        params.update(params.pop('kwargs', {}))
         # set the seed and call the method
         seed = self._seed(seed=seed)
         return self._correlate_custom(seed=seed, **params)

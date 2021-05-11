@@ -171,9 +171,10 @@ class SyntheticIntentModelTest(unittest.TestCase):
         sample['age'] = [20, 34, 50, 75]
         sample['gender'] = list("MMFM")
         builder.persist_canonical(connector_name='sample', canonical=sample)
-        df = pd.DataFrame(index=range(10))
+        df = pd.DataFrame(index=range(1973))
         df = tools.model_sample(df, sample='sample')
-        print(df)
+        self.assertEqual((1973, 2), df.shape)
+        self.assertGreater(df['age'].nunique(), sample['age'].size)
 
     def test_model_dict(self):
         builder = SyntheticBuilder.from_memory()

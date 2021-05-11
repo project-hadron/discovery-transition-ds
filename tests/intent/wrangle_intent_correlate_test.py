@@ -38,6 +38,15 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
                               reset_templates=False, has_contract=False).intent_model
         self.assertTrue(WrangleIntentModel, type(im))
 
+    def test_correlate_custom(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['A'] = [1, 2, 3]
+        result = tools.correlate_custom(df, code_str="[x + 2 for x in @['A']]")
+        self.assertEqual([3, 4, 5], result)
+        result = tools.correlate_custom(df, code_str="[True if x == $v1 else False for x in @['A']]", v1=2)
+        self.assertEqual([False, True, False], result)
+
     def test_correlate_choice(self):
         tools = self.tools
         df = pd.DataFrame()

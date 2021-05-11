@@ -579,6 +579,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         # remove intent params
         params = locals()
         [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        params.update(params.pop('kwargs', {}))
         # set the seed and call the method
         seed = self._seed(seed=seed)
         rtn_list = self._get_distribution(seed=seed, **params)
