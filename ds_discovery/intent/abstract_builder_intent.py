@@ -664,6 +664,38 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return self._frame_starter(canonical=canonical, selection=selection, headers=headers, drop=drop, dtype=dtype,
                                    exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
 
+    def _model_custom(self, canonical: Any, code_str: str, seed: int=None, **kwargs):
+        """ Commonly used for custom methods, takes code string that when executed changes the the canonical returning
+        the modified canonical. If the method passes returns a pd.Dataframe this will be returned else the assumption is
+        the canonical has been changed inplace and thus the modified canonical will be returned
+        When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
+        or the short cut '@' symbol. kwargs can also be passed into the code string but must be preceded by a '$' symbol
+        for example:
+            assume canonical['gender'] = ['M', 'F', 'U']
+            code_str ='''
+                \n@['new_gender'] = [True if x in $value else False for x in @[$header]]
+                \n@['value'] = [4, 5, 6]
+            '''
+            where kwargs are header="'gender'" and value=['M', 'F']
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param code_str: an action on those column values. to reference the canonical use '@'
+        :param seed: (optional) a seed value for the random function: default to None
+        :param kwargs: a set of kwargs to include in any executable function
+        :return: a list (optionally a pd.DataFrame
+        """
+        canonical = self._get_canonical(canonical)
+        _seed = seed if isinstance(seed, int) else self._seed()
+        local_kwargs = locals()
+        for k, v in local_kwargs.pop('kwargs', {}).items():
+            local_kwargs.update({k: v})
+            code_str = code_str.replace(f'${k}', str(v))
+        code_str = code_str.replace('@', 'canonical')
+        df = exec(code_str, globals(), local_kwargs)
+        if df is None:
+            return canonical
+        return df
+
     def _model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: str=None, selection: list=None,
                         default_action: dict=None, iteration_actions: dict=None, iter_start: int=None,
                         iter_stop: int=None, seed: int=None) -> pd.DataFrame:
@@ -1226,7 +1258,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param code_str: an action on those column values. to reference the canonical use '@'
-        :param use_exec: (optional) By default the code runs as eval if set to true exec would be used
         :param seed: (optional) a seed value for the random function: default to None
         :param kwargs: a set of kwargs to include in any executable function
         :return: a list (optionally a pd.DataFrame

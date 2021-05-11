@@ -161,6 +161,45 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._frame_selection(seed=seed, **params)
 
+    def model_custom(self, canonical: Any, code_str: str, seed: int=None, save_intent: bool=None,
+                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None, **kwargs):
+        """ Commonly used for custom methods, takes code string that when executed changes the the canonical returning
+        the modified canonical. If the method passes returns a pd.Dataframe this will be returned else the assumption is
+        the canonical has been changed inplace and thus the modified canonical will be returned
+        When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
+        or the short cut '@' symbol. kwargs can also be passed into the code string but must be preceded by a '$' symbol
+        for example:
+            code_str =
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param code_str: an action on those column values
+        :param kwargs: a set of kwargs to include in any executable function
+        :param seed: (optional) a seed value for the random function: default to None
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a list or pandas.DataFrame
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        params.update(params.pop('kwargs', {}))
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_custom(seed=seed, **params)
+
     def model_iterator(self, canonical: Any, marker_col: str=None, starting_frame: Any=None, selection: list=None,
                        default_action: dict=None, iteration_actions: dict=None, iter_start: int=None,
                        iter_stop: int=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
@@ -684,25 +723,21 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def correlate_custom(self, canonical: Any, code_str: str, seed: int=None, save_intent: bool=None,
                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                          remove_duplicates: bool=None, **kwargs):
-        """ enacts an action on a dataFrame, returning the output of the action or the DataFrame if using exec or
-        the evaluation returns None. Note that if using the input dataframe in your action, it is internally referenced
-        as it's parameter name 'canonical'.
+        """ Commonly used for custom list comprehension, takes code string that when evaluated returns a list of values
+        When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
+        or the short cut '@' symbol.
+        for example:
+            code_str = "[x + 2 for x in @['A']]" # where 'A' is a header in the canonical
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param code_str: an action on those column values
-        :param kwargs: a set of kwargs to include in any executable function
+        kwargs can also be passed into the code string but must be preceded by a '$' symbol
+        for example:
+            code_str = "[True if x == $v1 else False for x in @['A']]" # where 'v1' is a kwargs
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param code_str: an action on those column values. to reference the canonical use '@'
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a list or pandas.DataFrame
+        :param kwargs: a set of kwargs to include in any executable function
+        :return: a list (optionally a pd.DataFrame
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),

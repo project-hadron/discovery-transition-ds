@@ -247,6 +247,18 @@ class TransitionIntentModelTest(unittest.TestCase):
             self.assertTrue(isinstance(result, list), value)
         self.assertEqual([], Commons.list_formatter(None))
 
+    def test_model_custom(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['gender'] = ['M', 'F', 'U']
+        code_str ='''
+            \n@['new_gender'] = [True if x in $value else False for x in @[$header]]
+            \n@['value'] = [4, 5, 6]
+        '''
+        result = tools.model_custom(canonical=df, code_str=code_str, header='"gender"', value=['M', 'F'])
+        print(result)
+
+
     def test_to_date(self):
         tools = self.tools
         cleaner = self.clean
