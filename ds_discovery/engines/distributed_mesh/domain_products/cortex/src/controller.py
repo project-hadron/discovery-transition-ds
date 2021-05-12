@@ -1,6 +1,4 @@
 # Action file
-import json
-import sys
 from cortex import Cortex
 from cortex.utils import generate_token
 from ds_discovery import Controller
@@ -29,22 +27,30 @@ def domain_controller(params: dict):
         if key.startswith('HADRON'):
             del os.environ[key]
 
-    # run through the payload and set environment variables, and remove from the params
-    payload = params.get('payload')
-    hadron_kwargs = payload.get('hadron_kwargs', {})
+    # extract the payload
+    payload = params.get('payload', {})
+
+    # get the domain contract repo from the payload
     uri_pm_repo = payload.get('domain_contract_repo')
     if not isinstance(uri_pm_repo, str):
         raise KeyError("The message parameters passed do not have the mandatory 'domain_contract_repo' payload key")
+
+    # extract any extra kwargs
+    hadron_kwargs = payload.get('hadron_kwargs', {})
+    # export and pop any environment variable from the kwargs
     for key in hadron_kwargs.copy().keys():
         if str(key).isupper():
             os.environ[key] = hadron_kwargs.pop(key)
+    # pop the run_controller attributes from the kwargs
+    run_book = hadron_kwargs.pop('runbook', None)
+    mod_script = hadron_kwargs.pop('mod_script', None)
+    repeat = hadron_kwargs.pop('repeat', None)
+    sleep = hadron_kwargs.pop('sleep', None)
 
-    # Controller
+    # instantiate the Controller passing any remaining kwargs
     controller = Controller.from_env(uri_pm_repo=uri_pm_repo, default_save=False, has_contract=True, **hadron_kwargs)
-    run_book = os.environ.get('HADRON_CONTROLLER_RUNBOOK', None)
-    repeat = os.environ.get('HADRON_CONTROLLER_REPEAT', None)
-    sleep = os.environ.get('HADRON_CONTROLLER_WAIT', None)
-    controller.run_controller(run_book=run_book, repeat=repeat, sleep=sleep)
+    # run the controller nano services.
+    controller.run_controller(run_book=run_book, mod_scripts=mod_script, repeat=repeat, sleep=sleep)
 
 
 if __name__ == '__main__':
@@ -72,6 +78,10 @@ if __name__ == '__main__':
         "payload": {
             "domain_contract_repo": os.path.join(asset_bank_uri, contract),
             "hadron_kwargs": {
+                'runbook': '',
+                'mod_script': '',
+                'repeat': '',
+                'sleep': '',
                 "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/factory/autogen",
                 "HADRON_GEN_SAMPLE_URI": "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"
             },

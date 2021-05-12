@@ -36,17 +36,16 @@ class ControllerIntentModel(AbstractIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_level: [int, str]=None, synthetic_size: int=None,
-                            controller_repo: str=None, persist_result: bool=None, **kwargs):
+    def run_intent_pipeline(self, canonical: Any, intent_level: [int, str]=None, controller_repo: str=None,
+                            persist_result: bool=None, **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
         and will contain 'save_intent' as parameters.
 
-        :param canonical: this is the iterative value all intent are applied to and returned.
+        :param canonical:
         :param intent_level: (optional) The intent_level to run. if none then assume pm constant DEFAULT_INTENT_LEVEL
-        :param synthetic_size: (optional) a size to pass to any synthetic intent
         :param controller_repo: (optional) the controller repo to use if no uri_pm_repo is within the intent parameters
         :param persist_result: (optional) if the intent results should be persisted as well as returned in memory
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
@@ -74,9 +73,6 @@ class ControllerIntentModel(AbstractIntentModel):
                             params.update({'uri_pm_repo': controller_repo})
                         if isinstance(persist_result, bool):
                             params.update({'persist_result': persist_result})
-                        if method == 'synthetic_builder':
-                            if isinstance(synthetic_size, int):
-                                canonical = synthetic_size
                         canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 

@@ -293,7 +293,7 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, run_book: str=None, mod_scripts: list=None, repeat: int=None, sleep: int=None):
+    def run_controller(self, run_book: [str, list]=None, mod_tasks: dict=None, repeat: int=None, sleep: int=None):
         """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
         controller registered task name that will run in the given order passing the resulting outcome of one to the
         input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
@@ -301,20 +301,27 @@ class Controller(AbstractComponent):
         the intent list and run in no particular order and independent of each other using their connector source and
         persist as data input
 
-        run book elements can be a dictionary contain more detailed run commands for a particular task.
+        run book list elements can be a dictionary contain more detailed run commands for a particular task. if a
+        dictionary is used it must contain the task_name as a minimum
         The dictionary keys are as follows:
             - task_name: The task name (intent level) this run detail is applied to
             - source: (optional) The task name of the source or '@<intent_name>' to reference a known event book
             - persist: (optional) if true persist to an event book named after the intent. if False do nothing
             - end_source (optional) if this task will be the last to use the source, remove it from memory on completion
 
-        :param run_book: (optional) a run_book reference, a list of task names (intent levels) or task dict
-        :param mod_scripts: (optional) a list of modification dicts that override an existing task in the runbook
+        mod_tasks are a dictionary of modifications to tasks in the runbook. The run_book will still define the run
+        order and modification tasks not found in the run_book will be ignored. The dictionary is indexed on the task
+        name with the modifications a sub-dictionary of name value pairs.
+            for example: mod_tasks = {'my_synth_gen': {source: 1000}}
+            changes 'my_synth_gen' to now have a source reference of 1000 meaning it will generate 1000 synthetic rows.
+
+        :param run_book: (optional) a run_book reference, a list of task names (intent levels)
+        :param mod_tasks: (optional) a dict of modifications that override an existing task in the runbook
         :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
         :param sleep: (optional) number of seconds to sleep before repeating
         """
         _lock = threading.Lock()
-        mod_scripts = mod_scripts if isinstance(mod_scripts, list) else []
+        mod_tasks = mod_tasks if isinstance(mod_tasks, dict) else {}
         if not self.pm.has_intent():
             return
         if isinstance(run_book, str):
@@ -347,6 +354,8 @@ class Controller(AbstractComponent):
                 intent_levels[idx].update({'source': _source})
             if intent_levels[idx].get('source') == '@':
                 intent_levels[idx].update({'source': f'@{self.CONNECTOR_SOURCE}'})
+            if intent_levels[idx].get('task') in mod_tasks.keys():
+                intent_levels[idx].update(mod_tasks.get(intent_levels[idx].get('task'), {}))
         repeat = repeat if isinstance(repeat, int) and repeat > 0 else 1
         for count in range(repeat):
             for intent in intent_levels:

@@ -4,7 +4,8 @@ import shutil
 import pandas as pd
 from pprint import pprint
 
-from ds_discovery import SyntheticBuilder
+from ds_discovery import SyntheticBuilder, Transition
+from ds_discovery.components.commons import Commons
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
 
@@ -52,25 +53,24 @@ class ControllerTest(unittest.TestCase):
 
     def test_run_controller(self):
         uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
+        tr = Transition.from_env(task_name='members', uri_pm_repo=uri_pm_repo)
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
         roadmap = [
             controller.runbook2dict(task='members_sim', source=1000),
             controller.runbook2dict(task='members_gen', source='members_sim', persist=True),
-            # controller.runbook2dict(task='cln_members_gen', source='members_sim', persist=True),
-            # controller.runbook2dict(task='prf_members_gen', source='members_sim', persist=True),
-            # controller.runbook2dict(task='ins_members_gen', source='members_sim', persist=True),
-            # controller.runbook2dict(task='pcp_sim', source=100),
-            # controller.runbook2dict(task='pcp_gen', source='pcp_sim', persist=True),
-        ]
-        controller.run_controller(run_book=roadmap, repeat=2, sleep=2)
+         ]
+        controller.run_controller(run_book=roadmap)
+        self.assertEqual(1000, tr.load_persist_canonical().shape[0])
+        # test mod_task
+        controller.run_controller(run_book=roadmap, mod_tasks={'members_sim': {'source': 10}})
+        self.assertEqual(10, tr.load_persist_canonical().shape[0])
 
     def test_run_intent_pipeline(self):
         uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
         # os.environ['HADRON_PM_REPO'] = uri_pm_repo
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
-        result = controller.intent_model.run_intent_pipeline(intent_level='generator', synthetic_size=100,
-                                                             controller_repo=uri_pm_repo)
-        self.assertEqual((100, 25), result.shape)
+        result = controller.intent_model.run_intent_pipeline(canonical=100, intent_level='members_sim', controller_repo=uri_pm_repo)
+        self.assertEqual(100, result.shape[0])
 
     def test_report_tasks(self):
         uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"

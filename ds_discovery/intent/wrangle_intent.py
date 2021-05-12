@@ -724,6 +724,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                          remove_duplicates: bool=None, **kwargs):
         """ Commonly used for custom list comprehension, takes code string that when evaluated returns a list of values
+        Before using this method, consider the method correlate_selection(...)
+
         When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
         or the short cut '@' symbol.
         for example:
