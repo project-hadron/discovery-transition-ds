@@ -3,6 +3,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
+from ds_discovery.components.commons import Commons
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
 
@@ -35,45 +37,45 @@ class DataToleranceIntentModel(AbstractCommonsIntentModel):
                          default_intent_order=default_intent_order, default_replace_intent=default_replace_intent,
                          intent_type_additions=intent_type_additions)
 
-    def run_intent_pipeline(self, canonical: [pd.DataFrame, str], measure: [str, list], **kwargs):
+    def run_intent_pipeline(self, canonical: pd.DataFrame, intent_levels: [int, str, list]=None, run_book: str=None,
+                            **kwargs):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
 
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
-        and will contain 'save_intent' as parameters. It is also assumed that all features have a feature contract to
-        save the feature outcome to
+        and will contain 'inplace' and 'save_intent' as parameters.
 
-        :param canonical: this is the canonical the measure is applied too applied .
-        :param measure: the measure to run
-        :return distance measure
+        :param canonical: this is the iterative value all intent are applied to and returned.
+        :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
+        :param run_book: (optional) a preset runbook of intent_level to run in order
+        :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
+        :return Canonical with parameterised intent applied or None if inplace is True
         """
         # test if there is any intent to run
-        if self._pm.has_intent(level=measure):
-            canonical = self._get_canonical(canonical)
-            # run the feature
-            level_key = self._pm.join(self._pm.KEY.intent_key, measure)
-            df_measure = None
-            for order in sorted(self._pm.get(level_key, {})):
-                for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
-                    if method in self.__dir__():
-                        if 'canonical' in params.keys():
-                            df_measure = params.pop('canonical')
-                        elif df_measure is None:
-                            df_measure = canonical
-                        # fail safe in case kwargs was sored as the reference
-                        params.update(params.pop('kwargs', {}))
-                        # add method kwargs to the params
-                        if isinstance(kwargs, dict):
-                            params.update(kwargs)
-                        # remove the creator param
-                        _ = params.pop('intent_creator', 'Unknown')
-                        # add excluded params and set to False
-                        params.update({'save_intent': False})
-                        df_measure = eval(f"self.{method}(df_measure, **{params})", globals(), locals())
-            if df_measure is None:
-                raise ValueError(f"The measure '{measure}' pipeline did not run.")
-            return df_measure
-        raise ValueError(f"The measure '{measure}, can't be found in the tolerance catalog")
+        if self._pm.has_intent():
+            # get the list of levels to run
+            if isinstance(intent_levels, (int, str, list)):
+                intent_levels = Commons.list_formatter(intent_levels)
+            elif isinstance(run_book, str) and self._pm.has_run_book(book_name=run_book):
+                intent_levels = self._pm.get_run_book(book_name=run_book)
+            else:
+                intent_levels = sorted(self._pm.get_intent().keys())
+            for level in intent_levels:
+                level_key = self._pm.join(self._pm.KEY.intent_key, level)
+                for order in sorted(self._pm.get(level_key, {})):
+                    for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                        if method in self.__dir__():
+                            # fail safe in case kwargs was sored as the reference
+                            params.update(params.pop('kwargs', {}))
+                            # add method kwargs to the params
+                            if isinstance(kwargs, dict):
+                                params.update(kwargs)
+                            # remove the creator param
+                            _ = params.pop('intent_creator', 'Unknown')
+                            # add excluded params and set to False
+                            params.update({'inplace': False, 'save_intent': False})
+                            canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
+        return canonical
 
     def tolerate_relation(self, canonical: Any, header: str, tolerance: dict, schema_name: str=None, dtype: str=None,
                           save_intent: bool=None, measure_name: [int, str]=None, intent_order: int=None,

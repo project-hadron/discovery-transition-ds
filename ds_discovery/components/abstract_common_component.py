@@ -77,13 +77,15 @@ class AbstractCommonComponent(AbstractComponent):
             self.pm_persist(save)
         return
 
-    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None):
+    def setup_bootstrap(self, domain: str=None, project_name: str=None, path: str=None, file_type: str=None,
+                        description: str=None):
         """ Creates a bootstrap Transition setup. Note this does not set the source
 
         :param domain: (optional) The domain this simulators sits within e.g. 'Healthcare' or 'Financial Services'
         :param project_name: (optional) a project name that will replace the hadron naming on file prefix
         :param path: (optional) a path added to the template path default
         :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
+        :param description: (optional) a description of the component instance to overwrite the default
         """
         domain = domain.title() if isinstance(domain, str) else 'Unspecified'
         file_type = file_type if isinstance(file_type, str) else 'parquet'
@@ -92,7 +94,9 @@ class AbstractCommonComponent(AbstractComponent):
                                          versioned=True)
         self.set_persist(uri_file=file_name)
         component = self.pm.manager_name()
-        self.set_description(f"{domain} domain {component} component for {project_name} {self.pm.task_name} contract")
+        if not isinstance(description, str):
+            description = f"{domain} domain {component} component for {project_name} {self.pm.task_name} contract"
+        self.set_description(description=description)
 
     def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame],
                               replace_connectors: bool=None, auto_connectors: bool=None, save: bool=None, **kwargs):

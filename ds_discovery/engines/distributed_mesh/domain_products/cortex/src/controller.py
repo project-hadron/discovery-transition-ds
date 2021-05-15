@@ -43,14 +43,14 @@ def domain_controller(params: dict):
             os.environ[key] = hadron_kwargs.pop(key)
     # pop the run_controller attributes from the kwargs
     run_book = hadron_kwargs.pop('runbook', None)
-    mod_script = hadron_kwargs.pop('mod_script', None)
+    mod_tasks = hadron_kwargs.pop('mod_tasks', None)
     repeat = hadron_kwargs.pop('repeat', None)
     sleep = hadron_kwargs.pop('sleep', None)
 
     # instantiate the Controller passing any remaining kwargs
     controller = Controller.from_env(uri_pm_repo=uri_pm_repo, default_save=False, has_contract=True, **hadron_kwargs)
     # run the controller nano services.
-    controller.run_controller(run_book=run_book, mod_scripts=mod_script, repeat=repeat, sleep=sleep)
+    controller.run_controller(run_book=run_book, mod_tasks=mod_tasks, repeat=repeat, sleep=sleep)
 
 
 if __name__ == '__main__':
@@ -77,13 +77,13 @@ if __name__ == '__main__':
 
         "payload": {
             "domain_contract_repo": os.path.join(asset_bank_uri, contract),
+            "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/factory/autogen",
             "hadron_kwargs": {
-                'runbook': '',
-                'mod_script': '',
-                'repeat': '',
-                'sleep': '',
-                "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/factory/autogen",
-                "HADRON_GEN_SAMPLE_URI": "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"
+                # 'runbook': '',
+                # 'mod_tasks': '',
+                # 'repeat': '',
+                # 'sleep': '',
+                # "HADRON_GEN_SAMPLE_URI": "",
             },
         },
     }
