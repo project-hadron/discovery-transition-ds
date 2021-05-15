@@ -57,7 +57,7 @@ class ControllerIntentTest(unittest.TestCase):
     def test_register_task(self):
         repo_uri = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
         dc = self.instance
-        synth_df = dc.synthetic_builder(task_name='hk_income', size=1000, uri_pm_repo=repo_uri, run_task=True)
+        synth_df = dc.synthetic_builder(task_name='hk_income', canonical=1000, uri_pm_repo=repo_uri, run_task=True)
         result = dc.transition(canonical=synth_df, task_name='hk_income', uri_pm_repo=repo_uri, run_task=True, intent_order=2)
         control = ['ref_id', 'industry', 'age-group', 'ethnicity', 'area', 'gender', 'district', 'salary']
         self.assertEqual(control, result.columns.to_list())

@@ -44,36 +44,37 @@ class ControllerIntentModel(AbstractIntentModel):
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
         and will contain 'save_intent' as parameters.
 
-        :param canonical:
+        :param canonical: A pandas dataframe or int if passing to the SyntheticBuilder
         :param intent_level: (optional) The intent_level to run. if none then assume pm constant DEFAULT_INTENT_LEVEL
         :param controller_repo: (optional) the controller repo to use if no uri_pm_repo is within the intent parameters
         :param persist_result: (optional) if the intent results should be persisted as well as returned in memory
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
         :return Canonical with parameterised intent applied
         """
-        # test if there is any intent to run
-        if self._pm.has_intent():
-            # get the list of levels to run
-            intent_level = intent_level if isinstance(intent_level, (int, str)) else self._pm.DEFAULT_INTENT_LEVEL
-            level_key = self._pm.join(self._pm.KEY.intent_key, intent_level)
-            for order in sorted(self._pm.get(level_key, {})):
-                for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
-                    if method in self.__dir__():
-                        # fail safe in case kwargs was sored as the reference
-                        params.update(params.pop('kwargs', {}))
-                        # add method kwargs to the params
-                        if isinstance(kwargs, dict):
-                            params.update(kwargs)
-                        # remove the creator param
-                        _ = params.pop('intent_creator', 'Unknown')
-                        # add excluded params and set to False
-                        params.update({'run_task': True, 'save_intent': False})
-                        # add the controller_repo if given
-                        if isinstance(controller_repo, str) and 'uri_pm_repo' not in params.keys():
-                            params.update({'uri_pm_repo': controller_repo})
-                        if isinstance(persist_result, bool):
-                            params.update({'persist_result': persist_result})
-                        canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
+        # get the list of levels to run
+        intent_level = intent_level if isinstance(intent_level, (int, str)) else self._pm.DEFAULT_INTENT_LEVEL
+        if not self._pm.has_intent(intent_level):
+            raise ValueError(f"The intent level '{intent_level}' could not be found in the "
+                             f"property manager '{self._pm.manager_name()}' for task '{self._pm.task_name}'")
+        level_key = self._pm.join(self._pm.KEY.intent_key, intent_level)
+        for order in sorted(self._pm.get(level_key, {})):
+            for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
+                if method in self.__dir__():
+                    # fail safe in case kwargs was sored as the reference
+                    params.update(params.pop('kwargs', {}))
+                    # add method kwargs to the params
+                    if isinstance(kwargs, dict):
+                        params.update(kwargs)
+                    # remove the creator param
+                    _ = params.pop('intent_creator', 'Unknown')
+                    # add excluded params and set to False
+                    params.update({'run_task': True, 'save_intent': False})
+                    # add the controller_repo if given
+                    if isinstance(controller_repo, str) and 'uri_pm_repo' not in params.keys():
+                        params.update({'uri_pm_repo': controller_repo})
+                    if isinstance(persist_result, bool):
+                        params.update({'persist_result': persist_result})
+                    canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
     def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, uri_pm_repo: str=None,

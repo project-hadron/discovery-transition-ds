@@ -385,7 +385,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
             methods:
