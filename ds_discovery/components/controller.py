@@ -363,12 +363,7 @@ class Controller(AbstractComponent):
                 source = intent.get('source')
                 to_persist = intent.get('persist')
                 end_source = intent.get('end_source')
-                if isinstance(source, str) and source.startswith('@'):
-                    if self.pm.has_connector(source[1:]):
-                        canonical = self.load_canonical(source[1:])
-                    else:
-                        raise ValueError(f"The task '{task}' source connector '{source[1:]}' has not been set")
-                elif isinstance(source, int):
+                if isinstance(source, int) or (isinstance(source, str) and source.startswith('@')):
                     canonical = source
                 else:
                     if self.eb_portfolio.is_active_book(source):
@@ -422,7 +417,7 @@ class Controller(AbstractComponent):
         return df_style
 
     @staticmethod
-    def runbook2dict(task: str, source: [str, int]=None, persist: bool=None) -> dict:
+    def runbook2dict(task: str, source: [str, int]=None, persist: bool=None, end_source: bool=None) -> dict:
         """ a utility method to help build feature conditions by aligning method parameters with dictionary format.
 
         :param task: the task name (intent level) name this runbook is applied too or a number if synthetic generation
@@ -430,6 +425,7 @@ class Controller(AbstractComponent):
                             '@' will use the source contract of this task as the source input.
                             '@<connector>' will use the connector contract that must exist in the task connectors
         :param persist: (optional) if true persist to an event book named after the intent. if False do nothing
+        :param end_source: (optional) if true indicates the source canonical can be removed from in-memory
         :return: dictionary of the parameters
         """
         return Commons.param2dict(**locals())

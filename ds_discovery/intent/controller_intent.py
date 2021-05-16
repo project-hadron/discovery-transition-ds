@@ -111,6 +111,13 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             builder: SyntheticBuilder = eval(f"SyntheticBuilder.from_env(task_name=task_name, default_save=False, "
                                              f"has_contract=True, **{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if builder.pm.has_connector(canonical[1:]):
+                    canonical = builder.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
+            elif isinstance(canonical, int):
+                canonical = canonical
             canonical = builder.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=columns)
             # persist the canonical
             if persist_result and builder.pm.has_connector(builder.CONNECTOR_PERSIST):
@@ -155,6 +162,11 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             tr: Transition = eval(f"Transition.from_env(task_name=task_name, default_save=False, has_contract=True, "
                                   f"**{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if tr.pm.has_connector(canonical[1:]):
+                    canonical = tr.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = tr.load_source_canonical()
             canonical = tr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
@@ -212,6 +224,11 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             wr: Wrangle = eval(f"Wrangle.from_env(task_name=task_name, default_save=False, has_contract=True, "
                                f"**{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if wr.pm.has_connector(canonical[1:]):
+                    canonical = wr.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = wr.load_source_canonical()
             canonical = wr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
@@ -264,6 +281,11 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             fc: FeatureCatalog = eval(f"FeatureCatalog.from_env(task_name=task_name, default_save=False, "
                                       f"has_contract=True, **{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if fc.pm.has_connector(canonical[1:]):
+                    canonical = fc.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = fc.load_source_canonical()
             canonical = fc.intent_model.run_intent_pipeline(canonical=canonical, feature_name=feature_name,
@@ -309,6 +331,11 @@ class ControllerIntentModel(AbstractIntentModel):
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
             ct: DataDrift = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
                                  f"has_contract=True, **{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if ct.pm.has_connector(canonical[1:]):
+                    canonical = ct.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = ct.load_source_canonical()
             canonical = ct.intent_model.run_intent_pipeline(canonical=canonical, measure=measure)
