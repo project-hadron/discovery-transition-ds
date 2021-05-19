@@ -221,9 +221,10 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
         # csv
         if file_type.lower() in ['csv', 'tsv', 'txt']:
             byte_obj = StringIO()
-            _mode = write_params.pop('mode', 'wb')
+            _mode = write_params.pop('mode', 'w')
             _index = write_params.pop('index', False)
             with self._lock:
+
                 canonical.to_csv(byte_obj, mode=_mode, index=_index, **write_params)
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         # pickle

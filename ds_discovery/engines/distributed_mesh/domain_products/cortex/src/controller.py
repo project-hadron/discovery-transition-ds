@@ -59,8 +59,6 @@ if __name__ == '__main__':
     #     exit(1)
     # domain_controller(json.loads(sys.argv[-1]))
     # Local test
-    asset_bank_uri = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts"
-    contract = "factory/autogen"
     PAT = {"jwk": {"crv": "Ed25519",
                    "x": "OXdyU11SG10iRiaYststIz5sSt7Dk0qWd-AEdVW-CA0",
                    "d": "HgCri9Xw33SC3qCQMG5Q1dcixv7OgU9lf91OCeiK7-g",
@@ -76,14 +74,10 @@ if __name__ == '__main__':
         "projectId": "helloworld-new-3832b",
 
         "payload": {
-            "domain_contract_repo": os.path.join(asset_bank_uri, contract),
-            "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/factory/autogen",
+            "domain_contract_repo": 'https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/feature_catalog/profile_features',
             "hadron_kwargs": {
-                # 'runbook': '',
-                # 'mod_tasks': '',
-                # 'repeat': '',
-                # 'sleep': '',
-                # "HADRON_GEN_SAMPLE_URI": "",
+                "HADRON_DEFAULT_PATH": "s3://project-hadron-cs-repo/domain/helloworld/data/feature_catalog/profile_features/",
+                "HADRON_DATALAKE_VERSION": "v08"
             },
         },
     }
