@@ -251,6 +251,9 @@ class AbstractCommonComponent(AbstractComponent):
         report = self.pm.report_connectors(connector_filter=connector_filter, inc_pm=inc_pm,
                                            inc_template=inc_template)
         df = pd.DataFrame.from_dict(data=report)
+        # sort out any values that start with a $ as it throws formatting
+        for c in df.columns:
+            df[c] = [f"{x[1:]}" if str(x).startswith('$') else x for x in df[c]]
         if stylise:
             return Commons.report(df, index_header='connector_name')
         return df
