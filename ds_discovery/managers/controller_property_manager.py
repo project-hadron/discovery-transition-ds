@@ -53,11 +53,11 @@ class ControllerPropertyManager(AbstractPropertyManager):
         for name, value in params.items():
             if value is None:
                 continue
-            if name in ['title', 'domain', 'description', 'situation', 'opportunity', 'actions', 'author']:
+            if name in ['title', 'domain', 'description', 'situation', 'opportunity', 'actions']:
                 self.set(self.join(self.KEY.use_case_key, name), value)
             if name.startswith('project') or name.startswith('stakeholder'):
                 key, item = name.split(sep='_')
-                self.set(self.join(self.KEY.provenance_key, key, item), value)
+                self.set(self.join(self.KEY.use_case_key, key, item), value)
         return
 
     def reset_use_case(self):
