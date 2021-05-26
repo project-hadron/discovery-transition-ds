@@ -1898,7 +1898,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 weight_idx = _freq_choice(relative_freq)
                 if result[weight_idx] > 0:
                     result[weight_idx] -= 1
-        return result
+        # ensure we have all positive values
+        return [0 if x < 0 else x for x in result]
 
     @staticmethod
     def _seed(seed: int=None, increment: bool=False):
