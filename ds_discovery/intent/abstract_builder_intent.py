@@ -1660,12 +1660,12 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         action to be the current value
             simple correlation list:
                 ['A', 'B', 'C'] # if values is 'A' then action is 0 and so on
-            multiple choice correlation
+            multiple choice correlation:
                 [['A','B'], 'C'] # if values is 'A' OR 'B' then action is 0 and so on
-            actions dictionary where the method is a class method followed by its parameters
-                {0: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
-            you can also use the action to specify a specific value:
-                {0: 'F', 1: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
+
+            For more complex correlation the selection logic can be used, see notes below.
+
+            for actions also see notes below.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
@@ -1676,6 +1676,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
                 other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: a list of equal length to the one passed
+
+        Selections are a list of dictionaries of conditions and optional additional parameters to filter.
+        To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
+        options available to build a condition.
+        An example of a condition with the minimum requirements is
+                [{'column': 'genre', 'condition': "=='Comedy'"}]
+
+        an example of using the helper method
+                selection = [inst.select2dict(column='gender', condition="=='M'"),
+                             inst.select2dict(column='age', condition=">65", logic='XOR')]
+
+        Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed. It also
+        helps with building the logic that is executed in order
 
         Actions are the resulting outcome of the selection (or the default). An action can be just a value or a dict
         that executes a intent method such as get_number(). To help build actions there is a helper function called
@@ -1688,7 +1701,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             @eval: evaluate a code string, expects the key 'code_str' and any locals() required
 
         An example of a simple action to return a selection from a list:
-                {'method': 'get_category', selection=['M', 'F', 'U']
+                {'method': 'get_category', selection: ['M', 'F', 'U']}
+
+        This same action using the helper method would look like:
+                inst.action2dict(method='get_category', selection=['M', 'F', 'U'])
 
         an example of using the helper method, in this example we use the keyword @header to get a value from another
         column at the same index position:
@@ -1696,7 +1712,6 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         We can even execute some sort of evaluation at run time:
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
-
         """
         canonical = self._get_canonical(canonical, header=header)
         if not isinstance(header, str) or header not in canonical.columns:
@@ -1718,7 +1733,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             action = actions.get(i, actions.get(str(i), -1))
             if action == -1:
                 continue
-            corr_idx = s_values[s_values.isin(map(str, corr_list[i]))].index
+            if isinstance(corr_list[i][0], dict):
+                corr_idx = self._selection_index(canonical, selection=corr_list[i])
+            else:
+                corr_idx = s_values[s_values.isin(map(str, corr_list[i]))].index
             rtn_values.update(self._apply_action(canonical, action=action, select_idx=corr_idx, seed=_seed))
         if isinstance(rtn_type, str):
             if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):

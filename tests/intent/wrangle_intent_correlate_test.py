@@ -185,6 +185,24 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action)
         self.assertEqual(5000, len(result))
 
+    def test_correlate_categories_selection(self):
+        tools = self.tools
+        df = pd.DataFrame(columns=['cat'], data=list("ABACDBA"))
+        correlation = [[tools.select2dict(column='cat', condition="@=='A'")], [tools.select2dict(column='cat', condition="@=='B'")]]
+        action = {0: 'F', 1: 'G'}
+        default = 'H'
+        result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action, default_action=default)
+        self.assertEqual(['F', 'G', 'F', 'H', 'H', 'G', 'F'], result)
+        correlation = [[tools.select2dict(column='cat', condition="@=='A'")], ['B', 'C'], 'D']
+        result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action, default_action=default)
+        self.assertEqual(['F', 'G', 'F', 'G', 'H', 'G', 'F'], result)
+        # use with numbers
+        df = pd.DataFrame(columns=['cat'], data=[1,2,3,4,2,1])
+        correlation = [[tools.select2dict(column='cat', condition="@<=2")],
+                       [tools.select2dict(column='cat', condition="@==3")]]
+        result = tools.correlate_categories(df, 'cat', correlations=correlation, actions=action, default_action=default)
+        self.assertEqual(['F', 'F', 'G', 'H', 'F', 'F'], result)
+
     def test_correlate_categories_builder(self):
         builder = Wrangle.from_env('test', has_contract=False)
         builder.set_persist_contract(ConnectorContract(uri="eb://synthetic_members", module_name='ds_engines.handlers.event_handlers', handler='EventPersistHandler'))
@@ -196,7 +214,7 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df['pcp_name'] = builder.tools.correlate_categories(df, header='pcp_tax_id', correlations=correlations,
                                                             actions=actions, column_name='pcp_name')
         result = builder.tools.run_intent_pipeline(df)
-        self.assertEqual((10,2), result.shape)
+        self.assertEqual((10, 2), result.shape)
 
     def test_correlate_categories_multi(self):
         tools = self.tools
@@ -279,7 +297,7 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         # control
         df = pd.DataFrame(columns=['dates'], data=['1964-01-14', '1967-09-28', '1996-05-22', '1997-12-11'])
         result = tools.correlate_dates(df, 'dates', now_delta='Y')
-        self.assertEqual([57, 53, 24, 23], result)
+        self.assertEqual([57, 53, 25, 23], result)
 
     def test_correlate_missing(self):
         tools = self.tools
