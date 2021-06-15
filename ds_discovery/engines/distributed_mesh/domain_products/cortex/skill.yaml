@@ -1,0 +1,29 @@
+camel: 1.0.0
+name: controller-skill
+title:  Domain Contract execution
+description: A reusable skill run against predefined domain contracts
+inputs:
+  - name: controller_run_params
+    title: run parameters for the controller and components in the pipeline
+    parameters:
+      - name: domain_contract_repo
+        type: string
+        description: The path of the Controller Domain Contract repository
+        required: true
+      - name: hadron_kwargs
+        type: object
+        description: an optional dictionary of kwargs to pass to the Controller
+        required: false
+    routing:
+      all:
+        action  : controller-skill
+        runtime: cortex/functions
+        output: controller_out
+outputs:
+  - name: controller_out
+    title: Controller output
+    parameters:
+      - name: output
+        type: string
+        description: output
+        required: false

@@ -1,6 +1,10 @@
 # Project Hadron
-aistac-foundation >= 2.12
-discovery-transition-ds >= 3.2
+aistac-foundation >= 2.12.014
+discovery-transition-ds == 3.02.074
+# parquet
+pyarrow == 3.0.0
+# https
+requests
 # Cortex
 cortex-python
 # Data Science packages

@@ -1035,18 +1035,20 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_missing(seed=seed, **params)
 
-    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, offset: [int, float, str]=None,
-                          jitter: float=None, jitter_freq: list=None, precision: int=None,
-                          replace_nulls: [int, float]=None, seed: int=None, keep_zero: bool=None, rtn_type: str=None,
-                          min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
-                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                          remove_duplicates: bool=None):
+    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, standardize: bool=None,
+                          normalize: tuple=None, offset: [int, float, str]=None, jitter: float=None,
+                          jitter_freq: list=None, precision: int=None, replace_nulls: [int, float]=None, seed: int=None,
+                          keep_zero: bool=None, rtn_type: str=None, min_value: [int, float]=None,
+                          max_value: [int, float]=None, save_intent: bool=None, column_name: [int, str]=None,
+                          intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
         with the correlated value being the mean and the jitter its standard deviation from that mean
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
-        :param to_numeric: if the column should be converted to a numeric type. strings not convertible are set to null
+        :param to_numeric: (optional) ensures numeric type. None convertable strings are set to null
+        :param standardize: (optional) if the column should be standardised
+        :param normalize: (optional) normalise the column between two values. the tuple is the lower and upper bounds
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter

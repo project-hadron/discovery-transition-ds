@@ -124,6 +124,20 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             loss = abs(df['numbers'][index] - result[index])
             self.assertLessEqual(loss, 1)
 
+    def test_correlate_normalize(self):
+        tools = self.tools
+        df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
+        result = tools.correlate_numbers(df, header='numbers', normalize=(0, 1))
+        self.assertEqual([0.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, 0.0], result)
+        result = tools.correlate_numbers(df, header='numbers', normalize=(-1, 1))
+        self.assertEqual([-1.0, 0, 0, 1.0, 1.0, 0, 0, -1.0], result)
+
+    def test_correlate_standardise(self):
+        tools = self.tools
+        df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
+        result = tools.correlate_numbers(df, header='numbers', standardize=True, precision=1)
+        self.assertEqual([-1.4, 0.0, 0.0, 1.4, 1.4, 0.0, 0.0, -1.4], result)
+
     def test_correlate_number_to_numeric(self):
         tools = self.tools
         df = pd.DataFrame(data=list("123") + ['4-5'], columns=['numbers'])
