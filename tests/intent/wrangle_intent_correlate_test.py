@@ -320,6 +320,22 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_missing(df, header='cats', as_type='category', seed=1973)
         self.assertEqual(['a', 'b', 'b', 'f', 'b', 'f', 'b', 'c', 'b', 'a'], result)
 
+    def test_model_encoding(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['cats'] = ['a', 'b', 'a', 'c']
+        result = tools.model_encoding(df, headers='cats')
+        self.assertEqual([1, 0, 1, 0], result['cats_a'].to_list())
+        self.assertEqual([0, 1, 0, 0], result['cats_b'].to_list())
+        self.assertEqual([0, 0, 0, 1], result['cats_c'].to_list())
+
+    def test_correlate_discrete(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['age'] = [0, 1, 2, 0]
+        result = tools.correlate_discrete(df, header='age', categories=['low', 'mid', 'high'])
+        self.assertEqual(['low', 'mid', 'high', 'low'], result)
+
 
 if __name__ == '__main__':
     unittest.main()

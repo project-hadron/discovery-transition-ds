@@ -439,7 +439,21 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return rtn_list
 
     def _get_dist_poisson(self, interval: float, size: int=None, seed: int=None) -> list:
-        """A Poisson discrete random distribution
+        """A Poisson discrete random distribution.
+
+            The Poisson distribution
+
+            .. math:: f(k; \lambda)=\frac{\lambda^k e^{-\lambda}}{k!}
+
+            For events with an expected separation :math:`\lambda` the Poisson
+            distribution :math:`f(k; \lambda)` describes the probability of
+            :math:`k` events occurring within the observed
+            interval :math:`\lambda`.
+
+            Because the output is limited to the range of the C int64 type, a
+            ValueError is raised when `lam` is within 10 sigma of the maximum
+            representable value.
+
 
         :param interval: Expectation of interval, must be >= 0.
         :param size: the size of the sample.
@@ -1159,6 +1173,58 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
+    def _model_encoding(self, canonical: Any, headers: [str, list], encoding: bool=None, ordinal: dict=None,
+                        prefix=None, dtype: Any=None, prefix_sep: str=None, dummy_na: bool=False,
+                        drop_first: bool=False, seed: int=None) -> pd.DataFrame:
+        """ encodes categorical data types, by default, as dummy encoded but optionally can choose label
+        encoding
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param headers: the header(s) to apply multi-hot
+        :param encoding: the type of encoding to apply to the categories, types supported 'dummy', 'ordinal', 'label'
+        :param ordinal: a dictionary of ordinal encoding. encoding must be 'ordinal', if not mapped then returns null
+        :param prefix : str, list of str, or dict of str, default None
+                String to append DataFrame column names.
+                Pass a list with length equal to the number of columns
+                when calling get_dummies on a DataFrame. Alternatively, `prefix`
+                can be a dictionary mapping column names to prefixes.
+        :param prefix_sep : str, default '_'
+                If appending prefix, separator/delimiter to use. Or pass a
+                list or dictionary as with `prefix`.
+        :param dummy_na : bool, default False
+                Add a column to indicate NaNs, if False NaNs are ignored.
+        :param drop_first : bool, default False
+                Whether to get k-1 dummies out of k categorical levels by removing the
+                first level.
+        :param dtype : dtype, default np.uint8
+                Data type for new columns. Only a single dtype is allowed.
+        :param seed: seed: (optional) a seed value for the random function: default to None
+        :return: a pd.Dataframe
+        """
+        # intend code block on the canonical
+        canonical = self._get_canonical(canonical)
+        headers = Commons.list_formatter(headers)
+        seed = self._seed() if seed is None else seed
+        encoding = encoding if isinstance(encoding, str) and encoding in ['label', 'ordinal'] else 'dummy'
+        prefix = prefix if isinstance(prefix, str) else None
+        prefix_sep = prefix_sep if isinstance(prefix_sep, str) else "_"
+        dummy_na = dummy_na if isinstance(dummy_na, bool) else False
+        drop_first = drop_first if isinstance(drop_first, bool) else False
+        dtype = dtype if dtype else np.uint8
+        for header in headers:
+            if canonical[header].dtype.name != 'category':
+                canonical[header] = canonical[header].astype('category')
+            if encoding == 'ordinal':
+                ordinal = ordinal if isinstance(ordinal, dict) else {}
+                canonical[header] = canonical[header].map(ordinal, na_action=np.nan)
+            elif encoding == 'label':
+                canonical[f"{prefix}{prefix_sep}{header}"] = canonical[header].cat.codes
+        if encoding == 'dummy':
+            dummy_df = pd.get_dummies(canonical, columns=headers, prefix=prefix, prefix_sep=prefix_sep,
+                                      dummy_na=dummy_na, drop_first=drop_first, dtype=dtype)
+            canonical = pd.concat([canonical, dummy_df], axis='columns')
+        return canonical
+
     def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
                              default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
         """ returns a value set based on the selection list and the action enacted on that selection. If
@@ -1863,6 +1929,93 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 s_values = s_values.astype(rtn_type)
             return s_values
         return s_values.to_list()
+
+    def _correlate_discrete(self, canonical: Any, header: str, granularity: [int, float, list]=None,
+                            lower: [int, float]=None, upper: [int, float]=None, categories: list=None,
+                            precision: int=None, seed: int=None) -> list:
+        """ converts continuous representation into discrete representation through interval categorisation
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param granularity: (optional) the granularity of the analysis across the range. Default is 3
+                int passed - represents the number of periods
+                float passed - the length of each interval
+                list[tuple] - specific interval periods e.g []
+                list[float] - the percentile or quantities, All should fall between 0 and 1
+        :param lower: (optional) the lower limit of the number value. Default min()
+        :param upper: (optional) the upper limit of the number value. Default max()
+        :param precision: (optional) The precision of the range and boundary values. by default set to 5.
+        :param categories:(optional)  a set of labels the same length as the intervals to name the categories
+        :return: a list of equal size to that given
+        """
+        # exceptions check
+        canonical = self._get_canonical(canonical, header=header)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        _seed = seed if isinstance(seed, int) else self._seed()
+        # intend code block on the canonical
+        granularity = 3 if not isinstance(granularity, (int, float, list)) or granularity == 0 else granularity
+        precision = precision if isinstance(precision, int) else 5
+        # firstly get the granularity
+        lower = canonical[header].min() if not isinstance(lower, (int, float)) else lower
+        upper = canonical[header].max() if not isinstance(upper, (int, float)) else upper
+        if lower >= upper:
+            upper = lower
+            granularity = [(lower, upper, 'both')]
+        if isinstance(granularity, (int, float)):
+            # if granularity float then convert frequency to intervals
+            if isinstance(granularity, float):
+                # make sure frequency goes beyond the upper
+                _end = upper + granularity - (upper % granularity)
+                periods = pd.interval_range(start=lower, end=_end, freq=granularity).drop_duplicates()
+                periods = periods.to_tuples().to_list()
+                granularity = []
+                while len(periods) > 0:
+                    period = periods.pop(0)
+                    if len(periods) == 0:
+                        granularity += [(period[0], period[1], 'both')]
+                    else:
+                        granularity += [(period[0], period[1], 'left')]
+            # if granularity int then convert periods to intervals
+            else:
+                periods = pd.interval_range(start=lower, end=upper, periods=granularity).drop_duplicates()
+                granularity = periods.to_tuples().to_list()
+        if isinstance(granularity, list):
+            if all(isinstance(value, tuple) for value in granularity):
+                if len(granularity[0]) == 2:
+                    granularity[0] = (granularity[0][0], granularity[0][1], 'both')
+                granularity = [(t[0], t[1], 'right') if len(t) == 2 else t for t in granularity]
+            elif all(isinstance(value, float) and 0 < value < 1 for value in granularity):
+                quantiles = list(set(granularity + [0, 1.0]))
+                boundaries = canonical[header].quantile(quantiles).values
+                boundaries.sort()
+                granularity = [(boundaries[0], boundaries[1], 'both')]
+                granularity += [(boundaries[i - 1], boundaries[i], 'right') for i in range(2, boundaries.size)]
+            else:
+                granularity = (lower, upper, 'both')
+
+        granularity = [(np.round(p[0], precision), np.round(p[1], precision), p[2]) for p in granularity]
+        # now create the categories
+        conditions = []
+        for interval in granularity:
+            lower, upper, closed = interval
+            if str.lower(closed) == 'neither':
+                conditions.append((canonical[header] > lower) & (canonical[header] < upper))
+            elif str.lower(closed) == 'right':
+                conditions.append((canonical[header] > lower) & (canonical[header] <= upper))
+            elif str.lower(closed) == 'both':
+                conditions.append((canonical[header] >= lower) & (canonical[header] <= upper))
+            else:
+                conditions.append((canonical[header] >= lower) & (canonical[header] < upper))
+        if isinstance(categories, list) and len(categories) == len(conditions):
+            choices = categories
+        else:
+            if canonical[header].dtype.name.startswith('int'):
+                choices = [f"{int(i[0])}->{int(i[1])}" for i in granularity]
+            else:
+                choices = [f"{i[0]}->{i[1]}" for i in granularity]
+        # noinspection PyTypeChecker
+        return np.select(conditions, choices, default="<NA>").tolist()
 
     """
         UTILITY METHODS SECTION
