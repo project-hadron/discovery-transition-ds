@@ -154,7 +154,8 @@ class Transition(AbstractCommonComponent):
         :return:
         """
         canonical = self.load_source_canonical()
-        if not isinstance(run_book, str) and isinstance(use_default, bool) and use_default:
+        use_default = use_default if isinstance(use_default, bool) else True
+        if not isinstance(run_book, str) and use_default:
             if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
                 run_book = self.pm.PRIMARY_RUN_BOOK
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, run_book=run_book,
