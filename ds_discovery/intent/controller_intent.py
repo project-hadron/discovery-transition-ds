@@ -77,15 +77,17 @@ class ControllerIntentModel(AbstractIntentModel):
                     canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, uri_pm_repo: str=None,
-                          run_task: bool=None, persist_result: bool=None, size: int=None, save_intent: bool=None,
-                          intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
-                          remove_duplicates: bool=None):
+    def synthetic_builder(self, canonical: Any, task_name: str, columns: [str, int, list]=None, run_book: list=None,
+                          seed: int=None, uri_pm_repo: str=None, run_task: bool=None, persist_result: bool=None,
+                          size: int=None, save_intent: bool=None, intent_order: int=None, intent_level: [int, str]=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a synthetic component task pipeline
 
         :param canonical: this can be a size integer or a starting canonical size is based upon
         :param task_name: the task_name reference for this component
         :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param run_book: (optional) a runbook to execute. If None and there is a default runbook this will be used
+        :param seed: (optional) a seed for the run
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
         :param persist_result: (optional) if the resulting canonical should be persisted.
@@ -118,7 +120,11 @@ class ControllerIntentModel(AbstractIntentModel):
                     raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             elif isinstance(canonical, int):
                 canonical = canonical
-            canonical = builder.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=columns)
+            if not isinstance(run_book, list) and not isinstance(columns, (str, int, list)):
+                if builder.pm.has_run_book(builder.pm.PRIMARY_RUN_BOOK):
+                    run_book = builder.pm.PRIMARY_RUN_BOOK
+            canonical = builder.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=columns,
+                                                                 run_book=run_book, seed=seed)
             # persist the canonical
             if persist_result and builder.pm.has_connector(builder.CONNECTOR_PERSIST):
                 builder.save_persist_canonical(canonical=canonical)
@@ -130,14 +136,16 @@ class ControllerIntentModel(AbstractIntentModel):
             return canonical
         return
 
-    def transition(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                   transition_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None,
-                   intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
-                   remove_duplicates: bool=None):
+    def transition(self, canonical: Any, task_name: str, columns: [str, list]=None, run_book: list=None,
+                   uri_pm_repo: str=None, run_task: bool=None, transition_intent: [int, str, list]=None,
+                   persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
+                   intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
         :param task_name: the task_name reference for this component
+        :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param run_book: (optional) a runbook to execute. If None and there is a default runbook this will be used
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
         :param transition_intent: (optional) a single or list of components levels to run, if list, run in order given
@@ -169,8 +177,11 @@ class ControllerIntentModel(AbstractIntentModel):
                     raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = tr.load_source_canonical()
+            if not isinstance(run_book, list) and not isinstance(columns, (str, int, list)):
+                if tr.pm.has_run_book(tr.pm.PRIMARY_RUN_BOOK):
+                    run_book = tr.pm.PRIMARY_RUN_BOOK
             canonical = tr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
-                                                            inplace=False)
+                                                            run_book=run_book, inplace=False)
             # persist the canonical
             if persist_result and tr.pm.has_connector(tr.CONNECTOR_PERSIST):
                 tr.save_persist_canonical(canonical=canonical)
@@ -191,14 +202,17 @@ class ControllerIntentModel(AbstractIntentModel):
             return canonical
         return
 
-    def wrangle(self, canonical: Any, task_name: str, uri_pm_repo: str=None, run_task: bool=None,
-                wrangled_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None,
-                intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
-                remove_duplicates: bool=None):
+    def wrangle(self, canonical: Any, task_name: str, columns: [str, list]=None, run_book: list=None, seed: int=None,
+                uri_pm_repo: str=None, run_task: bool=None, wrangled_intent: [int, str, list]=None,
+                persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
+                intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ register a Transition component task pipeline
 
         :param canonical: the canonical to run through the component pipeline
         :param task_name: the task_name reference for this component
+        :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param run_book: (optional) a runbook to execute. If None and there is a default runbook this will be used
+        :param seed: (optional) a seed for the run
         :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
         :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
         :param wrangled_intent: (optional) an single or list of wrangled levels to run, if list, run in order given
@@ -231,8 +245,11 @@ class ControllerIntentModel(AbstractIntentModel):
                     raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
             if canonical.shape == (0, 0):
                 canonical = wr.load_source_canonical()
+            if not isinstance(run_book, list) and not isinstance(columns, (str, int, list)):
+                if wr.pm.has_run_book(wr.pm.PRIMARY_RUN_BOOK):
+                    run_book = wr.pm.PRIMARY_RUN_BOOK
             canonical = wr.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
-                                                            inplace=False)
+                                                            run_book=run_book, seed=seed, inplace=False)
             # persist the canonical
             if persist_result and wr.pm.has_connector(wr.CONNECTOR_PERSIST):
                 wr.save_persist_canonical(canonical=canonical)
