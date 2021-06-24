@@ -82,37 +82,19 @@ class SyntheticPipelineTest(unittest.TestCase):
         self.assertEqual(1, result['corr_plus'].value_counts().size)
         self.assertEqual(3, result['corr_plus'].value_counts().index[0])
 
-    def test_canonical_run_pipeline_dict(self):
-        tools = self.builder.intent_model
+    def test_canonical_run_pipeline_runbook(self):
+        builder = SyntheticBuilder.from_env('sample', has_contract=False)
+        tools = builder.tools
         df = pd.DataFrame()
+        df['values'] = tools.get_category(selection=['A', 'B'], column_name='values')
+        builder.add_run_book_level(run_level='values')
         df['numbers'] = tools.get_number(1, 2, column_name='numbers')
-        # create a remote pm contract
-        inst = SyntheticBuilder.from_env('sub_set', has_contract=False)
-        _ = inst.tools.get_category(selection=['A', 'B'], column_name='value')
-        sub_set = Commons.param2dict()
-        df['corr_num'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='numbers', intent_order=1)
-
-    def test_canonical_run_pipeline_str(self):
-        builder = SyntheticBuilder.from_env('test', has_contract=False)
-        tools: SyntheticIntentModel = builder.tools
-        builder.add_connector_uri('titanic', uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        # do nothing
-        df = tools.frame_starter(canonical='titanic', column_name='titanic')
-        # The response feedback to the intervention from the member
-        selection = [builder.tools.select2dict(column='alive', condition="@ == 1")]
-        action = builder.tools.action2dict(method='get_category',
-                                           selection=['Positive', 'Negative', 'Neutral', 'No Response'],
-                                           relative_freq=[5, 2, 10, 50])
-        default = builder.tools.action2dict(method='@constant', value='NA')
-        df['profile_feedback'] = builder.tools.correlate_selection(df, selection=selection, action=action,
-                                                                   default_action=default,
-                                                                   column_name='profile_feedback', intent_order=0)
-        result = tools.run_intent_pipeline(canonical=0)
-        print(result)
-        print(result.shape)
-
-
-
+        builder.add_run_book_level(run_level='numbers')
+        df['addition'] = tools.get_number(1, 2, column_name='addition')
+        result = tools.run_intent_pipeline(canonical=10, run_book=self.builder.pm.PRIMARY_RUN_BOOK)
+        self.assertEqual(['values', 'numbers'], result.columns.to_list())
+        result = tools.run_intent_pipeline(canonical=10)
+        self.assertEqual(['values', 'numbers', 'addition'], result.columns.to_list())
 
 
 if __name__ == '__main__':

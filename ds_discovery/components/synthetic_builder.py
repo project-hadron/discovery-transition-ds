@@ -97,7 +97,7 @@ class SyntheticBuilder(AbstractCommonComponent):
             canonical = kwargs.pop('size')
         if not isinstance(run_book, str) and isinstance(use_default, bool) and use_default:
             if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
-                run_book = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
+                run_book = self.pm.PRIMARY_RUN_BOOK
         result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
                                                        run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)

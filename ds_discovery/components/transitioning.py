@@ -156,7 +156,7 @@ class Transition(AbstractCommonComponent):
         canonical = self.load_source_canonical()
         if not isinstance(run_book, str) and isinstance(use_default, bool) and use_default:
             if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
-                run_book = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
+                run_book = self.pm.PRIMARY_RUN_BOOK
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, run_book=run_book,
                                                        inplace=False)
         self.save_persist_canonical(result)
