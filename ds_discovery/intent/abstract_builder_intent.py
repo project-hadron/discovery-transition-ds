@@ -1210,7 +1210,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         prefix_sep = prefix_sep if isinstance(prefix_sep, str) else "_"
         dummy_na = dummy_na if isinstance(dummy_na, bool) else False
         drop_first = drop_first if isinstance(drop_first, bool) else False
-        dtype = dtype if dtype else np.uint8
+        dtype = dtype if dtype else int
         for header in headers:
             if canonical[header].dtype.name != 'category':
                 canonical[header] = canonical[header].astype('category')
