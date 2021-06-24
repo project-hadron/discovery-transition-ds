@@ -1210,7 +1210,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         prefix_sep = prefix_sep if isinstance(prefix_sep, str) else "_"
         dummy_na = dummy_na if isinstance(dummy_na, bool) else False
         drop_first = drop_first if isinstance(drop_first, bool) else False
-        dtype = dtype if dtype else int
+        dtype = dtype if dtype else np.uint8
         for header in headers:
             if canonical[header].dtype.name != 'category':
                 canonical[header] = canonical[header].astype('category')
@@ -1222,7 +1222,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if encoding == 'dummy':
             dummy_df = pd.get_dummies(canonical, columns=headers, prefix=prefix, prefix_sep=prefix_sep,
                                       dummy_na=dummy_na, drop_first=drop_first, dtype=dtype)
-            canonical = pd.concat([canonical, dummy_df], axis='columns')
+            for name in dummy_df.columns:
+                canonical[name] = dummy_df[name]
         return canonical
 
     def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
