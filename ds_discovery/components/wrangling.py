@@ -89,11 +89,20 @@ class Wrangle(AbstractCommonComponent):
             self.pm_persist(save)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, seed: int=None,
-                               **kwargs):
-        """Runs the components pipeline from source to persist. if show_results is True then additionally returns
-        the raults"""
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None,
+                               seed: int=None, **kwargs):
+        """Runs the components pipeline from source to persist.
+
+        :param intent_levels: a single or list of intent levels to run
+        :param run_book: a saved runbook to run
+        :param use_default: if the default runbook should be used if it exists
+        :param seed: a seed value for this run
+        :param kwargs: any additional kwargs
+        """
         canonical = self.load_source_canonical()
+        if not isinstance(run_book, str) and isinstance(use_default, bool) and use_default:
+            if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
+                run_book = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
         result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
                                                        run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)

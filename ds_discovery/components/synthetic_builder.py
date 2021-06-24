@@ -82,11 +82,22 @@ class SyntheticBuilder(AbstractCommonComponent):
         return self._intent_model
 
     def run_component_pipeline(self, canonical: Any=None, intent_levels: [str, int, list]=None, run_book: str=None,
-                               seed: int=None, **kwargs):
-        """ runs the synthetic component pipeline. By passing an int value as the canonical will generate a synthetic
-        file of that size"""
+                               use_default: bool=None, seed: int=None, **kwargs):
+        """runs the synthetic component pipeline. By passing an int value as the canonical will generate a synthetic
+        file of that size
+
+        :param canonical: an optional canonical to start the pipeline or a size of the synthetic build
+        :param intent_levels: a single or list of intent levels to run
+        :param run_book: a saved runbook to run
+        :param use_default: if the default runbook should be used if it exists
+        :param seed: a seed value for this run
+        :param kwargs: any additional kwargs
+        """
         if 'size' in kwargs.keys() and canonical is None:
             canonical = kwargs.pop('size')
+        if not isinstance(run_book, str) and isinstance(use_default, bool) and use_default:
+            if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
+                run_book = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
         result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
                                                        run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)
