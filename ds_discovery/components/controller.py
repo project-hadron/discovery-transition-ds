@@ -293,7 +293,7 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, run_book: [str, list]=None, mod_tasks: dict=None, repeat: int=None, sleep: int=None):
+    def run_controller(self, run_book: [str, list, dict]=None, mod_tasks: dict=None, repeat: int=None, sleep: int=None):
         """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
         controller registered task name that will run in the given order passing the resulting outcome of one to the
         input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
@@ -331,8 +331,10 @@ class Controller(AbstractComponent):
                 intent_levels = self.pm.get_run_book(book_name=run_book)
             else:
                 intent_levels = Commons.list_formatter(run_book)
-        elif isinstance(run_book, (list, dict)):
+        elif isinstance(run_book, list):
             intent_levels = run_book
+        elif isinstance(run_book, dict):
+            intent_levels = [run_book]
         elif self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
             intent_levels = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
         else:
