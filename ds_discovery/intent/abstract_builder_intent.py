@@ -142,6 +142,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                                 canonical[column] = result
                         except ValueError as ve:
                             raise ValueError(f"intent '{column}', order '{order}', method '{method}' failed with: {ve}")
+                        except TypeError as te:
+                            raise TypeError(f"intent '{column}', order '{order}', method '{method}' failed with: {te}")
         if simulate:
             return pd.DataFrame.from_dict(col_sim)
         return canonical
