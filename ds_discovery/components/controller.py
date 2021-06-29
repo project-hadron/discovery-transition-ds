@@ -325,15 +325,18 @@ class Controller(AbstractComponent):
         if not self.pm.has_intent():
             return
         if isinstance(run_book, str):
-            if not self.pm.has_run_book(run_book):
-                raise ValueError(f"The run book '{run_book}' can not be found in the controller")
-            intent_levels = self.pm.get_run_book(book_name=run_book)
-        elif isinstance(run_book, list):
+            if not self.pm.has_run_book(run_book) and run_book not in self.pm.get_intent().keys():
+                raise ValueError(f"The run book or intent level '{run_book}' can not be found in the controller")
+            if self.pm.has_run_book(run_book):
+                intent_levels = self.pm.get_run_book(book_name=run_book)
+            else:
+                intent_levels = Commons.list_formatter(run_book)
+        elif isinstance(run_book, (list, dict)):
             intent_levels = run_book
         elif self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
             intent_levels = self.pm.get_run_book(book_name=self.pm.PRIMARY_RUN_BOOK)
         else:
-            intent_levels = self.pm.list_formatter(self.pm.get_intent().keys())
+            intent_levels = Commons.list_formatter(self.pm.get_intent().keys())
             # always put the DEFAULT_INTENT_LEVEL first
             if self.pm.DEFAULT_INTENT_LEVEL in intent_levels:
                 intent_levels.insert(0, intent_levels.pop(intent_levels.index(self.pm.DEFAULT_INTENT_LEVEL)))
@@ -399,9 +402,9 @@ class Controller(AbstractComponent):
         """
         pd.set_option('max_colwidth', 200)
         pd.set_option('expand_frame_repr', True)
-        bold = self.pm.list_formatter(bold)
+        bold = Commons.list_formatter(bold)
         bold.append(index_header)
-        large_font = self.pm.list_formatter(large_font)
+        large_font = Commons.list_formatter(large_font)
         large_font.append(index_header)
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]

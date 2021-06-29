@@ -52,17 +52,24 @@ class ControllerTest(unittest.TestCase):
         Controller.from_env(has_contract=False)
 
     def test_run_controller(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
+        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/datalake_gen/sor"
         tr = Transition.from_env(task_name='members', uri_pm_repo=uri_pm_repo)
         controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
+        # test errors
+        with self.assertRaises(ValueError) as context:
+            controller.run_controller(run_book='noname')
+        self.assertTrue("The run book or intent level" in str(context.exception))
+        controller.run_controller(run_book='sor_sim')
+        self.assertEqual(['datalake_gen_synthetic_sor_dataset_v08.parquet'], os.listdir('work/data/'))
+
         roadmap = [
-            controller.runbook2dict(task='members_sim', source=1000),
-            controller.runbook2dict(task='members_gen', source='members_sim', persist=True),
+            controller.runbook2dict(task='sor_sim', source=1000),
+            controller.runbook2dict(task='members_gen', source='sor_sim', persist=True),
          ]
         controller.run_controller(run_book=roadmap)
         self.assertEqual(1000, tr.load_persist_canonical().shape[0])
         # test mod_task
-        controller.run_controller(run_book=roadmap, mod_tasks={'members_sim': {'source': 10}})
+        controller.run_controller(run_book=roadmap, mod_tasks={'sor_sim': {'source': 10}})
         self.assertEqual(10, tr.load_persist_canonical().shape[0])
 
     def test_run_intent_pipeline(self):
