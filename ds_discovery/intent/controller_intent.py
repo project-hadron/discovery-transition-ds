@@ -167,7 +167,7 @@ class ControllerIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         if isinstance(run_task, bool) and run_task:
             persist_result = persist_result if isinstance(persist_result, bool) else False
-            params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
+            params = {'uri_pm_repo': uri_pm_repo, "reset_templates": False} if isinstance(uri_pm_repo, str) else {}
             tr: Transition = eval(f"Transition.from_env(task_name=task_name, default_save=False, has_contract=True, "
                                   f"**{params})", globals(), locals())
             if isinstance(canonical, str) and canonical.startswith('@'):
