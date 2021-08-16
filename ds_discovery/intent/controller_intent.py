@@ -110,7 +110,7 @@ class ControllerIntentModel(AbstractIntentModel):
         # create the event book
         if isinstance(run_task, bool) and run_task:
             persist_result = persist_result if isinstance(persist_result, bool) else False
-            params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
+            params = {'uri_pm_repo': uri_pm_repo, "reset_templates": False} if isinstance(uri_pm_repo, str) else {}
             builder: SyntheticBuilder = eval(f"SyntheticBuilder.from_env(task_name=task_name, default_save=False, "
                                              f"has_contract=True, **{params})", globals(), locals())
             if isinstance(canonical, str) and canonical.startswith('@'):
