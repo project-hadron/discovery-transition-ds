@@ -59,7 +59,7 @@ class ManagedContentSourceHandler(AbstractSourceHandler):
         cc_params.update(kwargs)     # Update with any passed though the call
         key = cc_params.pop("key",os.environ.get('KEY'))
         managedcontent_client = ManagedContentClient(url=self.url, token=self.token)
-        response = managedcontent_client.download(key,self.project)
+        response = managedcontent_client.download(key,retries=1,project=self.project)
         content = response.data
         bytes_file = io.BytesIO(content)
         #NOTE: info on how the managed content source handler will change
