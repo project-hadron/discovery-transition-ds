@@ -306,7 +306,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 rtn_list = pd.Series(rtn_list).dt.tz_convert(None).to_list()
         # to avoid excessively generated data
         if len(rtn_list) > size:
-            rtn_list[:size]
+            rtn_list = rtn_list[:size]
         return rtn_list
 
     def _get_intervals(self, intervals: list, relative_freq: list=None, precision: int=None, size: int=None,
