@@ -57,7 +57,10 @@ class ManagedContentSourceHandler(AbstractSourceHandler):
         cc_params = _cc.kwargs
         cc_params.update(_cc.query)  # Update kwargs with those in the uri query
         cc_params.update(kwargs)     # Update with any passed though the call
-        key = cc_params.pop("key",os.environ.get('KEY'))
+        # key = cc_params.pop("key",os.environ.get('KEY'))
+        key = _cc.raw_uri
+        if key.startswith('$'):
+            key = os.environ.get(key[1:])
         managedcontent_client = ManagedContentClient(url=self.url, token=self.token)
         response = managedcontent_client.download(key,retries=1,project=self.project)
         content = response.data
@@ -127,19 +130,25 @@ class ManagedContentPersistHandler(ManagedContentSourceHandler, AbstractPersistH
         cc_params = _cc.kwargs
         cc_params.update(_cc.query)
         managedcontent_client = ManagedContentClient(url=self.url, token=self.token)
-        key = cc_params.pop("key", os.environ.get('KEY_FEEDBACK'))
+        # key = cc_params.pop("key", os.environ.get('KEY_FEEDBACK'))
+        # key names can be environ variables
+        key = _cc.raw_uri
+        if key.startswith('$'):
+            key = os.environ.get(key[1:])
 
-
+        # file_name extracted from the key
+        file_name = os.path.basename(key)
         if ".parquet" in key:
-
-            canonical.to_parquet(key)
-            f_obj = open(key, mode="rb")
+            
+            canonical.to_parquet(file_name)
+            f_obj = open(file_name, mode="rb")
             managedcontent_client.upload_streaming(key=key, project=self.project, stream=f_obj,
                                                     content_type="application/octet-stream")
 
         elif ".csv" in key:
-            canonical.to_csv(key)
-            f_obj = open(key, mode="rb")
+
+            canonical.to_csv(file_name)
+            f_obj = open(file_name, mode="rb")
             managedcontent_client.upload_streaming(key=key, project=self.project, stream=f_obj,
                                                     content_type="application/octet-stream")
 

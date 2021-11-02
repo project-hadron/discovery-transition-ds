@@ -304,8 +304,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 rtn_list = pd.Series(rtn_list).dt.strftime(date_format).to_list()
             else:
                 rtn_list = pd.Series(rtn_list).dt.tz_convert(None).to_list()
-        # to avoid excessively generated data
-        if len(rtn_list) > size:
+        if (len(rtn_list) > size):
             rtn_list = rtn_list[:size]
         return rtn_list
 
@@ -325,6 +324,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if not isinstance(precision, int):
             precision = 0 if all(isinstance(v[0], int) and isinstance(v[1], int) for v in intervals) else 3
         _seed = self._seed() if seed is None else seed
+        if all(isinstance(value, list) for value in intervals):
+            intervals = [tuple(value) for value in intervals]
         if not all(isinstance(value, tuple) for value in intervals):
             raise ValueError("The intervals list must be a list of tuples")
         interval_list = self._get_category(selection=intervals, relative_freq=relative_freq, size=size, seed=_seed)
@@ -1987,6 +1988,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 periods = pd.interval_range(start=lower, end=upper, periods=granularity).drop_duplicates()
                 granularity = periods.to_tuples().to_list()
         if isinstance(granularity, list):
+            if all(isinstance(value, list) for value in granularity):
+                granularity = [tuple(value) for value in granularity]
             if all(isinstance(value, tuple) for value in granularity):
                 if len(granularity[0]) == 2:
                     granularity[0] = (granularity[0][0], granularity[0][1], 'both')
