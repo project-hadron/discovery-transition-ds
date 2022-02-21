@@ -33,9 +33,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                       dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
                       rename_map: dict=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
-        Rows are filtered before the column filter so columns can be referenced even though they might not be included
-        the final column list.
+        """ Selects rows and/or columns changing the shape of the DatFrame. This is always run first in a pipeline
+        Rows are filtered before columns are filtered so columns can be referenced even though they might not be
+        included in the final column list.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param selection: a list of selections where conditions are filtered on, executed in list order
@@ -585,24 +585,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_explode(seed=seed, **params)
 
-    def model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
-                     auto_transition: bool=None, detail_numeric: bool=None, strict_typing: bool=None,
-                     category_limit: int=None, apply_bias: bool=None, seed: int=None, save_intent: bool=None,
-                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                     remove_duplicates: bool=None) -> pd.DataFrame:
-        """Takes a sample dataset and using analytics, builds a set of synthetic columns that are representative of
-        the sample but scaled to the size of the canonical
+    def model_sample(self, canonical: Any, other: Any, headers: list, replace: bool=None, relative_freq: list=None,
+                     seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                     replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """Takes a target dataset and samples from that target to the size of the canonical
 
-        :param canonical:
-        :param sample:
-        :param columns_list:
-        :param exclude_associate:
-        :param auto_transition:
-        :param detail_numeric:
-        :param strict_typing:
-        :param category_limit:
-        :param apply_bias:
-        :param seed: seed: (optional) a seed value for the random function: default to None
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param headers: the headers to be selected from the other DataFrame
+        :param replace: assuming other is bigger than canonical, selects without replacement when True
+        :param relative_freq: (optional) a weighting pattern that does not have to add to 1
+        :param seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.

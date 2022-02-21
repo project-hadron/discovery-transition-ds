@@ -575,9 +575,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
     def _frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
                        rename_map: dict=None, default_size: int=None, seed: int=None) -> pd.DataFrame:
-        """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
-        Rows are filtered before the column filter so columns can be referenced even though they might not be included
-        the final column list.
+        """ Selects rows and/or columns changing the shape of the DatFrame. This is always run first in a pipeline
+        Rows are filtered before columns are filtered so columns can be referenced even though they might not be
+        included in the final column list.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param selection: a list of selections where conditions are filtered on, executed in list order
@@ -1038,38 +1038,35 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         _seed = self._seed() if seed is None else seed
         return canonical.explode(column=header, ignore_index=True)
 
-    def _model_sample(self, canonical: Any, sample: Any, columns_list: list=None, exclude_associate: list=None,
-                      auto_transition: bool=None, detail_numeric: bool=None, strict_typing: bool=None,
-                      category_limit: int=None, apply_bias: bool=None, seed: int = None) -> pd.DataFrame:
-        """ Takes a sample dataset and using analytics, builds a set of synthetic columns that are representative of
-        the sample but scaled to the size of the canonical
+    def _model_sample(self, canonical: Any, other: Any, headers: list, replace: bool=None,
+                      relative_freq: list=None, seed: int=None) -> pd.DataFrame:
+        """ Takes a target dataset and samples from that target to the size of the canonical
 
-        :param canonical:
-        :param sample:
-        :param columns_list:
-        :param exclude_associate:
-        :param auto_transition:
-        :param detail_numeric:
-        :param strict_typing:
-        :param category_limit:
-        :param apply_bias:
-        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param headers: the headers to be selected from the other DataFrame
+        :param replace: assuming other is bigger than canonical, selects without replacement when True
+        :param relative_freq: (optional) a weighting pattern that does not have to add to 1
+        :param seed: (optional) a seed value for the random function: default to None
         :return: a pd.DataFrame
         """
         canonical = self._get_canonical(canonical)
-        sample = self._get_canonical(sample)
-        auto_transition = auto_transition if isinstance(auto_transition, bool) else True
-        columns_list = columns_list if isinstance(columns_list, list) else list(sample.columns)
-        sample = Commons.filter_columns(sample, headers=columns_list)
-        if auto_transition:
-            Transition.from_memory().cleaners.auto_transition(sample, inplace=True)
-        blob = DataDiscovery.analyse_association(sample, columns_list=columns_list, exclude_associate=exclude_associate,
-                                                 detail_numeric=detail_numeric, strict_typing=strict_typing,
-                                                 category_limit=category_limit)
-        return self._model_analysis(canonical=canonical, analytics_blob=blob, apply_bias=apply_bias, seed=seed)
+        other = self._get_canonical(other)
+        headers = headers if isinstance(headers, list) else list(other.columns)
+        replace = replace if isinstance(replace, bool) else True
+        # build the distribution sizes
+        if isinstance(relative_freq, list) and len(relative_freq) > 1:
+            relative_freq = self._freq_dist_size(relative_freq=relative_freq, size=other.shape[0], seed=seed)
+        else:
+            relative_freq = None
+        seed = self._seed() if seed is None else seed
+        other = Commons.filter_columns(other, headers=headers)
+        other = other.sample(n=canonical.shape[0], weights=relative_freq, random_state=seed, ignore_index=True,
+                             replace=replace)
+        return pd.concat([canonical, other], axis=1)
 
     def _model_script(self, canonical: Any, script_contract: str, seed: int = None) -> pd.DataFrame:
-        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are that are
+        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are
          defined by the build script and scaled to the size of the canonical
 
         :param canonical:
