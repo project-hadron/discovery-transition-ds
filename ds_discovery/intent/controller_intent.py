@@ -118,6 +118,8 @@ class ControllerIntentModel(AbstractIntentModel):
                     canonical = builder.load_canonical(canonical[1:])
                 else:
                     raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
+            elif isinstance(canonical, str) and canonical.isnumeric():
+                canonical = int(canonical)
             elif isinstance(canonical, int):
                 canonical = canonical
             if not isinstance(run_book, list) and not isinstance(columns, (str, int, list)):

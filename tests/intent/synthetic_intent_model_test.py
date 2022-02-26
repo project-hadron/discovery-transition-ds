@@ -1,6 +1,8 @@
 import unittest
 import os
 import shutil
+from pprint import pprint
+
 import pandas as pd
 from ds_discovery import SyntheticBuilder, Wrangle
 from aistac.properties.property_manager import PropertyManager
@@ -141,6 +143,17 @@ class SyntheticIntentModelTest(unittest.TestCase):
         result = tools.model_iterator(canonical='titanic', marker_col='marker', iter_stop=3, iteration_actions=actions)
         self.assertCountEqual([0,1,4,5], result['marker'].value_counts().index.to_list())
 
+    def test_model_concat(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri('titanic', uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        df = pd.DataFrame(index=range(1973))
+        df = tools.model_concat(df, other='titanic')
+        self.assertEqual((1973, 15), df.shape)
+        df = pd.DataFrame(index=range(100))
+        df = tools.model_concat(df, other='titanic', headers=['class', 'embark_town', 'survived', 'sex'])
+        self.assertEqual((100, 4), df.shape)
+
     def test_model_group(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -172,9 +185,8 @@ class SyntheticIntentModelTest(unittest.TestCase):
         sample['gender'] = list("MMFM")
         builder.persist_canonical(connector_name='sample', canonical=sample)
         df = pd.DataFrame(index=range(1973))
-        df = tools.model_sample(df, sample='sample')
+        df = tools.model_sample(df, other='sample', headers=['age', 'gender'])
         self.assertEqual((1973, 2), df.shape)
-        self.assertGreater(df['age'].nunique(), sample['age'].size)
 
     def test_model_dict(self):
         builder = SyntheticBuilder.from_memory()

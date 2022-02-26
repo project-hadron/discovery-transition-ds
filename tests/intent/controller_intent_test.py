@@ -2,7 +2,7 @@ import unittest
 import os
 import shutil
 
-from ds_discovery import SyntheticBuilder
+from ds_discovery import SyntheticBuilder, Controller
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
 
@@ -53,6 +53,11 @@ class ControllerIntentTest(unittest.TestCase):
     def test_smoke(self):
         """Basic smoke test"""
         ControllerIntentModel(property_manager=ControllerPropertyManager('test', username='TestUser'))
+
+    def test_multi_comps(self):
+        domain_uri = f"https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/phase_two/cohort"
+        controller = Controller.from_env(uri_pm_repo=domain_uri)
+        controller.run_controller()
 
     def test_register_task(self):
         repo_uri = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"

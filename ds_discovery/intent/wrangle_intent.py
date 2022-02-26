@@ -29,15 +29,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                          default_intent_level=default_intent_level, default_intent_order=default_intent_order,
                          default_replace_intent=default_replace_intent)
 
-    def frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
-                      dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                      rename_map: dict=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    def frame_starter(self, canonical: Any, selection: list=None, choice: int=None, headers: [str, list]=None,
+                      drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                      re_ignore_case: bool=None, rename_map: dict=None, seed: int=None, save_intent: bool=None,
+                      column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                      remove_duplicates: bool=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run first in a pipeline
         Rows are filtered before columns are filtered so columns can be referenced even though they might not be
         included in the final column list.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param choice: a number of rows to select, randomly selected from the index
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
@@ -105,10 +107,11 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._frame_starter(seed=seed, **params)
 
-    def frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
-                        dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    def frame_selection(self, canonical: Any, selection: list=None, choice: int=None, headers: [str, list]=None,
+                        drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                        re_ignore_case: bool=None, seed: int=None, save_intent: bool=None,
+                        column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                        remove_duplicates: bool=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run last in a pipeline
         Rows are filtered before the column filter so columns can be referenced even though they might not be included
         the final column list.
@@ -117,6 +120,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+        :param choice: a number of rows to select, randomly selected from the index
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'

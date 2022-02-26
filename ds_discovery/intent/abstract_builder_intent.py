@@ -8,7 +8,6 @@ from matplotlib import dates as mdates
 from scipy import stats
 from aistac.components.aistac_commons import DataAnalytics
 
-from ds_discovery.components.transitioning import Transition
 from ds_discovery.components.commons import Commons
 from aistac.properties.abstract_properties import AbstractPropertyManager
 
@@ -375,6 +374,23 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         rtn_list = list(generator.normal(loc=mean, scale=std, size=size))
         return rtn_list
 
+    def _get_dist_choice(self, number: int, size: int=None, seed: int=None) -> list:
+        """A random fixed choice of latent flags based on the number given
+
+        :param number: The number of random latent flags
+        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+        :param seed: a seed value for the random function: default to None
+        :return: a random number
+        """
+        size = 1 if size is None else size
+        _seed = self._seed() if seed is None else seed
+        if isinstance(number, int) and 0 < number < size:
+            rtn_list = pd.Series(data=[0] * size)
+            choice_idx = self._get_number(to_value=size, size=number, at_most=1, precision=0, ordered='asc')
+            rtn_list.iloc[choice_idx] = [1]*number
+            return rtn_list.reset_index(drop=True).to_list()
+        return pd.Series(data=[1] * size).to_list()
+
     def _get_dist_logistic(self, mean: float, std: float, size: int=None, seed: int=None) -> list:
         """A logistic continuous random distribution.
 
@@ -572,9 +588,10 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return self._get_category(selection=_values.to_list(), relative_freq=relative_freq, size=size, at_most=at_most,
                                   seed=_seed)
 
-    def _frame_starter(self, canonical: Any, selection: list=None, headers: [str, list]=None, drop: bool=None,
-                       dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                       rename_map: dict=None, default_size: int=None, seed: int=None) -> pd.DataFrame:
+    def _frame_starter(self, canonical: Any, selection: list=None, choice: int=None, headers: [str, list]=None,
+                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                       re_ignore_case: bool=None, rename_map: dict=None, default_size: int=None,
+                       seed: int=None) -> pd.DataFrame:
         """ Selects rows and/or columns changing the shape of the DatFrame. This is always run first in a pipeline
         Rows are filtered before columns are filtered so columns can be referenced even though they might not be
         included in the final column list.
@@ -583,6 +600,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+        :param choice: a number of rows to select, randomly selected from the index
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or exclusive. Default None else int, float, bool, object, 'number'
@@ -636,6 +654,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             # run the select logic
             select_idx = self._selection_index(canonical=canonical, selection=selection)
             canonical = canonical.iloc[select_idx].reset_index(drop=True)
+        if isinstance(choice, int) and 0 < choice < canonical.shape[0]:
+            choice_idx = self._get_number(to_value=canonical.shape[0], size=choice, at_most=1, precision=0, ordered='asc')
+            canonical = canonical.iloc[choice_idx].reset_index(drop=True)
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
@@ -645,7 +666,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_frame.rename(mapper=rename_map, axis='columns', inplace=True)
         return rtn_frame
 
-    def _frame_selection(self, canonical: Any, selection: list=None, headers: [str, list]=None,
+    def _frame_selection(self, canonical: Any, selection: list=None, choice: int=None, headers: [str, list]=None,
                          drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                          re_ignore_case: bool=None, seed: int=None) -> pd.DataFrame:
         """ This method always runs at the start of the pipeline, taking a direct or generated pd.DataFrame,
@@ -655,6 +676,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param selection: a list of selections where conditions are filtered on, executed in list order
                 An example of a selection with the minimum requirements is: (see 'select2dict(...)')
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+        :param choice: a number of rows to select, randomly selected from the index
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or exclusive. Default None else int, float, bool, object, 'number'
@@ -677,8 +699,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed. It also
         helps with building the logic that is executed in order
         """
-        return self._frame_starter(canonical=canonical, selection=selection, headers=headers, drop=drop, dtype=dtype,
-                                   exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
+        return self._frame_starter(canonical=canonical, selection=selection, choice=choice, headers=headers, drop=drop,
+                                   dtype=dtype, exclude=exclude, regex=regex, re_ignore_case=re_ignore_case, seed=seed)
 
     def _model_custom(self, canonical: Any, code_str: str, seed: int=None, **kwargs):
         """ Commonly used for custom methods, takes code string that when executed changes the the canonical returning
@@ -1914,7 +1936,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             else:
                 raise ValueError(f"The max value {max_date} is less than the min result value {s_values.min()}")
         if now_delta:
-            s_values = (s_values.dt.tz_convert(None) - pd.Timestamp('now')).abs()
+            s_values = (s_values.dt.tz_convert(None) - pd.Timestamp.now()).abs()
             s_values = (s_values / np.timedelta64(1, now_delta))
             s_values = s_values.round(0) if null_idx.size > 0 else s_values.astype(int)
         else:

@@ -309,9 +309,10 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_date_as_delta(self):
         tools = self.tools
         # control
-        df = pd.DataFrame(columns=['dates'], data=['1964-01-14', '1967-09-28', '1996-05-22', '1997-12-11'])
+        now = pd.Timestamp.now()
+        df = pd.DataFrame(columns=['dates'], data=[now - pd.DateOffset(years=52), now - pd.DateOffset(years=20)])
         result = tools.correlate_dates(df, 'dates', now_delta='Y')
-        self.assertEqual([57, 53, 25, 23], result)
+        self.assertEqual([52, 20], result)
 
     def test_correlate_missing(self):
         tools = self.tools

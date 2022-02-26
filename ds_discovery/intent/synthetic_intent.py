@@ -408,6 +408,39 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_dist_normal(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
+    def get_dist_choice(self, number: int, size: int=None, quantity: float=None, seed: int=None,
+                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> list:
+        """A random fixed choice of latent flags based on the number given
+
+        :param number: The number of random latent flags
+        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+        :param quantity: a number between 0 and 1 representing data that isn't null
+        :param seed: a seed value for the random function: default to None
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a random number
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        rtn_list = self._get_dist_choice(seed=seed, **params)
+        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+
     def get_dist_binomial(self, trials: int, probability: float, size: int=None, quantity: float=None, seed: int=None,
                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None) -> list:

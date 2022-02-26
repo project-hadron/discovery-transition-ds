@@ -365,11 +365,13 @@ class Controller(AbstractComponent):
         for count in range(repeat):
             for intent in intent_levels:
                 task = intent.get('task')
-                source = intent.get('source')
+                source = intent.get('source', '@')
                 to_persist = intent.get('persist')
                 end_source = intent.get('end_source')
                 if isinstance(source, int) or (isinstance(source, str) and source.startswith('@')):
                     canonical = source
+                elif isinstance(source, str) and source.isnumeric():
+                    canonical = int(source)
                 else:
                     if self.eb_portfolio.is_active_book(source):
                         canonical = self.eb_portfolio.current_state(source)
