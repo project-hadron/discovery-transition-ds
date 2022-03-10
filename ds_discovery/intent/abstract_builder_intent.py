@@ -151,20 +151,35 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return pd.DataFrame.from_dict(col_sim)
         return canonical
 
-    def _get_number(self, from_value: [int, float]=None, to_value: [int, float]=None, relative_freq: list=None,
-                    precision: int=None, ordered: str=None, at_most: int=None, size: int=None,
+    def _get_number(self, from_value: [int, float, str]=None, to_value: [int, float, str]=None,
+                    relative_freq: list=None, precision: int=None, ordered: str=None, at_most: int=None, size: int=None,
                     seed: int=None) -> list:
-        """ returns a number in the range from_value to to_value. if only to_value given from_value is zero
+        """ returns a number in the range from_value to to_value. if only one number given from_value is zero
 
-        :param from_value: (signed) integer to start from
-        :param to_value: optional, (signed) integer the number sequence goes to but not include
+        :param from_value: (signed) integer or float to start from. See below
+        :param to_value: optional, (signed) integer or float the number sequence goes to but not include. See below
         :param relative_freq: a weighting pattern or probability that does not have to add to 1
         :param precision: the precision of the returned number. if None then assumes int value else float
         :param ordered: order the data ascending 'asc' or descending 'dec', values accepted 'asc' or 'des'
         :param at_most: the most times a selection should be chosen
         :param size: the size of the sample
         :param seed: a seed value for the random function: default to None
+
+        The values can be represented by an environment variable with the format '${NAME}' where NAME is the
+        environment variable name
         """
+        if isinstance(from_value, str) and from_value.startswith('${'):
+            from_value = ConnectorContract.parse_environ(from_value)
+            if from_value.isnumeric():
+                from_value = float(from_value)
+            else:
+                raise ValueError("The environment variable for to_value is not convertable from string to numeric")
+        if isinstance(to_value, str) and to_value.startswith('${'):
+            to_value = ConnectorContract.parse_environ(to_value)
+            if to_value.isnumeric():
+                to_value = float(to_value)
+            else:
+                raise ValueError("The environment variable for to_value is not convertable from string to numeric")
         if not isinstance(from_value, (int, float)) and not isinstance(to_value, (int, float)):
             raise ValueError(f"either a 'range_value' or a 'range_value' and 'to_value' must be provided")
         if not isinstance(from_value, (float, int)):
@@ -172,7 +187,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if not isinstance(to_value, (float, int)):
             (from_value, to_value) = (0, from_value)
         if to_value <= from_value:
-            raise ValueError("The number range must be a positive different, found to_value <= from_value")
+            raise ValueError("The number range must be a positive difference, where to_value <= from_value")
         at_most = 0 if not isinstance(at_most, int) else at_most
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
@@ -388,7 +403,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
        :param seed: a seed value for the random function: default to None
        :return: a list of 1 or 0
 
-        as choice is a fixed value, number can be represented by an environment variable with the format '${NAME}'
+        As choice is a fixed value, number can be represented by an environment variable with the format '${NAME}'
         where NAME is the environment variable name
         """
         size = 1 if size is None else size

@@ -78,6 +78,22 @@ class SyntheticIntentGetTest(unittest.TestCase):
         self.assertGreaterEqual(min(result), 0)
         # self.assertLessEqual(max(result), 1000)
 
+    def test_get_number_environ(self):
+        os.environ["HADRON_START_VALUE"] = "2"
+        os.environ["HADRON_END_VALUE"] = "6"
+        tools = self.tools
+        result = tools.get_number("${HADRON_START_VALUE}", "${HADRON_END_VALUE}", precision=0, size=10, seed=31)
+        self.assertEqual([3, 2, 4, 4, 3, 4, 3, 4, 2, 5], result)
+        os.environ["HADRON_START_VALUE"] = "A"
+        with self.assertRaises(ValueError) as context:
+            result = tools.get_number("${HADRON_START_VALUE}", "${HADRON_END_VALUE}", size=10, seed=31)
+        self.assertTrue("The environment variable for to_value" in str(context.exception))
+        os.environ["HADRON_START_VALUE"] = "2"
+        os.environ["HADRON_END_VALUE"] = "A"
+        with self.assertRaises(ValueError) as context:
+            result = tools.get_number("${HADRON_START_VALUE}", "${HADRON_END_VALUE}", size=10, seed=31)
+        self.assertTrue("The environment variable for to_value" in str(context.exception))
+
     def test_get_number_at_most(self):
         tools = self.tools
         sample_size = 10000
@@ -176,12 +192,12 @@ class SyntheticIntentGetTest(unittest.TestCase):
         self.assertEqual([0, 1, 1, 1], result)
 
     def test_choice(self):
-        os.environ["HADRON_MISSION_COHORT_SIZE"] = "4"
+        os.environ["HADRON_CHOICE_SIZE"] = "4"
         tools = self.tools
         result = tools.get_dist_choice(number=3, size=6, seed=31)
         self.assertEqual([1, 0, 1, 1, 0, 0], result)
-        os.environ['HADRON_VARIABLE_CHOICE'] = "2"
-        result = tools.get_dist_choice(number='${HADRON_MISSION_COHORT_SIZE}', size=6, seed=31)
+        os.environ['HADRON_CHOICE_SIZE'] = "2"
+        result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=6, seed=31)
         self.assertEqual([1, 1, 1, 1, 0, 0], result)
 
 if __name__ == '__main__':

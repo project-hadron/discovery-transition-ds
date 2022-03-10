@@ -31,14 +31,14 @@ class SyntheticIntentModel(WrangleIntentModel):
                          default_intent_level=default_intent_level, order_next_available=order_next_available,
                          default_replace_intent=default_replace_intent)
 
-    def get_number(self, from_value: [int, float]=None, to_value: [int, float]=None, relative_freq: list=None,
+    def get_number(self, from_value: [int, float, str]=None, to_value: [int, float, str]=None, relative_freq: list=None,
                    precision: int=None, ordered: str=None, at_most: int=None, size: int=None, quantity: float=None,
                    seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                    replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a number in the range from_value to to_value. if only to_value given from_value is zero
 
-        :param from_value: (signed) integer to start from
-        :param to_value: optional, (signed) integer the number sequence goes to but not include
+        :param from_value: (signed) integer or float to start from. See below for str
+        :param to_value: optional, (signed) integer or float the number sequence goes to but not include. See below
         :param relative_freq: a weighting pattern or probability that does not have to add to 1
         :param precision: the precision of the returned number. if None then assumes int value else float
         :param ordered: order the data ascending 'asc' or descending 'dec', values accepted 'asc' or 'des'
@@ -57,6 +57,9 @@ class SyntheticIntentModel(WrangleIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
+
+        The values can be represented by an environment variable with the format '${NAME}' where NAME is the
+        environment variable name
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
