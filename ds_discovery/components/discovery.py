@@ -1110,7 +1110,7 @@ class DataDiscovery(object):
             _intervals = [(lower, upper, 'both')]
         # outliers
         _values_size = values.size
-        values = values.loc[values.between(lower, upper, inclusive=True).values]
+        values = values.loc[values.between(lower, upper, inclusive='both').values]
         _excluded_size = _original_size - _nulls_size - _values_size
         _excluded_percent = round(((_values_size - values.size) / _values_size) * 100,
                                   freq_precision) if _values_size > 0 else 0

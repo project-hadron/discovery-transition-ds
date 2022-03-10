@@ -1,9 +1,13 @@
 import ast
 import time
+
+import numpy
 import numpy as np
 import pandas as pd
 from copy import deepcopy
 from typing import Any
+
+from aistac import ConnectorContract
 from matplotlib import dates as mdates
 from scipy import stats
 from aistac.components.aistac_commons import DataAnalytics
@@ -359,34 +363,42 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         np.random.default_rng(seed=_seed).shuffle(rtn_list)
         return rtn_list
 
-    def _get_dist_normal(self, mean: float, std: float, size: int=None, seed: int=None) -> list:
+    def _get_dist_normal(self, mean: float, std: float, precision: int=None, size: int=None, seed: int=None) -> list:
         """A normal (Gaussian) continuous random distribution.
 
         :param mean: The mean (“centre”) of the distribution.
         :param std: The standard deviation (jitter or “width”) of the distribution. Must be >= 0
+        :param precision: The number of decimal points. The default is 3
         :param size: the size of the sample. if a tuple of intervals, size must match the tuple
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
+        precision = precision if isinstance(precision, int) else 3
         generator = np.random.default_rng(seed=_seed)
         rtn_list = list(generator.normal(loc=mean, scale=std, size=size))
-        return rtn_list
+        return list(np.around(rtn_list, precision))
 
-    def _get_dist_choice(self, number: int, size: int=None, seed: int=None) -> list:
-        """A random fixed choice of latent flags based on the number given
+    def _get_dist_choice(self, number: [int, str], size: int=None, seed: int=None) -> list:
+        """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given.
 
-        :param number: The number of random latent flags
-        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
-        :param seed: a seed value for the random function: default to None
-        :return: a random number
+       :param number: The number of true (1) values to randomly chose from the canonical. see below
+       :param size: the size of the sample. if a tuple of intervals, size must match the tuple
+       :param seed: a seed value for the random function: default to None
+       :return: a list of 1 or 0
+
+        as choice is a fixed value, number can be represented by an environment variable with the format '${NAME}'
+        where NAME is the environment variable name
         """
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
+        if isinstance(number, str) and number.startswith('${'):
+            number = ConnectorContract.parse_environ(number)
+            number = int(number) if number.isnumeric() else 100
         if isinstance(number, int) and 0 < number < size:
             rtn_list = pd.Series(data=[0] * size)
-            choice_idx = self._get_number(to_value=size, size=number, at_most=1, precision=0, ordered='asc')
+            choice_idx = self._get_number(to_value=size, size=number, at_most=1, precision=0, ordered='asc', seed=_seed)
             rtn_list.iloc[choice_idx] = [1]*number
             return rtn_list.reset_index(drop=True).to_list()
         return pd.Series(data=[1] * size).to_list()
@@ -535,8 +547,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         else:
             generator = np.random.default_rng(seed=_seed)
             rtn_list = eval(f"generator.{distribution}(size=size, **kwargs)", globals(), locals())
-        rtn_list = list(rtn_list.round(precision))
-        return rtn_list
+        return list(np.around(rtn_list, precision))
 
     def _get_selection(self, canonical: Any, column_header: str, relative_freq: list=None, sample_size: int=None,
                        selection_size: int=None, size: int=None, at_most: bool=None, shuffle: bool=None,
