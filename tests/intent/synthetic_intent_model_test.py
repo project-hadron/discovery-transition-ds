@@ -200,10 +200,20 @@ class SyntheticIntentModelTest(unittest.TestCase):
         df = pd.DataFrame(data={'A': [5,2,None,4], 'X': sample, 'Y': list('VWXY')})
         df = tools._model_dict_column(df, header='X', convert_str=True)
         self.assertCountEqual(['A', 'Y', 'task', 'source', 'persist'], df.columns.to_list())
-        # replace nulls
+         # replace nulls
         df = pd.DataFrame(data={'A': [5,2,None,4], 'X': sample, 'Y': list('VWXY')})
         df = tools._model_dict_column(df, header='X', convert_str=True, replace_null='default')
         self.assertEqual(['default', 'default', 'default'], df.loc[3 ,['task', 'source', 'persist']].to_list())
+
+    def test_model_analysis(self):
+        uri = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv"
+        builder = SyntheticBuilder.from_memory()
+        builder.add_connector_uri(connector_name="titanic", uri=uri)
+        tools: SyntheticIntentModel = builder.tools
+        sample = builder.load_canonical("titanic")
+        df = tools.model_analysis(canonical=tools.canonical2dict(method='@empty', size=100), other='titanic')
+        self.assertEqual((100, 15), df.shape)
+        self.assertCountEqual(sample.columns.to_list(), df.columns.to_list())
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
@@ -213,3 +223,4 @@ class SyntheticIntentModelTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

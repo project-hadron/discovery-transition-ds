@@ -622,38 +622,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_sample(seed=seed, **params)
 
-    def model_script(self, canonical: Any, script_contract: str, seed: int=None, save_intent: bool=None,
-                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                     remove_duplicates: bool=None) -> pd.DataFrame:
-        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are that are
-         defined by the build script and scaled to the size of the canonical
-
-        :param canonical:
-        :param script_contract:
-        :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a DataFrame
-        """
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._model_script(seed=seed, **params)
-
-    def model_analysis(self, canonical: Any, analytics_blob: dict, apply_bias: bool=None, seed: int=None,
+    def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
+                       detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None, seed: int=None,
                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
@@ -662,8 +632,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         constructed association to be used as reference for a sub category.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param analytics_blob: the analytics blob from discovery-components-ds discovery model train
-        :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param columns_list: a list structure of columns to select for association
+        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration
+                (e.g. ['age.gender.salary']
+        :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
+        :param strict_typing: (optional) stops objects and string types being seen as categories
+        :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -676,6 +651,26 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         False - leaves it untouched, disregarding the new intent
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
+
+        The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
         """
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,

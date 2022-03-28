@@ -1353,7 +1353,7 @@ class DataDiscovery(object):
              {'label2': {'dtype': 'category', 'top': 10, 'replace_zero': 0.001}}]
 
         :param df: the DataFrame to take the columns from
-        :param columns_list: a dictionary structure of columns to select for association
+        :param columns_list: a list structure of columns to select for association
         :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration 
                 (e.g. ['age.gender.salary']
         :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis

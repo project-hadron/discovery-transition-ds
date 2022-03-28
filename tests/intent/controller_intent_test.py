@@ -1,9 +1,11 @@
 import unittest
 import os
 import shutil
+from pprint import pprint
 
-from ds_discovery import SyntheticBuilder, Controller
-from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+import pandas as pd
+
+from ds_discovery import SyntheticBuilder, Controller, Transition, Wrangle
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery.intent.controller_intent import ControllerIntentModel
@@ -34,6 +36,14 @@ class ControllerIntentTest(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
+        builder = SyntheticBuilder.from_env('task1', has_contract=False)
+        builder.set_persist()
+        tr = Transition.from_env('task2', has_contract=False)
+        tr.set_source_uri(builder.get_persist_contract().raw_uri)
+        tr.set_persist()
+        wr = Wrangle.from_env('task3', has_contract=False)
+        wr.set_source_uri(tr.get_persist_contract().raw_uri)
+        wr.set_persist()
 
     def tearDown(self):
         try:
@@ -41,42 +51,16 @@ class ControllerIntentTest(unittest.TestCase):
         except:
             pass
 
-    @property
-    def instance(self):
-        pm = ControllerPropertyManager('test', username='TestUser')
-        return ControllerIntentModel(property_manager=pm)
-
-    @property
-    def tools(self) -> SyntheticIntentModel:
-        return SyntheticBuilder.scratch_pad()
-
-    def test_smoke(self):
-        """Basic smoke test"""
-        ControllerIntentModel(property_manager=ControllerPropertyManager('test', username='TestUser'))
-
-    def test_multi_comps(self):
-        domain_uri = f"https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/phase_two/cohort"
-        controller = Controller.from_env(uri_pm_repo=domain_uri)
-        controller.run_controller()
-
     def test_register_task(self):
-        repo_uri = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/bundles/samples/hk_income_sample/contracts/"
-        dc = self.instance
-        synth_df = dc.synthetic_builder(task_name='hk_income', canonical=1000, uri_pm_repo=repo_uri, run_task=True)
-        result = dc.transition(canonical=synth_df, task_name='hk_income', uri_pm_repo=repo_uri, run_task=True, intent_order=2)
-        control = ['ref_id', 'industry', 'age-group', 'ethnicity', 'area', 'gender', 'district', 'salary']
-        self.assertEqual(control, result.columns.to_list())
-        self.assertEqual((1000, 8), result.shape)
+        controller = Controller.from_env(has_contract=False)
+        controller.intent_model.synthetic_builder(canonical=100, task_name='task1', intent_level='task1_build')
         # Check the intent in the properties
-        intent = dc._pm.get_intent()
-        self.assertEqual(['0', '2'], list(intent.get('primary_swarm').keys()))
-        self.assertEqual(['activate_synthetic'], list(intent.get('primary_swarm').get('0').keys()))
-        self.assertEqual(['activate_transition'], list(intent.get('primary_swarm').get('2').keys()))
-        # run the pipeline
-        result = dc.run_intent_pipeline()
-        control = ['ref_id', 'industry', 'age-group', 'ethnicity', 'area', 'gender', 'district', 'salary']
-        self.assertEqual(control, result.columns.to_list())
-        self.assertEqual((1000, 8), result.shape)
+        intent = controller.report_intent(stylise=False)
+        self.assertEqual(['synthetic_builder'], intent['intent'].to_list())
+        controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_clean')
+        intent = controller.report_intent(stylise=False)
+        self.assertEqual(['synthetic_builder', 'transition'], intent['intent'].to_list())
+
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

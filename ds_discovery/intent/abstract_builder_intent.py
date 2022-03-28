@@ -1,7 +1,5 @@
 import ast
 import time
-
-import numpy
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -1113,45 +1111,45 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                              replace=replace)
         return pd.concat([canonical, other], axis=1)
 
-    def _model_script(self, canonical: Any, script_contract: str, seed: int = None) -> pd.DataFrame:
-        """Takes a synthetic build script and using analytics, builds a set of synthetic columns that are
-         defined by the build script and scaled to the size of the canonical
-
-        :param canonical:
-        :param script_contract:
-        :param seed: (optional) this is a place holder, here for compatibility across methods
-        :return: a pd.DataFrame
-        """
-        canonical = self._get_canonical(canonical)
-        script = self._get_canonical(script_contract)
-        type_options = {'number': '_get_number', 'date': '_get_datetime', 'category': 'get_category',
-                        'selection': 'get_selection', 'intervals': 'get_intervals', 'distribution': 'get_distribution'}
-        script['params'] = script['params'].replace(['', ' '], np.nan)
-        script['params'].loc[script['params'].isna()] = '[]'
-        script['params'] = [ast.literal_eval(x) if isinstance(x, str) and x.startswith('[') and x.endswith(']')
-                            else x for x in script['params']]
-        # replace all other items with list
-        script['params'] = [x if isinstance(x, list) else [x] for x in script['params']]
-        script['params'] = script['params'].astype('object')
-
-        for index, row in script.iterrows():
-            method = type_options.get(row['type'])
-            params = row['params']
-            canonical[row['name']] = eval(f"self.{method}(size={canonical.shape[0]}, **params)", globals(), locals())
-        return canonical
-
-    def _model_analysis(self, canonical: Any, analytics_blob: dict, apply_bias: bool=None,
+    def _model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
+                        detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
                         seed: int=None) -> pd.DataFrame:
-        """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
+        """ builds a set of columns based on an other (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
         value will be taken as the reference to the sub category and not the random value. This allows already
         constructed association to be used as reference for a sub category.
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param analytics_blob: the analytics blob from DataDiscovery.analyse_association(...)
-        :param apply_bias: (optional) if dominant values have been excluded, re-include to maintain bias
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param columns_list: (optional) a list structure of columns to select for association
+        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration
+                (e.g. ['age.gender.salary']
+        :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
+        :param strict_typing: (optional) stops objects and string types being seen as categories
+        :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
         :param seed: seed: (optional) a seed value for the random function: default to None
         :return: a DataFrame
+
+        The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
         """
 
         def get_level(analysis: dict, sample_size: int, _seed: int=None):
@@ -1184,7 +1182,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 else:
                     result = []
                 # if the analysis was done with excluding dominance then se if they should be added back
-                if apply_bias and _analysis.patterns.is_element('dominant_excluded'):
+                if _analysis.patterns.is_element('dominant_excluded'):
                     _dom_percent = _analysis.patterns.dominant_percent/100
                     _dom_values = _analysis.patterns.dominant_excluded
                     if len(_dom_values) > 0:
@@ -1211,11 +1209,15 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return
 
         canonical = self._get_canonical(canonical)
-        apply_bias = apply_bias if isinstance(apply_bias, bool) else True
+        other = self._get_canonical(other)
+        columns_list = columns_list if isinstance(columns_list, list) else other.columns.to_list()
+        blob = DataDiscovery.analyse_association(other, columns_list=columns_list, exclude_associate=exclude_associate,
+                                                 detail_numeric=detail_numeric, strict_typing=strict_typing,
+                                                 category_limit=category_limit)
         row_dict = dict()
         seed = self._seed() if seed is None else seed
         size = canonical.shape[0]
-        get_level(analytics_blob, sample_size=size, _seed=seed)
+        get_level(blob, sample_size=size, _seed=seed)
         for key in row_dict.keys():
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
