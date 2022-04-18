@@ -47,6 +47,26 @@ class AbstractCommonComponentTest(unittest.TestCase):
         except:
             pass
 
+    def test_load_canonical_has_changed(self):
+        tr = Transition.from_env('task', has_contract=False)
+        tr.set_source(uri_file='sample.csv')
+        tr.set_persist(uri_file='sample.csv')
+        df = pd.DataFrame({'A': [1,2,3,4]})
+        tr.save_persist_canonical(df)
+        self.assertEqual(True, tr.pm.get_connector_handler(tr.CONNECTOR_SOURCE).has_changed())
+        sample = tr.load_source_canonical(reset_changed=False)
+        self.assertEqual(False, tr.pm.get_connector_handler(tr.CONNECTOR_SOURCE).has_changed())
+        self.assertEqual(sample.shape, df.shape)
+        with self.assertRaises(ConnectionAbortedError) as context:
+            sample = tr.load_source_canonical(has_changed=True)
+        self.assertTrue("The connector name primary_source has been aborted" in str(context.exception))
+        df = pd.DataFrame({'A': [1, 2, 3, 4, 5, 6, 7 ,8]})
+        tr.save_persist_canonical(df)
+        self.assertEqual(True, tr.pm.get_connector_handler(tr.CONNECTOR_SOURCE).has_changed())
+        sample = tr.load_source_canonical(has_changed=True)
+        self.assertEqual(False, tr.pm.get_connector_handler(tr.CONNECTOR_SOURCE).has_changed())
+        self.assertEqual(sample.shape, df.shape)
+
     def test_multi_environments_from_env(self):
         os.environ['HADRON_TRANSITION_PATH'] = "hadron/transition/path"
         os.environ['HADRON_TRANSITION_PERSIST_PATH'] = "hadron/transition/persist/path"

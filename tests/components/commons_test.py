@@ -42,7 +42,7 @@ class CommonsTest(unittest.TestCase):
         control = ['normal_num', 'single num']
         self.assertCountEqual(control, result)
         result = Commons.filter_headers(df, dtype=['number'])
-        control = ['weight_num', 'normal_num', 'single num']
+        control = ['null', 'weight_num', 'normal_num', 'single num']
         self.assertCountEqual(control, result)
 
     def test_canonical_formatter(self):

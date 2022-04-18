@@ -45,23 +45,40 @@ class AbstractCommonComponent(AbstractComponent):
         """The visualisation instance"""
         return Visualisation()
 
-    def load_source_canonical(self, **kwargs) -> pd.DataFrame:
-        """returns the contracted source data as a DataFrame """
-        return self.load_canonical(self.CONNECTOR_SOURCE, **kwargs)
+    def load_source_canonical(self, reset_changed: bool=None, has_changed: bool=None, **kwargs) -> pd.DataFrame:
+        """returns the contracted source data as a DataFrame
 
-    def load_canonical(self, connector_name: str, **kwargs) -> pd.DataFrame:
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
+        :param kwargs: arguments to be passed to the handler on load
+        """
+        return self.load_canonical(self.CONNECTOR_SOURCE, reset_changed=reset_changed, has_changed=has_changed,
+                                   **kwargs)
+
+    def load_canonical(self, connector_name: str, reset_changed: bool=None, has_changed: bool=None,
+                       **kwargs) -> pd.DataFrame:
         """returns the canonical of the referenced connector
 
         :param connector_name: the name or label to identify and reference the connector
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
+        :param kwargs: arguments to be passed to the handler on load
         """
-        canonical = super().load_canonical(connector_name=connector_name, **kwargs)
+        canonical = super().load_canonical(connector_name=connector_name, reset_changed=reset_changed,
+                                           has_changed=has_changed, **kwargs)
         if isinstance(canonical, dict):
             canonical = pd.DataFrame.from_dict(data=canonical)
         return canonical
 
-    def load_persist_canonical(self, **kwargs) -> pd.DataFrame:
-        """loads the clean pandas.DataFrame from the clean folder for this contract"""
-        return self.load_canonical(self.CONNECTOR_PERSIST, **kwargs)
+    def load_persist_canonical(self, reset_changed: bool=None, has_changed: bool=None, **kwargs) -> pd.DataFrame:
+        """loads the clean pandas.DataFrame from the clean folder for this contract
+
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
+        :param kwargs: arguments to be passed to the handler on load
+        """
+        return self.load_canonical(self.CONNECTOR_PERSIST, reset_changed=reset_changed, has_changed=has_changed,
+                                   **kwargs)
 
     def save_persist_canonical(self, canonical, auto_connectors: bool=None, **kwargs):
         """Saves the canonical to the clean files folder, auto creating the connector from template if not set"""

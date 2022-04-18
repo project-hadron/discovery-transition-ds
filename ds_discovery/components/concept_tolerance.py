@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
-from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
-from ds_discovery.intent.data_drift_intent import DataToleranceIntentModel
+from ds_discovery.managers.concept_tolerance_property_manager import ConceptTolerancePropertyManager
+from ds_discovery.intent.concept_tolerance_intent import ConceptToleranceIntentModel
 
 
-class DataDrift(AbstractCommonComponent):
+class ConceptTolerance(AbstractCommonComponent):
     """Component providing data tolerance reporting"""
 
-    def __init__(self, property_manager: DataDriftPropertyManager, intent_model: DataToleranceIntentModel,
+    def __init__(self, property_manager: ConceptTolerancePropertyManager, intent_model: ConceptToleranceIntentModel,
                  default_save=None, reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None):
         """ Encapsulation class for the components set of classes
@@ -35,7 +35,7 @@ class DataDrift(AbstractCommonComponent):
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
                  default_save_intent: bool=None, default_intent_level: bool=None, order_next_available: bool=None,
-                 default_replace_intent: bool=None, has_contract: bool=None) -> DataDrift:
+                 default_replace_intent: bool=None, has_contract: bool=None) -> ConceptTolerance:
         """ Class Factory Method to instantiates the component's application. The Factory Method handles the
         instantiation of the Properties Manager, the Intent Model and the persistence of the uploaded properties.
         See class inline docs for an example method
@@ -66,11 +66,11 @@ class DataDrift(AbstractCommonComponent):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
-        _pm = DataDriftPropertyManager(task_name=task_name, username=username)
-        _intent_model = DataToleranceIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
-                                                 default_intent_level=default_intent_level,
-                                                 order_next_available=order_next_available,
-                                                 default_replace_intent=default_replace_intent)
+        _pm = ConceptTolerancePropertyManager(task_name=task_name, username=username)
+        _intent_model = ConceptToleranceIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
+                                                    default_intent_level=default_intent_level,
+                                                    order_next_available=order_next_available,
+                                                    default_replace_intent=default_replace_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
                                  pm_handler=pm_handler, pm_kwargs=pm_kwargs, has_contract=has_contract)
@@ -80,25 +80,25 @@ class DataDrift(AbstractCommonComponent):
                    align_connectors=align_connectors)
 
     @classmethod
-    def scratch_pad(cls) -> DataToleranceIntentModel:
+    def scratch_pad(cls) -> ConceptToleranceIntentModel:
         """ A class method to use the Components intent methods as a scratch pad"""
         return super().scratch_pad()
 
     @property
-    def intent_model(self) -> DataToleranceIntentModel:
+    def intent_model(self) -> ConceptToleranceIntentModel:
         """The intent model instance"""
         return self._intent_model
 
     @property
-    def pm(self) -> DataDriftPropertyManager:
+    def pm(self) -> ConceptTolerancePropertyManager:
         """The properties manager instance"""
         return self._component_pm
 
     def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, seed: int=None,
-                               **kwargs):
+                               reset_changed: bool=None, has_changed: bool=None, **kwargs):
         """Runs the components pipeline from source to persist. if show_results is True then additionally returns
         the results"""
-        canonical = self.load_source_canonical()
+        canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         result = self.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_levels,
                                                        run_book=run_book, seed=seed, **kwargs)
         self.save_persist_canonical(result)

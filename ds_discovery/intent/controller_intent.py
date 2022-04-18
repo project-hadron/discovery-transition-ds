@@ -5,7 +5,7 @@ import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 
-from ds_discovery import FeatureCatalog, Transition, DataDrift, Wrangle, SyntheticBuilder
+from ds_discovery import FeatureCatalog, Transition, ConceptTolerance, Wrangle, SyntheticBuilder
 from ds_discovery.managers.controller_property_manager import ControllerPropertyManager
 
 __author__ = 'Darryl Oatridge'
@@ -60,7 +60,7 @@ class ControllerIntentModel(AbstractIntentModel):
         for order in sorted(self._pm.get(level_key, {})):
             for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
                 if method in self.__dir__():
-                    # fail safe in case kwargs was sored as the reference
+                    # failsafe in case kwargs was sored as the reference
                     params.update(params.pop('kwargs', {}))
                     # add method kwargs to the params
                     if isinstance(kwargs, dict):
@@ -348,7 +348,7 @@ class ControllerIntentModel(AbstractIntentModel):
         if isinstance(run_task, bool) and run_task:
             persist_result = persist_result if isinstance(persist_result, bool) else False
             params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
-            ct: DataDrift = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
+            ct: ConceptTolerance = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
                                  f"has_contract=True, **{params})", globals(), locals())
             if isinstance(canonical, str) and canonical.startswith('@'):
                 if ct.pm.has_connector(canonical[1:]):

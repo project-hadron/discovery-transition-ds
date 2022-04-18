@@ -696,13 +696,13 @@ class SyntheticIntentModel(WrangleIntentModel):
             rtn_list = [i + j for i, j in zip(rtn_list, result)] if len(rtn_list) > 0 else result
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_selection(self, canonical: str, column_header: str, relative_freq: list=None, sample_size: int=None,
+    def get_selection(self, select_source: str, column_header: str, relative_freq: list=None, sample_size: int=None,
                       selection_size: int=None, size: int=None, at_most: bool=None, shuffle: bool=None,
                       quantity: float=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a random list of values where the selection of those values is taken from a connector source.
 
-        :param canonical: the canonical
+        :param select_source: the selection source for the reference dataframe
         :param column_header: the name of the column header to correlate
         :param relative_freq: (optional) a weighting pattern of the final selection
         :param selection_size: (optional) the selection to take from the sample size, normally used with shuffle
@@ -724,7 +724,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: list
 
-        The canonical is normally a connector contract str reference or a set of parameter instructions on how to
+        The select_source is normally a connector contract str reference or a set of parameter instructions on how to
         generate a pd.Dataframe but can be a pd.DataFrame. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame

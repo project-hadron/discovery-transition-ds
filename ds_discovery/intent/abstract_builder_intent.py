@@ -249,8 +249,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: an item or list of items chosen from the list
         """
-        if not isinstance(selection, list) or len(selection) == 0:
-            return [None]*size
+        selection = selection if isinstance(selection, list) else [None] * size
         _seed = self._seed() if seed is None else seed
         select_index = self._get_number(len(selection), relative_freq=relative_freq, at_most=at_most, size=size,
                                         seed=_seed)
@@ -404,9 +403,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         As choice is a fixed value, number can be represented by an environment variable with the format '${NAME}'
         where NAME is the environment variable name
         """
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
-        if isinstance(number, str) and number.startswith('${'):
+        if isinstance(number, str) and number.startswith('${') and number.endswith('}'):
             number = ConnectorContract.parse_environ(number)
             number = int(number) if number.isnumeric() else 100
         if isinstance(number, int) and 0 < number < size:
@@ -562,12 +561,12 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             rtn_list = eval(f"generator.{distribution}(size=size, **kwargs)", globals(), locals())
         return list(np.around(rtn_list, precision))
 
-    def _get_selection(self, canonical: Any, column_header: str, relative_freq: list=None, sample_size: int=None,
+    def _get_selection(self, select_source: Any, column_header: str, relative_freq: list=None, sample_size: int=None,
                        selection_size: int=None, size: int=None, at_most: bool=None, shuffle: bool=None,
                        seed: int=None) -> list:
         """ returns a random list of values where the selection of those values is taken from a connector source.
 
-        :param canonical: a pd.DataFrame as the reference dataframe
+        :param select_source: the selection source for the reference dataframe
         :param column_header: the name of the column header to correlate
         :param relative_freq: (optional) a weighting pattern of the final selection
         :param selection_size: (optional) the selection to take from the sample size, normally used with shuffle
@@ -578,7 +577,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param seed: (optional) a seed value for the random function: default to None
         :return: list
 
-        The canonical is normally a connector contract str reference or a set of parameter instructions on how to
+        The select_source is normally a connector contract str reference or a set of parameter instructions on how to
         generate a pd.Dataframe but can be a pd.DataFrame. the description of each is:
 
         - pd.Dataframe -> a deep copy of the pd.DataFrame
@@ -598,7 +597,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                     :seed (optional) if a seed should be applied
                     :run_book (optional) if specific intent should be run only
         """
-        canonical = self._get_canonical(canonical)
+        canonical = self._get_canonical(select_source)
         _seed = self._seed() if seed is None else seed
         if isinstance(canonical, dict):
             canonical = pd.DataFrame.from_dict(data=canonical)

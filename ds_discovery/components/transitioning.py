@@ -145,15 +145,18 @@ class Transition(AbstractCommonComponent):
         self.save_report_canonical(reports=self.REPORT_QUALITY, report_canonical=report, auto_connectors=True)
         return
 
-    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None):
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None,
+                               reset_changed: bool=None, has_changed: bool=None):
         """ Runs the components pipeline from source to persist
 
         :param intent_levels: a single or list of intent levels to run
         :param run_book: a saved runbook to run
         :param use_default: if the default runbook should be used if it exists
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
         :return:
         """
-        canonical = self.load_source_canonical()
+        canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         use_default = use_default if isinstance(use_default, bool) else True
         if not isinstance(run_book, str) and use_default:
             if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):

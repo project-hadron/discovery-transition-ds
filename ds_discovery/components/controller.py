@@ -1,8 +1,11 @@
 from __future__ import annotations
+
+import datetime
 import threading
 import time
 import numpy as np
 import pandas as pd
+from aistac import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 
 from ds_discovery import EventBookPortfolio
@@ -293,7 +296,8 @@ class Controller(AbstractComponent):
             return df_style
         return df
 
-    def run_controller(self, run_book: [str, list, dict]=None, mod_tasks: dict=None, repeat: int=None, sleep: int=None):
+    def run_controller(self, run_book: [str, list, dict]=None, mod_tasks: [list, dict]=None, repeat: int=None,
+                       sleep: int=None, run_time: int=None, source_check_uri: str=None, run_cycle_report: str=None):
         """ Runs the components pipeline based on the runbook instructions. The run_book can be a simple list of
         controller registered task name that will run in the given order passing the resulting outcome of one to the
         input of the next, a list of task dictionaries that contain more detailed run commands (see below) or a
@@ -319,9 +323,17 @@ class Controller(AbstractComponent):
         :param mod_tasks: (optional) a dict of modifications that override an existing task in the runbook
         :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
         :param sleep: (optional) number of seconds to sleep before repeating
+        :param run_time: (optional) number of seconds to run the controller using repeat and sleep cycles time is up
+        :param source_check_uri: (optional) The source uri to check for change since last controller instance cycle
+        :param run_cycle_report: (optional) The run cycle report name that provides the run cycle activities
         """
         _lock = threading.Lock()
-        mod_tasks = mod_tasks if isinstance(mod_tasks, dict) else {}
+        mod_tasks = mod_tasks if isinstance(mod_tasks, (list, dict)) else []
+        if isinstance(run_cycle_report, str):
+            self.add_connector_persist(connector_name='run_cycle_report', uri_file=run_cycle_report)
+            df_report = pd.DataFrame(columns=['time', 'text'])
+        if isinstance(mod_tasks, dict):
+            mod_tasks = [mod_tasks]
         if not self.pm.has_intent():
             return
         if isinstance(run_book, str):
@@ -359,40 +371,71 @@ class Controller(AbstractComponent):
                 intent_levels[idx].update({'source': _source})
             if intent_levels[idx].get('source') == '@':
                 intent_levels[idx].update({'source': f'@{self.CONNECTOR_SOURCE}'})
-            if intent_levels[idx].get('task') in mod_tasks.keys():
-                intent_levels[idx].update(mod_tasks.get(intent_levels[idx].get('task'), {}))
+            for mod in mod_tasks:
+                if intent_levels[idx].get('task') in mod.keys():
+                    intent_levels[idx].update(mod.get(intent_levels[idx].get('task'), {}))
+        handler = None
+        if isinstance(source_check_uri, str):
+            self.add_connector_uri(connector_name='source_checker', uri=source_check_uri)
+            handler = self.pm.get_connector_handler(connector_name='source_checker')
         repeat = repeat if isinstance(repeat, int) and repeat > 0 else 1
-        for count in range(repeat):
-            for intent in intent_levels:
-                task = intent.get('task')
-                source = intent.get('source', '')
-                to_persist = intent.get('persist')
-                end_source = intent.get('end_source')
-                if isinstance(source, int) or (isinstance(source, str) and source.startswith('@')):
-                    canonical = source
-                elif isinstance(source, str) and source.isnumeric():
-                    canonical = int(source)
-                else:
-                    if self.eb_portfolio.is_active_book(source):
-                        canonical = self.eb_portfolio.current_state(source)
-                        if end_source:
-                            self.eb_portfolio.remove_event_books(book_names=task)
+        run_time = run_time if isinstance(run_time, int) else 0
+        if run_time > 0 and not isinstance(sleep, int):
+            sleep = 1
+        end_time = datetime.datetime.now() + datetime.timedelta(seconds=run_time)
+        while True: # run_time always runs once
+            if isinstance(run_cycle_report, str):
+                df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'start run-cycle']
+            for count in range(repeat):
+                if isinstance(run_cycle_report, str):
+                    df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start run count {count}']
+                if handler and handler.exists():
+                    if handler.has_changed():
+                        handler.reset_changed(False)
                     else:
-                        raise ValueError(f"The task '{task}' source event book '{source}' does not exist")
-                # get the result
-                canonical = self.intent_model.run_intent_pipeline(canonical=canonical, intent_level=task,
-                                                                  persist_result=to_persist,
-                                                                  controller_repo=self.URI_PM_REPO)
-                if to_persist:
-                    continue
-                if self.eb_portfolio.is_event_book(task):
-                    self.eb_portfolio.remove_event_books(task)
-                eb = self.eb_portfolio.intent_model.add_event_book(book_name=task, start_book=True)
-                self.eb_portfolio.add_book_to_portfolio(book_name=task, event_book=eb)
-                self.eb_portfolio.add_event(book_name=task, event=canonical)
-            self.eb_portfolio.reset_portfolio()
-            if isinstance(sleep, int) and count < repeat-1:
-                time.sleep(sleep)
+                        if isinstance(run_cycle_report, str):
+                            df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'Source has not changed']
+                        if isinstance(sleep, int) and count < repeat - 1:
+                            time.sleep(sleep)
+                        continue
+                for intent in intent_levels:
+                    task = intent.get('task')
+                    source = intent.get('source', '')
+                    to_persist = intent.get('persist')
+                    end_source = intent.get('end_source')
+                    if isinstance(run_cycle_report, str):
+                        df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'running {task}']
+                    if isinstance(source, int) or (isinstance(source, str) and source.startswith('@')):
+                        canonical = source
+                    elif isinstance(source, str) and source.isnumeric():
+                        canonical = int(source)
+                    else:
+                        if self.eb_portfolio.is_active_book(source):
+                            canonical = self.eb_portfolio.current_state(source)
+                            if end_source:
+                                self.eb_portfolio.remove_event_books(book_names=task)
+                        else:
+                            raise ValueError(f"The task '{task}' source event book '{source}' does not exist")
+                    # get the result
+                    canonical = self.intent_model.run_intent_pipeline(canonical=canonical, intent_level=task,
+                                                                      persist_result=to_persist,
+                                                                      controller_repo=self.URI_PM_REPO)
+                    if to_persist:
+                        continue
+                    if self.eb_portfolio.is_event_book(task):
+                        self.eb_portfolio.remove_event_books(task)
+                    eb = self.eb_portfolio.intent_model.add_event_book(book_name=task, start_book=True)
+                    self.eb_portfolio.add_book_to_portfolio(book_name=task, event_book=eb)
+                    self.eb_portfolio.add_event(book_name=task, event=canonical)
+                self.eb_portfolio.reset_portfolio()
+                if isinstance(run_cycle_report, str):
+                    df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'tasks complete']
+                if isinstance(sleep, int) and count < repeat-1:
+                    time.sleep(sleep)
+            if end_time < datetime.datetime.now():
+                break
+        if isinstance(run_cycle_report, str):
+            self.save_canonical(connector_name='run_cycle_report', canonical=df_report)
         return
 
     def _report(self, canonical: pd.DataFrame, index_header: str, bold: [str, list]=None, large_font: [str, list]=None):

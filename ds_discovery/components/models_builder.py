@@ -75,8 +75,9 @@ class ModelsBuilder(AbstractCommonComponent):
     def models(self) -> ModelsIntentModel:
         return self._intent_model
 
-    def run_component_pipeline(self, intent_levels: [str, int, list] = None):
+    def run_component_pipeline(self, intent_levels: [str, int, list] = None, reset_changed: bool=None,
+                               has_changed: bool=None):
         """Runs the components pipeline from source to persist"""
-        canonical = self.load_source_canonical()
+        canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
         self.save_persist_canonical(result)

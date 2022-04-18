@@ -2,9 +2,10 @@ import unittest
 import os
 import shutil
 import pandas as pd
+import numpy as np
 from pprint import pprint
 
-from ds_discovery import SyntheticBuilder, Transition
+from ds_discovery import SyntheticBuilder, Transition, Wrangle
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
@@ -16,7 +17,9 @@ class ControllerTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        pass
+        pd.set_option('display.width', 300)
+        np.set_printoptions(linewidth=300)
+        pd.set_option('display.max_columns', 10)
 
     @classmethod
     def tearDownClass(cls):
@@ -36,6 +39,15 @@ class ControllerTest(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
+        tr = Transition.from_env('task1', has_contract=False)
+        tr.set_source_uri("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        tr.set_persist()
+        wr = Wrangle.from_env('task2' , has_contract=False)
+        wr.set_source_uri(tr.get_persist_contract().raw_uri)
+        wr.set_persist()
+        controller = Controller.from_env(has_contract=False)
+        controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task1', intent_level='task1_tr')
+        controller.intent_model.wrangle(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_wr')
 
     def tearDown(self):
         try:
@@ -43,47 +55,72 @@ class ControllerTest(unittest.TestCase):
         except:
             pass
 
-    @property
-    def tools(self) -> SyntheticIntentModel:
-        return SyntheticBuilder.scratch_pad()
-
     def test_smoke(self):
         """Basic smoke test"""
         Controller.from_env(has_contract=False)
 
     def test_run_controller(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/helloworld/datalake_gen/sor"
-        tr = Transition.from_env(task_name='members', uri_pm_repo=uri_pm_repo)
-        controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
+        controller = Controller.from_env()
         # test errors
         with self.assertRaises(ValueError) as context:
             controller.run_controller(run_book='noname')
         self.assertTrue("The run book or intent level" in str(context.exception))
-        controller.run_controller(run_book='sor_sim')
-        self.assertEqual(['datalake_gen_synthetic_sor_dataset_v08.parquet'], os.listdir('work/data/'))
+        controller.run_controller()
+        self.assertEqual(['hadron_wrangle_task2_primary_persist.pickle'], os.listdir('work/data/'))
 
-        roadmap = [
-            controller.runbook2dict(task='sor_sim', source=1000),
-            controller.runbook2dict(task='members_gen', source='sor_sim', persist=True),
-         ]
-        controller.run_controller(run_book=roadmap)
-        self.assertEqual(1000, tr.load_persist_canonical().shape[0])
-        # test mod_task
-        controller.run_controller(run_book=roadmap, mod_tasks={'sor_sim': {'source': 10}})
-        self.assertEqual(10, tr.load_persist_canonical().shape[0])
+    def test_iterations(self):
+        wr = Wrangle.from_env('task2')
+        wr.set_persist(wr.pm.file_pattern(name='tester', prefix='result1_', file_type='parquet'))
+        controller = Controller.from_env()
+        controller.run_controller(repeat=1)
+        self.assertEqual(['result1_tester.parquet'], os.listdir('work/data/'))
+        shutil.rmtree('work/data')
+        os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
+        wr.set_persist(wr.pm.file_pattern(name='tester', prefix='result1_', file_type='parquet', stamped='ns'))
+        controller.run_controller(repeat=3)
+        self.assertEqual(3, len(os.listdir('work/data/')))
+        shutil.rmtree('work/data')
+        os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
+        controller.run_controller(repeat=2, sleep=1)
+        self.assertEqual(2, len(os.listdir('work/data/')))
+        shutil.rmtree('work/data')
+        os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
+        controller.run_controller(repeat=2, sleep=1, run_time=4)
+        self.assertEqual(4, len(os.listdir('work/data/')))
 
-    def test_run_intent_pipeline(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
-        # os.environ['HADRON_PM_REPO'] = uri_pm_repo
-        controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
-        result = controller.intent_model.run_intent_pipeline(canonical=100, intent_level='members_sim', controller_repo=uri_pm_repo)
-        self.assertEqual(100, result.shape[0])
+    def test_synthetic_with_no_source(self):
+        shutil.rmtree('work/config')
+        os.makedirs(os.environ['HADRON_PM_PATH'])
+        PropertyManager._remove_all()
+        builder = SyntheticBuilder.from_env('task3', has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        builder.set_persist()
+        df = pd.DataFrame(index=range(10))
+        tools.model_noise(df, num_columns=5, column_name='noise')
+        controller = Controller.from_env(has_contract=False)
+        controller.intent_model.synthetic_builder(df, task_name='task3')
+        controller.run_controller()
+        self.assertIn(builder.CONNECTOR_PERSIST, builder.report_connectors(stylise=False)['connector_name'].to_list())
+        self.assertNotIn(builder.CONNECTOR_SOURCE, builder.report_connectors(stylise=False)['connector_name'].to_list())
 
-    def test_report_tasks(self):
-        uri_pm_repo = "https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/factory/healthcare/"
-        controller = Controller.from_env(uri_pm_repo=uri_pm_repo)
-        result = controller.report_tasks(stylise=False)
-        self.assertEqual(['level', 'order', 'component', 'task', 'parameters', 'creator'], list(result.columns))
+    def test_controller_log(self):
+        controller = Controller.from_env()
+        controller.run_controller(run_cycle_report='report.csv')
+        df = controller.load_canonical(connector_name='run_cycle_report')
+        control = ['start run-cycle', 'start run count 0', 'running task1_tr', 'running task2_wr', 'tasks complete']
+        self.assertEqual(control, df['text'].to_list())
+
+    def test_controller_check_changed(self):
+        tr = Transition.from_env('task1')
+        tr.set_source(uri_file='sample.csv')
+        tr.set_persist(uri_file='sample.csv')
+        df = pd.DataFrame({'A': [1,2,3,4]})
+        tr.save_persist_canonical(df)
+        controller = Controller.from_env()
+        controller.run_controller(repeat=2, source_check_uri=tr.get_persist_contract().raw_uri, run_cycle_report='report.csv')
+        df = controller.load_canonical(connector_name='run_cycle_report')
+        control = ['start run-cycle', 'start run count 0', 'running task1_tr', 'running task2_wr', 'tasks complete', 'start run count 1', 'Source has not changed']
+        self.assertEqual(control, df['text'].to_list())
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

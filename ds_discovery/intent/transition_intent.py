@@ -108,7 +108,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         if not isinstance(unique_max, int):
             unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
-        null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
+        null_max = 0.998 if not isinstance(null_max, (int, float)) else null_max
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = deepcopy(df)
@@ -328,7 +328,7 @@ class TransitionIntentModel(AbstractIntentModel):
                 col_drop.append(c)
             elif drop_predominant and df_filter[c].nunique() == 1:
                 col_drop.append(c)
-            elif drop_predominant and round((df_filter[c].value_counts() / np.float(len(df_filter[c].dropna()))).
+            elif drop_predominant and round((df_filter[c].value_counts() / np.float64(len(df_filter[c].dropna()))).
                                             sort_values(ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)

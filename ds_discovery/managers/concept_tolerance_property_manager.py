@@ -4,7 +4,7 @@ from ds_discovery.components.commons import Commons
 __author__ = 'Darryl Oatridge'
 
 
-class DataDriftPropertyManager(AbstractPropertyManager):
+class ConceptTolerancePropertyManager(AbstractPropertyManager):
 
     def __init__(self, task_name: str, username: str):
         # set additional keys

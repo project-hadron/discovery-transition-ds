@@ -4,9 +4,9 @@ from ds_discovery.components.transitioning import Transition
 from ds_discovery.components.wrangling import Wrangle
 from ds_discovery.components.feature_catalog import FeatureCatalog
 from ds_discovery.components.event_book_portfolio import EventBookPortfolio
-from ds_discovery.components.data_drift import DataDrift
+from ds_discovery.components.concept_tolerance import ConceptTolerance
 from ds_discovery.components.models_builder import ModelsBuilder
 from ds_discovery.components.controller import Controller
 
 # release version number picked up in the setup.py
-__version__ = "3.03.004"
+__version__ = "3.03.006"

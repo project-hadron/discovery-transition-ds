@@ -6,15 +6,15 @@ import pandas as pd
 
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
-from ds_discovery.managers.data_drift_property_manager import DataDriftPropertyManager
+from ds_discovery.managers.concept_tolerance_property_manager import ConceptTolerancePropertyManager
 
 __author__ = 'Darryl Oatridge'
 
 
-class DataToleranceIntentModel(AbstractCommonsIntentModel):
+class ConceptToleranceIntentModel(AbstractCommonsIntentModel):
     """ The Data Tolerance intent modelling methods"""
 
-    def __init__(self, property_manager: DataDriftPropertyManager, default_save_intent: bool=None,
+    def __init__(self, property_manager: ConceptTolerancePropertyManager, default_save_intent: bool=None,
                  default_intent_level: [str, int, float]=None, order_next_available: bool=None,
                  default_replace_intent: bool=None):
         """initialisation of the Intent class.

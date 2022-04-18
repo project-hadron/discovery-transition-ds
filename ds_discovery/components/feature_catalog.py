@@ -147,13 +147,16 @@ class FeatureCatalog(AbstractCommonComponent):
         return
 
     def run_component_pipeline(self, canonical: pd.DataFrame=None, feature_names: [str, list]=None,
-                               auto_connectors: bool=None, save: bool=None):
+                               auto_connectors: bool=None, save: bool=None, reset_changed: bool=None,
+                               has_changed: bool=None):
         """runs all features within the feature catalog or an optional set of features
 
         :param canonical: (optional) A canonical if the source canonical isn't to be used
         :param feature_names: (optional) a single or list of features to run
         :param auto_connectors: (optional) Adds a versioned feature connector if not yet added. Default to True
         :param save: (optional) if True, persist changes to property manager. Default is True
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
         """
         auto_connectors = auto_connectors if isinstance(auto_connectors, bool) else True
         if isinstance(feature_names, (str, list)):
@@ -161,7 +164,7 @@ class FeatureCatalog(AbstractCommonComponent):
         else:
             feature_names = Commons.list_formatter(self.pm.get_intent())
         if not isinstance(canonical, (pd.DataFrame, str)):
-            canonical = self.load_source_canonical()
+            canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         for feature in feature_names:
             if not self.pm.has_connector(feature):
                 if not auto_connectors:

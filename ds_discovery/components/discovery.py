@@ -484,12 +484,11 @@ class DataDiscovery(object):
 
         The IQR can be used to identify outliers by defining limits on the sample values that are a factor k of the
         IQR below the 25th percentile or above the 75th percentile. The common value for the factor k is the value 1.5.
-        A factor k of 3 or more can be used to identify values that are extreme outliers or “far outs” when described
-        in the context of box and whisker plots.
+        A factor k of 3 or more can be used to identify values that are extreme outliers.
 
         :param values: the values to be assessed
-        :param k_factor: the k factor to apply beyond the 25th and 75th percentile, defaults to 1.5 x the
-        :return: a tuple of the lower and upper whiskers as a list of index of the values
+        :param k_factor: the k factor to apply beyond the 25th and 75th percentile, defaults to 1.5
+        :return: a tuple of the lower and upper outliers as a list of index of the values
         """
         k_factor = k_factor if isinstance(k_factor, float) and 0 < k_factor <= 10 else 1.5
         values = values.copy().dropna()
@@ -509,14 +508,14 @@ class DataDiscovery(object):
         """ The empirical rule states that for a normal distribution, nearly all of the data will fall within three
         standard deviations of the mean.
 
-        Given mu and sigma, a simple way to identify outliers is to compute a z-score for every xi, which is
-        defined as the number of standard deviations away xi is from the mean. The 68–95–99.7 rule, also known as
+        Given mu and sigma, a simple way to identify outliers is to compute a z-score for every value, which is
+        defined as the number of standard deviations away value is from the mean. The 68–95–99.7 rule, also known as
         the empirical rule, is a shorthand used to remember the percentage of values that lie within a band around
         the mean in a normal distribution with a width of two, four and six standard deviations, respectively
 
-        :param values:
-        :param std_width:
-        :return: an list of index of outliers
+        :param values: the values to be assessed
+        :param std_width: (optional) A standard deviation away from the mean. Default is 3
+        :return: a list of index of outliers
         """
         values = values.copy().dropna()
         std_width = std_width if isinstance(std_width, int) and 2 <= std_width <= 6 else 3
@@ -1579,7 +1578,7 @@ class DataDiscovery(object):
             col = deepcopy(df[c])
             if len(col.dropna()) > 0:
                 result = (col.apply(str).value_counts() /
-                          np.float(len(col.apply(str).dropna()))).sort_values(ascending=False).values
+                          np.float64(len(col.apply(str).dropna()))).sort_values(ascending=False).values
                 line.append(round(result[0], 3))
                 if len(result) > 1:
                     line.append(round(result[1], 3))
