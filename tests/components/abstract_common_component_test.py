@@ -47,6 +47,19 @@ class AbstractCommonComponentTest(unittest.TestCase):
         except:
             pass
 
+    def test_load_canonical_return_empty(self):
+        tr = Transition.from_env('task', has_contract=False)
+        tr.set_source(uri_file='sample.csv')
+        tr.set_persist(uri_file='sample.csv')
+        df = pd.DataFrame({'A': [1, 2, 3, 4]})
+        tr.save_persist_canonical(df)
+        sample = tr.load_source_canonical(has_changed=True, return_empty=True)
+        self.assertEqual(False, tr.pm.get_connector_handler(tr.CONNECTOR_SOURCE).has_changed())
+        self.assertEqual(sample.shape, df.shape)
+        sample = tr.load_source_canonical(has_changed=True, return_empty=True)
+        self.assertEqual((0, 0), sample.shape)
+
+
     def test_load_canonical_has_changed(self):
         tr = Transition.from_env('task', has_contract=False)
         tr.set_source(uri_file='sample.csv')
