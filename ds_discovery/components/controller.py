@@ -383,9 +383,10 @@ class Controller(AbstractComponent):
         if run_time > 0 and not isinstance(sleep, int):
             sleep = 1
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=run_time)
+        run_count = 0
         while True: # run_time always runs once
             if isinstance(run_cycle_report, str):
-                df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'start run-cycle']
+                df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start run-cycle {run_count}']
             for count in range(repeat):
                 if isinstance(run_cycle_report, str):
                     df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start run count {count}']
@@ -432,9 +433,15 @@ class Controller(AbstractComponent):
                     df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'tasks complete']
                 if isinstance(sleep, int) and count < repeat-1:
                     time.sleep(sleep)
+            if isinstance(run_cycle_report, str):
+                df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'end run-cycle {run_count}']
+                run_count += 1
             if end_time < datetime.datetime.now():
                 break
+            else:
+                time.sleep(sleep)
         if isinstance(run_cycle_report, str):
+            df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'end of report']
             self.save_canonical(connector_name='run_cycle_report', canonical=df_report)
         return
 
