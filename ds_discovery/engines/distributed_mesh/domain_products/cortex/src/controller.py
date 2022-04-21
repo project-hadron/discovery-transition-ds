@@ -46,11 +46,14 @@ def domain_controller(params: dict):
     mod_tasks = hadron_kwargs.pop('mod_tasks', None)
     repeat = hadron_kwargs.pop('repeat', None)
     sleep = hadron_kwargs.pop('sleep', None)
+    run_time = hadron_kwargs.pop('run_time', None)
+    run_cycle_report = hadron_kwargs.pop('run_cycle_report', None)
 
     # instantiate the Controller passing any remaining kwargs
     controller = Controller.from_env(uri_pm_repo=uri_pm_repo, default_save=False, has_contract=True, **hadron_kwargs)
     # run the controller nano services.
-    controller.run_controller(run_book=run_book, mod_tasks=mod_tasks, repeat=repeat, sleep=sleep)
+    controller.run_controller(run_book=run_book, mod_tasks=mod_tasks, repeat=repeat, sleep=sleep, run_time=run_time,
+                              run_cycle_report=run_cycle_report)
 
 
 if __name__ == '__main__':
