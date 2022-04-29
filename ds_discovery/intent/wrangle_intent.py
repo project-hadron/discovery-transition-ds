@@ -347,6 +347,64 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_group(seed=seed, **params)
 
+    def model_modifier(self, canonical: Any, other: Any, headers: str = None, target: str=None, agg: str=None,
+                       seed: int=None, precision: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """Modifies a given set of headers within the canonical with the target value. The aggregator indicates the
+        type of modification to be performed. It is assumed the other DataFrame has the headers as the first column
+        and the target as the second column, if this is not the case the headers and target parameters can be used
+        to specify the header names
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param headers: (optional) the name of the other header where the header names are listed
+        :param target: (optional) The name of the other header where the target values are listed
+        :param agg: (optional) The name of the aggregator to modify. Options are 'add', 'sub', 'mul', 'div'
+        :param precision: (optional) the value precision of the return values
+        :param seed: (optional) this is a placeholder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+
+        The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_modifier(seed=seed, **params)
+
     def model_merge(self, canonical: Any, other: Any, left_on: str=None, right_on: str=None, on: str=None,
                     how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
                     seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,

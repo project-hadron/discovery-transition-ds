@@ -860,7 +860,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                      list_choice: int=None, list_max: int=None, drop_group_by: bool=False, seed: int=None,
                      include_weighting: bool=False, freq_precision: int=None, remove_weighting_zeros: bool=False,
                      remove_aggregated: bool=False) -> pd.DataFrame:
-        """ returns the full column values directly from another connector data source. in addition the the
+        """ returns the full column values directly from another connector data source. in addition the
         standard groupby aggregators there is also 'list' and 'set' that returns an aggregated list or set.
         These can be using in conjunction with 'list_choice' and 'list_size' allows control of the return values.
         if list_max is set to 1 then a single value is returned rather than a list of size 1.
@@ -917,6 +917,35 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         if drop_group_by:
             df_sub = df_sub.drop(columns=group_by, errors='ignore')
         return df_sub
+
+    def _model_modifier(self, canonical: Any, other: Any, headers: str=None, target: str=None, agg: str=None,
+                        precision: int=None, seed: int=None) -> pd.DataFrame:
+        """Modifies a given set of headers within the canonical with the target value. The aggregator indicates the
+        type of modification to be performed. It is assumed the other DataFrame has the headers as the first column
+        and the target as the second column, if this is not the case the headers and target parameters can be used
+        to specify the header names
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param headers: (optional) the name of the other header where the header names are listed
+        :param target: (optional) The name of the other header where the target values are listed
+        :param agg: (optional) The name of the aggregator to modify. Options are 'add', 'sub', 'mul', 'div'
+        :param precision: (optional) the value precision of the return values
+        :param seed: (optional) this is a placeholder, here for compatibility across methods
+        :return: pd.DataFrame
+        """
+        canonical = self._get_canonical(canonical)
+        other = self._get_canonical(other, size=canonical.shape[0])
+        _seed = self._seed() if seed is None else seed
+        agg = agg if isinstance(agg, str) and agg in ['add', 'sub', 'mul', 'div'] else 'add'
+        precision = precision if isinstance(precision, int) else 3
+        headers = headers if isinstance(headers, str) else other.columns[0]
+        target = target if isinstance(target, str) else other.columns[1]
+        for index, row in other.iterrows():
+            # print(f"{other[headers].iloc[index]} - {row.loc[target]}")
+            canonical[row.loc[headers]] = eval(f"canonical[row.loc[headers]].{agg}(row.loc[target])",
+                                               globals(), locals()).round(precision)
+        return canonical
 
     def _model_merge(self, canonical: Any, other: Any, left_on: str=None, right_on: str=None,
                      on: str=None, how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None,
