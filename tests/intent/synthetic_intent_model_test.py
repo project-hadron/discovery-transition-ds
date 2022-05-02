@@ -118,7 +118,7 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertCountEqual(["survived", "sex", "fare"], list(result.columns))
         self.assertEqual(300, result.shape[0])
 
-    def test_model_modify(self):
+    def test_model_modifier(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 3, 4, 5]})
@@ -126,15 +126,27 @@ class SyntheticIntentModelTest(unittest.TestCase):
         result = tools.model_modifier(df, other)
         self.assertEqual([3.0, 4.0, 5.0, 6.0, 7.0], result["A"].to_list())
         self.assertEqual([1.2, 2.2, 3.2, 4.2, 5.2], result["B"].to_list())
-        result = tools.model_modifier(df, other, agg="add")
+        result = tools.model_modifier(df, other, modifier="add")
         self.assertEqual([3.0, 4.0, 5.0, 6.0, 7.0], result["A"].to_list())
         self.assertEqual([1.2, 2.2, 3.2, 4.2, 5.2], result["B"].to_list())
-        result = tools.model_modifier(df, other, agg="mul")
+        result = tools.model_modifier(df, other, modifier="mul")
         self.assertEqual([2.0, 4.0, 6.0, 8.0, 10.0], result["A"].to_list())
         self.assertEqual([0.2, 0.4, 0.6, 0.8, 1.0], result["B"].to_list())
-        result = tools.model_modifier(df, other, headers='headers', target='target', agg='div')
+        result = tools.model_modifier(df, other, targets_header='headers', values_header='target', modifier='div')
         self.assertEqual([0.5, 1.0, 1.5, 2.0, 2.5], result["A"].to_list())
         self.assertEqual([5.0, 10.0, 15.0, 20.0, 25.0], result["B"].to_list())
+
+    def test_model_modify_agg(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 3, 4, 5]})
+        other = {"headers": ["A", "B"], "target": [2, 0.2]}
+        result = tools.model_modifier(df, other, aggregator='sum')
+        self.assertEqual(['A', 'B', 'latent_aggregator'], result.columns.to_list())
+        self.assertEqual([4.2, 6.2, 8.2, 10.2, 12.2], result['latent_aggregator'].to_list())
+        result = tools.model_modifier(df, other, aggregator='max', agg_header='my_agg')
+        self.assertEqual(['A', 'B', 'my_agg'], result.columns.to_list())
+        self.assertEqual([3.0, 4.0, 5.0, 6.0, 7.0], result['my_agg'].to_list())
 
     def test_model_merge(self):
         builder = SyntheticBuilder.from_memory()

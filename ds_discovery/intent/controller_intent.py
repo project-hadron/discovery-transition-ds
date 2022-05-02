@@ -60,7 +60,7 @@ class ControllerIntentModel(AbstractIntentModel):
         for order in sorted(self._pm.get(level_key, {})):
             for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
                 if method in self.__dir__():
-                    # failsafe in case kwargs was sored as the reference
+                    # failsafe in case kwargs was stored as the reference
                     params.update(params.pop('kwargs', {}))
                     # add method kwargs to the params
                     if isinstance(kwargs, dict):

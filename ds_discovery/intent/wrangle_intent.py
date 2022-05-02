@@ -347,19 +347,26 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_group(seed=seed, **params)
 
-    def model_modifier(self, canonical: Any, other: Any, headers: str = None, target: str=None, agg: str=None,
-                       seed: int=None, precision: int=None, save_intent: bool=None, column_name: [int, str]=None,
+    def model_modifier(self, canonical: Any, other: Any, targets_header: str=None, values_header: str=None,
+                       modifier: str=None, aggregator: str=None, agg_header: str=None, seed: int=None,
+                       precision: int=None, save_intent: bool=None, column_name: [int, str]=None,
                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """Modifies a given set of headers within the canonical with the target value. The aggregator indicates the
-        type of modification to be performed. It is assumed the other DataFrame has the headers as the first column
-        and the target as the second column, if this is not the case the headers and target parameters can be used
-        to specify the header names
+        """Modifies a given set of target header names, within the canonical with the target value for that name. The
+        aggregator indicates the type of modification to be performed. It is assumed the other DataFrame has the
+        target headers as the first column and the target values as the second column, if this is not the case the
+        targets_header and values_handler parameters can be used to specify the other header names.
+
+        Additionally, the given headers, from other, can be aggregated to a single value. The new aggregated column
+        can be given a header name with agg_header.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param other: a direct or generated pd.DataFrame. see context notes below
-        :param headers: (optional) the name of the other header where the header names are listed
-        :param target: (optional) The name of the other header where the target values are listed
-        :param agg: (optional) The name of the aggregator to modify. Options are 'add', 'sub', 'mul', 'div'
+        :param targets_header: (optional) the name of the target header where the header names are listed
+        :param values_header: (optional) The name of the value header where the target values are listed
+        :param modifier: (optional) how the value is to be modified. Options are 'add', 'sub', 'mul', 'div'
+        :param aggregator: (optional) the aggregation function name to enact. The available functions are:
+                           'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
+        :param agg_header: (optional) the name to give the aggregated column. By default 'latent_aggregator'
         :param precision: (optional) the value precision of the return values
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param save_intent (optional) if the intent contract should be saved to the property manager

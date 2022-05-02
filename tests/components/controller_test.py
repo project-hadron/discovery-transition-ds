@@ -68,7 +68,7 @@ class ControllerTest(unittest.TestCase):
         controller.run_controller()
         self.assertEqual(['hadron_wrangle_task2_primary_persist.pickle'], os.listdir('work/data/'))
 
-    def test_iterations(self):
+    def test_repeat_iterations(self):
         wr = Wrangle.from_env('task2')
         wr.set_persist(wr.pm.file_pattern(name='tester', prefix='result1_', file_type='parquet'))
         controller = Controller.from_env()
@@ -123,8 +123,9 @@ class ControllerTest(unittest.TestCase):
         controller = Controller.from_env()
         controller.run_controller(repeat=2, source_check_uri=tr.get_persist_contract().raw_uri, run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'running task2_wr', 'tasks complete',
-                   'start run count 1', 'Source has not changed', 'end run-cycle 0', 'end of report']
+        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'canonical shape is (4, 1)',
+                   'running task2_wr', 'canonical shape is (4, 1)', 'tasks complete',
+                   'start run count 1', 'Source has not changed', 'end of report']
         self.assertEqual(control, df['text'].to_list())
 
     def test_raise(self):

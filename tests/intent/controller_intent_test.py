@@ -34,16 +34,19 @@ class ControllerIntentTest(unittest.TestCase):
             os.makedirs(os.environ['HADRON_PM_PATH'])
             os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
         except:
-            pass
+            raise IOError('Unable to create directories')
         PropertyManager._remove_all()
         builder = SyntheticBuilder.from_env('task1', has_contract=False)
         builder.set_persist()
+        builder.pm_persist()
         tr = Transition.from_env('task2', has_contract=False)
         tr.set_source_uri(builder.get_persist_contract().raw_uri)
         tr.set_persist()
+        tr.pm_persist()
         wr = Wrangle.from_env('task3', has_contract=False)
         wr.set_source_uri(tr.get_persist_contract().raw_uri)
         wr.set_persist()
+        wr.pm_persist()
 
     def tearDown(self):
         try:

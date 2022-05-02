@@ -403,7 +403,7 @@ class Controller(AbstractComponent):
                     task = intent.get('task')
                     source = intent.get('source', '')
                     to_persist = intent.get('persist')
-                    end_source = intent.get('end_source')
+                    end_source = intent.get('end_source', False)
                     if isinstance(run_cycle_report, str):
                         df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'running {task}']
                     if isinstance(source, int) or (isinstance(source, str) and source.startswith('@')):
@@ -421,6 +421,9 @@ class Controller(AbstractComponent):
                     canonical = self.intent_model.run_intent_pipeline(canonical=canonical, intent_level=task,
                                                                       persist_result=to_persist,
                                                                       controller_repo=self.URI_PM_REPO)
+                    if isinstance(run_cycle_report, str):
+                        df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f"canonical shape is "
+                                                                                        f"{canonical.shape}"]
                     if to_persist:
                         continue
                     if self.eb_portfolio.is_event_book(task):
@@ -434,7 +437,6 @@ class Controller(AbstractComponent):
                 if isinstance(sleep, int) and count < repeat-1:
                     time.sleep(sleep)
             if isinstance(run_cycle_report, str):
-                df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'end run-cycle {run_count}']
                 run_count += 1
             if end_time < datetime.datetime.now():
                 break
