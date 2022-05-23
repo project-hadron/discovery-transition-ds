@@ -414,8 +414,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def model_merge(self, canonical: Any, other: Any, left_on: str=None, right_on: str=None, on: str=None,
                     how: str=None, headers: list=None, suffixes: tuple=None, indicator: bool=None, validate: str=None,
-                    seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                    replace_intent: bool=None,  remove_duplicates: bool=None) -> pd.DataFrame:
+                    replace_nulls: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                    intent_order: int=None, replace_intent: bool=None,  remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns the full column values directly from another connector data source.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
@@ -437,6 +437,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                             “one_to_many” or “1:m”: checks if merge keys are unique in left dataset.
                             “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
                             “many_to_many” or “m:m”: allowed, but does not result in checks.
+        :param replace_nulls: (optional) replaces nulls with an appropriate value dependent upon the field type
         :param seed: this is a place holder, here for compatibility across methods
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column

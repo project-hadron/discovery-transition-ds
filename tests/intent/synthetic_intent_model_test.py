@@ -139,7 +139,7 @@ class SyntheticIntentModelTest(unittest.TestCase):
     def test_model_modify_agg(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 3, 4, 5]})
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 'A', 4, 5]})
         other = {"headers": ["A", "B"], "target": [2, 0.2]}
         result = tools.model_modifier(df, other, aggregator='sum')
         self.assertEqual(['A', 'B', 'latent_aggregator'], result.columns.to_list())
@@ -148,6 +148,15 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual(['A', 'B', 'my_agg'], result.columns.to_list())
         self.assertEqual([3.0, 4.0, 5.0, 6.0, 7.0], result['my_agg'].to_list())
 
+    def test_model_modify_except(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 'A', 4, 5]})
+        other = {"headers": ["A", "B"], "target": [2, 0.2]}
+        with self.assertRaises(TypeError) as context:
+            result = tools.model_modifier(df, other, aggregator='sum')
+        self.assertTrue("The column B is not of type numeric" in str(context.exception))
+        
     def test_model_merge(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -165,6 +174,17 @@ class SyntheticIntentModelTest(unittest.TestCase):
         result = tools.model_merge(canonical=df, other=other, on="A", headers=["X"])
         self.assertEqual((5, 3), result.shape)
         self.assertEqual(["A", "B", "X"], result.columns.to_list())
+
+    def test_modal_merge_nulls(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": list("ABCDE")})
+        other = {"A": [5, 7, 3, 9, 4], "X": list("VWXYZ"), "Y": [9, 7, 12, 10, 2]}
+        # using left_on and right_on
+        result = tools.model_merge(canonical=df, other=other, how='left', right_on="A", left_on="A", replace_nulls=True)
+        self.assertEqual((5, 4), result.shape)
+        control = {'X': {0: '', 1: ''}, 'Y': {0: 0.0, 1: 0.0}}
+        self.assertDictEqual(control, result.loc[:1,['X', 'Y']].to_dict())
 
     def test_remove_unwanted_headers(self):
         builder = SyntheticBuilder.from_env(
@@ -232,48 +252,12 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 5), df.shape)
         print(df["gender"].value_counts().loc["F"])
 
-    def test_model_iterator(self):
-        builder = SyntheticBuilder.from_env(
-            "test", default_save=False, default_save_intent=False, has_contract=False
-        )
-        tools: SyntheticIntentModel = builder.tools
-        builder.add_connector_uri(
-            "titanic",
-            uri="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv",
-        )
-        # do nothing
-        result = tools.model_iterator(canonical="titanic")
-        self.assertEqual(builder.load_canonical("titanic").shape, result.shape)
-        # add marker
-        result = tools.model_iterator(canonical="titanic", marker_col="marker")
-        self.assertEqual(
-            builder.load_canonical("titanic").shape[1] + 1, result.shape[1]
-        )
-        # with selection
-        selection = [tools.select2dict(column="survived", condition="@==1")]
-        control = tools.frame_selection(canonical="titanic", selection=selection)
-        result = tools.model_iterator(
-            canonical="titanic", marker_col="marker", selection=selection
-        )
-        self.assertEqual(control.shape[0], result.shape[0])
-        # with iteration
-        result = tools.model_iterator(
-            canonical="titanic", marker_col="marker", iter_stop=3
-        )
-        self.assertCountEqual(
-            [0, 1, 2], result["marker"].value_counts().index.to_list()
-        )
-        # with actions
-        actions = {2: (tools.action2dict(method="get_category", selection=[4, 5]))}
-        result = tools.model_iterator(
-            canonical="titanic",
-            marker_col="marker",
-            iter_stop=3,
-            iteration_actions=actions,
-        )
-        self.assertCountEqual(
-            [0, 1, 4, 5], result["marker"].value_counts().index.to_list()
-        )
+    def test_model_inc(self):
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 3, 4, 5], "C": [0, 0, 0, 0, 0]})
+        other = pd.DataFrame(data={"A": [1, 7, 5, 3], "B": [1, 2, 1.5, 0], "C": [1, 0, 1, 0]})
+        other = other.loc[other.loc[:,'A'].isin(df.loc[:,'A']), :].index.to_list()
+        # result = df.combine(other, lambda s1, s2: s2 + s1 if len(s2.mode()) else s1)
+        print(other)
 
     def test_model_concat(self):
         builder = SyntheticBuilder.from_memory()
