@@ -144,7 +144,7 @@ class TransitionIntentModel(AbstractIntentModel):
     def auto_remove_null_rows(self, df, nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                               intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                               remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
-        """ automatically removes rows where the full row 
+        """ automatically removes rows where the full row is null
 
         :param df: the pandas DataFrame to remove null rows from
         :param nulls_list: potential nul values to consider other than just np.nan
@@ -339,10 +339,10 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drops highly correlated columns
-    def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=None,
-                             inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
-                             intent_order: int=None, replace_intent: bool=None,
-                             remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+    def auto_brute_force_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=None,
+                                    inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+                                    intent_order: int=None, replace_intent: bool=None,
+                                    remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
         set by default to 0.998.
 
@@ -372,9 +372,9 @@ class TransitionIntentModel(AbstractIntentModel):
             df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
         df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        if isinstance(inc_category, bool) and inc_category:
-            for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
-                df_filter[col] = df[col].cat.codes
+        # if isinstance(inc_category, bool) and inc_category:
+        #     for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
+        #         df_filter[col] = df[col].cat.codes
         col_corr = set()
         corr_matrix = df_filter.corr()
         for i in range(len(corr_matrix.columns)):
