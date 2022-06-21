@@ -97,7 +97,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         PRIVATE METHODS SECTION
     """
 
-    def _apply_action(self, canonical: pd.DataFrame, action: Any, select_idx: pd.Int64Index=None, seed: int=None):
+    def _apply_action(self, canonical: pd.DataFrame, action: Any, select_idx: pd.Index=None, seed: int=None):
         """ applies an action returning an indexed Series
         Special method values
             @header: use a column as the value reference, expects the 'header' key
@@ -111,7 +111,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         :param seed: a seed to apply to any action
         :return: pandas Series with passed index
         """
-        if not isinstance(select_idx, pd.Int64Index):
+        if not isinstance(select_idx, pd.Index):
             select_idx = canonical.index
         if isinstance(action, dict):
             action = action.copy()

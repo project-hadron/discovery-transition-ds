@@ -4,6 +4,8 @@ from pathlib import Path
 import shutil
 import pandas as pd
 from pprint import pprint
+
+from build.lib.ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import Transition, Wrangle, Controller, SyntheticBuilder
 from aistac.properties.property_manager import PropertyManager
 from ds_discovery.intent.transition_intent import TransitionIntentModel

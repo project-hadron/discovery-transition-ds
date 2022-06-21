@@ -24,7 +24,7 @@ class FeatureCatalogIntentTest(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
-        self.tools = SyntheticBuilder.scratch_pad()
+        self.tools = SyntheticBuilder.tools
         self.fc: FeatureCatalogIntentModel = FeatureCatalog.scratch_pad()
 
     def tearDown(self):

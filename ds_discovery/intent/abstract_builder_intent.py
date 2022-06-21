@@ -10,7 +10,6 @@ from aistac import ConnectorContract
 from matplotlib import dates as mdates
 from scipy import stats
 from aistac.components.aistac_commons import DataAnalytics
-
 from ds_discovery.components.commons import Commons
 from aistac.properties.abstract_properties import AbstractPropertyManager
 
@@ -758,47 +757,19 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return canonical
         return df
 
-    def _model_iterator(self, canonical: Any, other: Any, seed: int=None) -> pd.DataFrame:
-        """"""
-        canonical = self._get_canonical(canonical)
-        other = self._get_canonical(other)
-        _seed = self._seed() if seed is None else seed
-
-
-
-
-
-        # iter_start = iter_start if isinstance(iter_start, int) else 0
-        # iter_stop = iter_stop if isinstance(iter_stop, int) and iter_stop > iter_start else iter_start + 1
-        # default_action = default_action if isinstance(default_action, dict) else 0
-        # iteration_actions = iteration_actions if isinstance(iteration_actions, dict) else {}
-        # for counter in range(iter_start, iter_stop):
-        #     df_count = canonical.copy()
-        #     # selection
-        #     df_count = self._frame_selection(df_count, selection=selection, seed=_seed)
-        #     # actions
-        #     if isinstance(marker_col, str):
-        #         if counter in iteration_actions.keys():
-        #             _action = iteration_actions.get(counter, None)
-        #             df_count[marker_col] = self._apply_action(df_count, action=_action, seed=_seed)
-        #         else:
-        #             default_action = default_action if isinstance(default_action, dict) else counter
-        #             df_count[marker_col] = self._apply_action(df_count, action=default_action, seed=_seed)
-        #     rtn_frame = pd.concat([rtn_frame, df_count], ignore_index=True)
-        # return rtn_frame
-
-    def _model_group(self, canonical: Any, headers: [str, list], group_by: [str, list], aggregator: str=None,
-                     list_choice: int=None, list_max: int=None, drop_group_by: bool=False, seed: int=None,
-                     include_weighting: bool=False, freq_precision: int=None, remove_weighting_zeros: bool=False,
-                     remove_aggregated: bool=False) -> pd.DataFrame:
-        """ returns the full column values directly from another connector data source. in addition the
-        standard groupby aggregators there is also 'list' and 'set' that returns an aggregated list or set.
-        These can be using in conjunction with 'list_choice' and 'list_size' allows control of the return values.
+    def _model_group(self, canonical: Any, group_by: [str, list], headers: [str, list]=None, regex: bool=None,
+                     aggregator: str=None, list_choice: int=None, list_max: int=None, drop_group_by: bool=False,
+                     seed: int=None, include_weighting: bool=False, freq_precision: int=None,
+                     remove_weighting_zeros: bool=False, remove_aggregated: bool=False) -> pd.DataFrame:
+        """ groups a given set of headers, or all headers, using the aggregator to calculate the given headers.
+        in addition the standard groupby aggregators there is also 'list' and 'set' that returns an aggregated list or
+        set. These can be using in conjunction with 'list_choice' and 'list_size' allows control of the return values.
         if list_max is set to 1 then a single value is returned rather than a list of size 1.
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param headers: the column headers to apply the aggregation too
         :param group_by: the column headers to group by
+        :param headers: the column headers to apply the aggregation too and return
+        :param regex: if the column headers is q regex
         :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby' or 'list' or 'set'
         :param list_choice: (optional) used in conjunction with list or set aggregator to return a random n choice
         :param list_max: (optional) used in conjunction with list or set aggregator restricts the list to a n size
@@ -815,7 +786,8 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         generator = np.random.default_rng(seed=_seed)
         freq_precision = freq_precision if isinstance(freq_precision, int) else 3
         aggregator = aggregator if isinstance(aggregator, str) else 'sum'
-        headers = Commons.list_formatter(headers)
+        headers = Commons.filter_headers(canonical, regex=headers) if isinstance(regex, bool) and regex else None
+        headers = Commons.list_formatter(headers) if isinstance(headers, (list,str)) else canonical.columns.to_list()
         group_by = Commons.list_formatter(group_by)
         df_sub = Commons.filter_columns(canonical, headers=headers + group_by).dropna()
         if aggregator.startswith('set') or aggregator.startswith('list'):
@@ -1202,16 +1174,16 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
-    def _model_encoding(self, canonical: Any, headers: [str, list], encoding: bool=None, ordinal: dict=None,
-                        prefix=None, dtype: Any=None, prefix_sep: str=None, dummy_na: bool=False,
-                        drop_first: bool=False, seed: int=None) -> pd.DataFrame:
-        """ encodes categorical data types, by default, as dummy encoded but optionally can choose label
-        encoding
+    def _model_encoding(self, canonical: Any, headers: [str, list], encoding: str=None, prefix=None, dtype: Any=None,
+                        prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False,
+                        seed: int=None) -> pd.DataFrame:
+        """ encodes categorical data types, by default, as one-hot encoded but optionally can choose label or
+        ordinal encoding, where ordinals are automatically defined and expect categorical consistency across each
+        dataset run. Use correlate_selection(...) for predictive ordinal or more complex ordinal logic
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply multi-hot
-        :param encoding: the type of encoding to apply to the categories, types supported 'dummy', 'ordinal', 'label'
-        :param ordinal: a dictionary of ordinal encoding. encoding must be 'ordinal', if not mapped then returns null
+        :param encoding: the type of encoding to apply to the categories, types supported 'one-hot', 'ordinal', 'label'
         :param prefix : str, list of str, or dict of str, default None
                 String to append DataFrame column names.
                 Pass a list with length equal to the number of columns
@@ -1234,25 +1206,30 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         headers = Commons.list_formatter(headers)
         seed = self._seed() if seed is None else seed
-        encoding = encoding if isinstance(encoding, str) and encoding in ['label', 'ordinal'] else 'dummy'
-        prefix = prefix if isinstance(prefix, str) else None
+        encoding = encoding if isinstance(encoding, str) and encoding in ['label', 'ordinal'] else 'one-hot'
         prefix_sep = prefix_sep if isinstance(prefix_sep, str) else "_"
         dummy_na = dummy_na if isinstance(dummy_na, bool) else False
         drop_first = drop_first if isinstance(drop_first, bool) else False
         dtype = dtype if dtype else np.uint8
         for header in headers:
-            if canonical[header].dtype.name != 'category':
-                canonical[header] = canonical[header].astype('category')
-            if encoding == 'ordinal':
-                ordinal = ordinal if isinstance(ordinal, dict) else {}
-                canonical[header] = canonical[header].map(ordinal, na_action=np.nan)
-            elif encoding == 'label':
-                canonical[f"{prefix}{prefix_sep}{header}"] = canonical[header].cat.codes
-        if encoding == 'dummy':
-            dummy_df = pd.get_dummies(canonical, columns=headers, prefix=prefix, prefix_sep=prefix_sep,
+            if encoding.startswith('ord'):
+                select = canonical[header].unique()
+                select.sort()
+                action = {}
+                for i in range(len(select)):
+                    action.update({i:i+1})
+                canonical[header] = self._correlate_categories(canonical=canonical, header=header,
+                                                               correlations=select.tolist(), actions=action,
+                                                               default_action=0, seed=seed, rtn_type='int')
+            elif encoding.startswith('lab'):
+                if canonical[header].dtype.name != 'category':
+                    canonical[header] = canonical[header].astype('category')
+                canonical[header] = canonical[header].cat.codes
+            if isinstance(prefix, str):
+                canonical[header].rename(f"{prefix}{prefix_sep}{header}")
+        if encoding.startswith('one'):
+            canonical = pd.get_dummies(canonical, columns=headers, prefix=prefix, prefix_sep=prefix_sep,
                                       dummy_na=dummy_na, drop_first=drop_first, dtype=dtype)
-            for name in dummy_df.columns:
-                canonical[name] = dummy_df[name]
         return canonical
 
     def _correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
@@ -1340,6 +1317,33 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
                 rtn_values = rtn_values.astype(rtn_type)
             return rtn_values
         return rtn_values.to_list()
+
+    def _correlate_date_diff(self, canonical: Any, first_date: str, second_date: str, aggregator: str=None,
+                             units: str=None, precision: int=None, seed: int=None) -> list:
+        """ returns a column for the difference between a primary and secondary date where the primary is an early date
+        than the secondary.
+
+        :param canonical: the DataFrame containing the column headers
+        :param first_date: the primary or older date field
+        :param second_date: the secondary or newer date field
+        :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
+        :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
+        :param precision: (optional) the precision of the result
+        :param seed:  (optional) aplace holder
+        :return: the DataFrame with the extra column
+        """
+        # Code block for intent
+        if second_date not in canonical.columns:
+            raise ValueError(f"The column header '{second_date}' is not in the canonical DataFrame")
+        if first_date not in canonical.columns:
+            raise ValueError(f"The column header '{first_date}' is not in the canonical DataFrame")
+        canonical = self._get_canonical(canonical)
+        _seed = seed if isinstance(seed, int) else self._seed()
+        precision = precision if isinstance(precision, int) else 0
+        units = units if isinstance(units, str) else 'D'
+        selected = canonical[[first_date, second_date]]
+        rename = (selected[second_date].sub(selected[first_date], axis=0) / np.timedelta64(1, units))
+        return [np.round(v, precision) for v in rename]
 
     def _correlate_custom(self, canonical: Any, code_str: str, seed: int=None, **kwargs):
         """ Commonly used for custom list comprehension, takes code string that when evaluated returns a list of values
@@ -1593,7 +1597,62 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
-    def _correlate_missing(self, canonical: Any, header: str, granularity: [int, float]=None,
+    def _correlate_mark_outliers(self, canonical: Any, header: str, method: str=None, measure: [int, float]=None,
+                                 seed: int=None):
+        """ returns a list of markers or flags identifying outliers in a dataset where 1 represents a suggested outlier.
+        There are three selectable methods of choice, interquartile, empirical or probability, of which interquartile
+        is the default.
+
+        The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
+        standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
+        for every value, which is defined as the number of standard deviations away a alue is from the mean. therefor
+        measure given should be the z-score or the number of standard deviations away a value is from the mean.
+        The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
+        distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
+
+        For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
+        statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
+        and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
+        values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
+        for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
+
+        The 'probability' range uses statistical dispersion of a sample set to analyse the percentile or quantities
+        that sit beyond a given defining limit. The measure must be a value between 1 and 0 where the closer to zero
+        the measure the smaller the probability of outliers.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param method: (optional) A method to run to identify outliers. interquartile (default), empirical, probability
+        :param measure: (optional) A measure against each method, respectively factor k, z-score, quartile (see above)
+        :param seed: (optional) the random seed
+        :return: list
+        """
+        canonical = self._get_canonical(canonical, header=header)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        s_values = canonical[header].copy()
+        _seed = seed if isinstance(seed, int) else self._seed()
+        measure = measure if isinstance(measure, (int, float)) else 1.5
+        method = method if isinstance(method, str) else 'quantile'
+        if method.startswith('emp'):
+            result_idx = DataDiscovery.empirical_outliers(values=s_values, std_width=measure)
+        elif method.startswith('qua'):
+            result_idx = DataDiscovery.interquartile_outliers(values=s_values, k_factor=measure)
+        elif method.startswith('pro'):
+            lower_quantile = 0 + measure
+            upper_quantile = 1 - measure
+            result = DataDiscovery.analyse_number(s_values, granularity=[lower_quantile, upper_quantile],
+                                                  detail_stats=False)
+            analysis = DataAnalytics(result)
+            lower, upper = analysis.intent.intervals[0][1], analysis.intent.intervals[2][0]
+            lower_outliers = s_values.loc[s_values.apply(lambda x: x < lower)].index.to_list()
+            upper_outliers = s_values.loc[s_values.apply(lambda x: x > upper)].index.to_list()
+            result_idx = lower_outliers, upper_outliers
+        rtn_values = pd.Series(data=0, index=np.arange(canonical.shape[0]))
+        rtn_values.loc[result_idx[0]+result_idx[1]] = 1
+        return rtn_values.to_list()
+
+    def _correlate_missing(self, canonical: Any, header: str, granularity: [int, float, list]=None,
                            as_type: str=None, lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
                            exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
                            day_first: bool=None, year_first: bool=None, seed: int=None,
@@ -1606,7 +1665,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param granularity: (optional) the granularity of the analysis across the range. Default is 5
                 int passed - represents the number of periods
                 float passed - the length of each interval
-                list[tuple] - specific interval periods e.g []
+                list[tuple] - specific interval periods defined by the list of tuples
                 list[float] - the percentile or quantities, All should fall between 0 and 1
         :param as_type: (optional) specify the type to analyse
         :param lower: (optional) the lower limit of the number value. Default min()
@@ -1668,9 +1727,9 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         return s_values.to_list()
 
     def _correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, standardize: bool=None,
-                           normalize: tuple=None, offset: [int, float, str]=None, jitter: float=None,
-                           jitter_freq: list=None, precision: int=None, replace_nulls: [int, float]=None,
-                           seed: int=None, keep_zero: bool=None, min_value: [int, float]=None,
+                           normalize: tuple=None, transform: str=None, offset: [int, float, str]=None,
+                           jitter: float=None, jitter_freq: list=None, precision: int=None, keep_zero: bool=None,
+                           replace_nulls: [int, float]=None, seed: int=None, min_value: [int, float]=None,
                            max_value: [int, float]=None, rtn_type: str=None):
         """ returns a number that correlates to the value given. The jitter is based on a normal distribution
         with the correlated value being the mean and the jitter its standard deviation from that mean
@@ -1680,13 +1739,14 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         :param to_numeric: (optional) ensures numeric type. None convertable strings are set to null
         :param standardize: (optional) if the column should be standardised
         :param normalize: (optional) normalise the column between two values. the tuple is the lower and upper bounds
+        :param transform: (optional) transform the columns options are log, sqrt, cbrt, reciprocal
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
         :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
         :param precision: (optional) how many decimal places. default to 3
         :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
-        :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
+        :param keep_zero: (optional) if True then zeros passed remain zero despite a change, Default is False
         :param min_value: a minimum value not to go below
         :param max_value: a max value not to go above
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
@@ -1744,6 +1804,21 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
             if normalize[0] >= normalize[1] or len(normalize) != 2:
                 raise ValueError("The normalize tuple must be of size 2 with the first value lower than the second")
             s_values = pd.Series(Commons.list_normalize(s_values.to_list(), normalize[0], normalize[1]))
+        if isinstance(transform, str):
+            if transform == 'log':
+                s_values = np.log(s_values)
+            elif transform == 'sqrt':
+                s_values = np.sqrt(s_values)
+            elif transform == 'cbrt':
+                s_values = np.cbrt(s_values)
+            elif transform == 'reciprocal' or transform.startswith("reci"):
+                s_values = np.reciprocal(s_values)
+            elif transform == 'boxcox' or transform.startswith('box'):
+                s_values, _ = stats.boxcox(s_values)
+            elif transform == 'yeojohnson' or transform.startswith("yeo"):
+                s_values, _ = stats.yeojohnson(s_values)
+            else:
+                raise ValueError(f"The transformer {transform} is not recognized. See contacts notes for reference")
         # reset the zero values if any
         s_values.iloc[zero_idx] = 0
         s_values = s_values.round(precision)

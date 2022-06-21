@@ -89,64 +89,6 @@ class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
             return df_feature
         raise ValueError(f"The feature '{feature_name}, can't be found in the feature catalog")
 
-    def apply_date_diff(self, canonical: Any, key: [str, list], first_date: str, second_date: str,
-                        aggregator: str=None, units: str=None, precision: int=None, rtn_columns: list=None,
-                        regex: bool=None, rename: str=None, unindex: bool=None, save_intent: bool=None,
-                        feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                        remove_duplicates: bool=None) -> pd.DataFrame:
-        """ adds a column for the difference between a primary and secondary date where the primary is an early date
-        than the secondary.
-
-        :param canonical: the DataFrame containing the column headers
-        :param key: the key label to group by and index on
-        :param first_date: the primary or older date field
-        :param second_date: the secondary or newer date field
-        :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
-        :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
-        :param precision: the precision of the result
-        :param rtn_columns: (optional) return columns, the header must be listed to be included.
-                    If None then header
-                    if 'all' then all original headers
-        :param regex: if True then treat the rtn_columns as a regular expression
-        :param rename: a new name for the column, else primary and secondary name used
-        :param unindex: (optional) if the passed canonical should be un-index before processing
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param feature_name: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: the DataFrame with the extra column
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        if second_date not in canonical.columns:
-            raise ValueError(f"The column header '{second_date}' is not in the canonical DataFrame")
-        if first_date not in canonical.columns:
-            raise ValueError(f"The column header '{first_date}' is not in the canonical DataFrame")
-        canonical = self._get_canonical(canonical)
-        if isinstance(unindex, bool) and unindex:
-            canonical.reset_index(inplace=True)
-        key = Commons.list_formatter(key)
-        rename = rename if isinstance(rename, str) else f'{second_date}-{first_date}'
-        if rtn_columns == 'all':
-            rtn_columns = Commons.filter_headers(canonical, headers=key + [rename], drop=True)
-        if isinstance(regex, bool) and regex:
-            rtn_columns = Commons.filter_headers(canonical, regex=rtn_columns)
-        rtn_columns = Commons.list_formatter(rtn_columns) if isinstance(rtn_columns, list) else [rename]
-        precision = precision if isinstance(precision, int) else 0
-        units = units if isinstance(units, str) else 'D'
-        selected = canonical[[first_date, second_date]].dropna(axis='index', how='any')
-        canonical[rename] = (selected[second_date].sub(selected[first_date], axis=0) / np.timedelta64(1, units))
-        canonical[rename] = [np.round(v, precision) for v in canonical[rename]]
-        return Commons.filter_columns(canonical, headers=list(set(key + [rename] + rtn_columns))).set_index(key)
 
     def select_feature(self, canonical: Any, key: [str, list], headers: [str, list]=None,
                        drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
@@ -590,66 +532,6 @@ class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
             canonical[rename] = np.select(selection, choices)
         return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
 
-    def select_where(self, canonical: Any, key: [str, list], selection: list, inc_columns: list=None,
-                     unindex: bool=None, save_intent: bool=None, feature_name: [int, str]=None, intent_order: int=None,
-                     replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ returns a selected result based upon a set of conditions.
-
-        :param canonical: the Pandas.DataFrame to get the column headers from
-        :param key: the key column to index on
-        :param selection: a list of dictionaries of selection where conditions to filter on, executed in list order
-                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
-                [{'column': 'genre', 'condition': "=='Comedy'"}]
-        :param inc_columns: additional columns to include in the returning DataFrame
-        :param unindex: if the passed canonical should be un-index before processing
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param feature_name: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: apandas DataFrame of the resulting select
-
-        Conditions are a list of dictionaries of conditions and optional additional parameters to filter.
-        To help build conditions there is a static helper method called 'conditions2dict(...)' that has parameter
-        options available to build a condition.
-        An example of a condition with the minimum requirements is
-                [{'column': 'genre', 'condition': "=='Comedy'"}]
-
-        an example of using the helper method
-                selection = [self.select2dict(column='gender', condition="=='M'"),
-                             self.select2dict(column='age', condition=">65", logic='XOR')]
-
-        Using the 'select2dict' method ensure the correct keys are used and the dictionary is properly formed
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        if not isinstance(selection, list) or not all(isinstance(x, dict) for x in selection):
-            raise ValueError("The 'selection' parameter must be a 'list' of 'dict' types")
-        for _where in selection:
-            if 'column' not in _where or 'condition' not in _where:
-                raise ValueError("all 'dict' in the 'selection' list must have a 'column' and 'condition' key "
-                                 "as a minimum")
-        canonical = self._get_canonical(canonical)
-        if isinstance(unindex, bool) and unindex:
-            canonical.reset_index(inplace=True)
-        key = Commons.list_formatter(key)
-        inc_columns = self._pm.list_formatter(inc_columns)
-        if not inc_columns:
-            inc_columns = Commons.filter_headers(canonical, headers=key, drop=True)
-        select_idx = None
-        for _where in selection:
-            select_idx = self._condition_index(canonical=canonical, condition=_where, select_idx=select_idx)
-        canonical = canonical.iloc[select_idx]
-        return Commons.filter_columns(canonical, headers=list(set(key + inc_columns))).set_index(key)
-
     def remove_outliers(self, canonical: Any, key: [str, list], column: str, lower_quantile: float=None,
                         upper_quantile: float=None, unindex: bool=None, save_intent: bool=None,
                         feature_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -730,6 +612,7 @@ class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
                                    feature_name=feature_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
+
         # intend code block on the canonical
         if isinstance(unindex, bool) and unindex:
             canonical.reset_index(inplace=True)
@@ -1096,7 +979,7 @@ class FeatureCatalogIntentModel(AbstractCommonsIntentModel):
         return
 
     @staticmethod
-    def _condition_index(canonical: pd.DataFrame, condition: dict, select_idx: pd.Int64Index):
+    def _condition_index(canonical: pd.DataFrame, condition: dict, select_idx: pd.Index):
         """ private method to select index from the selection conditions
 
         :param canonical: a pandas DataFrame to select from

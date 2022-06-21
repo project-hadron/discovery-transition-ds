@@ -175,6 +175,22 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((5, 3), result.shape)
         self.assertEqual(["A", "B", "X"], result.columns.to_list())
 
+    def test_model_code(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6], "B": ['M', 'F', 'F', 'U', 'U', 'F']})
+        result = tools.model_encoding(df, headers='B', encoding='ordinal')
+        self.assertEqual(['A', 'B'], df.columns.to_list())
+        self.assertEqual([2, 1, 1, 3, 3, 1], result.B.to_list())
+        result = tools.model_encoding(df, headers='B', encoding='label')
+        self.assertEqual(['A', 'B'], df.columns.to_list())
+        self.assertEqual([1, 0, 0, 2, 2, 0], result.B.to_list())
+        result = tools.model_encoding(df, headers='B', encoding='onehot')
+        self.assertEqual(['A', 'B_F', 'B_M', 'B_U'], result.columns.to_list())
+        self.assertEqual([0, 1, 1, 0, 0, 1], result.B_F.to_list())
+        self.assertEqual([1, 0, 0, 0, 0, 0], result.B_M.to_list())
+        self.assertEqual([0, 0, 0, 1, 1, 0], result.B_U.to_list())
+
     def test_modal_merge_nulls(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -185,6 +201,19 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((5, 4), result.shape)
         control = {'X': {0: '', 1: ''}, 'Y': {0: 0.0, 1: 0.0}}
         self.assertDictEqual(control, result.loc[:1,['X', 'Y']].to_dict())
+
+    def test_model_encode(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("BCDECFB")})
+        result = tools.model_encoding(df, headers=['B', 'C'], encoding='one-hot')
+        self.assertCountEqual(['A', 'B_A', 'B_B', 'B_C', 'B_D', 'C_B', 'C_C', 'C_D', 'C_E', 'C_F'], result.columns.to_list())
+        result = tools.model_encoding(df, headers=['B', 'C'], encoding='label')
+        self.assertCountEqual([0, 1, 2, 3, 2, 1, 0], result['B'].to_list())
+        self.assertCountEqual([0, 1, 2, 3, 1, 4, 0], result['C'].to_list())
+        result = tools.model_encoding(df, headers=['B', 'C'], encoding='ordinal')
+        self.assertCountEqual([1, 2, 3, 4, 3, 2, 1], result['B'].to_list())
+        self.assertCountEqual([1, 2, 3, 4, 2, 5, 1], result['C'].to_list())
 
     def test_remove_unwanted_headers(self):
         builder = SyntheticBuilder.from_env(

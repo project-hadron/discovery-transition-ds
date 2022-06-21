@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from aistac import ConnectorContract
 
+from build.lib.ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import Wrangle, SyntheticBuilder
 from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from aistac.properties.property_manager import PropertyManager
@@ -37,6 +38,29 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         im = Wrangle.from_env('tester', default_save=False, default_save_intent=False,
                               reset_templates=False, has_contract=False).intent_model
         self.assertTrue(WrangleIntentModel, type(im))
+
+    def test_correlate_mark_outliers(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame()
+        df["number"] = tools.get_dist_normal(2,1,size=1000, seed=99)
+        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=1.5, method='quantile')
+        df['quantile'] = result
+        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=3, method='empirical')
+        df['empirical'] = result
+        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=0.002, method='probability')
+        df['probability'] = result
+        self.assertEqual([992, 8], df['quantile'].value_counts().values.tolist())
+        self.assertEqual([995, 5], df['empirical'].value_counts().values.tolist())
+        self.assertEqual([996, 4], df['probability'].value_counts().values.tolist())
+
+    def test_correlate_number_encode(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame()
+        df["number"] = tools.get_dist_poisson(interval=2, size=10)
+        result = tools.correlate_numbers(canonical=df, header="number", transform="log")
+        print(result)
 
     def test_correlate_custom(self):
         tools = self.tools
