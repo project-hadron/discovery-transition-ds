@@ -115,7 +115,7 @@ class Commons(AistacCommons):
             _rtn_cols = set(_obj_cols)
 
         if dtype and len(dtype) > 0:
-            _df_selected = df.loc[:, _rtn_cols]
+            _df_selected = df.loc[:, list(_rtn_cols)]
             _rtn_cols = (_df_selected.select_dtypes(exclude=dtype) if exclude
                          else _df_selected.select_dtypes(include=dtype)).columns
 
