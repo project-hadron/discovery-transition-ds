@@ -107,12 +107,12 @@ class ControllerTest(unittest.TestCase):
         controller = Controller.from_env()
         controller.run_controller(run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'running task2_wr', 'tasks complete',
-                   'end run-cycle 0', 'end of report']
+        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'canonical shape is (891, 15)',
+                   'running task2_wr', 'canonical shape is (891, 15)', 'tasks complete', 'end of report']
         self.assertEqual(control, df['text'].to_list())
         controller.run_controller(run_time=3, run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        self.assertEqual((19, 2), df.shape)
+        self.assertEqual((15, 2), df.shape)
 
     def test_controller_check_changed(self):
         tr = Transition.from_env('task1')

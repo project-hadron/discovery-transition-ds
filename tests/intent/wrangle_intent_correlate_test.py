@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from aistac import ConnectorContract
 
-from build.lib.ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import Wrangle, SyntheticBuilder
 from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from aistac.properties.property_manager import PropertyManager
@@ -161,6 +161,12 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
         result = tools.correlate_numbers(df, header='numbers', standardize=True, precision=1)
         self.assertEqual([-1.4, 0.0, 0.0, 1.4, 1.4, 0.0, 0.0, -1.4], result)
+
+    def test_correlate_scalarize(self):
+        tools = self.tools
+        df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
+        result = tools.correlate_numbers(df, header='numbers',scalarize=True, precision=1)
+        self.assertEqual([-1.3, 0.0, 0.0, 1.3, 1.3, 0.0, 0.0, -1.3], result)
 
     def test_correlate_number_to_numeric(self):
         tools = self.tools
@@ -338,11 +344,24 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_dates(df, 'dates', now_delta='Y')
         self.assertEqual([52, 20], result)
 
-    def test_correlate_missing(self):
+    def test_correlate_missing_stats(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['age'] = [2, 1, 2, 2, 9, 1, None, None]
+        result = tools.correlate_missing_stats(df, header='age')
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.833, 2.833], result)
+        result = tools.correlate_missing_stats(df, header='age', method='mode')
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
+        result = tools.correlate_missing_stats(df, header='age', method='median')
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
+        result = tools.correlate_missing_stats(df, header='age', method='mean', precision=0)
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
+
+    def test_correlate_missing_weighted(self):
         tools = self.tools
         df = pd.DataFrame()
         df['cats'] = ['a', 'b', None, 'f', None, 'f', 'b', 'c', 'b', 'a']
-        result = tools.correlate_missing(df, header='cats', as_type='category', seed=1973)
+        result = tools.correlate_missing_weighted(df, header='cats', as_type='category', seed=1973)
         self.assertEqual(['a', 'b', 'b', 'f', 'b', 'f', 'b', 'c', 'b', 'a'], result)
 
     def test_model_encoding(self):

@@ -1131,12 +1131,48 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_mark_outliers(seed=seed, **params)
 
-    def correlate_missing(self, canonical: Any, header: str, granularity: [int, float, list]=None, as_type: str=None,
-                          lower: [int, float]=None, upper: [int, float]=None, nulls_list: list=None,
-                          exclude_dominant: bool=None, replace_zero: [int, float]=None, precision: int=None,
-                          day_first: bool=None, year_first: bool=None, seed: int=None, rtn_type: str=None,
-                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                          replace_intent: bool=None, remove_duplicates: bool=None):
+    def correlate_missing_stats(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
+                                precision: int=None, seed: int=None, save_intent: bool=None,
+                                column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                                remove_duplicates: bool=None):
+        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
+             column
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param method: (optional) specify the type to replacement. Options mean, median or mode
+        :param nulls_list: (optional) a list of nulls that should be considered null
+        :param precision: (optional) by default set to 3.
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: an equal length list of correlated values
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._correlate_missing_stats(seed=seed, **params)
+
+    def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
+                                   as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,
+                                   nulls_list: list=None, exclude_dominant: bool=None, replace_zero: [int, float]=None,
+                                   precision: int=None, day_first: bool=None, year_first: bool=None, seed: int=None,
+                                   rtn_type: str=None, save_intent: bool=None, column_name: [int, str]=None,
+                                   intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
             column
 
@@ -1181,11 +1217,11 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_missing(seed=seed, **params)
+        return self._correlate_missing_weighted(seed=seed, **params)
 
     def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, standardize: bool=None,
-                          normalize: tuple=None, transform: str=None, offset: [int, float, str]=None,
-                          jitter: float=None, jitter_freq: list=None, precision: int=None, seed: int=None,
+                          normalize: tuple=None, scalarize: bool=None, transform: str=None, jitter: float=None,
+                          jitter_freq: list=None, offset: [int, float, str]=None, precision: int=None, seed: int=None,
                           keep_zero: bool=None, replace_nulls: [int, float]=None, rtn_type: str=None,
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -1198,6 +1234,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param to_numeric: (optional) ensures numeric type. None convertable strings are set to null
         :param standardize: (optional) if the column should be standardised
         :param normalize: (optional) normalise the column between two values. the tuple is the lower and upper bounds
+        :param scalarize: (optional) assuming standard normally distributed, removes the mean and scaling
+        :param transform: (optional) attempts normal distribution of values.
+                            options are log, sqrt, cbrt, reciprocal, boxcox, yeojohnson
         :param transform: (optional) transform the columns options are log, sqrt, cbrt, reciprocal
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0

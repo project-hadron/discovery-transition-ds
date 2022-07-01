@@ -1,3 +1,4 @@
+import time
 from abc import abstractmethod
 from copy import deepcopy
 from typing import Any
@@ -344,3 +345,13 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
             return pd.DataFrame()
         raise ValueError(f"The canonical format is not recognised, pd.DataFrame, pd.Series, "
                          f"str, list or dict expected, {type(data)} passed")
+
+    @staticmethod
+    def _seed(seed: int=None, increment: bool=False):
+        if not isinstance(seed, int):
+            return int(time.time() * np.random.default_rng().random())
+        if increment:
+            seed += 1
+            if seed > 2 ** 31:
+                seed = int(time.time() * np.random.default_rng(seed=seed-1).random())
+        return seed
