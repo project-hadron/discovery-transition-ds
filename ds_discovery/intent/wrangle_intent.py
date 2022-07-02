@@ -592,52 +592,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_sample(seed=seed, **params)
 
-    def model_multihot(self, canonical: Any, header: str, prefix=None, prefix_sep: str=None, dummy_na: bool=False,
-                       drop_first: bool=False,  dtype: Any=None, seed: int=None, save_intent: bool=None,
-                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                       remove_duplicates: bool=None) -> pd.DataFrame:
-        """ one-hot or multi-hot encoding of a categorical
-
-        :param canonical: the Dataframe to reference
-        :param header: the category type column break into the category columns
-        :param prefix : str, list of str, or dict of str, default None
-                String to append DataFrame column names.
-                Pass a list with length equal to the number of columns
-                when calling get_dummies on a DataFrame. Alternatively, `prefix`
-                can be a dictionary mapping column names to prefixes.
-        :param prefix_sep : str, default '_'
-                If appending prefix, separator/delimiter to use. Or pass a
-                list or dictionary as with `prefix`.
-        :param dummy_na : bool, default False
-                Add a column to indicate NaNs, if False NaNs are ignored.
-        :param drop_first : bool, default False
-                Whether to get k-1 dummies out of k categorical levels by removing the
-                first level.
-        :param dtype : dtype, default np.uint8
-                Data type for new columns. Only a single dtype is allowed.
-        :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a DataFrame
-        """
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._model_multihot(seed=seed, **params)
-
     def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
                        detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None, seed: int=None,
                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
@@ -777,17 +731,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_selection(seed=seed, **params)
 
-    def correlate_date_diff(self, canonical: Any, first_date: str, second_date: str, aggregator: str=None,
-                            units: str=None, precision: int=None, seed: int=None, save_intent: bool=None,
-                            column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                            remove_duplicates: bool=None, **kwargs):
+    def correlate_date_diff(self, canonical: Any, first_date: str, second_date: str, units: str=None,
+                            precision: int=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                            intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ returns a column for the difference between a primary and secondary date where the primary is an early date
         than the secondary.
 
         :param canonical: the DataFrame containing the column headers
         :param first_date: the primary or older date field
         :param second_date: the secondary or newer date field
-        :param aggregator: (optional) the aggregator as a function of Pandas DataFrame 'groupby'
         :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
         :param precision: the precision of the result
         :param seed: (optional) a seed value for the random function: default to None
@@ -1129,19 +1081,19 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_mark_outliers(seed=seed, **params)
+        return self._correlate_flag_outliers(seed=seed, **params)
 
     def correlate_missing_stats(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
                                 precision: int=None, seed: int=None, save_intent: bool=None,
                                 column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                                 remove_duplicates: bool=None):
-        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
-             column
+        """ imputes missing continuous data with a statistical measures of central tendency along with random choice
+        or a correlated list of 1 or 0 flags with 1 representing the missing data.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param method: (optional) specify the type to replacement. Options mean, median or mode
-        :param nulls_list: (optional) a list of nulls that should be considered null
+        :param method: (optional) specify the type to replacement. Options 'mean', 'median' or 'mode'
+        :param nulls_list: (optional) a list of nulls or strings that should be considered null
         :param precision: (optional) by default set to 3.
         :param seed: (optional) the random seed. defaults to current datetime
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -1166,6 +1118,40 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         # set the seed and call the method
         seed = self._seed(seed=seed)
         return self._correlate_missing_stats(seed=seed, **params)
+
+    def correlate_missing_values(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
+                                 seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                                 intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ imputes missing values with a random choice or a correlated list of 1 or 0 flags with 1 representing
+        the missing data.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param method: (optional) specify the type to replacement. Options 'random' or 'flag'
+        :param nulls_list: (optional) a list of nulls or strings that should be considered null
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: an equal length list of correlated values
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._correlate_missing_values(seed=seed, **params)
 
     def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
                                    as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,
@@ -1347,10 +1333,11 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_categories(seed=seed, **params)
 
-    def correlate_discrete(self, canonical: Any, header: str, granularity: [int, float, list]=None,
-                           lower: [int, float]=None, upper: [int, float]=None, categories: list=None,
-                           precision: int=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                           intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    def correlate_discrete_intervals(self, canonical: Any, header: str, granularity: [int, float, list]=None,
+                                     lower: [int, float]=None, upper: [int, float]=None, categories: list=None,
+                                     precision: int=None, seed: int=None, save_intent: bool=None,
+                                     column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                                     remove_duplicates: bool=None):
         """ converts continuous representation into discrete representation through interval categorisation
 
         :param canonical: a pd.DataFrame as the reference dataframe
@@ -1386,7 +1373,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_discrete(seed=seed, **params)
+        return self._correlate_discrete_intervals(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                         jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,

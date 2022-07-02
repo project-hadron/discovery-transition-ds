@@ -357,6 +357,16 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_missing_stats(df, header='age', method='mean', precision=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
 
+    def test_correlate_missing_values(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
+        result = tools.correlate_missing_values(df, header='cat', method='flag')
+        self.assertEqual([0, 0, 0, 0, 0, 0, 1, 1], result)
+        result = tools.correlate_missing_values(df, header='cat', method='random', seed=31)
+        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'B', 'C'], result)
+
+
     def test_correlate_missing_weighted(self):
         tools = self.tools
         df = pd.DataFrame()
@@ -377,7 +387,7 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [0, 1, 2, 0]
-        result = tools.correlate_discrete(df, header='age', categories=['low', 'mid', 'high'])
+        result = tools.correlate_discrete_intervals(df, header='age', categories=['low', 'mid', 'high'])
         self.assertEqual(['low', 'mid', 'high', 'low'], result)
 
 
