@@ -8,6 +8,7 @@ from ds_discovery import SyntheticBuilder, Wrangle
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 
 
 class SyntheticIntentModelTest(unittest.TestCase):
@@ -201,6 +202,22 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((5, 4), result.shape)
         control = {'X': {0: '', 1: ''}, 'Y': {0: 0.0, 1: 0.0}}
         self.assertDictEqual(control, result.loc[:1,['X', 'Y']].to_dict())
+
+    def test_missing_cca(self):
+        # load titanic subset
+        url = "https://raw.github.com/mattdelhey/kaggle-titanic/master/Data/train.csv"
+        df = pd.read_csv(url)
+        df = df[['survived', 'age']]
+        # add gender with nulls
+        builder = SyntheticBuilder.from_memory()
+        df['gender'] = builder.tools.get_category(selection=['M', 'F', None], relative_freq=[0.5, 0.3, 0.1], size=df.shape[0], seed=31)
+        # test
+        wr = Wrangle.from_memory()
+        tools: WrangleIntentModel = wr.tools
+        result = tools.model_missing_cca(df)
+        self.assertEqual(df.shape[0] - result.shape[0], 259)
+        result = tools.model_missing_cca(df, threshold=0.15)
+        self.assertEqual(df.shape[0] - result.shape[0], 101)
 
     def test_model_encode(self):
         builder = SyntheticBuilder.from_memory()

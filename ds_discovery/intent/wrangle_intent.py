@@ -479,6 +479,38 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_dict_column(seed=seed, **params)
 
+    def model_missing_cca(self, canonical: Any, threshold: float=None, seed: int=None, save_intent: bool=None,
+                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                          remove_duplicates: bool=None) -> pd.DataFrame:
+        """ Applies Complete Case Analysis to the canonical. Complete-case analysis (CCA), also called "list-wise
+        deletion" of cases, consists of discarding observations with any missing values. In other words, we only keep
+        observations with data on all the variables. CCA works well when the data is missing completely at random.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param threshold: (optional) a null threshold between 0 and 1 where 1 is all nulls. Default to 0.5
+        :param seed: (optional) a placeholder
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_missing_cca(seed=seed, **params)
+
     def model_encoding(self, canonical: Any, headers: [str, list], encoding: str=None, prefix=None, dtype: Any=None,
                        prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False, seed: int=None,
                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
