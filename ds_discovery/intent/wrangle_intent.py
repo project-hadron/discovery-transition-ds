@@ -898,7 +898,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_choice(seed=seed, **params)
+        return self._correlate_element_choice(seed=seed, **params)
 
     def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, rtn_type: str=None,
                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
@@ -1118,40 +1118,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         # set the seed and call the method
         seed = self._seed(seed=seed)
         return self._correlate_missing_stats(seed=seed, **params)
-
-    def correlate_missing_values(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
-                                 seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                                 intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ imputes missing values with a random choice or a correlated list of 1 or 0 flags with 1 representing
-        the missing data.
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param header: the header in the DataFrame to correlate
-        :param method: (optional) specify the type to replacement. Options 'random' or 'flag'
-        :param nulls_list: (optional) a list of nulls or strings that should be considered null
-        :param seed: (optional) the random seed. defaults to current datetime
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: an equal length list of correlated values
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._correlate_missing_values(seed=seed, **params)
 
     def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
                                    as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,

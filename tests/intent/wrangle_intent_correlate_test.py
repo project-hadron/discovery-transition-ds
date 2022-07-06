@@ -356,6 +356,12 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
         result = tools.correlate_missing_stats(df, header='age', method='mean', precision=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
+        df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
+        result = tools.correlate_missing_stats(df, header='cat', method='mode')
+        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
+        with self.assertRaises(ValueError) as context:
+            result = tools.correlate_missing_stats(df, header='cat', method='mean')
+        self.assertTrue("The header 'cat' is not numeric and thus not compatible" in str(context.exception))
 
     def test_correlate_missing_values(self):
         tools = self.tools
