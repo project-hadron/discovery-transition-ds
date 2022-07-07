@@ -363,15 +363,18 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             result = tools.correlate_missing_stats(df, header='cat', method='mean')
         self.assertTrue("The header 'cat' is not numeric and thus not compatible" in str(context.exception))
 
-    def test_correlate_missing_values(self):
+    def test_correlate_missing_arbitrary(self):
         tools = self.tools
         df = pd.DataFrame()
+        df['age'] = [2, 1, 2, 2, 9, 1, None, None]
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
-        result = tools.correlate_missing_values(df, header='cat', method='flag')
-        self.assertEqual([0, 0, 0, 0, 0, 0, 1, 1], result)
-        result = tools.correlate_missing_values(df, header='cat', method='random', seed=31)
-        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'B', 'C'], result)
-
+        result = tools.correlate_missing_arbitrary(df, header='cat', value='U')
+        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'U', 'U'], result)
+        result = tools.correlate_missing_arbitrary(df, header='age', value=-1)
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, -1.0, -1.0], result)
+        with self.assertRaises(ValueError) as context:
+            result = tools.correlate_missing_arbitrary(df, header='age', value='U')
+        self.assertTrue("The value 'U' is a string and column 'age' expects a numeric value" in str(context.exception))
 
     def test_correlate_missing_weighted(self):
         tools = self.tools
