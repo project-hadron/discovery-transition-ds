@@ -194,11 +194,25 @@ class SyntheticIntentGetTest(unittest.TestCase):
     def test_choice(self):
         os.environ["HADRON_CHOICE_SIZE"] = "4"
         tools = self.tools
-        result = tools.get_dist_choice(number=3, size=6, seed=31)
-        self.assertEqual([1, 0, 1, 1, 0, 0], result)
-        os.environ['HADRON_CHOICE_SIZE'] = "2"
+        result = tools.get_dist_choice(number=4, size=6, seed=31)
+        self.assertEqual(4, sum(result))
+        os.environ['HADRON_CHOICE_SIZE'] = "5"
         result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=6, seed=31)
-        self.assertEqual([1, 1, 1, 1, 0, 0], result)
+        self.assertEqual(5, sum(result))
+        os.environ['HADRON_CHOICE_SIZE'] = "0"
+        result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=6, seed=31)
+        self.assertEqual(0, sum(result))
+        result = tools.get_dist_choice(number=6, size=6, seed=31)
+        self.assertEqual(0, sum(result))
+
+    def test_quality(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame()
+        df['cat'] = tools.get_category(['A', 'B', 'C'], size=10, quantity=0.6, seed=0)
+        self.assertEqual(['', 'A', 'A', 'A', '', '', '', '', 'B', ''], df['cat'].to_list())
+        df['cat'] = tools.get_category(['A', 'B', 'C'], size=10, quantity=90, seed=0)
+        self.assertEqual(['B', 'A', 'A', 'A', 'C', '', 'A', 'A', 'B', ''], df['cat'].to_list())
 
 if __name__ == '__main__':
     unittest.main()
