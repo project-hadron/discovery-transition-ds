@@ -348,7 +348,7 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [2, 1, 2, 2, 9, 1, None, None]
-        result = tools.correlate_missing_stats(df, header='age')
+        result = tools.correlate_missing_stats(df, header='age', method='mean')
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.833, 2.833], result)
         result = tools.correlate_missing_stats(df, header='age', method='mode')
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
@@ -356,8 +356,12 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
         result = tools.correlate_missing_stats(df, header='age', method='mean', precision=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
+        result = tools.correlate_missing_stats(df, header='age', method='random', seed=0)
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 1.0, 2.0], result)
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
         result = tools.correlate_missing_stats(df, header='cat', method='mode')
+        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
+        result = tools.correlate_missing_stats(df, header='cat', method='random')
         self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
         with self.assertRaises(ValueError) as context:
             result = tools.correlate_missing_stats(df, header='cat', method='mean')

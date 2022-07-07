@@ -1160,12 +1160,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                 precision: int=None, seed: int=None, save_intent: bool=None,
                                 column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                                 remove_duplicates: bool=None):
-        """ imputes missing continuous data with a statistical measures of central tendency along with random choice
-        or a correlated list of 1 or 0 flags with 1 representing the missing data.
+        """ imputes missing data with a statistical measures of central tendency or random. Mean and median are both for
+        continuous data only, where mode and random can be used with categorical data types as well.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param method: (optional) specify the type to replacement. Options 'mean', 'median' or 'mode'
+        :param method: (optional) specify the type to replacement. Options 'mean', 'median', 'mode' or 'random'
         :param nulls_list: (optional) a list of nulls or strings that should be considered null
         :param precision: (optional) by default set to 3.
         :param seed: (optional) the random seed. defaults to current datetime
