@@ -348,37 +348,44 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [2, 1, 2, 2, 9, 1, None, None]
-        result = tools.correlate_missing_stats(df, header='age', method='mean')
+        result = tools.correlate_missing(df, header='age', method='mean')
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.833, 2.833], result)
-        result = tools.correlate_missing_stats(df, header='age', method='mode')
+        result = tools.correlate_missing(df, header='age', method='mode')
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
-        result = tools.correlate_missing_stats(df, header='age', method='median')
+        result = tools.correlate_missing(df, header='age', method='median')
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.0, 2.0], result)
-        result = tools.correlate_missing_stats(df, header='age', method='mean', precision=0)
+        result = tools.correlate_missing(df, header='age', method='mean', precision=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
-        result = tools.correlate_missing_stats(df, header='age', method='random', seed=0)
+        result = tools.correlate_missing(df, header='age', method='random', seed=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 1.0, 2.0], result)
+        result = tools.correlate_missing(df, header='age', method='indicator')
+        self.assertEqual([0,0,0,0,0,0,1,1], result)
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
-        result = tools.correlate_missing_stats(df, header='cat', method='mode')
+        result = tools.correlate_missing(df, header='cat', method='mode')
         self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
-        result = tools.correlate_missing_stats(df, header='cat', method='random')
+        result = tools.correlate_missing(df, header='cat', method='random')
         self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
+        result = tools.correlate_missing(df, header='cat', method='indicator')
+        self.assertEqual([0,0,0,0,0,0,1,1], result)
         with self.assertRaises(ValueError) as context:
-            result = tools.correlate_missing_stats(df, header='cat', method='mean')
+            result = tools.correlate_missing(df, header='cat', method='mean')
         self.assertTrue("The header 'cat' is not numeric and thus not compatible" in str(context.exception))
 
-    def test_correlate_missing_arbitrary(self):
+    def test_correlate_missing_constant(self):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [2, 1, 2, 2, 9, 1, None, None]
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
-        result = tools.correlate_missing_arbitrary(df, header='cat', value='U')
+        result = tools.correlate_missing(df, header='cat', method='constant', constant='U')
         self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'U', 'U'], result)
-        result = tools.correlate_missing_arbitrary(df, header='age', value=-1)
+        result = tools.correlate_missing(df, header='age', method='constant', constant=-1)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, -1.0, -1.0], result)
         with self.assertRaises(ValueError) as context:
-            result = tools.correlate_missing_arbitrary(df, header='age', value='U')
+            result = tools.correlate_missing(df, header='age', method='constant', constant='U')
         self.assertTrue("The value 'U' is a string and column 'age' expects a numeric value" in str(context.exception))
+        with self.assertRaises(ValueError) as context:
+            result = tools.correlate_missing(df, header='age', method='constant')
+        self.assertTrue("When using the 'constant' method a constant value must be provided" in str(context.exception))
 
     def test_correlate_missing_weighted(self):
         tools = self.tools

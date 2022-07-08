@@ -1115,58 +1115,41 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_flag_outliers(seed=seed, **params)
 
-    def correlate_missing_arbitrary(self, canonical: Any, header: str, value: [int, float, str], nulls_list: list=None,
-                                    seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                                    intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ imputes missing data with an arbitrary value. Applies to both numerical and categorical types. The type is
-        inferred by the column type.
+    def correlate_missing(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
+                          constant: Any=None, precision: int=None, seed: int=None, save_intent: bool=None,
+                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                          remove_duplicates: bool=None):
+        """ imputes missing data with statistical estimates of the missing values. The methods are 'mean', 'median',
+        'mode' and 'random' with the addition of 'constant' and 'indicator'
 
-        For numeric the most common values are 0, 999, -999 (or other 9 combinations), or -1 (if the distribution is
-        positive).
+        Mean/median imputation consists of replacing all occurrences of missing values (NA) within a variable by the
+        mean (if the variable has a Gaussian distribution) or median (if the variable has a skewed distribution). Can
+        only be applied to numeric values.
 
-        For categorical this is the most widely used method of missing data imputation. This method consists
-        of treating missing data as an additional category of the variable. For example, all the missing observations
-        are grouped under the newly created label, "Missing'.
+        Mode imputation consists of replacing all occurrences of missing values (NA) within a variable by the mode,
+        which is the most frequent value or most frequent category. Can be applied to both numerical and categorical
+        variables.
 
-         :param canonical: a pd.DataFrame as the reference dataframe
-         :param header: the header in the DataFrame to correlate
-         :param value: the arbitrary value to replace nulls with
-         :param nulls_list: (optional) a list of nulls or strings that should be considered null
-         :param seed: (optional) the random seed. defaults to current datetime
-         :param save_intent: (optional) if the intent contract should be saved to the property manager
-         :param column_name: (optional) the column name that groups intent to create a column
-         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-         :return: an equal length list of correlated values
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._correlate_missing_arbitrary(seed=seed, **params)
+        Random sampling imputation is in principle similar to mean, median, and mode imputation in that it considers
+        that missing values, should look like those already existing in the distribution. Random sampling consists of
+        taking random observations from the pool of available data and using them to replace the NA. In random sample
+        imputation, we take as many random observations as missing values exist in the variable. Can be applied to both
+        numerical and categorical variables.
 
-    def correlate_missing_stats(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
-                                precision: int=None, seed: int=None, save_intent: bool=None,
-                                column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                remove_duplicates: bool=None):
-        """ imputes missing data with a statistical measures of central tendency or random. Mean and median are both for
-        continuous data only, where mode and random can be used with categorical data types as well.
+        Constant or Arbitrary value imputation consists of replacing all occurrences of missing values (NA) with an
+        arbitrary constant value. Can be applied to both numerical and categorical variables. A value must be passed
+        in the constant parameter relevant to the column type.
+
+        Indicator is not an imputation method but imputation techniques, such as mean, median and random will affect
+        the variable distribution quite dramatically and is a good idea to flag them with a missing indicator. This
+        must be done before imputation of the column.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param method: (optional) specify the type to replacement. Options 'mean', 'median', 'mode' or 'random'
+        :param method: (optional) the replacement method, 'mean', 'median', 'mode', 'constant', 'random', 'indicator'
+        :param constant: (optional) a value to us when the method is constant
         :param nulls_list: (optional) a list of nulls or strings that should be considered null
+        :param precision: (optional) if numeric, the precision of the outcome, by default set to 3.
         :param precision: (optional) by default set to 3.
         :param seed: (optional) the random seed. defaults to current datetime
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -1190,7 +1173,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_missing_stats(seed=seed, **params)
+        return self._correlate_missing(seed=seed, **params)
 
     def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
                                    as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,
