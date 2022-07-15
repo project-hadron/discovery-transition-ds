@@ -202,21 +202,19 @@ class AbstractCommonComponent(AbstractComponent):
         return
 
     @staticmethod
-    def canonical_report(canonical, stylise: bool=True, inc_next_dom: bool=False, report_header: str=None,
-                         condition: str=None):
+    def canonical_report(canonical, stylise: bool=True, report_header: str=None, condition: str=None):
         """The Canonical Report is a data dictionary of the canonical providing a reference view of the dataset's
         attribute properties
 
         :param canonical: the DataFrame to view
         :param stylise: if True present the report stylised.
-        :param inc_next_dom: (optional) if to include the next dominate element column
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist
         :param condition: (optional) the condition to apply to the header. Header must exist. examples:
                 ' > 0.95', ".str.contains('shed')"
         :return:
         """
-        return DataDiscovery.data_dictionary(df=canonical, stylise=stylise, inc_next_dom=inc_next_dom,
-                                             report_header=report_header, condition=condition)
+        return DataDiscovery.data_dictionary(df=canonical, stylise=stylise, report_header=report_header,
+                                             condition=condition)
 
     def report_canonical_schema(self, schema: [str, dict]=None, roots: [str, list]=None,
                                 sections: [str, list]=None, elements: [str, list]=None, stylise: bool=True):
@@ -257,6 +255,22 @@ class AbstractCommonComponent(AbstractComponent):
                     df = df.append(a_series, ignore_index=True)
         if stylise:
             return Commons.report(df, index_header=['root', 'section'], bold='element')
+        return df
+
+    def report_task(self, stylise: bool=True):
+        """ generates a report on the source contract
+
+        :param stylise: (optional) returns a stylised DataFrame with formatting
+        :return: pd.DataFrame
+        """
+        report = self.pm.report_task_meta()
+        df = pd.DataFrame.from_dict(data=report, orient='index').reset_index()
+        df.columns = ['name', 'value']
+        # sort out any values that start with a $ as it throws formatting
+        for c in df.columns:
+            df[c] = [f"{x[1:]}" if str(x).startswith('$') else x for x in df[c]]
+        if stylise:
+            return Commons.report(df, index_header='connector_name')
         return df
 
     def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,

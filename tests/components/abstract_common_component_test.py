@@ -5,6 +5,8 @@ from pprint import pprint
 import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from aistac.properties.abstract_properties import AbstractPropertyManager
+
+from build.lib.ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery import *
 from ds_discovery.components.commons import Commons
 
@@ -109,6 +111,18 @@ class AbstractCommonComponentTest(unittest.TestCase):
         tr.add_connector_uri("tester", "s3://project-hadron-cs-repo/factory/tester")
         self.assertEqual("ds_discovery.handlers.s3_handlers", tr.pm.get_connector_contract("tester").module_name)
         self.assertEqual("S3PersistHandler", tr.pm.get_connector_contract("tester").handler)
+
+    def test_report_task(self):
+        tr = Transition.from_env("tr1", has_contract=False)
+        data = 'https://www.openml.org/data/get_csv/16826755/phpMYEkMl'
+        tr.set_source_uri(uri=data)
+        tr.set_persist()
+        tr.set_version('0.0.1')
+        tr.set_status('testing')
+        tr.set_description("A description of the component")
+        result = tr.report_task(stylise=False)
+        self.assertEqual(['contract', 'task', 'description', 'status', 'version'], result.loc[:,'name'].tolist())
+        self.assertEqual(['transition', 'tr1', 'A description of the component', 'testing', '0.0.1'], result.loc[:,'value'].tolist())
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

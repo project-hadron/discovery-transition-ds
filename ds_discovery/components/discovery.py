@@ -1545,8 +1545,7 @@ class DataDiscovery(object):
         return df[df['name'].str.contains(find_name)]
 
     @staticmethod
-    def data_dictionary(df, stylise: bool=False, inc_next_dom: bool=False, report_header: str=None,
-                        condition: str=None):
+    def data_dictionary(df, stylise: bool=None, report_header: str=None, condition: str=None):
         """ returns a DataFrame of a data dictionary showing 'Attribute', 'Type', '% Nulls', 'Count',
         'Unique', 'Observations' where attribute is the column names in the df
         Note that the subject_matter, if used, should be in the form:
@@ -1555,14 +1554,12 @@ class DataDiscovery(object):
 
         :param df: (optional) the pandas.DataFrame to get the dictionary from
         :param stylise: (optional) returns a stylised dataframe with formatting
-        :param inc_next_dom: (optional) if to include the next dominate element column
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist
         :param condition: (optional) the condition to apply to the header. Header must exist. examples:
                 ' > 0.95', ".str.contains('shed')"
         :return: a pandas.DataFrame
         """
-        stylise = True if not isinstance(stylise, bool) else stylise
-        inc_next_dom = False if not isinstance(inc_next_dom, bool) else inc_next_dom
+        stylise = stylise if isinstance(stylise, bool) else True
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         pd.set_option('max_colwidth', 200)
@@ -1639,9 +1636,6 @@ class DataDiscovery(object):
             _ = df_style.set_caption('%_Dom: The % most dominant element - %_Nxt: The % next most dominant element')
             _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
-            if not inc_next_dom:
-                df_style.hide_columns('%_Nxt')
-                _ = df_style.set_caption('%_Dom: The % most dominant element')
             return df_style
         if not inc_next_dom:
             df_dd.drop('%_Nxt', axis='columns', inplace=True)
