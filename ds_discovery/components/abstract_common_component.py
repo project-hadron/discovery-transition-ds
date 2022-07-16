@@ -270,7 +270,7 @@ class AbstractCommonComponent(AbstractComponent):
         for c in df.columns:
             df[c] = [f"{x[1:]}" if str(x).startswith('$') else x for x in df[c]]
         if stylise:
-            return Commons.report(df, index_header='connector_name')
+            return Commons.report(df, index_header='name')
         return df
 
     def report_connectors(self, connector_filter: [str, list]=None, inc_pm: bool=None, inc_template: bool=None,
