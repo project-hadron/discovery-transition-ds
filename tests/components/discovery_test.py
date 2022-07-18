@@ -125,7 +125,13 @@ class DiscoveryTest(unittest.TestCase):
         result = DataDiscovery.filter_correlated(df, target='target')
         print(result)
 
-
+    def test_canonica_report(self):
+        builder = SyntheticBuilder.from_memory()
+        df = pd.DataFrame()
+        df['col1'] = [1,2,3,4,5,6,7]
+        df['col2'] = [1,2,3,4,5,6,7]
+        self.assertNotIn('%_Nxt', builder.canonical_report(df, stylise=False).columns)
+        self.assertIn('%_Nxt', builder.canonical_report(df, stylise=False, inc_next_dom=True).columns)
 
 if __name__ == '__main__':
     unittest.main()

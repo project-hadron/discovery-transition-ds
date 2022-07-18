@@ -7,6 +7,39 @@ AI-STAC Discovery Transition and Feature Catalog
 
 .. section-numbering::
 
+Filling the Gap - Project Hardon
+================================
+
+Project Hadron has been built to bridge the gap between data scientists and data engineers.  More specifically between
+machine learning business outcomes and the production readiness of systems.
+
+Project Hadron places data scientists in the familiar environment of machine learning and statistical tools, extracting
+those ideas and translating them automagically into production readable solutions familiar to data engineers and SME’s.
+
+Project Hadron provides a clear Separation of Concerns whilst maintaining the original intent that can be passed to a
+production team.  It offers trust between the data scientists teams and product teams.  It brings with it transparency
+and traceability, dealing with bias, fairness and knowledge. The resulting outcome provides the product engineers with
+adaptability, robustness and reuse, fitting seamlessly into a microsystems solution that can be language agnostic.
+
+The heart of Hardon is the concept of Parameterized intent.  Intent identifies the specific needs of the component that
+are fixed to that component providing low code, low maintenance and faster time-to-market. Parameterization gives
+flexibility to the fixed intent, defined by the user, and can be linked together to produce complex networks of intent
+making simple steps into infinate solutions.  Intent and its parameterization works along side data science research
+tools, capturing the intended objectives of the data scientist across multiple notebooks familiar to their working
+style. In the background this intent and its parameterization is captured as a domain contract that is both transparent
+and traceable and can easily be adapted back to its original code form avoiding impenetrable numbers of notebooks.
+
+For the data engineer the domain contract arrives as a familiar solution that can fit into a testing and CI solution
+with clear designs around adaptability, knowledge transfer and reuse.
+
+This approach brings together the language of data scientists and their research tools, data engineers and their
+production tools and the business owners and their success criteria. Packed with distrubital reports directed at
+different parts of the business and in their language, the core of intent gives the foundation to bring together
+disparate parties that are currently struggling to communicate each others needs to produce robust product solutions.
+
+
+
+
 What is AI-STAC
 ===============
 
