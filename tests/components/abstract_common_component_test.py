@@ -130,11 +130,11 @@ class AbstractCommonComponentTest(unittest.TestCase):
         wr.set_source_uri(uri=data)
         wr.set_persist()
         df = wr.load_source_canonical()
-        df = tools.frame_starter(df, headers=['survived', 'sex', 'deck'], column_name='starter')
+        df = tools.frame_starter(df, headers=['survived', 'sex'], column_name='starter')
         wr.run_component_pipeline()
         wr.save_canonical_schema()
         result = wr.report_canonical_schema(stylise=False)
-        print(result)
+        self.assertEqual(4, len(result.columns.to_list()))
 
 
 

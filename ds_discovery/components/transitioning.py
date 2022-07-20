@@ -79,7 +79,7 @@ class Transition(AbstractCommonComponent):
         return self._intent_model
 
     @property
-    def cleaners(self) -> TransitionIntentModel:
+    def tools(self) -> TransitionIntentModel:
         """The intent model instance"""
         return self._intent_model
 

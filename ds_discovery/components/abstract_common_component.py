@@ -254,7 +254,8 @@ class AbstractCommonComponent(AbstractComponent):
                             continue
                     to_append = [root_items, section, element, value]
                     a_series = pd.Series(to_append, index=df.columns)
-                    df = df.append(a_series, ignore_index=True)
+                    # df = df.append(a_series, ignore_index=True)
+                    df = pd.concat([df, a_series.to_frame().transpose()], ignore_index=True)
         if stylise:
             return Commons.report(df, index_header=['root', 'section'], bold='element')
         return df
