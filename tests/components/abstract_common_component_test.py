@@ -5,8 +5,7 @@ from pprint import pprint
 import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 from aistac.properties.abstract_properties import AbstractPropertyManager
-
-from build.lib.ds_discovery.intent.transition_intent import TransitionIntentModel
+from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from ds_discovery import *
 from ds_discovery.components.commons import Commons
 
@@ -114,7 +113,7 @@ class AbstractCommonComponentTest(unittest.TestCase):
 
     def test_report_task(self):
         tr = Transition.from_env("tr1", has_contract=False)
-        data = 'https://www.openml.org/data/get_csv/16826755/phpMYEkMl'
+        data = 'https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv'
         tr.set_source_uri(uri=data)
         tr.set_persist()
         tr.set_version('0.0.1')
@@ -123,6 +122,21 @@ class AbstractCommonComponentTest(unittest.TestCase):
         result = tr.report_task(stylise=False)
         self.assertEqual(['contract', 'task', 'description', 'status', 'version'], result.loc[:,'name'].tolist())
         self.assertEqual(['transition', 'tr1', 'A description of the component', 'testing', '0.0.1'], result.loc[:,'value'].tolist())
+
+    def test_schema_report(self):
+        wr = Wrangle.from_env("titanic", has_contract=False)
+        tools: WrangleIntentModel = wr.tools
+        data = 'https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv'
+        wr.set_source_uri(uri=data)
+        wr.set_persist()
+        df = wr.load_source_canonical()
+        df = tools.frame_starter(df, headers=['survived', 'sex', 'deck'], column_name='starter')
+        wr.run_component_pipeline()
+        wr.save_canonical_schema()
+        result = wr.report_canonical_schema(stylise=False)
+        print(result)
+
+
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
