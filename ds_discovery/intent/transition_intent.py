@@ -147,9 +147,8 @@ class TransitionIntentModel(AbstractIntentModel):
         """ automatically removes rows where the full row is null
 
         :param df: the pandas DataFrame to remove null rows from
-        :param nulls_list: potential nul values to consider other than just np.nan
-        :param nulls_list:  potential null values to replace.
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param nulls_list: (optional) potential null values to consider other than just np.nan
+        :param inplace: (optional) if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -178,6 +177,54 @@ class TransitionIntentModel(AbstractIntentModel):
             df.dropna(axis='index', how='all', inplace=True)
             return
         return df.dropna(axis='index', how='all', inplace=False)
+
+    def auto_reinstate_nulls(self, df, nulls_list=None, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
+                        exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
+                             intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+        """ automatically reinstates nulls that have been masked with alternate values such as space or question-mark.
+
+        :param df: the pandas DataFrame to remove null rows from
+        :param nulls_list: (optional) potential null values to replace with a null.
+        :param headers: a list of headers to drop or filter on type
+        :param drop: to drop or not drop the headers
+        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
+        :param exclude: to exclude or include the dtypes
+        :param regex: a regular expression to search the headers
+        :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param inplace:  (optional)if the passed pandas.DataFrame should be used or a deep copy
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        drop = drop if isinstance(drop, bool) else False
+        exclude = exclude if isinstance(exclude, bool) else False
+        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', '?']
+        inplace = inplace if isinstance(inplace, bool) else False
+        if not inplace:
+            df = deepcopy(df)
+        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                          re_ignore_case=re_ignore_case)
+        for c in obj_cols:
+            for item in nulls_list:
+                df[c] = df[c].replace(item, np.nan)
+        if inplace:
+            return
+        return df
 
     def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=None,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,

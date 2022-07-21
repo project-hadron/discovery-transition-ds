@@ -1234,8 +1234,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                           min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
                           column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                           remove_duplicates: bool=None):
-        """ returns a number that correlates to the value given. The jitter is based on a normal distribution
-        with the correlated value being the mean and the jitter its standard deviation from that mean
+        """ Returns a number that correlates to the value given. The numbers can be standardized, normalize between
+        given limits, scalarized or transformed and offers offset and jitters. The jitter is based on a normal
+        distribution with the correlated value being the mean and the jitter its  standard deviation from that mean
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate

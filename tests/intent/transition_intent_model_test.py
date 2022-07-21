@@ -91,6 +91,22 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertTrue(df['bool_num'].dtype.name.startswith('bool'))
         self.assertTrue(df['cats'].dtype.name.startswith('category'))
 
+    def test_auto_reinstate_nulls(self):
+        tools = self.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['nums'] = tools.get_number(4, size=sample_size, seed=0)
+        df['bool_num'] = tools.get_category([1, 0, '?'], size=sample_size, seed=0)
+        df['cats'] = tools.get_category(list('ABC?'), size=sample_size, seed=0)
+        result = self.clean.auto_reinstate_nulls(df)
+        self.assertEqual(['C', 'A', 'B', 'A', '?', 'B', 'A', 'A', 'C', '?'], df['cats'].to_list())
+        self.assertEqual(['C', 'A', 'B', 'A', 'B', 'A', 'A', 'C'], result['cats'].dropna().to_list())
+        self.assertEqual([0.0, 1.0, 1.0, 1.0, '?', 1.0, 1.0, 1.0, 0.0, '?'], df['bool_num'].to_list())
+        self.assertEqual([0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0], result['bool_num'].dropna().to_list())
+        result = self.clean.auto_reinstate_nulls(df, nulls_list=[0], headers='nums')
+        self.assertEqual([2, 0, 1, 0, 3, 1, 0, 0, 2, 3], df['nums'].to_list())
+        self.assertEqual([2, 1, 3, 1, 2, 3], result['nums'].dropna().to_list())
+
     def test_auto_remove(self):
         tools = self.tools
         df = pd.DataFrame()
