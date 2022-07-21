@@ -1241,8 +1241,8 @@ class DataDiscovery(object):
         else:
             rtn_dict.get('stats')['mean'] = np.round(np.mean(values), freq_precision)
             rtn_dict.get('stats')['std'] = np.round(np.std(values), freq_precision)
-            rtn_dict.get('patterns')['freq_mean'] = _mean_weights
-            rtn_dict.get('patterns')['freq_std'] = _std_weights
+            rtn_dict.get('patterns')['freq_mean'] = np.round(_mean_weights, freq_precision)
+            rtn_dict.get('patterns')['freq_std'] = np.round(_std_weights, freq_precision)
         # normality
         if values.size >= 10 and detail_stats:
             if values.size < 5000:
@@ -1632,8 +1632,6 @@ class DataDiscovery(object):
             df_style = df_dd.style.set_table_styles(style)
             _ = df_style.applymap(DataDiscovery._highlight_null_dom, subset=['%_Null', '%_Dom'])
             _ = df_style.applymap(lambda x: 'color: white' if x > 0.98 else 'color: black', subset=['%_Null', '%_Dom'])
-            _ = df_style.applymap(DataDiscovery._highlight_next, subset=['%_Nxt'])
-            _ = df_style.applymap(lambda x: 'color: white' if x < 0.02 else 'color: black', subset=['%_Nxt'])
             _ = df_style.applymap(DataDiscovery._dtype_color, subset=['dType'])
             _ = df_style.applymap(DataDiscovery._color_unique, subset=['Unique'])
             _ = df_style.applymap(lambda x: 'color: white' if x < 2 else 'color: black', subset=['Unique'])
@@ -1642,6 +1640,8 @@ class DataDiscovery(object):
             _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
             if inc_next_dom:
+                _ = df_style.applymap(DataDiscovery._highlight_next, subset=['%_Nxt'])
+                _ = df_style.applymap(lambda x: 'color: white' if x < 0.02 else 'color: black', subset=['%_Nxt'])
                 _ = df_style.format({'%_Null': "{:.1%}", '%_Dom': '{:.1%}', '%_Nxt': '{:.1%}'})
                 _ = df_style.set_caption('%_Dom: The % most dominant element - %_Nxt: The % next most dominant element')
             return df_style
