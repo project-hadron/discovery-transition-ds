@@ -11,6 +11,7 @@ __author__ = 'Darryl Oatridge'
 
 class SyntheticBuilder(AbstractCommonComponent):
 
+    REPORT_DICTIONARY = 'dictionary'
     REPORT_CATALOG = 'catalog'
     REPORT_FIELDS = 'field_description'
 

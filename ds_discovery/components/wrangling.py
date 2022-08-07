@@ -10,6 +10,7 @@ __author__ = 'Darryl Oatridge'
 
 class Wrangle(AbstractCommonComponent):
 
+    REPORT_DICTIONARY = 'dictionary'
     REPORT_CATALOG = 'catalog'
 
     @classmethod

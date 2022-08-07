@@ -11,6 +11,8 @@ from ds_discovery.managers.feature_catalog_property_manager import FeatureCatalo
 
 class FeatureCatalog(AbstractCommonComponent):
 
+    REPORT_DICTIONARY = 'dictionary'
+
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
