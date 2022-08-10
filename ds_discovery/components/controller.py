@@ -319,13 +319,16 @@ class Controller(AbstractComponent):
             for example: mod_tasks = {'my_synth_gen': {source: 1000}}
             changes 'my_synth_gen' to now have a source reference of 1000 meaning it will generate 1000 synthetic rows.
 
+        The run_cycle_report automatically generates the connector contract with the name 'run_cycle_report'. To reload
+        the report for observation use the controller method 'load_canonical(...) passing the name 'run_cycle_report'.
+
         :param run_book: (optional) a run_book reference, a list of task names (intent levels)
         :param mod_tasks: (optional) a dict of modifications that override an existing task in the runbook
         :param repeat: (optional) the number of times this intent should be repeated. None or -1 -> never, 0 -> forever
         :param sleep: (optional) number of seconds to sleep before repeating
         :param run_time: (optional) number of seconds to run the controller using repeat and sleep cycles time is up
         :param source_check_uri: (optional) The source uri to check for change since last controller instance cycle
-        :param run_cycle_report: (optional) The run cycle report name that provides the run cycle activities
+        :param run_cycle_report: (optional) a full name for the run cycle report
         """
         _lock = threading.Lock()
         mod_tasks = mod_tasks if isinstance(mod_tasks, (list, dict)) else []
@@ -390,7 +393,7 @@ class Controller(AbstractComponent):
                 df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start run-cycle {run_count}']
             for count in range(repeat):
                 if isinstance(run_cycle_report, str):
-                    df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start run count {count}']
+                    df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'start task cycle {count}']
                 if handler and handler.exists():
                     if handler.has_changed():
                         handler.reset_changed(False)
