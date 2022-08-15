@@ -17,13 +17,15 @@ import seaborn as sns
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import chi2
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.feature_selection import chi2, SelectFromModel
 from sklearn.metrics import mean_squared_error, confusion_matrix
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
 
 from aistac.handlers.abstract_handlers import HandlerFactory
+from sklearn.preprocessing import StandardScaler
+
 from ds_discovery.components.commons import Commons
 
 __author__ = 'Darryl Oatridge'
@@ -464,6 +466,72 @@ class Visualisation(object):
         plt.ylabel('True label', size=18)
         plt.xlabel('Predicted label', size=18)
         plt.show()
+
+    @staticmethod
+    def show_regressor_coefficient(canonical: Any, target: Any, seed: int=None, train_size: float=None, **kwargs):
+        """ Uses Random Forest regressor tree to measure the magnitude of coefficient against a target.It tries to
+        predict which feature has the most relevance to the target. This is an embedded method
+
+        :param canonical: the Pandas.DataFrame to get the selection from
+        :param target: the key column to index on
+        :param seed: (optional) a seed value for the random function: default to None
+        :param train_size: (optional) The size of the training data subset to avoid over-fitting set between 0 and 1.
+        :param kwargs: (optional) additional arguments to pass to the model
+        """
+        # Code block for intent
+        seed = seed if isinstance(seed, int) else None
+        train_size = train_size if isinstance(train_size, float) and 0 < train_size < 1 else 0.3
+        params = {}
+        # add method kwargs to the params
+        if isinstance(kwargs, dict):
+            params.update(kwargs)
+        n_estimators = params.pop('n_estimators', 10)
+        seed = params.pop('random_state', seed)
+        # to avoid over-fitting
+        X_train, _, y_train, _ = train_test_split(canonical.drop(labels=[target], axis=1), canonical[target],
+                                                  test_size=1 - train_size, random_state=seed)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        sel_ = SelectFromModel(RandomForestRegressor(n_estimators=n_estimators, random_state=seed, **params))
+        sel_.fit(scaler.transform(X_train), y_train)
+        pd.Series(np.abs(sel_.estimator_.coef_).ravel()).hist(bins=20)
+        plt.xlabel('Coefficients')
+        plt.ylabel('Number of variables')
+        plt.show()
+        plt.clf()
+
+    @staticmethod
+    def show_classifier_coefficient(canonical: Any, target: Any, seed: int=None, train_size: float=None, **kwargs):
+        """ Uses Random Forest classifier tree to measure the magnitude of coefficient against a target.It tries to
+        predict which feature has the most relevance to the target. This is an embedded method
+
+        :param canonical: the Pandas.DataFrame to get the selection from
+        :param target: the key column to index on
+        :param seed: (optional) a seed value for the random function: default to None
+        :param train_size: (optional) The size of the training data subset to avoid over-fitting set between 0 and 1.
+        :param kwargs: (optional) additional arguments to pass to the model
+        """
+        # Code block for intent
+        seed = seed if isinstance(seed, int) else None
+        train_size = train_size if isinstance(train_size, float) and 0 < train_size < 1 else 0.3
+        params = {}
+        # add method kwargs to the params
+        if isinstance(kwargs, dict):
+            params.update(kwargs)
+        n_estimators = params.pop('n_estimators', 10)
+        seed = params.pop('random_state', seed)
+        # to avoid over-fitting
+        X_train, _, y_train, _ = train_test_split(canonical.drop(labels=[target], axis=1), canonical[target],
+                                                  test_size=1 - train_size, random_state=seed)
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+        sel_ = SelectFromModel(RandomForestClassifier(n_estimators=n_estimators, random_state=seed, **params))
+        sel_.fit(scaler.transform(X_train), y_train)
+        pd.Series(np.abs(sel_.estimator_.coef_).ravel()).hist(bins=20)
+        plt.xlabel('Coefficients')
+        plt.ylabel('Number of variables')
+        plt.show()
+        plt.clf()
 
 
 class DataDiscovery(object):

@@ -70,9 +70,9 @@ class MyTestCase(unittest.TestCase):
         tr.set_persist()
         df = tr.load_source_canonical()
         self.assertEqual((1000, 9), df.shape)
-        df = cleaners.auto_brute_force_correlated(df)
+        df = cleaners.auto_drop_correlated(df)
         self.assertEqual((1000, 7), df.shape)
-        df = cleaners.auto_brute_force_correlated(df, threshold=0.8)
+        df = cleaners.auto_drop_correlated(df, threshold=0.8)
         self.assertEqual((1000, 3), df.shape)
 
     def test_raise(self):

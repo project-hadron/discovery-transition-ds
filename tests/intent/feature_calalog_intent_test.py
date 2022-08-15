@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 import shutil
 import pandas as pd
-from pprint import pprint
+from ds_discovery.components.commons import Commons
+
 from ds_discovery import SyntheticBuilder, FeatureCatalog
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery.intent.feature_catalog_intent import FeatureCatalogIntentModel
@@ -47,7 +48,7 @@ class TestFeatureCatalog(unittest.TestCase):
         except:
             pass
 
-    def test_smoke(self):
+    def test_select_correlate(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         sample_size = 10
@@ -64,9 +65,84 @@ class TestFeatureCatalog(unittest.TestCase):
         df['jitter5'] = builder.tools.correlate_numbers(df, header='pois', jitter=7, column_name='jitter5', seed=seed)
         fc = FeatureCatalog.from_memory()
         catalog: FeatureCatalogIntentModel = fc.tools
-        result = catalog.select_correlate(df, target ='pois', threshold=0.8, train_size=0.3, seed=seed)
+        result = catalog.select_correlated(df, target ='pois', threshold=0.8, train_size=0.3, seed=seed)
         self.assertCountEqual(['pois', 'cat', 'norm_std', 'jitter3'], result.columns.to_list())
 
+    def test_select_logistic_coefficient(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 109), df.shape)
+        result = catalog.select_logistic_coefficient(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 62), result.shape)
+
+    def test_select_classifier_coefficient(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 109), df.shape)
+        result = catalog.select_classifier_coefficient(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 30), result.shape)
+
+    def test_select_linear_coefficient(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_1.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        df = Commons.filter_columns(df, dtype=['int', 'float']).dropna()
+        self.assertEqual((50000, 301), df.shape)
+        result = catalog.select_linear_coefficient(df, target='target', feature_name='select2', seed=31)
+        self.assertEqual((50000, 47), result.shape)
+
+    def test_select_regression_coefficient(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_1.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        df = Commons.filter_columns(df, dtype=['int', 'float']).dropna()
+        self.assertEqual((50000, 301), df.shape)
+        result = catalog.select_regression_coefficient(df, target='target', feature_name='select2', seed=31)
+        self.assertEqual((50000, 30), result.shape)
+
+    def test_select_classifier_shuffled(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 109), df.shape)
+        result = catalog.select_classifier_shuffled(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 21), result.shape)
+
+    def test_select_regressor_shuffled(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 301), df.shape)
+        result = catalog.select_regressor_shuffled(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 9), result.shape)
+
+    def test_select_classifier_eliminator(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 109), df.shape)
+        result = catalog.select_classifier_elimination(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 9), result.shape)
+        # print(result.shape)
+
+    def test_select_regressor_eliminator(self):
+        fc = FeatureCatalog.from_env('tester', has_contract=False)
+        fc.set_source_uri('../_test_data/dataset_2.csv')
+        catalog: FeatureCatalogIntentModel = fc.tools
+        df = fc.load_source_canonical()
+        self.assertEqual((50000, 109), df.shape)
+        result = catalog.select_regressor_elimination(df, target='target', feature_name='select1', seed=31)
+        self.assertEqual((50000, 6), result.shape)
+        # print(result.shape)
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

@@ -68,7 +68,7 @@ class TransitionIntentModel(AbstractIntentModel):
                 for order in sorted(self._pm.get(level_key, {})):
                     for method, params in self._pm.get(self._pm.join(level_key, order), {}).items():
                         if method in self.__dir__():
-                            # fail safe in case kwargs was sored as the reference
+                            # fail safe in case kwargs was stored as the reference
                             params.update(params.pop('kwargs', {}))
                             # add method kwargs to the params
                             if isinstance(kwargs, dict):
@@ -80,66 +80,66 @@ class TransitionIntentModel(AbstractIntentModel):
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def auto_transition(self, df, unique_max: int=None, null_max: float=None, inplace: bool=None,
-                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
-        """ automatically tries to convert a passes DataFrame to appropriate types
-
-        :param df: the pandas DataFrame to remove null rows from
-        :param unique_max: the max number of unique values in the column. default to 20
-        :param null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        if not isinstance(unique_max, int):
-            unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
-        null_max = 0.998 if not isinstance(null_max, (int, float)) else null_max
-        inplace = inplace if isinstance(inplace, bool) else False
-        if not inplace:
-            df = deepcopy(df)
-        _date_headers = []
-        _bool_headers = []
-        _cat_headers = []
-        _num_headers = []
-        for c in Commons.filter_headers(df, dtype=object):
-            try:
-                if all(Commons.valid_date(x) for x in df[c].dropna()):
-                    _date_headers.append(c)
-                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
-                    _bool_headers.append(c)
-                elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
-                    _cat_headers.append(c)
-                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
-                    _num_headers.append(c)
-            except TypeError:
-                pass
-        if len(_bool_headers) > 0:
-            bool_map = {1: True}
-            df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)
-        if len(_date_headers) > 0:
-            df = self.to_date_type(df, headers=_date_headers, inplace=False, save_intent=False)
-        if len(_cat_headers) > 0:
-            df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
-        if len(_num_headers) > 0:
-            df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
-        if not inplace:
-            return df
-        return
+    # def auto_transition(self, df, unique_max: int=None, null_max: float=None, inplace: bool=None,
+    #                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+    #                     replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+    #     """ automatically tries to convert a passes DataFrame to appropriate types
+    #
+    #     :param df: the pandas DataFrame to remove null rows from
+    #     :param unique_max: the max number of unique values in the column. default to 20
+    #     :param null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
+    #     :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
+    #     :param intent_level: (optional) the level name that groups intent by a reference name
+    #     :param intent_order: (optional) the order in which each intent should run.
+    #                     If None: default's to -1
+    #                     if -1: added to a level above any current instance of the intent section, level 0 if not found
+    #                     if int: added to the level specified, overwriting any that already exist
+    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
+    #                     True - replaces the current intent method with the new
+    #                     False - leaves it untouched, disregarding the new intent
+    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+    #     :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+    #     """
+    #     # resolve intent persist options
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
+    #     # Code block for intent
+    #     if not isinstance(unique_max, int):
+    #         unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
+    #     null_max = 0.998 if not isinstance(null_max, (int, float)) else null_max
+    #     inplace = inplace if isinstance(inplace, bool) else False
+    #     if not inplace:
+    #         df = deepcopy(df)
+    #     _date_headers = []
+    #     _bool_headers = []
+    #     _cat_headers = []
+    #     _num_headers = []
+    #     for c in Commons.filter_headers(df, dtype=object):
+    #         try:
+    #             if all(Commons.valid_date(x) for x in df[c].dropna()):
+    #                 _date_headers.append(c)
+    #             elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
+    #                 _bool_headers.append(c)
+    #             elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
+    #                 _cat_headers.append(c)
+    #             elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+    #                 _num_headers.append(c)
+    #         except TypeError:
+    #             pass
+    #     if len(_bool_headers) > 0:
+    #         bool_map = {1: True}
+    #         df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)
+    #     if len(_date_headers) > 0:
+    #         df = self.to_date_type(df, headers=_date_headers, inplace=False, save_intent=False)
+    #     if len(_cat_headers) > 0:
+    #         df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
+    #     if len(_num_headers) > 0:
+    #         df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
+    #     if not inplace:
+    #         return df
+    #     return
 
     def auto_remove_null_rows(self, df, nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                               intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -322,12 +322,12 @@ class TransitionIntentModel(AbstractIntentModel):
             return result
         return
 
-    # drop column that only have 1 value in them
     def auto_drop_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
                           drop_predominant: bool=None, drop_empty_row: bool=None, inplace: bool=None,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
-        """ auto removes columns that are np.NaN, a single value or have a predominant value greater than.
+        """ auto removes columns that are at least 0.998 percent np.NaN, a single value, std equal zero or have a
+        predominant value greater than the default 0.998 percent.
 
         :param df: the pandas.DataFrame to auto remove
         :param null_min: the minimum number of null values default to 0.998 (99.8%) nulls
@@ -378,6 +378,8 @@ class TransitionIntentModel(AbstractIntentModel):
             elif drop_predominant and round((df_filter[c].value_counts() / np.float64(len(df_filter[c].dropna()))).
                                             sort_values(ascending=False).values[0], 5) >= predominant_max:
                 col_drop.append(c)
+            elif drop_predominant and isinstance(df_filter[c], (int, float)) and df_filter[c].dropna().std() == 0:
+                col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
         if isinstance(drop_empty_row, bool) and drop_empty_row:
             result = result.dropna(how='all')
@@ -386,16 +388,14 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # drops highly correlated columns
-    def auto_brute_force_correlated(self, df: pd.DataFrame, threshold: float=None, inc_category: bool=None,
-                                    inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
-                                    intent_order: int=None, replace_intent: bool=None,
-                                    remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
-        """ uses 'brute force' techniques to removes highly correlated columns based on the threshold,
+    def auto_drop_correlated(self, df: pd.DataFrame, threshold: float=None, inplace: bool=None, save_intent: bool=None,
+                             intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+        """ uses 'brute force' techniques to removes highly correlated numeric columns based on the threshold,
         set by default to 0.998.
 
         :param df: data: the Canonical data to drop duplicates from
         :param threshold: (optional) threshold correlation between columns. default 0.998
-        :param inc_category: (optional) if category type columns should be converted to numeric representations
         :param inplace: if the passed Canonical, should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -418,10 +418,7 @@ class TransitionIntentModel(AbstractIntentModel):
         if not inplace:
             df = deepcopy(df)
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
-        df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        # if isinstance(inc_category, bool) and inc_category:
-        #     for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
-        #         df_filter[col] = df[col].cat.codes
+        df_filter = Commons.filter_columns(df, dtype=[float, int], exclude=False)
         col_corr = set()
         corr_matrix = df_filter.corr()
         for i in range(len(corr_matrix.columns)):
@@ -430,6 +427,46 @@ class TransitionIntentModel(AbstractIntentModel):
                     colname = corr_matrix.columns[i]  # getting the name of column
                     col_corr.add(colname)
         df.drop(labels=col_corr, axis=1, inplace=True)
+        if not inplace:
+            return df
+        return
+
+    # drops duplicate columns
+    def auto_drop_duplicates(self, df: pd.DataFrame, inplace: bool=None, save_intent: bool=None,
+                             intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                             remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
+        """ Removes columns that are duplicates of each other
+
+        :param df: data: the Canonical data to drop duplicates from
+       :param inplace: if the passed Canonical, should be used or a deep copy
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy Canonical,.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        inplace = inplace if isinstance(inplace, bool) else False
+        if not inplace:
+            df = deepcopy(df)
+        df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
+        duplicated_feat = []
+        for i in range(0, len(df_filter.columns)):
+            col_1 = df_filter.columns[i]
+            for col_2 in df_filter.columns[i + 1:]:
+                if df_filter[col_1].equals(df_filter[col_2]):
+                    duplicated_feat.append(col_2)
+        df.drop(labels=duplicated_feat, axis=1, inplace=True)
         if not inplace:
             return df
         return
