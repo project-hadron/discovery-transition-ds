@@ -14,9 +14,11 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import scipy.stats
 import seaborn as sns
+import scipy.stats as stats
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
+
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import chi2, SelectFromModel
 from sklearn.metrics import mean_squared_error, confusion_matrix
@@ -199,6 +201,29 @@ class Visualisation(object):
             plt.clf()
         else:
             raise LookupError("No category columns found in the dataframe")
+
+    @staticmethod
+    def show_distribution(df, header, filename=None, figsize=None):
+        # Define figure size.
+        figsize = figsize if isinstance(figsize, tuple) else (16, 4)
+        fig = plt.figure(figsize=figsize)
+        # histogram
+        plt.subplot(1, 3, 1)
+        sns.histplot(df[header], bins=30)
+        plt.title('Histogram')
+        # Q-Q plot
+        plt.subplot(1, 3, 2)
+        stats.probplot(df[header], dist="norm", plot=plt)
+        plt.ylabel('RM quantiles')
+        # boxplot
+        plt.subplot(1, 3, 3)
+        sns.boxplot(y=df[header])
+        plt.title('Boxplot')
+        if filename is None:
+            plt.show()
+        else:
+            fig.savefig(filename)
+        plt.clf()
 
     @staticmethod
     def show_corr(df, filename=None, figsize=None, **kwargs):
