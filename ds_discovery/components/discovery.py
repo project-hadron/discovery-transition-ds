@@ -147,60 +147,60 @@ class Visualisation(object):
             raise LookupError("No numeric columns found in the dataframe")
 
     @staticmethod
-    def show_cat_count(df, category=None, top=None, filename=None):
-        if isinstance(category, (str, list)):
-            cat_headers = Commons.filter_headers(df, headers=category)
+    def show_categories(canonical, headers=None, top=None):
+        headers = headers if isinstance(headers, (str, list)) else Commons.filter_headers(canonical, dtype=['category'])
+        if len(headers) == 0:
+            return
+        if isinstance(headers, str):
+            headers = [headers]
+        sns.set(style='darkgrid', color_codes=True)
+        if len(headers) == 1:
+            c = headers[0]
+            _ = sns.countplot(x=c, data=canonical, palette="summer")
+            _ = plt.xticks(rotation=-90)
+            _ = plt.xlabel(str.title(c))
+            _ = plt.ylabel('Count')
+            title = "{} Categories".format(str.title(c))
+            _ = plt.title(title, fontsize=16)
         else:
-            cat_headers = Commons.filter_headers(df, dtype=['category'])
-        if len(cat_headers) > 0:
             wide_col, thin_col = [], []
-            for c in cat_headers:
-                if len(df[c].cat.categories) > 10:
+            for c in headers:
+                if len(canonical[c].cat.categories) > 10:
                     wide_col += [c]
                 else:
                     thin_col += [c]
             depth = len(wide_col) + int(round(len(thin_col) / 2, 0))
-
-            _figsize = (20, 5 * depth)
-            fig = plt.figure(figsize=_figsize)
+            fig = plt.figure(figsize=(20, 5 * depth))
             sns.set(style='darkgrid', color_codes=True)
-
             for c, i in zip(wide_col, range(len(wide_col))):
                 ax = plt.subplot2grid((depth, 2), (i, 0), colspan=2)
-                order = list(df[c].value_counts().index.values)
+                order = list(canonical[c].value_counts().index.values)
                 if isinstance(top, int):
                     order = order[:top]
-                _ = sns.countplot(x=c, data=df, ax=ax, order=order, palette="summer")
+                _ = sns.countplot(x=c, data=canonical, ax=ax, order=order, palette="summer")
                 _ = plt.xticks(rotation=-90)
                 _ = plt.xlabel(str.title(c))
                 _ = plt.ylabel('Count')
                 title = "{} Categories".format(str.title(c))
                 _ = plt.title(title, fontsize=16)
-
             right = False
             line = len(wide_col)
             for c in thin_col:
                 ax = plt.subplot2grid((depth, 2), (line, int(right)))
-                order = list(df[c].value_counts().index.values)
-                _ = sns.countplot(x=c, data=df, ax=ax, order=order, palette="summer")
+                order = list(canonical[c].value_counts().index.values)
+                _ = sns.countplot(x=c, data=canonical, ax=ax, order=order, palette="summer")
                 _ = plt.xticks(rotation=-90)
                 _ = plt.xlabel(str.title(c))
                 _ = plt.ylabel('Count')
-                _ = title = "{} Categories".format(str.title(c))
+                title = "{} Categories".format(str.title(c))
                 _ = plt.title(title, fontsize=16)
                 if right:
                     line += 1
                 right = not right
 
-            plt.tight_layout()
-
-            if filename is None:
-                plt.show()
-            else:
-                fig.savefig(filename, dpi=300)
-            plt.clf()
-        else:
-            raise LookupError("No category columns found in the dataframe")
+        _ = plt.tight_layout()
+        _ = plt.show()
+        _ = plt.clf()
 
     @staticmethod
     def show_distribution(df, header, filename=None, figsize=None):

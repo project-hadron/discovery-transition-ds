@@ -58,6 +58,20 @@ class SyntheticTest(unittest.TestCase):
         result = tools.correlate_date_diff(df, first_date='date1', second_date='date2')
         self.assertEqual([60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0], result)
 
+    def test_model_categories(self):
+        builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
+        tools: SyntheticIntentModel = builder.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['cat'] = tools.get_category(selection=['A', 'B', 'C'], size=sample_size)
+        df['num'] = tools.get_number(to_value=2, size=sample_size)
+        self.assertEqual('object', df.cat.dtype)
+        self.assertEqual('int64', df.num.dtype)
+        result = tools.model_to_category(df, headers=['cat', 'num'])
+        self.assertEqual('category', result.cat.dtype)
+        self.assertEqual('category', result.num.dtype)
+
+
     def test_model_onehot(self):
         builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
         tools: SyntheticIntentModel = builder.tools
