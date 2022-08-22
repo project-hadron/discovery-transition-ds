@@ -119,6 +119,41 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertCountEqual(["survived", "sex", "fare"], list(result.columns))
         self.assertEqual(300, result.shape[0])
 
+    def test_model_classifier(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        result = tools.model_synthetic_classification(1000)
+        self.assertEqual((1000, 21), result.shape)
+        result = tools.model_synthetic_classification(1000, n_features=10)
+        self.assertEqual((1000, 11), result.shape)
+        result = tools.model_synthetic_classification(1000, n_features=10, with_labels=False)
+        self.assertEqual((1000, 10), result.shape)
+        result = tools.model_synthetic_classification(1000, n_features=10, n_classes=3, n_informative=3)
+        self.assertEqual((1000, 11), result.shape)
+
+    def test_model_regression(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        result = tools.model_synthetic_regression(1000)
+        self.assertEqual((1000, 101), result.shape)
+        result = tools.model_synthetic_regression(1000, n_features=40)
+        self.assertEqual((1000, 41), result.shape)
+        result = tools.model_synthetic_regression(1000, n_features=40, with_labels=False)
+        self.assertEqual((1000, 40), result.shape)
+
+    def test_model_cluster(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        result = tools.model_synthetic_clusters(1000)
+        self.assertEqual((1000, 101), result.shape)
+        result = tools.model_synthetic_clusters(1000, n_features=40)
+        self.assertEqual((1000, 41), result.shape)
+        result = tools.model_synthetic_clusters(1000, n_features=40, with_labels=False)
+        self.assertEqual((1000, 40), result.shape)
+        result = tools.model_synthetic_clusters(1000, n_features=40, clusters=[800, 150, 50])
+        self.assertEqual((1000, 41), result.shape)
+
+
     def test_model_modifier(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
