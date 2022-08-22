@@ -946,7 +946,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             kwargs.pop(param, None)
         kwargs.update({'n_features': n_features, 'random_state': seed})
         sample, labels = make_classification(n_samples=canonical.shape[0], **kwargs)
-        labels = pd.DataFrame(labels, columns=['label']).astype(int)
+        labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
         if with_labels:
@@ -993,7 +993,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             kwargs.pop(param, None)
         kwargs.update({'n_features': n_features, 'random_state': seed})
         sample, labels = make_regression(n_samples=canonical.shape[0], **kwargs)
-        labels = pd.DataFrame(labels, columns=['label']).astype(int)
+        labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
         if with_labels:
@@ -1043,7 +1043,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             kwargs.pop(param, None)
         kwargs.update({'n_features': n_features, 'random_state': seed})
         sample, labels = make_blobs(n_samples=n_sample, **kwargs)
-        labels = pd.DataFrame(labels, columns=['label']).astype(int)
+        labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
         if with_labels:
