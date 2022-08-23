@@ -511,6 +511,58 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_missing_cca(seed=seed, **params)
 
+    def model_drop_outliers(self, canonical: Any, header: str, measure: [int, float]=None, method: str=None,
+                            seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                            replace_intent: bool=None, remove_duplicates: bool=None):
+        """ Drops rows in the canonical where the values are deemed outliers based on the method and measure.
+         There are three selectable methods of choice, interquartile, empirical or probability, of which interquartile
+         is the default.
+
+         The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
+         standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
+         for every value, which is defined as the number of standard deviations away a alue is from the mean. therefor
+         measure given should be the z-score or the number of standard deviations away a value is from the mean.
+         The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
+         distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
+
+         For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
+         statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
+         and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
+         values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
+         for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
+
+         The 'probability' range uses statistical dispersion of a sample set to analyse the percentile or quantities
+         that sit beyond a given defining limit. The measure must be a value between 1 and 0 where the closer to zero
+         the measure the smaller the probability of outliers.
+
+         :param canonical: a pd.DataFrame as the reference dataframe
+         :param header: the header in the DataFrame to correlate
+         :param method: (optional) A method to run to identify outliers. interquartile (default), empirical, probability
+         :param measure: (optional) A measure against each method, respectively factor k, z-score, quartile (see above)
+         :param seed: (optional) the random seed
+         :param save_intent: (optional) if the intent contract should be saved to the property manager
+         :param column_name: (optional) the column name that groups intent to create a column
+         :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+         :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+         :return: an equal length list of correlated values
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_drop_outliers(seed=seed, **params)
+
     # convert objects to categories
     def model_to_category(self, canonical: Any, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
                           exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, seed: int=None,
