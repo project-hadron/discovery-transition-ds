@@ -152,6 +152,8 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 40), result.shape)
         result = tools.model_synthetic_clusters(1000, n_features=40, clusters=[800, 150, 50])
         self.assertEqual((1000, 41), result.shape)
+        self.assertEqual([800, 150, 50], result.target.value_counts().to_list())
+
 
 
     def test_model_modifier(self):

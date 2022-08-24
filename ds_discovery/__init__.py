@@ -10,4 +10,4 @@ from ds_discovery.components.controller import Controller
 from ds_discovery.components.commons import Commons
 
 # release version number picked up in the setup.py
-__version__ = "3.03.047"
+__version__ = "3.3.48"

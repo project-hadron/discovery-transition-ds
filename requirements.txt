@@ -3,7 +3,7 @@ setuptools
 aistac-foundation >= 2.12
 # Data Science packages
 pandas >= 1.1
-numpy
+numpy < 1.23
 scikit-learn
 matplotlib
 seaborn

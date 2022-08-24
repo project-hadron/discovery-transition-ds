@@ -1037,7 +1037,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         canonical = self._get_canonical(canonical)
         seed = seed if isinstance(seed, int) else self._seed()
         n_features = n_features if isinstance(n_features, int) else 100
-        n_sample = clusters if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
+        n_sample = np.asarray(clusters) if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
         with_labels = with_labels if isinstance(with_labels, bool) else True
         for param in ['n_samples', 'n_features', 'random_state']:
             kwargs.pop(param, None)
