@@ -953,11 +953,11 @@ class SyntheticIntentModel(WrangleIntentModel):
             return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
         return pd.concat([canonical, pd.DataFrame(sample)], axis=1)
 
-    def model_synthetic_regression(self, canonical: Any, n_features: int=None, with_labels: bool=None, seed: int=None, save_intent: bool=None,
-                                   column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                   remove_duplicates: bool=None, **kwargs):
+    def model_synthetic_regression(self, canonical: Any, n_features: int=None, with_labels: bool=None, seed: int=None,
+                                   save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                                   replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ A generated regression dataset with a given number of features concatenated with an existing canonical.
-        ased upon the Scikit-learn datasets generators, `make_regression` parameters can be passed as
+        Based upon the Scikit-learn datasets generators, `make_regression` parameters can be passed as
         keyword arguments (kwargs)
 
         Produces regression targets as an optionally-sparse random linear combination of random features, with noise.
@@ -1000,9 +1000,10 @@ class SyntheticIntentModel(WrangleIntentModel):
             return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
         return pd.concat([canonical, pd.DataFrame(sample)], axis=1)
 
-    def model_synthetic_clusters(self, canonical: Any, n_features: int=None, clusters: list=None, with_labels: bool=None, seed: int=None,
-                                 save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                 replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
+    def model_synthetic_clusters(self, canonical: Any, n_features: int=None, clusters: list=None,
+                                 with_labels: bool=None, seed: int=None, save_intent: bool=None,
+                                 column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                                 remove_duplicates: bool=None, **kwargs):
         """ A generated isotropic Gaussian blobs dataset for clustering with a given number of features, concatenated
         with an existing canonical. Based upon the Scikit-learn datasets generators, `make_blobs` parameters can be
         passed as keyword arguments (kwargs)
