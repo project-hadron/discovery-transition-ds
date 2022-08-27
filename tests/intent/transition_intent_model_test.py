@@ -214,6 +214,16 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = clean.run_intent_pipeline(df)
         self.assertTrue(result.equals(control))
 
+    def test_to_bool_type(self):
+        tr = Transition.from_memory()
+        df = pd.DataFrame()
+        df['bool'] = [False, True, False, True, None]
+        df['two_num'] = [1,1,0,0,1]
+        result = tr.tools.to_bool_type(df)
+        self.assertEqual([False, True, False, True, False], result['bool'].to_list())
+        self.assertEqual([True, True, False, False, True], result['two_num'].to_list())
+
+
     def test_to_float_with_mode(self):
         tools = self.tools
         clean = self.clean

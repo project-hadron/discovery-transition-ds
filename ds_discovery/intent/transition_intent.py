@@ -616,7 +616,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     # convert boolean
-    def to_bool_type(self, df: pd.DataFrame, bool_map, headers: [str, list]=None, drop: bool=None,
+    def to_bool_type(self, df: pd.DataFrame, bool_map: dict=None, headers: [str, list]=None, drop: bool=None,
                      dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                      re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
                      intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -653,8 +653,7 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        if not isinstance(bool_map, dict):
-            raise TypeError("The map attribute must be of type 'dict'")
+        bool_map = bool_map if isinstance(bool_map, dict) else {1: True, '1': True, 'True': True, 'T': True}
         if not inplace:
             df = deepcopy(df)
         if not bool_map:  # map is empty so nothing to map
