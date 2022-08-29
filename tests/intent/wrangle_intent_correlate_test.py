@@ -344,7 +344,7 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_dates(df, 'dates', now_delta='Y')
         self.assertEqual([52, 20], result)
 
-    def test_correlate_missing_stats(self):
+    def test_correlate_missing(self):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [2, 1, 2, 2, 9, 1, None, None]
@@ -393,6 +393,14 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df['cats'] = ['a', 'b', None, 'f', None, 'f', 'b', 'c', 'b', 'a']
         result = tools.correlate_missing_weighted(df, header='cats', as_type='category', seed=1973)
         self.assertEqual(['a', 'b', 'b', 'f', 'b', 'f', 'b', 'c', 'b', 'a'], result)
+
+    def test_correlate_missing_analysis(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['gender'] = ['M', 'F', 'M', 'F', 'M', 'M', 'F', 'M']
+        df['cat'] = ['A', 'C', 'A', 'C', 'A', 'B', None, None]
+        result = tools.correlate_missing_analysis(df, header='cat', analysis_list=[{'gender': {}}, {'cat': {}}])
+        print(result)
 
     def test_model_encoding(self):
         tools = self.tools
