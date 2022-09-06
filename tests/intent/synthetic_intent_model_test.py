@@ -256,19 +256,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         result = tools.model_missing_cca(df, threshold=0.15)
         self.assertEqual(df.shape[0] - result.shape[0], 101)
 
-    def test_model_encode(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("BCDECFB")})
-        result = tools.model_encoding(df, headers=['B', 'C'], encoding='one-hot')
-        self.assertCountEqual(['A', 'B_A', 'B_B', 'B_C', 'B_D', 'C_B', 'C_C', 'C_D', 'C_E', 'C_F'], result.columns.to_list())
-        result = tools.model_encoding(df, headers=['B', 'C'], encoding='label')
-        self.assertCountEqual([0, 1, 2, 3, 2, 1, 0], result['B'].to_list())
-        self.assertCountEqual([0, 1, 2, 3, 1, 4, 0], result['C'].to_list())
-        result = tools.model_encoding(df, headers=['B', 'C'], encoding='ordinal')
-        self.assertCountEqual([1, 2, 3, 4, 3, 2, 1], result['B'].to_list())
-        self.assertCountEqual([1, 2, 3, 4, 2, 5, 1], result['C'].to_list())
-
     def test_remove_unwanted_headers(self):
         builder = SyntheticBuilder.from_env(
             "test", default_save=False, default_save_intent=False, has_contract=False

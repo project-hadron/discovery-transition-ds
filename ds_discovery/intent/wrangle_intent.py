@@ -600,17 +600,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_to_category(seed=seed, **params)
 
-    def model_encoding(self, canonical: Any, headers: [str, list], encoding: str=None, prefix=None, dtype: Any=None,
-                       prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False, seed: int=None,
-                       save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types, by default, as one-hot encoded but optionally can choose label or
-        ordinal, where ordinals are automatically defined and expect categorical consistency across each dataset run.
-        Use correlate_selection(...) for predictive ordinal or more complex ordinal logic
+    def model_encode_one_hot(self, canonical: Any, headers: [str, list], prefix=None, dtype: Any=None,
+                             prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False, seed: int=None,
+                             save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                             replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ encodes categorical data types,
+
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply multi-hot
-        :param encoding: the type of encoding to apply to the categories, types supported 'one-hot', 'ordinal', 'label'
         :param prefix : str, list of str, or dict of str, default None
                 String to append DataFrame column names.
                 Pass a list with length equal to the number of columns
@@ -647,7 +645,102 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._model_encoding(seed=seed, **params)
+        return self._model_encode_one_hot(seed=seed, **params)
+
+    def model_encode_ordinal(self, canonical: Any, headers: [str, list], prefix=None, seed: int=None,
+                             save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                             replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ encodes categorical data types,
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param headers: the header(s) to apply the encoding
+        :param prefix
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_encode_ordinal(seed=seed, **params)
+
+    def model_encode_count(self, canonical: Any, headers: [str, list], top: int=None, prefix=None, seed: int=None,
+                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                           replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ encodes categorical data types,
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param headers: the header(s) to apply the encoding
+        :param top:
+        :param prefix:
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_encode_count(seed=seed, **params)
+
+    def model_encode_woe(self, canonical: Any, headers: [str, list], target: str=None, prefix=None, seed: int=None,
+                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                           replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ encodes categorical data types,
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param headers: the header(s) to apply the encoding
+        :param target:
+        :param prefix:
+        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: a pd.DataFrame
+        """
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._model_encode_woe(seed=seed, **params)
 
     def model_explode(self, canonical: Any, header: str, seed: int=None, save_intent: bool=None,
                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -1204,10 +1297,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_flag_outliers(seed=seed, **params)
 
-    def correlate_missing(self, canonical: Any, header: str, method: str=None, nulls_list: list=None,
-                          constant: Any=None, precision: int=None, seed: int=None, save_intent: bool=None,
-                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                          remove_duplicates: bool=None):
+    def correlate_missing(self, canonical: Any, header: str, method: str=None, constant: Any=None, precision: int=None,
+                          seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None):
         """ imputes missing data with statistical estimates of the missing values. The methods are 'mean', 'median',
         'mode' and 'random' with the addition of 'constant' and 'indicator'
 
@@ -1237,9 +1329,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param header: the header in the DataFrame to correlate
         :param method: (optional) the replacement method, 'mean', 'median', 'mode', 'constant', 'random', 'indicator'
         :param constant: (optional) a value to us when the method is constant
-        :param nulls_list: (optional) a list of nulls or strings that should be considered null
         :param precision: (optional) if numeric, the precision of the outcome, by default set to 3.
-        :param precision: (optional) by default set to 3.
         :param seed: (optional) the random seed. defaults to current datetime
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -1266,7 +1356,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
                                    as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,
-                                   nulls_list: list=None, exclude_dominant: bool=None, replace_zero: [int, float]=None,
+                                   exclude_dominant: bool=None, replace_zero: [int, float]=None,
                                    precision: int=None, day_first: bool=None, year_first: bool=None, seed: int=None,
                                    rtn_type: str=None, save_intent: bool=None, column_name: [int, str]=None,
                                    intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
@@ -1283,7 +1373,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param as_type: (optional) specify the type to analyse
         :param lower: (optional) the lower limit of the number value. Default min()
         :param upper: (optional) the upper limit of the number value. Default max()
-        :param nulls_list: (optional) a list of values that should be considered to represent a null
         :param exclude_dominant: (optional) if overly dominant are to be excluded from analysis to avoid bias (numbers)
         :param replace_zero: (optional) with categories, a non-zero minimal chance relative frequency to replace zero
                 This is useful when the relative frequency of a category is so small the analysis returns zero
