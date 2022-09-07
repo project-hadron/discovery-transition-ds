@@ -94,12 +94,12 @@ class WrangleIntentModelTest(unittest.TestCase):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
-        df['A'] = tools.get_category([1,0], size=10, relative_freq=[75,20], seed=99)
-        df['B'] = tools.get_category(['a','b','c','d'], size=10, relative_freq=[40,8,6,4], quantity=0.998, seed=99)
+        df['A'] = tools.get_category([1,0], size=10000, relative_freq=[75,20], seed=99)
+        df['B'] = tools.get_category(['a','b','c','d'], size=10000, seed=99)
         result = tools.model_encode_woe(df, headers=['B'], target='A')
         # self.assertCountEqual([1, 2, 3, 4, 3, 2, 1], result['B'].to_list())
         # self.assertCountEqual([1, 2, 3, 4, 2, 5, 1], result['C'].to_list())
-        # print(result)
+        print(result.head())
 
 
 
