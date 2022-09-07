@@ -10,7 +10,7 @@ class TransitionPropertyManager(AbstractPropertyManager):
         # set additional keys
         root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author', 'cost']}]
         knowledge_keys = ['observations', 'actions', 'attributes']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
 
     @property
     def provenance(self) -> dict:

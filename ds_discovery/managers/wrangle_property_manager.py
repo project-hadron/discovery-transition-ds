@@ -15,7 +15,7 @@ class WranglePropertyManager(AbstractPropertyManager):
         """
         root_keys = []
         knowledge_keys = ['describe']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
 
     @staticmethod
     def list_formatter(value) -> list:

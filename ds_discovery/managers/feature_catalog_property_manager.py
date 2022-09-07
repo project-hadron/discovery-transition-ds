@@ -10,7 +10,7 @@ class FeatureCatalogPropertyManager(AbstractPropertyManager):
         # set additional keys
         root_keys = []
         knowledge_keys = ['features', 'observations', 'actions']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, username=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
 
     @staticmethod
     def list_formatter(value) -> list:
