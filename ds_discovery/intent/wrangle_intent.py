@@ -604,27 +604,19 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                              prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False, seed: int=None,
                              save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                              replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types,
-
+        """ encodes categorical data types, One hot encoding, consists in encoding each categorical variable with
+        different boolean variables (also called dummy variables) which take values 0 or 1, indicating if a category
+        is present in an observation.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply multi-hot
-        :param prefix : str, list of str, or dict of str, default None
-                String to append DataFrame column names.
-                Pass a list with length equal to the number of columns
-                when calling get_dummies on a DataFrame. Alternatively, `prefix`
-                can be a dictionary mapping column names to prefixes.
-        :param prefix_sep : str, default '_'
-                If appending prefix, separator/delimiter to use. Or pass a
-                list or dictionary as with `prefix`.
-        :param dummy_na : bool, default False
-                Add a column to indicate NaNs, if False NaNs are ignored.
-        :param drop_first : bool, default False
-                Whether to get k-1 dummies out of k categorical levels by removing the
-                first level.
-        :param dtype : dtype, default np.uint8
-                Data type for new columns. Only a single dtype is allowed.
-        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param prefix : str, list of str, or dict of str, String to append DataFrame column names,
+                list with length equal to the number of columns. Alternatively, dictionary mapping column names to prefixes.
+        :param prefix_sep : str separator, default '_'
+        :param dummy_na : Add a column to indicate null values, if False nullss are ignored.
+        :param drop_first :  Whether to get k-1 dummies out of k categorical levels by removing the first level.
+        :param dtype : Data type for new columns. Only a single dtype is allowed.
+        :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -650,12 +642,25 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_encode_ordinal(self, canonical: Any, headers: [str, list], prefix=None, seed: int=None,
                              save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                              replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types,
+        """ encodes categorical data types, Integer encoding consist in replacing the categories by digits from 1 to n
+        (or 0 to n-1, depending the implementation), where n is the number of distinct categories of the variable.
+        The numbers are assigned arbitrarily. This encoding method allows for quick benchmarking of machine learning
+        models.
+
+        Advantages
+        - Straightforward to implement
+        - Does not expand the feature space
+        Limitations
+        - Does not capture any information about the categories labels
+        - Not suitable for linear models.
+
+        Integer encoding is better suited for non-linear methods which are able to navigate through the arbitrarily
+        assigned digits to try and find patters that relate them to the target.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply the encoding
-        :param prefix
-        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param prefix: a str to prefix the column
+        :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -681,13 +686,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_encode_count(self, canonical: Any, headers: [str, list], top: int=None, prefix=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types,
+        """ encodes categorical data types, In count encoding we replace the categories by the count of the
+        observations that show that category in the dataset. This techniques capture's the representation of each label
+        in a dataset, but the encoding may not necessarily be predictive of the outcome.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply the encoding
-        :param top:
-        :param prefix:
-        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param top: a cutoff top categories, the rest go in a single category
+        :param prefix: a str to prefix the column
+        :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -713,13 +720,33 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_encode_woe(self, canonical: Any, headers: [str, list], target: str=None, prefix=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types,
+        """ encodes categorical data types, Weight of Evidence (WoE) was developed primarily for the credit and
+        financial industries to help build more predictive models to evaluate the risk of loan default. That is, to
+        predict how likely the money lent to a person or institution is to be lost. Thus, Weight of Evidence is a
+        measure of the "strength” of a grouping technique to separate good and bad risk (default).
+
+        - WoE will be 0 if the P(Goods) / P(Bads) = 1, that is, if the outcome is random for that group.
+        - If P(Bads) > P(Goods) the odds ratio will be < 1 and,
+        - WoE will be < 0 if, P(Goods) > P(Bads).
+        WoE is well suited for Logistic Regression, because the Logit transformation is simply the log of the odds,
+        i.e., ln(P(Goods)/P(Bads)). Therefore, by using WoE-coded predictors in logistic regression, the predictors are
+        all prepared and coded to the same scale, and the parameters in the linear logistic regression equation can be
+        directly compared.
+
+        The WoE transformation has three advantages:
+        - It creates a monotonic relationship between the target and the independent variables.
+        - It orders the categories on a "logistic" scale which is natural for logistic regression
+        - The transformed variables can then be compared because they are on the same scale. Therefore, it is possible
+          to determine which one is more predictive.
+
+        The WoE also has a limitation:
+        - Prone to cause over-fitting
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param headers: the header(s) to apply the encoding
-        :param target:
-        :param prefix:
-        :param seed: (optional) this is a place holder, here for compatibility across methods
+        :param headers: the header(s) to apply multi-hot
+        :param target: The woe target
+        :param prefix: a str value to put before the column name
+        :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
