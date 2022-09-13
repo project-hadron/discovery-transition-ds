@@ -7,12 +7,12 @@ class ControllerPropertyManager(AbstractPropertyManager):
 
     DEFAULT_INTENT_LEVEL = 'primary_intent'
 
-    def __init__(self, task_name: str, username: str):
+    def __init__(self, task_name: str, creator: str):
         """Abstract Class for the Master Properties"""
         root_keys = [{'use_case': ['title', 'domain', 'overview', 'scope', 'situation', 'opportunity',
                                    'actions', 'owner', 'stakeholder']}]
         knowledge_keys = []
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=creator)
 
     @property
     def use_case(self) -> dict:

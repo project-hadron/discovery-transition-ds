@@ -7,7 +7,7 @@ __author__ = 'Darryl Oatridge'
 class SyntheticPropertyManager(AbstractPropertyManager):
     """property manager for the Data Builder"""
 
-    def __init__(self, task_name: str, username: str):
+    def __init__(self, task_name: str, creator: str):
         """initialises the properties manager.
 
         :param task_name: the name of the task name within the property manager
@@ -15,7 +15,7 @@ class SyntheticPropertyManager(AbstractPropertyManager):
         """
         root_keys = []
         knowledge_keys = ['describe']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=creator)
 
     @staticmethod
     def list_formatter(value) -> list:

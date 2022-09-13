@@ -6,11 +6,11 @@ __author__ = 'Darryl Oatridge'
 
 class TransitionPropertyManager(AbstractPropertyManager):
 
-    def __init__(self, task_name: str, username: str):
+    def __init__(self, task_name: str, creator: str):
         # set additional keys
         root_keys = [{'provenance': ['title', 'domain', 'description', 'license', 'provider', 'author', 'cost']}]
         knowledge_keys = ['observations', 'actions', 'attributes']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=username)
+        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=creator)
 
     @property
     def provenance(self) -> dict:
