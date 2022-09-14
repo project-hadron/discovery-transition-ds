@@ -19,20 +19,20 @@ class TransitionPMTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        TransitionPropertyManager('test', username='TestUser')
+        TransitionPropertyManager('test')
 
     def test_catalog(self):
-        pm = TransitionPropertyManager('test', username='TestUser')
+        pm = TransitionPropertyManager('test')
         catalog = pm.knowledge_catalog
         self.assertCountEqual(['observations', 'actions', 'schema', 'intent', 'attributes'], catalog)
 
     def test_manager_name(self):
-        pm = TransitionPropertyManager('test', username='TestUser')
+        pm = TransitionPropertyManager('test')
         result = pm.manager_name()
         self.assertEqual('transition', result)
 
     def test_provenance_catalog(self):
-        pm = TransitionPropertyManager('test', username='TestUser')
+        pm = TransitionPropertyManager('test')
         pm.set(pm.KEY.provenance.title_key, 'my_title')
         self.assertEqual('my_title', pm.get(pm.KEY.provenance.title_key))
         pm.set(pm.KEY.provenance.domain_key, 'my_domain')

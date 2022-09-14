@@ -22,7 +22,7 @@ class Transition(AbstractCommonComponent):
     REPORT_PROVENANCE = 'provenance'
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
+    def from_uri(cls, task_name: str, uri_pm_path: str, creator: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
@@ -34,7 +34,7 @@ class Transition(AbstractCommonComponent):
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
-         :param username: A user name for this task activity.
+         :param creator: A user name for this task activity.
          :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
@@ -55,7 +55,7 @@ class Transition(AbstractCommonComponent):
          :param has_contract: (optional) indicates the instance should have a property manager domain contract
          :return: the initialised class instance
          """
-        _pm = TransitionPropertyManager(task_name=task_name, username=username)
+        _pm = TransitionPropertyManager(task_name=task_name, creator=creator)
         _intent_model = TransitionIntentModel(property_manager=_pm, default_save_intent=default_save_intent,
                                               default_intent_level=default_intent_level,
                                               order_next_available=order_next_available,
@@ -283,7 +283,7 @@ class Transition(AbstractCommonComponent):
         # meta
         report = {'meta-data': {'uid': str(uuid.uuid4()),
                                 'created': str(pd.Timestamp.now()),
-                                'creator': self.pm.username},
+                                'creator': self.pm.creator},
                   'description': self.pm.description,
                   'summary': self.report_quality_summary(canonical, as_dict=True)}
         # connectors

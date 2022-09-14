@@ -19,7 +19,7 @@ class EventBookPortfolio(AbstractCommonComponent):
     BOOK_TEMPLATE_CONNECTOR = 'book_template_connector'
 
     @classmethod
-    def from_uri(cls, task_name: str, uri_pm_path: str, username: str, uri_pm_repo: str=None, pm_file_type: str=None,
+    def from_uri(cls, task_name: str, uri_pm_path: str, creator: str, uri_pm_repo: str=None, pm_file_type: str=None,
                  pm_module: str=None, pm_handler: str=None, pm_kwargs: dict=None, default_save=None,
                  reset_templates: bool=None, template_path: str=None, template_module: str=None,
                  template_source_handler: str=None, template_persist_handler: str=None, align_connectors: bool=None,
@@ -31,7 +31,7 @@ class EventBookPortfolio(AbstractCommonComponent):
 
          :param task_name: The reference name that uniquely identifies a task or subset of the property manager
          :param uri_pm_path: A URI that identifies the resource path for the property manager.
-         :param username: A user name for this task activity.
+         :param creator: A user name for this task activity.
          :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
          :param pm_file_type: (optional) defines a specific file type for the property manager
          :param pm_module: (optional) the module or package name where the handler can be found
@@ -55,7 +55,7 @@ class EventBookPortfolio(AbstractCommonComponent):
         pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
         pm_module = pm_module if isinstance(pm_module, str) else cls.DEFAULT_MODULE
         pm_handler = pm_handler if isinstance(pm_handler, str) else cls.DEFAULT_PERSIST_HANDLER
-        _pm = EventBookPropertyManager(task_name=task_name, username=username)
+        _pm = EventBookPropertyManager(task_name=task_name, creator=creator)
         _intent_model = EventBookIntentModel(property_manager=_pm, default_save_intent=default_save_intent)
         super()._init_properties(property_manager=_pm, uri_pm_path=uri_pm_path, default_save=default_save,
                                  uri_pm_repo=uri_pm_repo, pm_file_type=pm_file_type, pm_module=pm_module,
