@@ -45,6 +45,31 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         except:
             pass
 
+    def test_model_analysis_smoke(self):
+        builder = SyntheticBuilder.from_env('tester', has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame()
+        df['cat'] = tools.get_category(selection=list('ABC'), size=100, column_name='cat')
+        df['values'] = tools.get_number(from_value=20, size=100, column_name='values')
+        builder.run_component_pipeline()
+        result = tools.model_analysis(10, other='primary_persist', column_name='analysis')
+        print(result)
+
+    def test_model_analysis_pattern(self):
+        builder = SyntheticBuilder.from_env('tester', has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame()
+        df['cat'] = tools.get_category(selection=list('MF'), relative_freq=[6,3], seed=31, size=100, column_name='cat')
+        df['values'] = tools.get_dist_poisson(interval=3, size=100, seed=101, column_name='values')
+        builder.run_component_pipeline()
+        result = tools.model_analysis(1000, other='primary_persist', seed=31, column_name='analysis')
+        _, p_value = builder.discover.shapiro_wilk_normality(result['values'])
+        # self.assertLess(0.2, p_value)
+        self.assertEqual([648, 352], result['cat'].value_counts().to_list())
+        print(f"{df['values'].mean()}, {df['values'].std()}, {df['values'].skew()}")
+        print(f"{result['values'].mean()}, {result['values'].std()}, {result['values'].skew()}, {p_value}")
+        builder.visual.show_num_density(df)
+
     def test_associate_analysis_from_discovery(self):
         builder = SyntheticBuilder.from_env('tester', has_contract=False)
         tools: SyntheticIntentModel = builder.tools

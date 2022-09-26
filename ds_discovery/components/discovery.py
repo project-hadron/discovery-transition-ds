@@ -1394,10 +1394,10 @@ class DataDiscovery(object):
             analysis_dict = {}
             for item in columns_list:
                 if df[item].dtype.name.startswith('float'):
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5,
+                    analysis_dict[item] = {'dtype': 'number', 'granularity': 50,
                                            'exclude_dominant': True}
                 elif df[item].dtype.name.startswith('int'):
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5,
+                    analysis_dict[item] = {'dtype': 'number', 'granularity': 50,
                                            'exclude_dominant': True, 'precision': 0}
                 elif df[item].dtype.name == 'category':
                     analysis_dict[item] = {'dtype': 'category', 'top': 10}
