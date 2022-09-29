@@ -1017,7 +1017,7 @@ class DataDiscovery(object):
         """
         categories = pd.Series(categories)
         freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
-        nulls_list = ['<NA>', '', ' ', 'NaN', 'nan', None] if not isinstance(nulls_list, list) else nulls_list
+        nulls_list = ['<NA>', '', ' ', 'NaN', 'nan'] if not isinstance(nulls_list, list) else nulls_list
         replace_zero = 0 if not isinstance(replace_zero, (int, float)) else replace_zero
         lower = lower if isinstance(lower, (int, float)) else None
         upper = upper if isinstance(upper, (int, float)) else None
@@ -1025,7 +1025,8 @@ class DataDiscovery(object):
         param_upper = upper
         param_top = top if isinstance(top, int) else 0
         _original_size = categories.size
-        categories.replace(nulls_list, np.nan, inplace=True, regex=True)
+        for item in nulls_list:
+            categories = categories.replace(item, np.nan)
         categories = categories.dropna()
         nulls_percent = round(((_original_size - categories.size) / _original_size) * 100,
                               freq_precision) if _original_size > 0 else 0

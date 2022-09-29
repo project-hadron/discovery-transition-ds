@@ -70,11 +70,21 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         print(f"{result['values'].mean()}, {result['values'].std()}, {result['values'].skew()}, {p_value}")
         builder.visual.show_num_density(df)
 
+    def test_associate_analysis_relative_freq(self):
+        builder = SyntheticBuilder.from_env('tester', has_contract=False)
+        tools: SyntheticIntentModel = builder.tools
+        builder.add_connector_uri(connector_name='titanic', uri='../_test_data/titanic_features.pickle')
+        df = builder.load_canonical(connector_name='titanic')
+        print(df.shape)
+        sel = [{'survived': {}},{'pclass': {}}]
+        result = builder.tools.model_analysis(1300, other='titanic', columns_list=sel, column_name='analysis')
+        print(result.shape)
+
     def test_associate_analysis_from_discovery(self):
         builder = SyntheticBuilder.from_env('tester', has_contract=False)
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
-        df['cat'] = tools.get_category(selection=list('ABC'), quantity=0.9, size=100, column_name='cat')
+        df['cat'] = tools.get_category(selection=list('ABC'), quantity=0.9, size=100, column_name='c')
         df['values'] = tools.get_number(from_value=20, size=100, column_name='values')
         builder.run_component_pipeline()
         # discover
