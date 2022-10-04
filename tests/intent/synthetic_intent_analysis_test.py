@@ -50,10 +50,13 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
         df['cat'] = tools.get_category(selection=list('ABC'), size=100, column_name='cat')
+        df['int'] = tools.get_number(from_value=3, size=100, precision=0, column_name='int')
         df['values'] = tools.get_number(from_value=20, size=100, column_name='values')
         builder.run_component_pipeline()
         result = tools.model_analysis(10, other='primary_persist', column_name='analysis')
-        print(result)
+        self.assertEqual('int64', result['int'].dtype)
+        self.assertEqual('float64', result['values'].dtype)
+        self.assertEqual('object', result['cat'].dtype)
 
     def test_model_analysis_pattern(self):
         builder = SyntheticBuilder.from_env('tester', has_contract=False)

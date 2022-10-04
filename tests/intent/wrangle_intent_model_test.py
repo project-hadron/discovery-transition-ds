@@ -49,6 +49,27 @@ class WrangleIntentModelTest(unittest.TestCase):
         except:
             pass
 
+    def test_model_to_category_titanic(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        builder.set_source_uri('../_test_data/titanic_features.pickle')
+        df = builder.load_source_canonical()
+        self.assertEqual('int64', df.family.dtype)
+        self.assertEqual('string', df.deck.dtype)
+        result = tools.model_to_category(df, headers=['family', 'is_alone', 'deck'])
+        self.assertEqual('category', result.family.dtype)
+        self.assertEqual('category', result.deck.dtype)
+
+    def test_model_to_category(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("BCDECFB")})
+        self.assertEqual('int64 object object', f'{df.A.dtype} {df.B.dtype} {df.C.dtype}')
+        result = tools.model_to_category(df, headers='A')
+        self.assertEqual('category object object', f'{result.A.dtype} {result.B.dtype} {result.C.dtype}')
+        result = tools.model_to_category(df, headers=['A','B'])
+        self.assertEqual('category category object', f'{result.A.dtype} {result.B.dtype} {result.C.dtype}')
+
     def test_model_drop_outliers(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
