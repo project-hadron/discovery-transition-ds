@@ -18,7 +18,8 @@ import scipy.stats as stats
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
-
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import chi2, SelectFromModel
 from sklearn.metrics import mean_squared_error, confusion_matrix
@@ -219,6 +220,68 @@ class Visualisation(object):
         plt.subplot(1, 3, 3)
         sns.boxplot(y=df[header])
         plt.title('Boxplot')
+        if filename is None:
+            plt.show()
+        else:
+            fig.savefig(filename)
+        plt.clf()
+
+    @staticmethod
+    def show_pca(canonical, headers, hue, filename=None, figsize=None):
+        """Principal Component Analysis (PCA) is a common technique to reduce feature dimensionality. This assumes
+        classification
+        """
+        if figsize is None or not isinstance(figsize, tuple):
+            _figsize = (6, 4)
+        else:
+            _figsize = figsize
+        fig = plt.figure(figsize=_figsize)
+        sns.set(style='darkgrid', color_codes=True)
+        x = canonical.loc[:, headers].values
+        x = StandardScaler().fit_transform(x)
+        # PCA Projection to 2D
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(x)
+        principalDf = pd.DataFrame(data=principalComponents, columns=['principal component one',
+                                                                      'principal component two'])
+        finalDf = pd.concat([principalDf, canonical[[hue]]], axis=1)
+        sns.scatterplot(data=finalDf, x='principal component one', y='principal component two', hue=hue)
+        if filename is None:
+            plt.show()
+        else:
+            fig.savefig(filename)
+        plt.clf()
+
+    @staticmethod
+    def show_corr_covariate(canonical, headers=None, hue:str=None, filename=None, figsize=None):
+        headers = headers if isinstance(headers, (str, list)) else Commons.filter_headers(canonical, dtype=['number'])
+        if len(headers) == 0:
+            return
+        if isinstance(headers, str):
+            headers = [headers]
+        if figsize is None or not isinstance(figsize, tuple):
+            _figsize = (6, 4)
+        else:
+            _figsize = figsize
+        fig = plt.figure(figsize=_figsize)
+        sns.set(style='darkgrid', color_codes=True)
+        for header in headers:
+            _ = sns.FacetGrid(canonical, hue=hue,
+                              height=5).map(sns.histplot, header, kde=True, stat="density", linewidth=0).add_legend()
+        if filename is None:
+            plt.show()
+        else:
+            fig.savefig(filename)
+        plt.clf()
+
+    @staticmethod
+    def show_corr_univariate(df, hue:str=None, filename=None, figsize=None, **kwargs):
+        if figsize is None or not isinstance(figsize, tuple):
+            _figsize = (6, 4)
+        else:
+            _figsize = figsize
+        fig = plt.figure(figsize=_figsize)
+        _ = sns.pairplot(df, hue=hue, diag_kind="hist", **kwargs)
         if filename is None:
             plt.show()
         else:
