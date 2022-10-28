@@ -379,13 +379,13 @@ class Controller(AbstractComponent):
                     intent_levels[idx].update(mod.get(intent_levels[idx].get('task'), {}))
         handler = None
         if isinstance(source_check_uri, str):
-            self.add_connector_uri(connector_name='run_cycle_report', uri=source_check_uri)
-            handler = self.pm.get_connector_handler(connector_name='run_cycle_report')
-        repeat = repeat if isinstance(repeat, int) and repeat > 0 else 1
+            self.add_connector_uri(connector_name='source_check_uri', uri=source_check_uri)
+            handler = self.pm.get_connector_handler(connector_name='source_check_uri')
         run_time = run_time if isinstance(run_time, int) else 0
         if run_time > 0 and not isinstance(sleep, int):
             sleep = 1
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=run_time)
+        repeat = repeat if isinstance(repeat, int) and repeat > 0 else 1
         run_count = 0
         df_report = pd.DataFrame(columns=['time', 'text'])
         while True: # run_time always runs once
@@ -439,12 +439,16 @@ class Controller(AbstractComponent):
                 if isinstance(run_cycle_report, str):
                     df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'tasks complete']
                 if isinstance(sleep, int) and count < repeat-1:
+                    if isinstance(run_cycle_report, str):
+                        df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'sleep for {sleep} seconds']
                     time.sleep(sleep)
             if isinstance(run_cycle_report, str):
                 run_count += 1
             if end_time < datetime.datetime.now():
                 break
             else:
+                if isinstance(run_cycle_report, str):
+                    df_report.loc[len(df_report.index)] = [datetime.datetime.now(), f'sleep for {sleep} seconds']
                 time.sleep(sleep)
         if isinstance(run_cycle_report, str):
             df_report.loc[len(df_report.index)] = [datetime.datetime.now(), 'end of report']

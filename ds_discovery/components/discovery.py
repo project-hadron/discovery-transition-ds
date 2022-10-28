@@ -12,16 +12,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-import scipy.stats
 import seaborn as sns
 import scipy.stats as stats
 from numpy.polynomial.polynomial import Polynomial
 from matplotlib.colors import LogNorm
 from scipy.stats import shapiro, normaltest, anderson
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.feature_selection import chi2, SelectFromModel
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_squared_error, confusion_matrix
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
@@ -38,23 +35,24 @@ class Visualisation(object):
     """ a set of data components methods to Visualise pandas.Dataframe"""
 
     @staticmethod
-    def show_fisher_score(df, target: [str, list]):
-        """displays the f-score for all applicable columns."""
-        target = Commons.list_formatter(target)
-        for name in target:
-            if name not in df.columns:
-                raise ValueError(f"The target header '{name}' was not found in the DataFrame")
-        df_numbers = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
-            df_numbers[col] = df[col].cat.codes
-        df_headers = Commons.filter_columns(df_numbers, headers=target, drop=True).fillna(0).abs()
-        if df_headers.shape[1] == 0:
-            raise ValueError(f"There were no suitable columns to apply the score too")
-        df_target = Commons.filter_columns(df, headers=target, drop=False)
-        f_score = chi2(df_headers, df_target)
-        pvalues = pd.Series(f_score[1])
-        pvalues.index = df_headers.columns
-        _ = pvalues[pvalues.values > 0].sort_values(ascending=True).plot.bar(figsize=(20, 8))
+    def show_chi_square(canonical: pd.DataFrame, target: [str, list], connector_name: str=None, seed: int=None):
+        """Chi-square is one of the most widely used supervised feature selection methods. It selects each feature
+         independently in accordance with their scores against a target or label then ranks them by their importance.
+         This score should be used to evaluate categorical variables in a classification task."""
+        # separate train and test sets
+        control = canonical.copy()
+        X_train, X_test, y_train, y_test = train_test_split(control.drop(target, axis=1), control[target],
+                                                            test_size=0.3, random_state=seed)
+        chi_ls = []
+        for feature in X_train.columns:
+            # create contingency table
+            c = pd.crosstab(y_train, X_train[feature])
+            # chi_test
+            p_value = stats.chi2_contingency(c)[1]
+            chi_ls.append(p_value)
+        pd.Series(chi_ls, index=X_train.columns).sort_values(ascending=True).plot.bar(rot=45)
+        plt.ylabel('p value')
+        plt.title('Feature importance based on chi-square test')
         plt.tight_layout()
         plt.show()
         plt.clf()
@@ -171,7 +169,7 @@ class Visualisation(object):
                 else:
                     thin_col += [c]
             depth = len(wide_col) + int(round(len(thin_col) / 2, 0))
-            fig = plt.figure(figsize=(20, 5 * depth))
+            _ = plt.figure(figsize=(20, 5 * depth))
             sns.set(style='darkgrid', color_codes=True)
             for c, i in zip(wide_col, range(len(wide_col))):
                 ax = plt.subplot2grid((depth, 2), (i, 0), colspan=2)
@@ -276,11 +274,10 @@ class Visualisation(object):
 
     @staticmethod
     def show_corr_univariate(df, hue:str=None, filename=None, figsize=None, **kwargs):
-        if figsize is None or not isinstance(figsize, tuple):
-            _figsize = (6, 4)
-        else:
-            _figsize = figsize
-        fig = plt.figure(figsize=_figsize)
+        figsize = figsize if isinstance(figsize, tuple) else (12, 12)
+        fig = plt.figure(figsize=figsize)
+        sns.set(palette='muted')
+
         _ = sns.pairplot(df, hue=hue, diag_kind="hist", **kwargs)
         if filename is None:
             plt.show()
@@ -518,7 +515,6 @@ class Visualisation(object):
         """
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
-        Source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
         """
         title = title if isinstance(title, str) else 'Confusion matrix'
         cmap = plt.cm.Oranges if cmap is None else cmap
@@ -622,7 +618,6 @@ class DataDiscovery(object):
     def pairs_bootstrap_with_linear_regression(x: pd.Series, y: pd.Series, p_percent: float=None, replicates: int=None,
                                                precision: int=None) -> (float, float):
         """"""
-        # TODO: Test and finish off
         if x.size != y.size:
             raise ValueError(f"The length of x ({x.size}) does not match the length of y ({y.size})")
         precision = precision if isinstance(precision, int) else 4
@@ -686,11 +681,11 @@ class DataDiscovery(object):
         if values.size < 8:
             raise ValueError(f"Shapiro Wilk Normality test requires 8 or more samples; {values.size} samples given")
         precision = precision if isinstance(precision, int) else 4
-        stats, p_values = shapiro(values)
+        s_stats, p_values = shapiro(values)
 
-        stats = round(stats, precision)
+        r_stats = round(s_stats, precision)
         p_values = round(p_values, precision)
-        return stats, p_values
+        return r_stats, p_values
 
     @staticmethod
     def dagostinos_k2_normality(values: pd.Series, precision: int=None) -> (float, float):
@@ -709,10 +704,10 @@ class DataDiscovery(object):
         if values.size < 8:
             raise ValueError(f"K2 Normality test requires 8 or more samples; {values.size} samples given")
         precision = precision if isinstance(precision, int) else 4
-        stats, p_values = normaltest(values, nan_policy='omit')
-        stats = round(stats, precision)
+        n_stats, p_values = normaltest(values, nan_policy='omit')
+        n_stats = round(n_stats, precision)
         p_values = round(p_values, precision)
-        return stats, p_values
+        return n_stats, p_values
 
     @staticmethod
     def anderson_darling_tests(values: pd.Series, dist: str=None, precision: int=None) -> (float, list, list):
@@ -818,7 +813,7 @@ class DataDiscovery(object):
         # calculate m
         m = (p + q) / 2
         # compute Jensen Shannon Divergence
-        divergence = (scipy.stats.entropy(p, m) + scipy.stats.entropy(q, m)) / 2
+        divergence = (stats.entropy(p, m) + stats.entropy(q, m)) / 2
         # compute the Jensen Shannon Distance
         distance = np.sqrt(divergence)
         return np.round(distance, precision)
@@ -940,8 +935,8 @@ class DataDiscovery(object):
         return list(mse_values.index)
 
     @staticmethod
-    def filter_fisher_score(df: pd.DataFrame, target: [str, list], top: [int, float]=None, inc_zero_score: bool=None,
-                            as_series: bool=None, train_split: float=None, random_state: int=None) -> [pd.Series, list]:
+    def filter_chi_square(df: pd.DataFrame, target: [str, list], top: [int, float]=None, train_split: float=None,
+                          random_state: int=None) -> list:
         """ Ranking columns to returns a list of headers in order of p-value from lowest to highest.
         Measured the dependence of 2 variables. This is suited to categorical variables where the target is binary.
         Variable values should be non-negative, and typically Boolean, frequencies or counts.
@@ -951,49 +946,28 @@ class DataDiscovery(object):
         :param top: used if the value passed is greater than zero. NOTE zero p-scores are excluded
                     1 <= value => n returns that number of ranked columns, top=3 returns the top 3
                     0 < value > 1 returns the percentile of ranked columns, top=0.1 would give the top 10 percentile
-        :param inc_zero_score: if a p-value of zero should be included in the list. only included if 'top' is 0 or None
-        :param as_series: returns by default returns an ordered list, if set to True, returns an ordered pandas Series
         :param train_split: the split percentage as a number between 0 and 1
         :param random_state: a random state constant
         :return: a list of headers in order of lowest p-score to highest or a pandas series
         """
         target = Commons.list_formatter(target)
-        for name in target:
-            if name not in df.columns:
-                raise ValueError(f"The target header '{name}' was not found in the DataFrame")
-        train_split = train_split if isinstance(train_split, float) else 0.25
-        if not 0 < train_split < 1:
-            raise ValueError(f"The train_split value must be between 0 and 1, '{train_split}' was passed")
-        inc_zero_score = inc_zero_score if isinstance(inc_zero_score, bool) else False
-        as_series = as_series if isinstance(as_series, bool) else False
-        top = top if isinstance(top, (int, float)) else 0
-        df_numbers = Commons.filter_columns(df, dtype=['number'], exclude=False)
-        for col in Commons.filter_columns(df, dtype=['category'], exclude=False):
-            df_numbers[col] = df[col].cat.codes
-        df_headers = Commons.filter_columns(df_numbers, headers=target, drop=True).fillna(0).abs()
-        if df_headers.shape[1] == 0:
-            raise ValueError(f"There were no suitable columns to apply the score too")
-        df_target = Commons.filter_columns(df, headers=target, drop=False)
-        if isinstance(train_split, float) and 0 < train_split < 1:
-            df_headers, _, df_target, _ = train_test_split(df_headers, df_target, test_size=1-train_split,
-                                                           random_state=random_state)
-        f_score = chi2(df_headers, df_target)
-        pvalues = pd.Series(f_score[1])
-        pvalues.index = df_headers.columns
-        pvalues = pvalues.round(8)
-        zero_scores = pvalues[pvalues.values == 0]
-        plus_score = pvalues[pvalues.values > 0]
-        if 0 < top < 1:
-            rtn_values = plus_score[plus_score.values < plus_score.quantile(q=top)].sort_values(ascending=True)
-        else:
-            rtn_values = plus_score.sort_values(ascending=True)
-            if inc_zero_score:
-                rtn_values = rtn_values.append(zero_scores)
-            if top >= 1:
-                rtn_values = rtn_values.iloc[:int(top)]
-        if as_series:
-            return rtn_values
-        return list(rtn_values.index)
+        train_split = train_split if isinstance(train_split, float) and 0 < train_split < 1 else 0.3
+        top = top if isinstance(top, (int, float)) else 10
+        df_headers, dft_headers, df_target, dft_target = train_test_split(df.drop(target, axis=1), df[target],
+                                                                          test_size=1-train_split,
+                                                                          random_state=random_state)
+        chi_ls = []
+        for feature in df_headers.columns:
+            print(feature)
+
+            # create contingency table
+            c = pd.crosstab(df_headers, dft_headers[feature])
+            # chi_test
+            p_value = stats.chi2_contingency(c)[1]
+            chi_ls.append(p_value)
+
+        selected = pd.Series(chi_ls, index=df_headers.columns).sort_values(ascending=True)[0:top].index
+        return selected.to_list()
 
     @staticmethod
     def filter_correlated(df: pd.DataFrame, target: str, threshold: float=None, inc_category: bool=None,
