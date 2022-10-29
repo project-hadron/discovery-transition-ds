@@ -935,38 +935,32 @@ class DataDiscovery(object):
         return list(mse_values.index)
 
     @staticmethod
-    def filter_chi_square(df: pd.DataFrame, target: [str, list], top: [int, float]=None, train_split: float=None,
-                          random_state: int=None) -> list:
+    def filter_chi_square(canonical: pd.DataFrame, target: str, top: [int, float]=None, seed: int=None) -> list:
         """ Ranking columns to returns a list of headers in order of p-value from lowest to highest.
         Measured the dependence of 2 variables. This is suited to categorical variables where the target is binary.
         Variable values should be non-negative, and typically Boolean, frequencies or counts.
 
-        :param df: the DataFrame to analyse
-        :param target: the target header(s)
+        :param canonical: the DataFrame to analyse
+        :param target: the target header
         :param top: used if the value passed is greater than zero. NOTE zero p-scores are excluded
                     1 <= value => n returns that number of ranked columns, top=3 returns the top 3
                     0 < value > 1 returns the percentile of ranked columns, top=0.1 would give the top 10 percentile
-        :param train_split: the split percentage as a number between 0 and 1
-        :param random_state: a random state constant
+        :param seed: a random state constant
         :return: a list of headers in order of lowest p-score to highest or a pandas series
         """
-        target = Commons.list_formatter(target)
-        train_split = train_split if isinstance(train_split, float) and 0 < train_split < 1 else 0.3
         top = top if isinstance(top, (int, float)) else 10
-        df_headers, dft_headers, df_target, dft_target = train_test_split(df.drop(target, axis=1), df[target],
-                                                                          test_size=1-train_split,
-                                                                          random_state=random_state)
+        control = canonical.copy()
+        X_train, X_test, y_train, y_test = train_test_split(control.drop(target, axis=1), control[target],
+                                                            test_size=0.3, random_state=seed)
         chi_ls = []
-        for feature in df_headers.columns:
-            print(feature)
-
+        for feature in X_train.columns:
             # create contingency table
-            c = pd.crosstab(df_headers, dft_headers[feature])
+            c = pd.crosstab(y_train, X_train[feature])
             # chi_test
             p_value = stats.chi2_contingency(c)[1]
             chi_ls.append(p_value)
 
-        selected = pd.Series(chi_ls, index=df_headers.columns).sort_values(ascending=True)[0:top].index
+        selected = pd.Series(chi_ls, index=X_train.columns).sort_values(ascending=True)[0:top].index
         return selected.to_list()
 
     @staticmethod
