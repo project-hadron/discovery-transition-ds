@@ -35,7 +35,7 @@ class Visualisation(object):
     """ a set of data components methods to Visualise pandas.Dataframe"""
 
     @staticmethod
-    def show_chi_square(canonical: pd.DataFrame, target: [str, list], connector_name: str=None, seed: int=None):
+    def show_chi_square(canonical: pd.DataFrame, target: [str, list], seed: int=None):
         """Chi-square is one of the most widely used supervised feature selection methods. It selects each feature
          independently in accordance with their scores against a target or label then ranks them by their importance.
          This score should be used to evaluate categorical variables in a classification task."""
@@ -52,31 +52,17 @@ class Visualisation(object):
             chi_ls.append(p_value)
         pd.Series(chi_ls, index=X_train.columns).sort_values(ascending=True).plot.bar(rot=45)
         plt.ylabel('p value')
-        plt.title('Feature importance based on chi-square test')
+        plt.title('Feature importance based on chi-square test', fontdict={'size': 20})
         plt.tight_layout()
         plt.show()
         plt.clf()
 
     @staticmethod
-    def show_ecdf(df: pd.DataFrame, header: str, x_label: str=None):
-        """Empirical cumulative distribution function"""
-        x = np.sort(df[header])
-        sns.set()
-        y = np.arange(1, len(x) + 1) / len(x)
-        _ = plt.plot(x, y, marker='.', linestyle='none')
-        _ = plt.xlabel(x_label if isinstance(x_label, str) else header)
-        _ = plt.ylabel('ECDF')
-        plt.margins(0.02)  # Keeps data off plot edges
-        plt.tight_layout()
-        plt.show()
-        plt.clf()
-
-    @staticmethod
-    def show_bootstrap_confidence_interval(df: pd.DataFrame, header: str, p_percent: float=None, replicates: int=None,
-                                           func: Any=None, x_label: str=None):
+    def show_bootstrap_confidence_interval(canonical: pd.DataFrame, header: str, p_percent: float=None,
+                                           replicates: int=None, func: Any=None, x_label: str=None):
         """ displays a Bootstrap Confidence Interval as a histogram with the 95% confidence interval shaded
 
-        :param df: the DataFrame to visualise
+        :param canonical: the DataFrame to visualise
         :param header: the header from the DataFrame to bootstrap
         :param p_percent: the p percent confidence interval. Default t0 0.95 for 95% confidence interval
         :param replicates: the number of replicates to run. default 10,000
@@ -84,25 +70,61 @@ class Visualisation(object):
         :param x_label: a label to give to the x axis. Default to header name
         :return:
         """
-        p_percent = p_percent if isinstance(p_percent, float) and 0 < p_percent < 1 else 0.95
         replicates = replicates if isinstance(replicates, int) else 10000
         func = np.mean if func is None else func
         result = []
         for i in range(replicates):
-            bs_sample = np.random.choice(df[header].dropna(), len(df[header].dropna()))
+            bs_sample = np.random.choice(canonical[header].dropna(), len(canonical[header].dropna()))
             result.append(func(bs_sample))
-        low_percentile = round((1 - p_percent) / 2, 5)
-        high_percentile = 1 - low_percentile
-        low_interval, high_interval = tuple(np.percentile(result, [low_percentile, high_percentile]))
+        # low_percentile = round((1 - p_percent) / 2, 5)
+        # high_percentile = 1 - low_percentile
+        # low_interval, high_interval = tuple(np.percentile(result, [low_percentile, high_percentile]))
+        low_interval, high_interval = tuple(np.percentile(result, [2.5, 97.5]))
         sns.set()
-        plt.rcParams['figure.figsize'] = (8, 5)
-        _ = plt.hist(result, bins=35, normed=True)
+        fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+        _ = plt.suptitle('Bootstrap Confidence Interval', fontdict={'size': 20})
+        # cdf
+        plt.subplot(1, 2, 1)
+        x = np.sort(result)
+        sns.set()
+        y = np.arange(1, len(x) + 1) / len(x)
+        _ = plt.plot(x, y, marker='.', linestyle='none')
+        _ = plt.xlabel(x_label if isinstance(x_label, str) else header)
+        _ = plt.ylabel('CDF')
+        plt.margins(0.02)  # Keeps data off plot edges
+        # pdf
+        plt.subplot(1, 2, 2)
+        _ = plt.hist(result, bins=50, density=True)
         _ = plt.xlabel(x_label if isinstance(x_label, str) else header)
         _ = plt.ylabel('PDF')
         _ = plt.axvspan(low_interval, high_interval, alpha=0.2)
         _ = plt.axvline(x=low_interval)
         _ = plt.axvline(x=high_interval)
+
         plt.show()
+        plt.clf()
+
+    @staticmethod
+    def show_pca(canonical: pd.DataFrame, headers: list, hue: str):
+        """Principal Component Analysis (PCA) is a common technique to reduce feature dimensionality. This assumes
+        classification. Principal component analysis (PCA) is a technique for reducing the dimensionality of such
+        datasets, increasing interpretability but at the same time minimizing information loss. It does so by creating
+        new uncorrelated variables that successively maximize variance.
+        """
+        fig = plt.figure(figsize=(12, 8))
+        sns.set(style='darkgrid', color_codes=True)
+        x = canonical.loc[:, headers].values
+        x = StandardScaler().fit_transform(x)
+        # PCA Projection to 2D
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(x)
+        principalDf = pd.DataFrame(data=principalComponents, columns=['principal component one',
+                                                                      'principal component two'])
+        finalDf = pd.concat([principalDf, canonical[[hue]]], axis=1)
+        sns.scatterplot(data=finalDf, x='principal component one', y='principal component two', hue=hue)
+        plt.title('Principle Component Analysis', fontdict={'size': 20})
+        plt.show()
+        plt.clf()
 
     @staticmethod
     def show_num_density(df: pd.DataFrame, category: bool=False, filename: str=None, **kwargs):
@@ -206,6 +228,7 @@ class Visualisation(object):
         # Define figure size.
         figsize = figsize if isinstance(figsize, tuple) else (16, 4)
         fig = plt.figure(figsize=figsize)
+        _ = plt.suptitle('Show Distribution', fontdict={'size': 20})
         # histogram
         plt.subplot(1, 3, 1)
         sns.histplot(df[header], bins=30)
@@ -224,34 +247,9 @@ class Visualisation(object):
             fig.savefig(filename)
         plt.clf()
 
-    @staticmethod
-    def show_pca(canonical, headers, hue, filename=None, figsize=None):
-        """Principal Component Analysis (PCA) is a common technique to reduce feature dimensionality. This assumes
-        classification
-        """
-        if figsize is None or not isinstance(figsize, tuple):
-            _figsize = (6, 4)
-        else:
-            _figsize = figsize
-        fig = plt.figure(figsize=_figsize)
-        sns.set(style='darkgrid', color_codes=True)
-        x = canonical.loc[:, headers].values
-        x = StandardScaler().fit_transform(x)
-        # PCA Projection to 2D
-        pca = PCA(n_components=2)
-        principalComponents = pca.fit_transform(x)
-        principalDf = pd.DataFrame(data=principalComponents, columns=['principal component one',
-                                                                      'principal component two'])
-        finalDf = pd.concat([principalDf, canonical[[hue]]], axis=1)
-        sns.scatterplot(data=finalDf, x='principal component one', y='principal component two', hue=hue)
-        if filename is None:
-            plt.show()
-        else:
-            fig.savefig(filename)
-        plt.clf()
 
     @staticmethod
-    def show_corr_covariate(canonical, headers=None, hue:str=None, filename=None, figsize=None):
+    def show_corr_density(canonical, headers=None, hue:str=None, filename=None, figsize=None):
         headers = headers if isinstance(headers, (str, list)) else Commons.filter_headers(canonical, dtype=['number'])
         if len(headers) == 0:
             return
@@ -273,7 +271,7 @@ class Visualisation(object):
         plt.clf()
 
     @staticmethod
-    def show_corr_univariate(df, hue:str=None, filename=None, figsize=None, **kwargs):
+    def show_corr_pairplot(df, hue:str=None, filename=None, figsize=None, **kwargs):
         figsize = figsize if isinstance(figsize, tuple) else (12, 12)
         fig = plt.figure(figsize=figsize)
         sns.set(palette='muted')

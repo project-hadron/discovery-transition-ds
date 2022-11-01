@@ -276,6 +276,67 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
+    def auto_transition(self, df, unique_max: int=None, null_max: float=None, inplace: bool=None,
+                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+        """ automatically tries to convert a passes DataFrame to appropriate types
+
+        :param df: the pandas DataFrame to remove null rows from
+        :param unique_max: the max number of unique values in the column. default to 20
+        :param null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        if not isinstance(unique_max, int):
+            unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
+        null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
+        inplace = inplace if isinstance(inplace, bool) else False
+        if not inplace:
+            df = deepcopy(df)
+        _date_headers = []
+        _bool_headers = []
+        _cat_headers = []
+        _num_headers = []
+        for c in Commons.filter_headers(df, dtype=object):
+            try:
+                if all(Commons.valid_date(x) for x in df[c].dropna()):
+                    _date_headers.append(c)
+                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
+                    _bool_headers.append(c)
+                elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
+                    _cat_headers.append(c)
+                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+                    _num_headers.append(c)
+            except TypeError:
+                pass
+        if len(_bool_headers) > 0:
+            bool_map = {1: True}
+            df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)
+        if len(_date_headers) > 0:
+            df = self.to_date_type(df, headers=_date_headers, inplace=False, save_intent=False)
+        if len(_cat_headers) > 0:
+            df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
+        if len(_num_headers) > 0:
+            df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
+        if not inplace:
+            return df
+        return
+
     def auto_to_category(self, df: pd.DataFrame, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
                          nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                          intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,

@@ -71,25 +71,25 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = self.clean.to_date_from_mpldates(df, headers='dates', date_format="%Y-%m-%d")
         self.assertEqual(['2018-01-01']*5, result['dates'].to_list())
 
-    # def test_auto_transition(self):
-    #     tools = self.tools
-    #     sample_size = 100
-    #     df = pd.DataFrame()
-    #     df['nums'] = tools.get_number(1, 100, size=sample_size)
-    #     df['floats'] = tools.get_number(1, 100, quantity=0.9, size=sample_size)
-    #     df['num_str'] = tools.get_category(list(range(100)), quantity=0.9, size=sample_size)
-    #     df['bools'] = tools.get_category([True, False], quantity=0.9, size=sample_size)
-    #     df['bool_str'] = tools.get_category(['1', '0'], quantity=0.9, size=sample_size)
-    #     df['bool_num'] = tools.get_category([1, 0], quantity=0.9, size=sample_size)
-    #     df['cats'] = tools.get_category(list('ABC'), quantity=0.9, size=sample_size)
-    #     df = self.clean.auto_transition(df)
-    #     self.assertTrue(df['nums'].dtype.name.startswith('int'))
-    #     self.assertTrue(df['floats'].dtype.name.startswith('float'))
-    #     self.assertTrue(df['num_str'].dtype.name.startswith('float'))
-    #     self.assertTrue(df['bools'].dtype.name.startswith('bool'))
-    #     self.assertTrue(df['bool_str'].dtype.name.startswith('category'))
-    #     self.assertTrue(df['bool_num'].dtype.name.startswith('bool'))
-    #     self.assertTrue(df['cats'].dtype.name.startswith('category'))
+    def test_auto_transition(self):
+        tools = self.tools
+        sample_size = 100
+        df = pd.DataFrame()
+        df['nums'] = tools.get_number(1, 100, size=sample_size)
+        df['floats'] = tools.get_number(1, 100, quantity=0.9, size=sample_size)
+        df['num_str'] = tools.get_category(list(range(100)), quantity=0.9, size=sample_size)
+        df['bools'] = tools.get_category([True, False], quantity=0.9, size=sample_size)
+        df['bool_str'] = tools.get_category(['1', '0'], quantity=0.9, size=sample_size)
+        df['bool_num'] = tools.get_category([1, 0], quantity=0.9, size=sample_size)
+        df['cats'] = tools.get_category(list('ABC'), quantity=0.9, size=sample_size)
+        df = self.clean.auto_transition(df)
+        self.assertTrue(df['nums'].dtype.name.startswith('int'))
+        self.assertTrue(df['floats'].dtype.name.startswith('float'))
+        self.assertTrue(df['num_str'].dtype.name.startswith('float'))
+        self.assertTrue(df['bools'].dtype.name.startswith('bool'))
+        self.assertTrue(df['bool_str'].dtype.name.startswith('category'))
+        self.assertTrue(df['bool_num'].dtype.name.startswith('bool'))
+        self.assertTrue(df['cats'].dtype.name.startswith('category'))
 
     def test_auto_reinstate_nulls(self):
         tools = self.tools
