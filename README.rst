@@ -332,6 +332,365 @@ environment variables. The next step is to build a real pipeline and
 join that with other pipelines to construct our complete master Domain
 Contract.
 
+Building a Pipeline
+===================
+
+Now we know what a component looks like we can start to build the
+pipeline adding in actions that gives the component purpose.
+
+The first component we will build as part of the pipeline is the data
+selection component with the class name Transition. This component
+provides a set of actions that focuses on tidying raw data by removing
+data columns that are not useful to the final feature set. These may
+include null columns, single value columns, duplicate columns and noise
+etc. We can also ensure the data is properly canonicalised through
+enforcing data typing.
+
+Project Hadron Canonicalizes data following the canonical model pattern
+so that every component speaks the same data language. In this case and
+with this package all components use Pandas DataFrame format. This is
+common format used by data scientists and statisticians to manipulate
+and visualise large data sets.
+
+Setting Up
+----------
+
+Before we do that, and as shown in the previous section, we now use the
+environment variables to define the location of the Domain Contract and
+datastore.
+
+.. code:: ipython3
+
+    import os
+
+.. code:: ipython3
+
+    os.environ['HADRON_PM_PATH'] = '0_hello_meta/demo/contracts'
+    os.environ['HADRON_DEFAULT_PATH'] = '0_hello_meta/demo/data'
+
+For the feature selection we are using the Transition component with the
+ability to select the correct columns from raw data, potentially
+reducing the column count. In addition the Transistioning component
+extends the common reporting tools and provides additional functionality
+for identifying quality, quantity, veracity and availability.
+
+It should be worth noting we are creating a new component and as such
+must set up the input and the output of the component.
+
+.. code:: ipython3
+
+    from ds_discovery import Transition
+
+.. code:: ipython3
+
+    # get the instance
+    tr = Transition.from_env('hello_tr', has_contract=False)
+
+.. code:: ipython3
+
+    tr.set_source_uri('https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv')
+    tr.set_persist()
+
+Adding Select Actions
+---------------------
+
+At the core of a component is its tasks, in other words how it changes
+incoming data into a different data outcome. To achieve this we use the
+actions that are set up specificially for this Component. These actions
+are the intensions of the specific component also know as the components
+intent. The components intent is a finate set of methods, unique to each
+component, that can be applied to the raw data in order to change it in
+a way that is useful to the outcome of the task.
+
+In order to get a list of a component’s intent, in this case feature
+selection, you can use the Python method ``__dir__()``. In this case
+with the transition component ``tr`` we would use the comand
+``tr.tools.__dir__()``\ to produce the directory of the components
+select intent. Remember this method call can be used in any components
+intent tools.
+
+Now we have added where the raw data is situated we can load the
+canonical, called, ``df``\ …
+
+.. code:: ipython3
+
+    df = tr.load_source_canonical()
+
+…and produce the report on the raw data so we can observe the features
+of interest.
+
+.. code:: ipython3
+
+    tr.canonical_report(df)
+
+.. image:: docs/2_img01.png
+  :width: 650
+
+-------------------
+
+Featutres of Interest
+---------------------
+
+The components intent methods are not first class methods but part of
+the ``intent_model_class``. Therefore to access the intent specify the
+controller instance name, in this case ``tr``, and then reference the
+``intent_model_class`` to access the components intent. To make this
+easier to remember with an abbreviated form we have overloaded the
+``intent_model`` name with the name ``tools``. You can see with all
+reference to the intent actions they start with ``tr.tools.``
+
+When looking for features of interest, through observation, it appears,
+within some columns ``space`` has been repalaced by a question mark
+``?``. In this instance we would use the ``auto_reinstate_nulls`` to
+replace all the obfusacted cells with nulls. In addition we can
+immediately observe columns that are inappropriate for our needs. In
+this case we do not need the column **name** and it is removed using
+``to_remove`` passing the name of the attribute.
+
+.. code:: ipython3
+
+    # returns obfusacted nulls
+    df = tr.tools.auto_reinstate_nulls(df, nulls_list=['?'])
+    # removes data columns of no interest
+    df = tr.tools.to_remove(df, headers=['name'])
+
+Run Component Pipeline
+----------------------
+
+To run a component we use the common method ``run_component_pipeline``
+which loads the source data, executes the component task then persists
+the results. This is the only method you can use to run the tasks of a
+component and produce its results and should be a familiarized method.
+
+We can now run the ``run_component_pipeline`` and use the canonical
+report to observe the outcome. From it we can see the nulls column now
+indicates the number of nulls in each column correctly so we can deal
+with them later. We have also removed the column **name**.
+
+.. code:: ipython3
+
+    tr.run_component_pipeline()
+    tr.canonical_report(tr.load_persist_canonical())
+
+.. image:: docs/2_img02.png
+  :width: 650
+
+-------------------
+
+As we continue the observations we see more columns that are of limited
+interest and need to be removed as part of the selection process.
+Because the components intent action is mutable we can re-implement the
+``to_remove`` including the new headers within the list. As this
+overwrites the original component intent we must make sure to include
+the **name** Column.
+
+.. code:: ipython3
+
+    df = tr.tools.to_remove(df, headers=['name', 'boat', 'body', 'home.dest'])
+
+As the target is a cluster algorithm we can use the ``auto_to_category``
+to ensure the data **typing** is appropriate to the column type.
+
+.. code:: ipython3
+
+    df = tr.tools.auto_to_category(df, unique_max=20)
+
+Finally we ensure the two contigious columns are set to numeric type. It
+is worth noting though age is an interger, Python does not recognise
+nulls within an interger type and automaticially choses it as a float
+type.
+
+.. code:: ipython3
+
+    df = tr.tools.to_numeric_type(df, headers=['age', 'fare'])
+
+Using the Intent reporting tool to check the work and see what the
+Intent currently looks like all together.
+
+.. code:: ipython3
+
+    tr.report_intent()
+
+.. image:: docs/2_img03.png
+  :width: 500
+
+-------------------
+
+Adding these actions or the components intent is a process of looking at
+the raw data and the observer making decisions on the selection of the
+features of interest. Therefore component selection is potentially an
+iterative task where we would add component intent, observe the changes
+and then repeat until the process is complete.
+
+Ordering the Actions of a Component
+-----------------------------------
+
+With the component intent now defined the run pipeline does its best to
+guess the best order of that Intent but sometimes we want to ensure
+things run in a certain order due to dependancies or other challenges.
+Though not necessary, we will clear the previous Intent and write it
+again, this time in order.
+
+.. code:: ipython3
+
+    tr.remove_intent()
+
+This time when we add the Intent we include the parameter
+``intent_level`` to indicate the different order or level of execution.
+
+We load the source canonical and repeat the Intent, this time including
+the new intent level.
+
+.. code:: ipython3
+
+    df = tr.load_source_canonical()
+
+.. code:: ipython3
+
+    df = tr.tools.auto_reinstate_nulls(df, nulls_list=['?'], intent_level='reinstate')
+    df = tr.tools.to_remove(df, headers=['name', 'boat', 'body', 'home.dest'], intent_level='remove')
+    df = tr.tools.auto_to_category(df, unique_max=20, intent_level='auto_category')
+    df = tr.tools.to_numeric_type(df, headers=['age', 'fare'], intent_level='to_dtype')
+    df = tr.tools.to_str_type(df, headers=['cabin', 'ticket'],use_string_type=True , intent_level='to_dtype')
+
+In addition, and as an introduction to a new feature, we will add in the
+column description that describes the reasoning behind why an Intent was
+added.
+
+.. code:: ipython3
+
+    tr.add_column_description('reinstate', description="reinstate nulls that where obfuscated with '?'")
+    tr.add_column_description('remove', description="remove column of no value")
+    tr.add_column_description('auto_category', description="auto fit features to categories where their uniqueness is 20 or less")
+    tr.add_column_description('to_dtype', description="ensure all other columns of interest are appropriately typed")
+
+
+Using the report we can see the addition of the numbers, in the level
+column, which helps the run component run the tasks in the order given.
+It is worth noting that the tasks can be given the same level if the
+order is not important and the run component will deal with it using its
+ordering algorithm.
+
+.. code:: ipython3
+
+    tr.report_intent()
+
+.. image:: docs/2_img04.png
+  :width: 650
+
+-------------------
+
+As we have taken the time to capture the reasoning to include the
+compoment Intent we can use the reports to produce a view of the Intent
+column comments that are invaluable when interrogating a component and
+understanding why decisions were made.
+
+.. code:: ipython3
+
+    tr.report_column_catalog()
+
+.. image:: docs/2_img05.png
+  :width: 650
+
+-------------------
+
+Component Pipeline
+------------------
+
+As usual we can now run the Compant pipeline to apply the components
+tasks.
+
+.. code:: ipython3
+
+    tr.run_component_pipeline()
+
+As an extension of the default, ``run_component_pipeline`` provides
+useful tools to help manage the outcome. In this case we’ve
+specificially defined the Intent order we wanted to run.
+
+.. code:: ipython3
+
+    tr.run_component_pipeline(intent_levels=['remove', 'reinstate', 'auto_category', 'to_dtype'])
+
+
+Run Books
+---------
+
+A challenge faced with the component intent is its order, as you have
+seen. The solution thus far only applies at run time and is therefore
+not repeatable. We introduced the idea of Run Books as a repeatable set
+of instructions which contain the order in which to run the components
+intent. Run Books also provide the ability to particially implement
+component intent actions, meaning we can replay subsets of a fuller list
+of a components intent. For example through experimentation we have
+created a number of additional component intents, that are not pertinent
+to a production ready selection. By setting up two Run Books we can
+select which component intent is appropriate to their objectives and
+``run_component_pipeline`` to produce the appropriate outcome.
+
+In the example we add our list of intent to a book in the order needed.
+In this case we have not specified a book name so this book is allocated
+to the primary Run Book. Now each time we run pipeline, it is set to run
+the primary Run Book.
+
+.. code:: ipython3
+
+    tr.add_run_book(run_levels=['remove', 'reinstate', 'auto_category', 'to_dtype'])
+
+Here we had a book by name where we select only the intent that cleans
+the raw data. The Run book report Now what are shows us the two run
+books;
+
+.. code:: ipython3
+
+    tr.add_run_book(book_name='cleaner', run_levels=['remove', 'reinstate'])
+
+.. code:: ipython3
+
+    tr.report_run_book()
+
+.. image:: docs/2_img06.png
+  :width: 650
+
+-------------------
+
+In this next example we add an additional Run Book that is a subset of
+the tasks to only clean the data. By passing this named Run Book to the
+run pipeline it is obliged to only run this subset and only clean the
+data. We can see the results of this in our canonical report below.
+
+.. code:: ipython3
+
+    tr.run_component_pipeline(run_book='cleaner')
+
+.. code:: ipython3
+
+    tr.canonical_report(tr.load_persist_canonical())
+
+.. image:: docs/2_img07.png
+  :width: 650
+
+-------------------
+
+As a contrast to the above we can run the pipeline without providing a
+Run Book name and it will automatically default to the primary run book,
+assuming this has been set up. In this case running the full component
+Intent the resulting outcome is shown below in the canonical report.
+
+.. code:: ipython3
+
+    tr.run_component_pipeline()
+
+.. code:: ipython3
+
+    tr.canonical_report(tr.load_persist_canonical())
+
+.. image:: docs/2_img08.png
+  :width: 650
+
+-------------------
+
+
 Reference
 =========
 
