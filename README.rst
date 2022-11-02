@@ -107,6 +107,9 @@ referencing and reloading. Though this may seem complicated at this
 early stage it is important to understand the relationship between a
 named component and its Domain Contract.
 
+Getting Started
+---------------
+
 Firstly we have imported a component from the Project Hadron library for
 this demonstration. It should be noted, the choice of component is
 arbritary for this demonstration, as even though each component has its
@@ -206,6 +209,10 @@ up your data discovery and the understanding of the dataset.
 
     tr.canonical_report(df)
 
+.. image:: docs/1_img01.png
+  :width: 650
+
+-------------------
 
 When we set up the source and persist we use something called Connector
 contracts, these act like brokers between external data and the internal
@@ -224,11 +231,15 @@ and the location of the data.
 
     tr.report_connectors()
 
+.. image:: docs/1_img02.png
+  :width: 650
+
+----------------
+
 This gives a flavour of the tools available to look inside a component
 and time should be taken viewing the different reports a component
 offers.
 
---------------
 
 Environment Variables
 ---------------------
@@ -290,6 +301,10 @@ giving the location path (uri) given by the environment variable.
 
     tr.report_connectors(inc_template=True)
 
+.. image:: docs/1_img03.png
+  :width: 650
+
+-------------------
 
 Because we have now changed the location of where the Domain Contract
 can be found we need to reset things from the start giving the source
