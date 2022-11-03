@@ -1,4 +1,4 @@
-Project Hadron Data Science and Synthetic Feature Builder
+Project Hadron Data Science Tools and Synthetic Feature Builder
 #########################################################
 
 .. class:: no-web no-pdf
