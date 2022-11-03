@@ -973,6 +973,178 @@ engineering has made.
 
 -------------------
 
+Controller
+==========
+
+The Controller is a unique component that independantly orchestrates the
+components registered to it. It executes the components Domain Contract
+and not its code. Domain Contracts belonging to a Controller should be
+in the same path location as the Controllers Domain Contract. The
+Controller executes the registered Controllers Domain Contracts in
+accordance to the instructions given to it when the ``run_components``
+is executed. The Controller orchestrates how those components should run
+with the components being independant in their actions and therefore a
+separation of concerns. With Controller you do not need to give it a
+name as this is assumed in each folder containing Domain Contracts for
+this set of components, known as a Domain Contract Cluster. This allows
+us the entry point to interogate the Controller and its components.
+
+Setting Up
+----------
+
+.. code:: ipython3
+
+    import os
+
+.. code:: ipython3
+
+    os.environ['HADRON_PM_PATH'] = '0_hello_meta/demo/contracts'
+    os.environ['HADRON_DEFAULT_PATH'] = '0_hello_meta/demo/data'
+
+.. code:: ipython3
+
+    from ds_discovery import Controller
+
+.. code:: ipython3
+
+    controller = Controller.from_env(has_contract=False)
+
+Add Components
+--------------
+
+Now we have the empty Controller we need to register or add which
+components make up this Controller, it should be noted that the Domain
+Contracts for each component must be in the same folder of the
+Controller Domain Contract.
+
+To add a component we use the intent method specific for that component
+type in this case ``model_transition`` for ``hello_tr`` and
+``model_wrangle`` for ``hello_wr``.
+
+.. code:: ipython3
+
+    controller.intent_model.transition(canonical=0, task_name='hello_tr', intent_level='hw_transition')
+
+.. code:: ipython3
+
+    controller.intent_model.wrangle(canonical=0, task_name='hello_wr', intent_level='hw_wrangle')
+
+Report
+------
+
+Using the Task report we can check the components have been added.
+
+.. code:: ipython3
+
+    controller.report_tasks()
+
+.. image:: docs/4_img01.png
+  :align: center
+  :width: 400
+
+-------------------
+
+As with all components the Controller executes the components in the
+order given. By using the Controller’s special Run Book we are given
+considerabily more flexability in the order and behaviour of each
+component and how it interacts with others.
+
+As good practice a Run Book should always be created for each Controller
+as this provides better transparency into how the components run.
+
+.. code:: ipython3
+
+    run_book = [
+        controller.runbook2dict(task='hw_transition'),
+        controller.runbook2dict(task='hw_wrangle'),
+    ]
+    controller.add_run_book(run_levels=run_book)
+
+Run Controller Pipeline
+-----------------------
+
+To run the controller we execute ``run_controller`` this is a special
+method and replaces ``run_component_pipeline``, common to other
+components, adding extra features to enable the control of the
+registared components. This is the only method you can use to run the
+Controller and execute its registared components. It is worth noting it
+is the components that produce the outcome of their collective
+objectives or tasks and not the Controller. The Controller orchestrates
+how those components should run with the components being independant in
+their actions and therefore a separation of concerns.
+
+.. code:: ipython3
+
+    controller.run_controller()
+
+The Controller is a powerful tool and should be investigated further to
+understand all its options. The Run Book can be used to provide a set of
+instructions on how each component recieves its source and persists, be
+it to another component or as an external data set. The
+``run_controller`` has useful tools to monitor changes in incoming data
+and provide a run report of how all the components ran.
+
+--------------
+
+In the section below we will demonstrate a couple of these features.
+
+One of the most useful parameters that comes with the ``run_controller``
+is the ``run_cycle_report`` that saves off a run report, that provides
+the run time of the controller and the components there in.
+
+.. code:: ipython3
+
+    controller.run_controller(run_cycle_report='cycle_report.csv')
+    controller.load_canonical(connector_name='run_cycle_report')
+
+.. image:: docs/4_img02.png
+  :align: center
+  :width: 300
+
+-------------------
+
+Now we have the ``run_cycle_report`` we can observe the other
+parameters. In this case we are adding the ``run_time`` parameter that
+runs the controllers components for a time period of three seconds
+
+.. code:: ipython3
+
+    controller.run_controller(run_time=3, run_cycle_report='cycle_report.csv')
+    controller.load_canonical(connector_name='run_cycle_report')
+
+.. image:: docs/4_img03.png
+  :align: center
+  :width: 300
+
+-------------------
+
+In this example we had the parameters ``repeat`` and ``sleep`` where the
+first defines the number of times to repeat the component cycleand the
+second, and the number of seconds to pause between each cycle.
+
+.. code:: ipython3
+
+    controller.run_controller(repeat=2, sleep=3, run_cycle_report='cycle_report.csv')
+    controller.load_canonical(connector_name='run_cyclHelloe_report')
+
+.. image:: docs/4_img04.png
+  :align: center
+  :width: 300
+
+-------------------
+
+Finally we use the ``source_check_uri`` parameter as a pointer to and
+input source to watch for changes.
+
+.. code:: ipython3
+
+    controller.run_controller(repeat=3, source_check_uri='https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv', run_cycle_report='cycle_report.csv')
+    controller.load_canonical(connector_name='run_cycle_report')
+
+.. image:: docs/4_img05.png
+  :align: center
+  :width: 300
+
 
 Reference
 =========

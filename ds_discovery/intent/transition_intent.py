@@ -308,13 +308,16 @@ class TransitionIntentModel(AbstractIntentModel):
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = deepcopy(df)
+        _null_headers = []
         _date_headers = []
         _bool_headers = []
         _cat_headers = []
         _num_headers = []
         for c in Commons.filter_headers(df, dtype=object):
             try:
-                if all(Commons.valid_date(x) for x in df[c].dropna()):
+                if df[c].isnull().all():
+                    _null_headers.append(c)
+                elif all(Commons.valid_date(x) for x in df[c].dropna()):
                     _date_headers.append(c)
                 elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
                     _bool_headers.append(c)

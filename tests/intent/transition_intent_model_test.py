@@ -75,6 +75,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         tools = self.tools
         sample_size = 100
         df = pd.DataFrame()
+        df['nulls'] = [None]*sample_size
         df['nums'] = tools.get_number(1, 100, size=sample_size)
         df['floats'] = tools.get_number(1, 100, quantity=0.9, size=sample_size)
         df['num_str'] = tools.get_category(list(range(100)), quantity=0.9, size=sample_size)
