@@ -2,9 +2,9 @@
 
 # -- Project information
 
-project = 'Lumache'
-copyright = '2021, Graziella'
-author = 'Graziella'
+project = 'Project Hadron'
+copyright = '2022, gigas64'
+author = 'gigas64'
 
 release = '0.1'
 version = '0.1.0'

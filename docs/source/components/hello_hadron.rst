@@ -1,99 +1,3 @@
-Project Hadron Data Science Tools and Synthetic Feature Builder
-#########################################################
-
-.. class:: no-web no-pdf
-
-.. contents:: Table of Contents
-
-.. section-numbering::
-
-Filling the Gap - Project Hadron
-================================
-Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
-machine learning business outcomes and the final product.
-
-Project Hadron is a core set of abstractions that are the foundation of the three key elements that represent data
-science, those being: (1) feature engineering, (2) the construction of synthetic data with simulators, and generators
-(3) and statistics and machine learning algorithms for discovery and creating models. Project Hadron uniquely sees
-data as ‘all the same’ (lazyprogrammer (2020) https://lazyprogrammer.me/all-data-is-the-same/) , by which we mean
-its origin, shape and size stay independent throughout the disciplines so its content, form and structure can be
-removed as a factor in the design and implementation of the components built.
-
-Project Hadron has been designed to place data scientists in the familiar environment of machine learning and
-statistical tools, extracting their ideas and translating them automagicially into production ready solutions
-familiar to data engineers and Subject Matter Experts (SME’s).
-
-Project Hadron provides a clear Separation of Concerns, whilst maintaining the original intentions of the data
-scientist, that can be passed to a production team. It offers trust between the data scientists teams and product
-teams. It brings with it transparency and traceability, dealing with bias, fairness, and knowledge. The resulting
-outcome provides the product engineers with adaptability, robustness, and reuse; fitting seamlessly into a
-microservices solution that can be language agnostic.
-
-At the heart of Project Hardon is a multi-tenant, NoSQL, singleton, in memory data store that has minimal code and
-functionality and has been custom built specifically for Hadron tasks in  mind. Abstracted from this is the component
-store which allows us to build a reusable set of methods that define each tenanted component that sits separately
-from the store itself. In addition, a dynamic key value class provides labeling so that each tenant is not tied to
-a fixed set of reference values unless by specificity. Each of the classes, the data store, the component property
-manager, and the key value pairs that make up the component are all independent, giving complete flexibility and
-minimum code footprint to the build process of new components.
-
-This is what gives us the Domain Contract for each tennant which sits at the heart of what makes the contracts
-reusable, translatable, transferable and brings the data scientist closer to the production engineer along with
-building a production ready component solution.
-
-
-Main features
-=============
-
-* Data Preparation
-* Feature Selection
-* Feature Engineering
-* Feature Cataloguing
-* Augmented Knowledge
-* Synthetic Feature Build
-
-Background
-==========
-Born out of the frustration of time constraints and the inability to show business value
-within a business expectation, this project aims to provide a set of tools to quickly build production ready
-data science disciplines within a component based solution demonstrating coupling and cohesion between each
-disipline, providing a separation of concerns between components.
-
-It also aims to improve the communication outputs needed by ML delivery to talk to Pre-Sales, Stakholders,
-Business SME's, Data SME's product coders and tooling engineers while still remaining within familiar code
-paradigms.
-
-Getting Started
-===============
-The ``discovery-transition-ds`` package is a set of python components that are focussed on Data Science. They
-are a concrete implementation of the Project Hadron abstract core. It is build to be very light weight
-in terms of package dependencies requiring nothing beyond what would be found in an basic Data Science environment.
-Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
-
-Installation
-============
-
-package install
----------------
-The best way to install AI-STAC component packages is directly from the Python Package Index repository using pip.
-All AI-STAC components are based on a pure python foundation package ``aistac-foundation``
-
-.. code-block:: bash
-
-    $ pip install aistac-foundation
-
-The AI-STAC component package for the Transition is ``discovery-transition-ds`` and pip installed with:
-
-.. code-block:: bash
-
-    $ pip install discovery-transition-ds
-
-if you want to upgrade your current version then using pip install upgrade with:
-
-.. code-block:: bash
-
-    $ pip install --upgrade discovery-transition-ds
-
 Building a Component
 ====================
 
@@ -209,7 +113,7 @@ up your data discovery and the understanding of the dataset.
 
     tr.canonical_report(df)
 
-.. image:: docs/source/images/hello_hadron/source/images/hello_hadron/1_img01.png
+.. image:: /images/hello_hadron/1_img01.png
   :align: center
   :width: 700
 
@@ -232,7 +136,7 @@ and the location of the data.
 
     tr.report_connectors()
 
-.. image:: docs/source/images/hello_hadron/1_img02.png
+.. image:: /images/hello_hadron/1_img02.png
   :align: center
   :width: 650
 
@@ -303,7 +207,7 @@ giving the location path (uri) given by the environment variable.
 
     tr.report_connectors(inc_template=True)
 
-.. image:: docs/source/images/hello_hadron/1_img03.png
+.. image:: /images/hello_hadron/1_img03.png
   :align: center
   :width: 650
 
@@ -426,7 +330,7 @@ of interest.
 
     tr.canonical_report(df)
 
-.. image:: docs/source/images/hello_hadron/2_img01.png
+.. image:: /images/hello_hadron/2_img01.png
   :align: center
   :width: 650
 
@@ -476,7 +380,7 @@ with them later. We have also removed the column **name**.
     tr.run_component_pipeline()
     tr.canonical_report(tr.load_persist_canonical())
 
-.. image:: docs/source/images/hello_hadron/2_img02.png
+.. image:: /images/hello_hadron/2_img02.png
   :align: center
   :width: 650
 
@@ -516,7 +420,7 @@ Intent currently looks like all together.
 
     tr.report_intent()
 
-.. image:: docs/source/images/hello_hadron/2_img03.png
+.. image:: /images/hello_hadron/2_img03.png
   :align: center
   :width: 500
 
@@ -581,7 +485,7 @@ ordering algorithm.
 
     tr.report_intent()
 
-.. image:: docs/source/images/hello_hadron/2_img04.png
+.. image:: /images/hello_hadron/2_img04.png
   :align: center
   :width: 500
 
@@ -596,7 +500,7 @@ understanding why decisions were made.
 
     tr.report_column_catalog()
 
-.. image:: docs/source/images/hello_hadron/2_img05.png
+.. image:: /images/hello_hadron/2_img05.png
   :align: center
   :width: 500
 
@@ -657,7 +561,7 @@ books;
 
     tr.report_run_book()
 
-.. image:: docs/source/images/hello_hadron/2_img06.png
+.. image:: /images/hello_hadron/2_img06.png
   :align: center
   :width: 400
 
@@ -676,7 +580,7 @@ data. We can see the results of this in our canonical report below.
 
     tr.canonical_report(tr.load_persist_canonical())
 
-.. image:: docs/source/images/hello_hadron/2_img07.png
+.. image:: /images/hello_hadron/2_img07.png
   :align: center
   :width: 650
 
@@ -695,7 +599,7 @@ Intent the resulting outcome is shown below in the canonical report.
 
     tr.canonical_report(tr.load_persist_canonical())
 
-.. image:: docs/source/images/hello_hadron/2_img08.png
+.. image:: /images/hello_hadron/2_img08.png
   :align: center
   :width: 650
 
@@ -766,7 +670,7 @@ current source.
 
     wr.canonical_report(df)
 
-.. image:: docs/source/images/hello_hadron/3_img01.png
+.. image:: /images/hello_hadron/3_img01.png
   :align: center
   :width: 650
 
@@ -834,7 +738,7 @@ intent level.
 
     wr.report_intent()
 
-.. image:: docs/source/images/hello_hadron/3_img02.png
+.. image:: /images/hello_hadron/3_img02.png
   :align: center
   :width: 500
 
@@ -860,7 +764,7 @@ features.
 
     wr.canonical_report(df)
 
-.. image:: docs/source/images/hello_hadron/3_img03.png
+.. image:: /images/hello_hadron/3_img03.png
   :align: center
   :width: 650
 
@@ -891,7 +795,7 @@ anything.
 
     df['deck'].value_counts()
 
-.. image:: docs/source/images/hello_hadron/3_img04.png
+.. image:: /images/hello_hadron/3_img04.png
   :align: center
   :width: 200
 
@@ -922,7 +826,7 @@ Using the Intent report we can check on the additional intent added.
 
     wr.report_intent()
 
-.. image:: docs/source/images/hello_hadron/3_img05.png
+.. image:: /images/hello_hadron/3_img05.png
   :align: center
   :width: 700
 
@@ -957,7 +861,7 @@ engineering has made.
 
     wr.report_run_book()
 
-.. image:: docs/source/images/hello_hadron/3_img06.png
+.. image:: /images/hello_hadron/3_img06.png
   :align: center
   :width: 400
 
@@ -967,7 +871,7 @@ engineering has made.
 
     wr.canonical_report(wr.load_persist_canonical(), stylise=False)
 
-.. image:: docs/source/images/hello_hadron/3_img07.png
+.. image:: /images/hello_hadron/3_img07.png
   :align: center
   :width: 650
 
@@ -1038,7 +942,7 @@ Using the Task report we can check the components have been added.
 
     controller.report_tasks()
 
-.. image:: docs/source/images/hello_hadron/4_img01.png
+.. image:: /images/hello_hadron/4_img01.png
   :align: center
   :width: 400
 
@@ -1097,7 +1001,7 @@ the run time of the controller and the components there in.
     controller.run_controller(run_cycle_report='cycle_report.csv')
     controller.load_canonical(connector_name='run_cycle_report')
 
-.. image:: docs/source/images/hello_hadron/4_img02.png
+.. image:: /images/hello_hadron/4_img02.png
   :align: center
   :width: 300
 
@@ -1112,7 +1016,7 @@ runs the controllers components for a time period of three seconds
     controller.run_controller(run_time=3, run_cycle_report='cycle_report.csv')
     controller.load_canonical(connector_name='run_cycle_report')
 
-.. image:: docs/source/images/hello_hadron/4_img03.png
+.. image:: /images/hello_hadron/4_img03.png
   :align: center
   :width: 300
 
@@ -1127,7 +1031,7 @@ second, and the number of seconds to pause between each cycle.
     controller.run_controller(repeat=2, sleep=3, run_cycle_report='cycle_report.csv')
     controller.load_canonical(connector_name='run_cyclHelloe_report')
 
-.. image:: docs/source/images/hello_hadron/4_img04.png
+.. image:: /images/hello_hadron/4_img04.png
   :align: center
   :width: 300
 
@@ -1141,7 +1045,7 @@ input source to watch for changes.
     controller.run_controller(repeat=3, source_check_uri='https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv', run_cycle_report='cycle_report.csv')
     controller.load_canonical(connector_name='run_cycle_report')
 
-.. image:: docs/source/images/hello_hadron/4_img05.png
+.. image:: /images/hello_hadron/4_img05.png
   :align: center
   :width: 300
 
@@ -1163,50 +1067,6 @@ for data science ```discovery-transition-ds``` python package offers many more, 
 * Datetime features
 * Time series
 
-Reporting and Cataloging
-========================
-* citation of data
 
-Reference
-=========
-
-Python version
---------------
-
-Python 3.7 or less is not supported. Although it is recommended to install ``discovery-transition-ds`` against the
-latest Python version or greater whenever possible.
-
-Pandas version
---------------
-
-Pandas 0.25.x and above are supported but It is highly recommended to use the latest 1.0.x release as the first
-major release of Pandas.
-
-GitHub Project
---------------
-discovery-transition-ds: `<https://github.com/Gigas64/discovery-transition-ds>`_.
-
-Change log
-----------
-
-See `CHANGELOG <https://github.com/doatridge-cs/discovery-transition-ds/blob/master/CHANGELOG.rst>`_.
-
-
-Licence
--------
-
-BSD-3-Clause: `LICENSE <https://github.com/doatridge-cs/discovery-transition-ds/blob/master/LICENSE.txt>`_.
-
-
-Authors
--------
-
-`Gigas64`_  (`@gigas64`_) created discovery-transition-ds.
-
-
-.. _pip: https://pip.pypa.io/en/stable/installing/
-.. _Github API: http://developer.github.com/v3/issues/comments/#create-a-comment
-.. _Gigas64: http://opengrass.io
-.. _@gigas64: https://twitter.com/gigas64
 
 
