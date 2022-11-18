@@ -43,6 +43,27 @@ Main features
 * Augmented Knowledge
 * Synthetic Feature Build
 
+Feature transformers
+====================
+
+Project Hadron is a Python library with multiple transformers to engineer and select features to use
+across a synthetic build, statistics and machine learning.
+
+* Missing data imputation
+* Categorical encoding
+* Discretisation
+* Outlier capping or removal
+* Numerical transformation
+* Redundant feature removal
+* Synthetic variable creation
+* Synthetic multivariate
+* Synthetic model distributions
+* Datetime features
+* Time series
+
+Project Hadron allows one to present optimal parameters associated with each transformer, allowing
+different engineering procedures to be applied to different variables and feature subsets.
+
 Background
 ----------
 Born out of the frustration of time constraints and the inability to show business value
@@ -62,7 +83,7 @@ in terms of package dependencies requiring nothing beyond what would be found in
 Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
 
 Instalation
-===========
+-----------
 The best way to install AI-STAC component packages is directly from the Python Package Index repository using pip.
 All AI-STAC components are based on a pure python foundation package ``aistac-foundation``
 

@@ -1049,24 +1049,5 @@ input source to watch for changes.
   :align: center
   :width: 300
 
-Feature Engineering and Selection
-=================================
-
-Though we have only touched on a few intent feature actions, Project Hadron and its concert implementation
-for data science ```discovery-transition-ds``` python package offers many more, which include:
-
-* Missing data imputation
-* Categorical encoding
-* Discretisation
-* Outlier capping or removal
-* Numerical transformation
-* Redundant feature removal
-* Synthetic variable creation
-* Synthetic multivariate
-* Synthetic model distributions
-* Datetime features
-* Time series
-
-
 
 
