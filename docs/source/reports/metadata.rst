@@ -1,16 +1,10 @@
-Darryl Oatridge, August 2022
 
-Validating and Adding Metadata
-==============================
+Reports: Adding Information of Interest
+=======================================
 
--  Information about a data set that is structured (often in
-   machine-readable format) for purposes of search and retrieval.
-
-Citing the Data
----------------
-
--  Adding citations to support appropriate attribution by third-party
-   users in order to formally incorporate data reuse.
+Adding extended information of interest to guide and inform about appropriate
+attribution and decision making by the creator or editors to promote information
+share and assist data reuse.
 
 .. code:: ipython3
 

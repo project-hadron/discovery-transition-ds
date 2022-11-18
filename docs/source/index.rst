@@ -1,5 +1,5 @@
-Project Hadron Data Science Tools and Synthetic Feature Builder
-===============================================================
+Project Hadron Data Science and Synthetic Toolset
+=================================================
 
 .. toctree::
    :caption: Table of Contents

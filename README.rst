@@ -42,7 +42,7 @@ reusable, translatable, transferable and brings the data scientist closer to the
 building a production ready component solution.
 
 Main features
-=============
+-------------
 
 * Data Preparation
 * Feature Selection
@@ -52,14 +52,14 @@ Main features
 * Synthetic Feature Build
 
 Feature transformers
-====================
+--------------------
 
 Project Hadron is a Python library with multiple transformers to engineer and select features to use
 across a synthetic build, statistics and machine learning.
 
 * Missing data imputation
 * Categorical encoding
-* Discretisation
+* Variable Discretisation
 * Outlier capping or removal
 * Numerical transformation
 * Redundant feature removal
@@ -73,7 +73,7 @@ Project Hadron allows one to present optimal parameters associated with each tra
 different engineering procedures to be applied to different variables and feature subsets.
 
 Background
-==========
+----------
 Born out of the frustration of time constraints and the inability to show business value
 within a business expectation, this project aims to provide a set of tools to quickly build production ready
 data science disciplines within a component based solution demonstrating coupling and cohesion between each
@@ -91,10 +91,7 @@ in terms of package dependencies requiring nothing beyond what would be found in
 Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
 
 Installation
-============
-
-package install
----------------
+------------
 The best way to install AI-STAC component packages is directly from the Python Package Index repository using pip.
 All AI-STAC components are based on a pure python foundation package ``aistac-foundation``
 
@@ -114,8 +111,8 @@ if you want to upgrade your current version then using pip install upgrade with:
 
     $ pip install --upgrade discovery-transition-ds
 
-Building a Component
-====================
+Introducing Components
+======================
 
 This tutorial shows the fundamentals of how to run a basic Project
 Hadron component. It is the simpliest form of running a task
@@ -127,8 +124,8 @@ referencing and reloading. Though this may seem complicated at this
 early stage it is important to understand the relationship between a
 named component and its Domain Contract.
 
-Getting Started
----------------
+First Steps
+-----------
 
 Firstly we have imported a component from the Project Hadron library for
 this demonstration. It should be noted, the choice of component is
@@ -355,8 +352,8 @@ environment variables. The next step is to build a real pipeline and
 join that with other pipelines to construct our complete master Domain
 Contract.
 
-Building a Pipeline
-===================
+Building a Component for Selection
+==================================
 
 Now we know what a component looks like we can start to build the
 pipeline adding in actions that gives the component purpose.
@@ -452,8 +449,8 @@ of interest.
 
 -------------------
 
-Featutres of Interest
----------------------
+Features of Interest
+--------------------
 
 The components intent methods are not first class methods but part of
 the ``intent_model_class``. Therefore to access the intent specify the
@@ -622,10 +619,10 @@ understanding why decisions were made.
 
 -------------------
 
-Component Pipeline
-------------------
+Run Component
+-------------
 
-As usual we can now run the Compant pipeline to apply the components
+As usual we can now run the Component to apply the components
 tasks.
 
 .. code:: ipython3
@@ -721,8 +718,8 @@ Intent the resulting outcome is shown below in the canonical report.
 
 -------------------
 
-Feature Engineering
-===================
+Building a Component for Engineering
+====================================
 
 This new component works in exactly the same way as the selection
 component, whereby we create the instance pertinent to our intentions,
@@ -860,8 +857,8 @@ intent level.
 
 -------------------
 
-Run Component Pipeline
-----------------------
+Run Component
+-------------
 
 To run a component we use the common method ``run_component_pipeline``
 which loads the source data, executes the component task , in this case
@@ -993,10 +990,10 @@ engineering has made.
 
 -------------------
 
-Controller
-==========
+Building a Component Controller
+===============================
 
-The Controller is a unique component that independantly orchestrates the
+The Controller is a unique component that independently orchestrates the
 components registered to it. It executes the components Domain Contract
 and not its code. Domain Contracts belonging to a Controller should be
 in the same path location as the Controllers Domain Contract. The

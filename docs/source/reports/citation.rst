@@ -1,7 +1,5 @@
-Darryl Oatridge, November 2022
-
-Citing the Data
-===============
+Reports: Citing the Data
+========================
 
 Adding citations to support appropriate attribution by third-party users
 in order to formally incorporate data reuse

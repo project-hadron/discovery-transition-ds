@@ -1,11 +1,10 @@
-Darryl Oatridge, August 2022
 
-Validation of Data
-==================
+Reports : Data Veracity and Insight
+===================================
 
--  The review of a dataset by an expert with similar credentials and
-   subject knowledge as the data creator to validate the accuracy of the
-   data.
+The review of a dataset by an expert with similar credentials and
+subject knowledge as the data creator to validate the accuracy of the
+data and gain insight into its content and form.
 
 .. code:: ipython3
 

@@ -1,27 +1,20 @@
 Darryl Oatridge, August 2022
 
-Component Intent
-================
+Reports: Observing Intent
+=========================
 
--  Adding citations to support appropriate attribution by third-party
-   users in order to formally incorporate data reuse
-
-Validation of Data
-------------------
-
--  The review of a data set by an expert with similar credentials and
-   subject knowledge as the data creator to validate the accuracy of the
-   data
+The review of a data transformations by an expert with similar credentials and
+subject knowledge as the data creator to validate the accuracy of the transformations
 
 .. code:: ipython3
 
     from ds_discovery import Transition, SyntheticBuilder
     import pandas as pd
 
-Intent
-------
+Transformation Intent
+---------------------
 
-Intent is a core concept that provides a set of intended actions
+Intent is a core concept that transforms a set of intended actions
 relating directly to the components core task. In this instance we are
 using the Transitioning component that provides selection engineering of
 a provided dataset.

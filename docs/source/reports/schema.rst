@@ -1,17 +1,10 @@
 Darryl Oatridge, August 2022
 
-Contextualizing
-===============
+Reports: Data Analysis
+======================
+A deep dive look at patterns and relationships within a dataset to provide variable
+analysis
 
--  Using metadata to link the data set to related sources and
-   attributions and/or projects that provide added context for how the
-   data were generated and why.
-
-Validating and Adding Metadata
-------------------------------
-
--  Information about a data set that is structured (often in
-   machine-readable format) for purposes of search and retrieval.
 
 .. code:: ipython3
 

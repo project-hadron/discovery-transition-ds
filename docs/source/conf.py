@@ -6,8 +6,8 @@ project = 'Project Hadron'
 copyright = '2022, gigas64'
 author = 'gigas64'
 
-release = '0.1'
-version = '0.1.0'
+release = '1.0'
+version = '1.0.5'
 
 # -- General configuration
 

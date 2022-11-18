@@ -1,5 +1,5 @@
-Building a Component
-====================
+Introducing Components
+======================
 
 This tutorial shows the fundamentals of how to run a basic Project
 Hadron component. It is the simpliest form of running a task
@@ -11,8 +11,8 @@ referencing and reloading. Though this may seem complicated at this
 early stage it is important to understand the relationship between a
 named component and its Domain Contract.
 
-Getting Started
----------------
+First Steps
+-----------
 
 Firstly we have imported a component from the Project Hadron library for
 this demonstration. It should be noted, the choice of component is
@@ -47,8 +47,8 @@ more on this later.
     tr.set_source_uri('https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv')
     tr.set_persist()
 
-Run Component Pipeline
-----------------------
+Run Component
+-------------
 
 To run a component we use the common method ``run_component_pipeline``
 which loads the source data, executes the component task then persists
@@ -239,8 +239,8 @@ environment variables. The next step is to build a real pipeline and
 join that with other pipelines to construct our complete master Domain
 Contract.
 
-Building a Pipeline
-===================
+Building a Component for Selection
+==================================
 
 Now we know what a component looks like we can start to build the
 pipeline adding in actions that gives the component purpose.
@@ -336,8 +336,8 @@ of interest.
 
 -------------------
 
-Featutres of Interest
----------------------
+Features of Interest
+--------------------
 
 The components intent methods are not first class methods but part of
 the ``intent_model_class``. Therefore to access the intent specify the
@@ -362,8 +362,8 @@ this case we do not need the column **name** and it is removed using
     # removes data columns of no interest
     df = tr.tools.to_remove(df, headers=['name'])
 
-Run Component Pipeline
-----------------------
+Run Component
+-------------
 
 To run a component we use the common method ``run_component_pipeline``
 which loads the source data, executes the component task then persists
@@ -506,10 +506,10 @@ understanding why decisions were made.
 
 -------------------
 
-Component Pipeline
-------------------
+Run Component
+-------------
 
-As usual we can now run the Compant pipeline to apply the components
+As usual we can now run the Component to apply the components
 tasks.
 
 .. code:: ipython3
@@ -605,8 +605,8 @@ Intent the resulting outcome is shown below in the canonical report.
 
 -------------------
 
-Feature Engineering
-===================
+Building a Component for Engineering
+====================================
 
 This new component works in exactly the same way as the selection
 component, whereby we create the instance pertinent to our intentions,
@@ -744,8 +744,8 @@ intent level.
 
 -------------------
 
-Run Component Pipeline
-----------------------
+Run Component
+-------------
 
 To run a component we use the common method ``run_component_pipeline``
 which loads the source data, executes the component task , in this case
@@ -877,8 +877,8 @@ engineering has made.
 
 -------------------
 
-Controller
-==========
+Building a Component Controller
+===============================
 
 The Controller is a unique component that independantly orchestrates the
 components registered to it. It executes the components Domain Contract

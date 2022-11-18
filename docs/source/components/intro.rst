@@ -44,14 +44,14 @@ Main features
 * Synthetic Feature Build
 
 Feature transformers
-====================
+--------------------
 
 Project Hadron is a Python library with multiple transformers to engineer and select features to use
 across a synthetic build, statistics and machine learning.
 
 * Missing data imputation
 * Categorical encoding
-* Discretisation
+* Variable Discretisation
 * Outlier capping or removal
 * Numerical transformation
 * Redundant feature removal
