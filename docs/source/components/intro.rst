@@ -14,13 +14,28 @@ Project Hadron has been designed to place data scientists in the familiar enviro
 statistical tools, extracting their ideas and translating them automagicially into production ready solutions
 familiar to data engineers and Subject Matter Experts (SME’s).
 
-Project Hadron provides a clear Separation of Concerns, whilst maintaining the original intentions of the data
+Project Hadron provides a clear separation of concerns, whilst maintaining the original intentions of the data
 scientist, that can be passed to a production team. It offers trust between the data scientists teams and product
 teams. It brings with it transparency and traceability, dealing with bias, fairness, and knowledge. The resulting
 outcome provides the product engineers with adaptability, robustness, and reuse; fitting seamlessly into a
 microservices solution that can be language agnostic.
 
-At the heart of Project Hardon is a multi-tenant, NoSQL, singleton, in memory data store that has minimal code and
+Project Hadron is designed using Microservices. Microservices - also known as the microservice architecture - is an
+architectural pattern that structures an application as a collection of component services that are:
+
+* Highly maintainable and testable
+* Loosely coupled
+* Independently deployable
+* Highly reusable
+* Resilient
+* Technically independent
+
+Component services are built for business capabilities and each service performs a single function. Because they are
+independently run, each service can be updated, deployed, and scaled to meet demand for specific functions of an
+application. Project Hadron microservices enable the rapid, frequent and reliable delivery of large, complex
+applications. It also enables an organization to evolve its data science stack and experiment with innovative ideas.
+
+At the heart of Project Hadron is a multi-tenant, NoSQL, singleton, in memory data store that has minimal code and
 functionality and has been custom built specifically for Hadron tasks in  mind. Abstracted from this is the component
 store which allows us to build a reusable set of methods that define each tenanted component that sits separately
 from the store itself. In addition, a dynamic key value class provides labeling so that each tenant is not tied to
@@ -84,14 +99,9 @@ Its designed to be used easily within multiple python based interfaces such as J
 
 Instalation
 -----------
-The best way to install AI-STAC component packages is directly from the Python Package Index repository using pip.
-All AI-STAC components are based on a pure python foundation package ``aistac-foundation``
+The best way to install the component packages is directly from the Python Package Index repository using pip.
 
-.. code-block:: bash
-
-    $ pip install aistac-foundation
-
-The AI-STAC component package for the Transition is ``discovery-transition-ds`` and pip installed with:
+The component package for the Data Science and Synthetic tolling is ``discovery-transition-ds`` and pip installed with:
 
 .. code-block:: bash
 
@@ -103,3 +113,7 @@ if you want to upgrade your current version then using pip install upgrade with:
 
     $ pip install --upgrade discovery-transition-ds
 
+This will also install or update dependent third party packages. The dependencies are
+limited to python and related Data Science tooling such as pandas, numpy, scipy,
+scikit-learn and visual packages matplotlib and seaborn, and thus have a limited
+footprint and non-disruptive in a machine learning environment.
