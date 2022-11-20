@@ -43,7 +43,7 @@ a fixed set of reference values unless by specificity. Each of the classes, the 
 manager, and the key value pairs that make up the component are all independent, giving complete flexibility and
 minimum code footprint to the build process of new components.
 
-This is what gives us the Domain Contract for each tennant which sits at the heart of what makes the contracts
+This is what gives us the Domain Contract for each tenant which sits at the heart of what makes the contracts
 reusable, translatable, transferable and brings the data scientist closer to the production engineer along with
 building a production ready component solution.
 
@@ -66,7 +66,7 @@ across a synthetic build, statistics and machine learning.
 
 * Missing data imputation
 * Categorical encoding
-* Variable Discretisation
+* Variable Discretization
 * Outlier capping or removal
 * Numerical transformation
 * Redundant feature removal
@@ -86,7 +86,7 @@ within a business expectation, this project aims to provide a set of tools to qu
 data science disciplines within a component based solution demonstrating coupling and cohesion between each
 disipline, providing a separation of concerns between components.
 
-It also aims to improve the communication outputs needed by ML delivery to talk to Pre-Sales, Stakholders,
+It also aims to improve the communication outputs needed by ML delivery to talk to Pre-Sales, Stakeholders,
 Business SME's, Data SME's product coders and tooling engineers while still remaining within familiar code
 paradigms.
 
@@ -97,8 +97,8 @@ are a concrete implementation of the Project Hadron abstract core. It is build t
 in terms of package dependencies requiring nothing beyond what would be found in an basic Data Science environment.
 Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
 
-Instalation
------------
+Installation
+------------
 The best way to install the component packages is directly from the Python Package Index repository using pip.
 
 The component package for the Data Science and Synthetic tolling is ``discovery-transition-ds`` and pip installed with:

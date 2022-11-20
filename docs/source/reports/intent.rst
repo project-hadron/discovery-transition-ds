@@ -19,9 +19,9 @@ relating directly to the components core task. In this instance we are
 using the Transitioning component that provides selection engineering of
 a provided dataset.
 
-As a core concept, Intent and its Parameterisation is captured in full
+As a core concept, Intent and its Parameterization is captured in full
 giving it transparency and traceability to an expert observer. It
-provides direct editability of each Intent, with each Intent a seperate
+provides direct editability of each Intent, with each Intent a separate
 concern. This means minimal rewrites, adaptability, clarity of change
 and reduced testing.
 
@@ -48,15 +48,15 @@ Parameterised Intent
 
 Through observations one identifies a number of selection engineering
 that needs to be done with the provided dataset. We are therefore
-looking to: - automaticially clean the header to remove spaces and
+looking to: - automatically clean the header to remove spaces and
 hidden characters in the header names. In addition note that ‘home.dest’
 is seperated with a dot and best practice is to replace that with an
 underscore. - reinstate nulls that have been obfuscated with ‘question
 marks’ in order for us to clarify data quality and make better feature
 engineering decisions. - identity selected data columns of no interest
-and remove them. - apply logic that identifies potential catagoricals
+and remove them. - apply logic that identifies potential categoricals
 and appropriately ‘type’ them. - insure the appropriate’typing’ of
-indentifed numeric features. - turn our target boulian into a 0 and 1
+identified numeric features. - turn our target boolean into a 0 and 1
 integer type for better feature engineering, observability and decision
 making.
 
@@ -85,13 +85,17 @@ report which outlines each activity which displays each line of the
 Intent. So it is worth observing that the Intent report is presented in
 alphabetical order and not the order in which it will run.
 
-From the report one can clearly see each Intent and its Parameterisation
+From the report one can clearly see each Intent and its Parameterization
 that can be modified by applying either a new Intent or a replacement of
 the already existing line of code.
 
 .. code:: ipython3
 
     tr.report_intent()
+
+.. image:: /images/reports/int_img01.png
+  :align: center
+  :width: 450
 
 Intent Metadata
 ---------------
@@ -115,6 +119,10 @@ the outgoing dataset.
 .. code:: ipython3
 
     tr.report_column_catalog()
+
+.. image:: /images/reports/int_img02.png
+  :align: center
+  :width: 500
 
 Run Book
 --------
@@ -140,3 +148,10 @@ visualisation.
 .. code:: ipython3
 
     tr.report_run_book()
+
+.. image:: /images/reports/int_img03.png
+  :align: center
+  :width: 500
+
+
+

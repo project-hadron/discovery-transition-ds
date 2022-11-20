@@ -2,7 +2,7 @@ Introducing Components
 ======================
 
 This tutorial shows the fundamentals of how to run a basic Project
-Hadron component. It is the simpliest form of running a task
+Hadron component. It is the simplest form of running a task
 demonstrating the input, throughput and output of a dataset. Each
 instance of the component is given a unique reference name whereby the
 Domain Contract uses that name as its unique identifier and thus can be
@@ -16,7 +16,7 @@ First Steps
 
 Firstly we have imported a component from the Project Hadron library for
 this demonstration. It should be noted, the choice of component is
-arbritary for this demonstration, as even though each component has its
+arbitrary for this demonstration, as even though each component has its
 own unique set of tasks it also has methods shared across all
 components. In this demonstration we only use these common tasks, this
 is why our choice of component is arbitrary.
@@ -26,12 +26,12 @@ is why our choice of component is arbitrary.
     from ds_discovery import Transition
 
 To create a Domain Contract instance of the component we have used the
-Factory method ``from_env`` and given it a referenceable name
+Factory method ``from_env`` and given it a referencable name
 ``hello_comp``, and as this is the first instantiation, we have used the
 one off parameter call ``has_contract`` that by default is set to True
 and is used to avoid the accidential loading of a Domain Contract
 instance of the same task name. As common practice we capture the
-instance of this specific componant ``transition`` as ``tr``.
+instance of this specific component ``transition`` as ``tr``.
 
 .. code:: ipython3
 
@@ -39,7 +39,7 @@ instance of this specific componant ``transition`` as ``tr``.
 
 We have set where the data is coming from and where the resulting data
 is going to. The source identifies a URI (URL) from which the data will
-be collected and in this case persistance uses the default settings,
+be collected and in this case persistence uses the default settings,
 more on this later.
 
 .. code:: ipython3
@@ -67,8 +67,8 @@ Reloading and Extending our Component
 -------------------------------------
 
 Though this is a single notebook, one of the powers of Project Hadron is
-the ability to reload componant state across new notebooks, not just
-locally but even across locations and teams. To load our componant state
+the ability to reload component state across new notebooks, not just
+locally but even across locations and teams. To load our component state
 we use the same factory method ``from_env`` passing the unique component
 name ``hello_comp`` which reloads the Domain Contract. We have now
 reinstated our origional component state and can continue to work on
@@ -227,7 +227,7 @@ been set by the environment variable.
     tr.set_source_uri('https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv')
     tr.set_persist()
 
-Finally we run the pipeline with the new environemt variables in place
+Finally we run the pipeline with the new environment variables in place
 and check everything runs okay.
 
 .. code:: ipython3
@@ -250,7 +250,7 @@ selection component with the class name Transition. This component
 provides a set of actions that focuses on tidying raw data by removing
 data columns that are not useful to the final feature set. These may
 include null columns, single value columns, duplicate columns and noise
-etc. We can also ensure the data is properly canonicalised through
+etc. We can also ensure the data is properly canonicalized through
 enforcing data typing.
 
 Project Hadron Canonicalizes data following the canonical model pattern
@@ -277,7 +277,7 @@ datastore.
 
 For the feature selection we are using the Transition component with the
 ability to select the correct columns from raw data, potentially
-reducing the column count. In addition the Transistioning component
+reducing the column count. In addition the Transitioning component
 extends the common reporting tools and provides additional functionality
 for identifying quality, quantity, veracity and availability.
 
@@ -303,15 +303,15 @@ Adding Select Actions
 
 At the core of a component is its tasks, in other words how it changes
 incoming data into a different data outcome. To achieve this we use the
-actions that are set up specificially for this Component. These actions
-are the intensions of the specific component also know as the components
-intent. The components intent is a finate set of methods, unique to each
+actions that are set up specifically for this Component. These actions
+are the intentions of the specific component also know as the components
+intent. The components intent is a finite set of methods, unique to each
 component, that can be applied to the raw data in order to change it in
 a way that is useful to the outcome of the task.
 
 In order to get a list of a component’s intent, in this case feature
 selection, you can use the Python method ``__dir__()``. In this case
-with the transition component ``tr`` we would use the comand
+with the transition component ``tr`` we would use the command
 ``tr.tools.__dir__()``\ to produce the directory of the components
 select intent. Remember this method call can be used in any components
 intent tools.
@@ -350,14 +350,14 @@ reference to the intent actions they start with ``tr.tools.``
 When looking for features of interest, through observation, it appears,
 within some columns ``space`` has been repalaced by a question mark
 ``?``. In this instance we would use the ``auto_reinstate_nulls`` to
-replace all the obfusacted cells with nulls. In addition we can
+replace all the obfuscated cells with nulls. In addition we can
 immediately observe columns that are inappropriate for our needs. In
 this case we do not need the column **name** and it is removed using
 ``to_remove`` passing the name of the attribute.
 
 .. code:: ipython3
 
-    # returns obfusacted nulls
+    # returns obfuscated nulls
     df = tr.tools.auto_reinstate_nulls(df, nulls_list=['?'])
     # removes data columns of no interest
     df = tr.tools.to_remove(df, headers=['name'])
@@ -404,9 +404,9 @@ to ensure the data **typing** is appropriate to the column type.
 
     df = tr.tools.auto_to_category(df, unique_max=20)
 
-Finally we ensure the two contigious columns are set to numeric type. It
-is worth noting though age is an interger, Python does not recognise
-nulls within an interger type and automaticially choses it as a float
+Finally we ensure the two contiguous columns are set to numeric type. It
+is worth noting though age is an integer, Python does not recognise
+nulls within an integer type and automatically chooses it as a float
 type.
 
 .. code:: ipython3
@@ -437,7 +437,7 @@ Ordering the Actions of a Component
 
 With the component intent now defined the run pipeline does its best to
 guess the best order of that Intent but sometimes we want to ensure
-things run in a certain order due to dependancies or other challenges.
+things run in a certain order due to dependencies or other challenges.
 Though not necessary, we will clear the previous Intent and write it
 again, this time in order.
 
@@ -492,7 +492,7 @@ ordering algorithm.
 -------------------
 
 As we have taken the time to capture the reasoning to include the
-compoment Intent we can use the reports to produce a view of the Intent
+component Intent we can use the reports to produce a view of the Intent
 column comments that are invaluable when interrogating a component and
 understanding why decisions were made.
 
@@ -518,7 +518,7 @@ tasks.
 
 As an extension of the default, ``run_component_pipeline`` provides
 useful tools to help manage the outcome. In this case we’ve
-specificially defined the Intent order we wanted to run.
+specifically defined the Intent order we wanted to run.
 
 .. code:: ipython3
 
@@ -532,7 +532,7 @@ A challenge faced with the component intent is its order, as you have
 seen. The solution thus far only applies at run time and is therefore
 not repeatable. We introduced the idea of Run Books as a repeatable set
 of instructions which contain the order in which to run the components
-intent. Run Books also provide the ability to particially implement
+intent. Run Books also provide the ability to partially implement
 component intent actions, meaning we can replay subsets of a fuller list
 of a components intent. For example through experimentation we have
 created a number of additional component intents, that are not pertinent
@@ -706,7 +706,7 @@ value that provides the size of each family.
 The column name ``cabin`` provides us with a record of the cabin each
 passenger was allocated. Taking the first letter from each cabin gives
 us the deck the passenger was on. This provides us with a useful
-catagorical.
+categorical.
 
 .. code:: ipython3
 
@@ -787,8 +787,8 @@ With ``deck`` and ``fair`` we can assume MCAR but with ``age`` it
 appears to have association with other features. But for the purposes of
 the demo we are going to assume it to also be MCAR.
 
-With ``deck`` the conversion to catagorical has already imputed the
-nulls with the new catagorical value therefore we do not need to do
+With ``deck`` the conversion to categorical has already imputed the
+nulls with the new categorical value therefore we do not need to do
 anything.
 
 .. code:: ipython3
@@ -813,7 +813,7 @@ data.
 Age is slightly more tricky as its null values are quite large. In this
 instance we will use probability frequency, which like random values
 preserves the distribution of the data. Quite often, in these cases, we
-can add an additional boulean column that tells us which values were
+can add an additional boolean column that tells us which values were
 generated to replace nulls.
 
 .. code:: ipython3
@@ -853,7 +853,7 @@ its run order.
 
     wr.run_component_pipeline()
 
-Finially we can finish off by checking the Run Book with the Run Book
+Finally we can finish off by checking the Run Book with the Run Book
 report and produce the Canonical Report to see the changes the feature
 engineering has made.
 
@@ -880,18 +880,18 @@ engineering has made.
 Building a Component Controller
 ===============================
 
-The Controller is a unique component that independantly orchestrates the
+The Controller is a unique component that independently orchestrates the
 components registered to it. It executes the components Domain Contract
 and not its code. Domain Contracts belonging to a Controller should be
 in the same path location as the Controllers Domain Contract. The
 Controller executes the registered Controllers Domain Contracts in
 accordance to the instructions given to it when the ``run_components``
 is executed. The Controller orchestrates how those components should run
-with the components being independant in their actions and therefore a
+with the components being independent in their actions and therefore a
 separation of concerns. With Controller you do not need to give it a
 name as this is assumed in each folder containing Domain Contracts for
 this set of components, known as a Domain Contract Cluster. This allows
-us the entry point to interogate the Controller and its components.
+us the entry point to integrate the Controller and its components.
 
 Setting Up
 ----------
@@ -950,7 +950,7 @@ Using the Task report we can check the components have been added.
 
 As with all components the Controller executes the components in the
 order given. By using the Controller’s special Run Book we are given
-considerabily more flexability in the order and behaviour of each
+considerably more flexibility in the order and behaviour of each
 component and how it interacts with others.
 
 As good practice a Run Book should always be created for each Controller
@@ -970,11 +970,11 @@ Run Controller Pipeline
 To run the controller we execute ``run_controller`` this is a special
 method and replaces ``run_component_pipeline``, common to other
 components, adding extra features to enable the control of the
-registared components. This is the only method you can use to run the
-Controller and execute its registared components. It is worth noting it
+registered components. This is the only method you can use to run the
+Controller and execute its registered components. It is worth noting it
 is the components that produce the outcome of their collective
 objectives or tasks and not the Controller. The Controller orchestrates
-how those components should run with the components being independant in
+how those components should run with the components being independent in
 their actions and therefore a separation of concerns.
 
 .. code:: ipython3
@@ -983,7 +983,7 @@ their actions and therefore a separation of concerns.
 
 The Controller is a powerful tool and should be investigated further to
 understand all its options. The Run Book can be used to provide a set of
-instructions on how each component recieves its source and persists, be
+instructions on how each component receives its source and persists, be
 it to another component or as an external data set. The
 ``run_controller`` has useful tools to monitor changes in incoming data
 and provide a run report of how all the components ran.

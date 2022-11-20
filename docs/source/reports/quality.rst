@@ -14,7 +14,7 @@ Quality Assurance
 -----------------
 
 Quality assurance provides an immediate insight into the quality,
-quantity, verasity and availability of the dataset being provided. This
+quantity, veracity and availability of the dataset being provided. This
 is a critical step to the success of any machine learning or product
 outcome.
 
@@ -62,6 +62,10 @@ presented.
     df = tr.load_source_canonical()
     tr.canonical_report (df)
 
+.. image:: /images/reports/qua_img01.png
+  :align: center
+  :width: 700
+
 Engineering Selection
 ^^^^^^^^^^^^^^^^^^^^^
 
@@ -85,13 +89,17 @@ Validation
 Now our selection engineering has been applied to the dataset one has a
 clearer view of the value of the data provided.
 
-The canonical report provides an enhancment of already existing data
+The canonical report provides an enhancement of already existing data
 science tools to give a clear single view of our data set that is
-familuar to a broader audience.
+familiar to a broader audience.
 
 .. code:: ipython3
 
     tr.canonical_report(df)
+
+.. image:: /images/reports/qua_img02.png
+  :align: center
+  :width: 550
 
 Reporting
 ---------
@@ -129,8 +137,12 @@ usability summary and cost, if applicable.
 
     tr.report_quality_summary()
 
-Report
-------
+.. image:: /images/reports/qua_img03.png
+  :align: center
+  :width: 250
+
+Report Redistribution
+---------------------
 
 As with the dictionary the quality report can be saved and redistributed
 to interested parties.

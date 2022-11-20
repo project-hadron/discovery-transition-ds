@@ -21,7 +21,7 @@ through automated processes.
 
 Knowledge capture is placed under a tree structure of: - catalogue:
 provides an encompassing group identifier such as attributes or
-observations. - label: a subset of catagories identifing the individual
+observations. - label: a subset of categories identifying the individual
 set of text such as attribute name or observation type. - text: a brief
 or descriptive narrative of the catalogue and label. Text is immutable
 thus new text with the same catalogue and label will be added to the
@@ -86,7 +86,10 @@ been captured.
 
     tr.report_notes(drop_dates=True)
 
---------------
+.. image:: /images/reports/met_img01.png
+  :align: center
+  :width: 500
+
 
 Bulk Notes
 ----------
@@ -112,8 +115,8 @@ component.
     tr.set_persist()
     tr.set_description("Consumer Notebook Orders for Q4 FY20")
 
-Connect the Bulk Uploiad
-^^^^^^^^^^^^^^^^^^^^^^^^
+Connect the Bulk Upload
+^^^^^^^^^^^^^^^^^^^^^^^
 
 First create a connector to the information source.
 
@@ -139,6 +142,12 @@ have been uploaded.
 
     tr.report_notes(drop_dates=True)
 
+.. figure:: /images/reports/met_img02.png
+  :align: center
+  :width: 500
+
+  not all attributes are displayed
+
 Report Filtering
 ^^^^^^^^^^^^^^^^
 
@@ -150,4 +159,8 @@ we are filtering on ‘label’ across all sections, or catalogues.
 .. code:: ipython3
 
     tr.report_notes(labels=['ORD_DTS', 'INV_DTS', 'HOLD_DTS'], drop_dates=True)
+
+.. image:: /images/reports/met_img03.png
+  :align: center
+  :width: 250
 

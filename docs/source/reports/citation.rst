@@ -17,7 +17,7 @@ cited through added knowledge from the component’s creator or SME
 feedback. In addition the data location of the source and persist is
 also captured.
 
-This is extended with the Project Hadron transistion component,
+This is extended with the Project Hadron transition component,
 considered the data entry point reporting tool, which includes a special
 method call to add provenance. Provenance sites a number of origin
 indicators that guide the user to the data’s provenance, its
@@ -56,9 +56,9 @@ changed.
 
 .. code:: ipython3
 
-    tr.set_provenance(title='NYPD Histroic Arrest Data',
-                      domain='Public Safty', 
-                      license_type='Public Consuption',
+    tr.set_provenance(title='NYPD Historic Arrest Data',
+                      domain='Public Safety',
+                      license_type='Public Consumption',
                       description="List of every arrest in NYC going back to 2006 through the end of the previous calendar year.",
                       provider_name='Police Department (NYPD)', 
                       provider_uri="https://data.cityofnewyork.us/Public-Safety/NYPD-Arrests-Data-Historic-/8h9b-rp9u",
@@ -84,6 +84,10 @@ Our initial report shows information capture about our component.
 
     tr.report_task()
 
+.. image:: /images/reports/cit_img01.png
+  :align: center
+  :width: 300
+
 Connectivity Reporting
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -91,16 +95,20 @@ As part of all components one can also interrogate where data is coming
 from and going to, which connector contracts have been set up and what
 they look like. In this case we only require our primary source and
 persist connectors from which we can identify the data’s location and
-how we retrived it.
+how we retrieved it.
 
 .. code:: ipython3
 
     tr.report_connectors()
 
+.. image:: /images/reports/cit_img02.png
+  :align: center
+  :width: 700
+
 Provenance Reporting
 ^^^^^^^^^^^^^^^^^^^^
 
-Finially and specificially to the transistioning component, we citate
+Finally and specifically to the transitioning component, we citate
 the provider of our data and that citation can be added to as knowledge
 is gained.
 
@@ -115,3 +123,6 @@ sourcing for data reuse.
 
     tr.report_provenance()
 
+.. image:: /images/reports/cit_img03.png
+  :align: center
+  :width: 650

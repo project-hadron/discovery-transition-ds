@@ -13,25 +13,25 @@ analysis
 Schema
 ------
 
-A Schema is a representation of our dataset as a set of statisticial and
-probablistic values that are semantically common across all schemas. The
+A Schema is a representation of our dataset as a set of statistical and
+probabilistic values that are semantically common across all schemas. The
 schema separates each data element into four parts:
 
--  Intent: shows how the data content is being discretionised and its
+-  Intent: shows how the data content is being discretionized and its
    type.
 -  Params: the parameters used to specialise the Intent such as
    granularity, value limits etc.
--  Patterns: probabilstic values of how the datas relative frequency is
+-  Patterns: probabilistic values of how the datas relative frequency is
    distributed, along with a number of other values, related to the data
    type.
--  Stats: a broad set of statisticial analysis of the data dependant
+-  Stats: a broad set of statistical analysis of the data dependant
    upon the data type including distribution indicators, limits and
    observations.
 
 A schema can be fully or partially stored or represented as a relational
-tree, through naming. One can build a semantic and contexualised view of
+tree, through naming. One can build a semantic and contextualized view of
 its data that can be distributed as a machine readable set of
-comparitives or as part of some other outcome.
+comparatives or as part of some other outcome.
 
 .. code:: ipython3
 
@@ -70,6 +70,12 @@ case, displayed within the notebook.
 
     tr.report_canonical_schema()
 
+.. figure:: /images/reports/sch_img01.png
+  :align: center
+  :width: 350
+
+  not all attributes are displayed
+
 Report
 ------
 
@@ -102,11 +108,17 @@ that schema.
 
     tr.report_canonical_schema(roots=['survived', 'fare'], sections='patterns')
 
+.. figure:: /images/reports/sch_img02.png
+  :align: center
+  :width: 700
+
+  not all attributes are displayed
+
 Semantic Schema
 ---------------
 
-Beyond the basic schema lies a complex but accessable set of
-paramatization that allows for the creation of relational comparisions
+Beyond the basic schema lies a complex but accessible set of
+parametrization that allows for the creation of relational comparisons
 between the data type.
 
 In our demonstration below, when creating the schema, we have given it a
@@ -125,7 +137,13 @@ distributed both by ‘survived’ and ‘gender’.
 
     tr.report_canonical_schema(schema='survived')
 
-Distrubutable Reporting
+.. figure:: /images/reports/sch_img03.png
+  :align: center
+  :width: 550
+
+  not all attributes are displayed
+
+Distributable Reporting
 -----------------------
 
 With this done one can now further investigate distributions and
@@ -141,4 +159,8 @@ your system.
 
     result = tr.report_canonical_schema(schema='survived', roots='survived.1.age', elements=['relative_freq'], stylise=False)
     result['value'].to_list()
+
+.. image:: /images/reports/sch_img04.png
+  :align: left
+  :width: 225
 
