@@ -1,8 +1,8 @@
-Synthetic Distribution Logic
-============================
+Correlated Distribution Logic
+=============================
 
-Set by a Senior data scientist and researcher to test the logic of
-single and joint distributions. This applies to both the preparation of
+Set by a senior data scientist and researcher to test the logic of
+correlation observed across a distributions. This applies to both the preparation of
 features for machine learning and distribution techniques for synthetic
 data. These logic tests were considered challenges to the data science
 team in the preparation of their data for consumption into their models.
@@ -124,7 +124,7 @@ Multi column
 
 .. image:: /images/demo/log_img04.png
   :align: center
-  :width: 85
+  :width: 75
 
 
 !(A AND B)
@@ -213,7 +213,7 @@ Multi column
 
 .. image:: /images/demo/log_img08.png
   :align: center
-  :width: 85
+  :width: 75
 
 
 
@@ -262,5 +262,5 @@ Multi column
 
 .. image:: /images/demo/log_img10.png
   :align: center
-  :width: 80
+  :width: 75
 
