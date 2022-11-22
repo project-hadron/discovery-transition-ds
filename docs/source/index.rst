@@ -8,6 +8,7 @@ Project Hadron Data Science and Synthetic Toolset
 
    components/intro
    components/hello_hadron
+   components/docker
    reports/citation
    reports/intent
    reports/metadata
