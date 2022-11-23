@@ -14,4 +14,5 @@ Project Hadron Data Science and Synthetic Toolset
    reports/metadata
    reports/quality
    reports/schema
+   demo/demo_synthetic_score
    demo/demo_logic

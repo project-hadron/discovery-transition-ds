@@ -65,9 +65,9 @@ setup(
     },
     python_requires='>=3.7',
     install_requires=[
-        'aistac-foundation>=2.12',
-        'pandas>=1.1',
-        'numpy<1.23',
+        'aistac-foundation',
+        'pandas>',
+        'numpy',
         'matplotlib',
         'seaborn',
         'scikit-learn',

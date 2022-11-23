@@ -85,3 +85,6 @@ Next Steps
 
 Try different `Domain Contract Ensemble` components with additional environment variables and use the Docker
 documentation to learn about Hadron containers with remote or differing data locations
+
+Project Hadron has been built as a component model to fit seamlessly into an orchestration
+engine such as Kubernetes
