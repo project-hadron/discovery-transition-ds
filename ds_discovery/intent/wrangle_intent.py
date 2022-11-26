@@ -683,7 +683,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_encode_ordinal(seed=seed, **params)
 
-    def model_encode_count(self, canonical: Any, headers: [str, list], top: int=None, prefix=None, seed: int=None,
+    def model_encode_count(self, canonical: Any, headers: [str, list], prefix=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ encodes categorical data types, In count encoding we replace the categories by the count of the
@@ -692,7 +692,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply the encoding
-        :param top: a cutoff top categories, the rest go in a single category
         :param prefix: a str to prefix the column
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent (optional) if the intent contract should be saved to the property manager
@@ -717,57 +716,57 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_encode_count(seed=seed, **params)
 
-    def model_encode_woe(self, canonical: Any, headers: [str, list], target: str=None, prefix=None, seed: int=None,
-                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                           replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types, Weight of Evidence (WoE) was developed primarily for the credit and
-        financial industries to help build more predictive models to evaluate the risk of loan default. That is, to
-        predict how likely the money lent to a person or institution is to be lost. Thus, Weight of Evidence is a
-        measure of the "strength” of a grouping technique to separate good and bad risk (default).
-
-        - WoE will be 0 if the P(Goods) / P(Bads) = 1, that is, if the outcome is random for that group.
-        - If P(Bads) > P(Goods) the odds ratio will be < 1 and,
-        - WoE will be < 0 if, P(Goods) > P(Bads).
-        WoE is well suited for Logistic Regression, because the Logit transformation is simply the log of the odds,
-        i.e., ln(P(Goods)/P(Bads)). Therefore, by using WoE-coded predictors in logistic regression, the predictors are
-        all prepared and coded to the same scale, and the parameters in the linear logistic regression equation can be
-        directly compared.
-
-        The WoE transformation has three advantages:
-        - It creates a monotonic relationship between the target and the independent variables.
-        - It orders the categories on a "logistic" scale which is natural for logistic regression
-        - The transformed variables can then be compared because they are on the same scale. Therefore, it is possible
-          to determine which one is more predictive.
-
-        The WoE also has a limitation:
-        - Prone to cause over-fitting
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param headers: the header(s) to apply multi-hot
-        :param target: The woe target
-        :param prefix: a str value to put before the column name
-        :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a pd.DataFrame
-        """
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._model_encode_woe(seed=seed, **params)
+    # def model_encode_woe(self, canonical: Any, headers: [str, list], target: str=None, prefix=None, seed: int=None,
+    #                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+    #                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    #     """ encodes categorical data types, Weight of Evidence (WoE) was developed primarily for the credit and
+    #     financial industries to help build more predictive models to evaluate the risk of loan default. That is, to
+    #     predict how likely the money lent to a person or institution is to be lost. Thus, Weight of Evidence is a
+    #     measure of the "strength” of a grouping technique to separate good and bad risk (default).
+    #
+    #     - WoE will be 0 if the P(Goods) / P(Bads) = 1, that is, if the outcome is random for that group.
+    #     - If P(Bads) > P(Goods) the odds ratio will be < 1 and,
+    #     - WoE will be < 0 if, P(Goods) > P(Bads).
+    #     WoE is well suited for Logistic Regression, because the Logit transformation is simply the log of the odds,
+    #     i.e., ln(P(Goods)/P(Bads)). Therefore, by using WoE-coded predictors in logistic regression, the predictors are
+    #     all prepared and coded to the same scale, and the parameters in the linear logistic regression equation can be
+    #     directly compared.
+    #
+    #     The WoE transformation has three advantages:
+    #     - It creates a monotonic relationship between the target and the independent variables.
+    #     - It orders the categories on a "logistic" scale which is natural for logistic regression
+    #     - The transformed variables can then be compared because they are on the same scale. Therefore, it is possible
+    #       to determine which one is more predictive.
+    #
+    #     The WoE also has a limitation:
+    #     - Prone to cause over-fitting
+    #
+    #     :param canonical: a pd.DataFrame as the reference dataframe
+    #     :param headers: the header(s) to apply multi-hot
+    #     :param target: The woe target
+    #     :param prefix: a str value to put before the column name
+    #     :param seed: seed: (optional) a seed value for the random function: default to None
+    #     :param save_intent (optional) if the intent contract should be saved to the property manager
+    #     :param column_name: (optional) the column name that groups intent to create a column
+    #     :param intent_order: (optional) the order in which each intent should run.
+    #                     If None: default's to -1
+    #                     if -1: added to a level above any current instance of the intent section, level 0 if not found
+    #                     if int: added to the level specified, overwriting any that already exist
+    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
+    #                     True - replaces the current intent method with the new
+    #                     False - leaves it untouched, disregarding the new intent
+    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+    #     :return: a pd.DataFrame
+    #     """
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
+    #     # remove intent params
+    #     params = locals()
+    #     [params.pop(k) for k in self._INTENT_PARAMS]
+    #     # set the seed and call the method
+    #     seed = self._seed(seed=seed)
+    #     return self._model_encode_woe(seed=seed, **params)
 
     def model_explode(self, canonical: Any, header: str, seed: int=None, save_intent: bool=None,
                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
