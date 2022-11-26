@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 import pandas as pd
+import numpy as np
 from pprint import pprint
 from ds_discovery import SyntheticBuilder
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
@@ -48,6 +49,14 @@ class SyntheticTest(unittest.TestCase):
             shutil.rmtree('working')
         except:
             pass
+
+    def test_get_noise(self):
+        builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
+        tools: SyntheticIntentModel = builder.tools
+        result = tools.get_noise(10)
+        self.assertEqual(list(np.ones(10)), result)
+        result = tools.get_noise(10, ones=False)
+        self.assertEqual(list(np.zeros(10)), result)
 
     def test_correlate_date(self):
         builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
