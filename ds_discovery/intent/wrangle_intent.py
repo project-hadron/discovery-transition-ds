@@ -515,29 +515,25 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                             seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                             replace_intent: bool=None, remove_duplicates: bool=None):
         """ Drops rows in the canonical where the values are deemed outliers based on the method and measure.
-         There are three selectable methods of choice, interquartile, empirical or probability, of which interquartile
-         is the default.
+        There are three selectable methods of choice, interquartile or empirical, of which interquartile
+        is the default.
 
-         The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
-         standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
-         for every value, which is defined as the number of standard deviations away a alue is from the mean. therefor
-         measure given should be the z-score or the number of standard deviations away a value is from the mean.
-         The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
-         distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
+        The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
+        standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
+        for every value, which is defined as the number of standard deviations away a value is from the mean. therefor
+        measure given should be the z-score or the number of standard deviations away a value is from the mean.
+        The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
+        distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
 
-         For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
-         statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
-         and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
-         values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
-         for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
-
-         The 'probability' range uses statistical dispersion of a sample set to analyse the percentile or quantities
-         that sit beyond a given defining limit. The measure must be a value between 1 and 0 where the closer to zero
-         the measure the smaller the probability of outliers.
+        For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
+        statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
+        and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
+        values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
+        for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
 
          :param canonical: a pd.DataFrame as the reference dataframe
          :param header: the header in the DataFrame to correlate
-         :param method: (optional) A method to run to identify outliers. interquartile (default), empirical, probability
+         :param method: (optional) A method to run to identify outliers. interquartile (default) or empirical
          :param measure: (optional) A measure against each method, respectively factor k, z-score, quartile (see above)
          :param seed: (optional) the random seed
          :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -1305,29 +1301,25 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                                 seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                                 replace_intent: bool=None, remove_duplicates: bool=None):
         """ returns a list of markers or flags identifying outliers in a dataset where 1 represents a suggested outlier.
-         There are three selectable methods of choice, interquartile, empirical or probability, of which interquartile
-         is the default.
+        There are three selectable methods of choice, interquartile or empirical, of which interquartile
+        is the default.
 
-         The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
-         standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
-         for every value, which is defined as the number of standard deviations away a alue is from the mean. therefor
-         measure given should be the z-score or the number of standard deviations away a value is from the mean.
-         The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
-         distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
+        The 'empirical' rule states that for a normal distribution, nearly all of the data will fall within three
+        standard deviations of the mean. Given mu and sigma, a simple way to identify outliers is to compute a z-score
+        for every value, which is defined as the number of standard deviations away a value is from the mean. therefor
+        measure given should be the z-score or the number of standard deviations away a value is from the mean.
+        The 68–95–99.7 rule, guide the percentage of values that lie within a band around the mean in a normal
+        distribution with a width of two, four and six standard deviations, respectively and thus the choice of z-score
 
-         For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
-         statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
-         and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
-         values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
-         for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
-
-         The 'probability' range uses statistical dispersion of a sample set to analyse the percentile or quantities
-         that sit beyond a given defining limit. The measure must be a value between 1 and 0 where the closer to zero
-         the measure the smaller the probability of outliers.
+        For the 'interquartile' range (IQR), also called the midspread, middle 50%, or H‑spread, is a measure of
+        statistical dispersion, being equal to the difference between 75th and 25th percentiles, or between upper
+        and lower quartiles of a sample set. The IQR can be used to identify outliers by defining limits on the sample
+        values that are a factor k of the IQR below the 25th percentile or above the 75th percentile. The common value
+        for the factor k is 1.5. A factor k of 3 or more can be used to identify values that are extreme outliers.
 
          :param canonical: a pd.DataFrame as the reference dataframe
          :param header: the header in the DataFrame to correlate
-         :param method: (optional) A method to run to identify outliers. interquartile (default), empirical, probability
+         :param method: (optional) A method to run to identify outliers. interquartile (default) or empirical
          :param measure: (optional) A measure against each method, respectively factor k, z-score, quartile (see above)
          :param seed: (optional) the random seed
          :param save_intent: (optional) if the intent contract should be saved to the property manager
