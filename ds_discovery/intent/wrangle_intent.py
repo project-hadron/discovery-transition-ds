@@ -1300,7 +1300,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def correlate_mark_outliers(self, canonical: Any, header: str, measure: [int, float]=None, method: str=None,
                                 seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                                 replace_intent: bool=None, remove_duplicates: bool=None):
-        """ returns a list of markers or flags identifying outliers in a dataset where 1 represents a suggested outlier.
+        """ Drops rows in the canonical where the values are deemed outliers based on the method and measure.
         There are three selectable methods of choice, interquartile or empirical, of which interquartile
         is the default.
 
