@@ -449,144 +449,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_dist_choice(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_dist_binomial(self, trials: int, probability: float, size: int=None, quantity: float=None, seed: int=None,
-                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                          replace_intent: bool=None, remove_duplicates: bool=None) -> list:
-        """A binomial discrete random distribution. The Binomial Distribution represents the number of
-           successes and failures in n independent Bernoulli trials for some given value of n
-
-        :param trials: the number of trials to attempt, must be >= 0.
-        :param probability: the probability distribution, >= 0 and <=1.
-        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
-        :param quantity: a number between 0 and 1 representing data that isn't null
-        :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a random number
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        rtn_list = self._get_dist_binomial(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
-
-    def get_dist_pareto(self, alpha: [int, float], size: int=None, quantity: float=None, seed: int=None, save_intent: bool=None,
-                        column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                        remove_duplicates: bool=None) -> list:
-        """Draw samples from a Pareto II or Lomax distribution with specified a shape or alpha.t is also known as
-        the “80-20 rule”. In this distribution, 80 percent of the weights are in the lowest 20 percent of the range,
-        while the other 20 percent fill the remaining 80 percent of the range.
-
-        :param alpha: Shape of the distribution. Must be positive.
-        :param size: the size of the sample
-        :param quantity: a number between 0 and 1 representing data that isn't null
-        :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a random number
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        rtn_list = self._get_dist_pareto(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
-
-    def get_dist_gamma(self, shape: float, scale: float=None, precision: int=None, size: int=None,
-                       quantity: float=None, seed: int=None, save_intent: bool=None, column_name : [int, str]=None,
-                       intent_order: int=None,  replace_intent: bool=None, remove_duplicates: bool=None) -> list:
-        """Draw samples from a Gamma distribution.
-
-        :param shape: The shape of the gamma distribution. Must be non-negative
-        :param scale: (optional) The scale of the gamma distribution. Must be non-negative.
-        :param precision: (optional) The number of decimal points. The default is 3
-        :param size: (optional) the size of the sample. if a tuple of intervals, size must match the tuple
-        :param quantity: a number between 0 and 1 representing data that isn't null
-        :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a random number
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        rtn_list = self._get_dist_gamma(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
-
-    def get_dist_poisson(self, interval: float, size: int=None, quantity: float=None, seed: int=None,
-                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                         replace_intent: bool=None, remove_duplicates: bool=None) -> list:
-        """A Poisson discrete random distribution
-
-        :param interval: Expectation of interval, must be >= 0.
-        :param size: the size of the sample.
-        :param quantity: a number between 0 and 1 representing data that isn't null
-        :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a random number
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS + ['quantity']]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        rtn_list = self._get_dist_poisson(seed=seed, **params)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
-
     def get_dist_bernoulli(self, probability: float, size: int=None, quantity: float=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> list:
@@ -658,14 +520,14 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_dist_bounded_normal(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_distribution(self, distribution: str, package: str=None, precision: int=None, size: int=None,
+    def get_distribution(self, distribution: str, is_stats: bool=None, precision: int=None, size: int=None,
                          quantity: float=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                          intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None,
                          **kwargs) -> list:
         """returns a number based the distribution type.
 
         :param distribution: The string name of the distribution function from numpy random Generator class
-        :param package: (optional) The name of the package to use, options are 'numpy' (default) and 'scipy'.
+        :param is_stats: (optional) if the generator is from the stats package and not numpy
         :param precision: (optional) the precision of the returned number
         :param size: (optional) the size of the sample
         :param quantity: (optional) a number between 0 and 1 representing data that isn't null
