@@ -1345,7 +1345,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_flag_outliers(seed=seed, **params)
 
-    def correlate_missing(self, canonical: Any, header: str, method: str=None, constant: Any=None, precision: int=None,
+    def correlate_missing(self, canonical: Any, header: str, method: str=None, weights: str=None, constant: Any=None, precision: int=None,
                           seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """ imputes missing data with statistical estimates of the missing values. The methods are 'mean', 'median',
@@ -1365,6 +1365,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         imputation, we take as many random observations as missing values exist in the variable. Can be applied to both
         numerical and categorical variables.
 
+        Neighbour imputation is for filling in missing values using the k-Nearest Neighbors approach. Each missing
+        feature is imputed using values from five nearest neighbors that have a value for the feature. The
+        feature of the neighbors are averaged uniformly or weighted by distance to each neighbor. If a sample has
+        more than one feature missing, then the neighbors for that sample can be different depending on the particular
+        feature being imputed. When the number of available neighbors is less than five the average for that feature
+        is used during imputation. If there is at least one neighbor with a defined distance, the weighted or
+        unweighted average of the remaining neighbors will be used during imputation.
+
         Constant or Arbitrary value imputation consists of replacing all occurrences of missing values (NA) with an
         arbitrary constant value. Can be applied to both numerical and categorical variables. A value must be passed
         in the constant parameter relevant to the column type.
@@ -1376,6 +1384,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param method: (optional) the replacement method, 'mean', 'median', 'mode', 'constant', 'random', 'indicator'
+        :param weights: (optional) Weight function used in prediction of nearest neighbour if used as method. Options
+                    ‘uniform’ : uniform weights. All points in each neighborhood are weighted equally.
+                    ‘distance’ : weight points by the inverse of their distance.
         :param constant: (optional) a value to us when the method is constant
         :param precision: (optional) if numeric, the precision of the outcome, by default set to 3.
         :param seed: (optional) the random seed. defaults to current datetime

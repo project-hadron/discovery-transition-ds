@@ -358,6 +358,8 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 3.0, 3.0], result)
         result = tools.correlate_missing(df, header='age', method='random', seed=0)
         self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 1.0, 2.0], result)
+        result = tools.correlate_missing(df, header='age', method='neighbour', seed=0)
+        self.assertEqual([2.0, 1.0, 2.0, 2.0, 9.0, 1.0, 2.833, 2.833], result)
         result = tools.correlate_missing(df, header='age', method='indicator')
         self.assertEqual([0,0,0,0,0,0,1,1], result)
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
