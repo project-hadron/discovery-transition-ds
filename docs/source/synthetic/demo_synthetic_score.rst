@@ -1,7 +1,7 @@
-Synthetic: Risk Score
-=====================
+Use Case: Flu Risk score
+========================
 
-This example builds a risk score, using Project Hadron’s Synthetic
+This use case builds a risk score, using Project Hadron’s Synthetic
 Builder capability, to create a test data set targeting a selected model
 algorithm to demonstrate bias within a score. This is a univariate
 example for the purposes of demonstration with statistics taken from the

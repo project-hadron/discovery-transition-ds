@@ -1,5 +1,5 @@
-Correlated Distribution Logic
-=============================
+Use Case: Logic Test
+====================
 
 Set by a senior data scientist and researcher to test the logic of
 correlation observed across a distributions. This applies to both the preparation of
