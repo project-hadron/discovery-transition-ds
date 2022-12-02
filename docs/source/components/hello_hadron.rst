@@ -282,7 +282,12 @@ extends the common reporting tools and provides additional functionality
 for identifying quality, quantity, veracity and availability.
 
 It should be worth noting we are creating a new component and as such
-must set up the input and the output of the component.
+must set up the input and the output of the component. The input here is a
+direct URL to a resource on the Internet. We can also use this technique
+to access other common storage such as AWS S3 where we prefix the bucket and
+file name with ``s3`` for example ``s3://<bucket>/<path>/<name.ext>``.
+Alternatively we could copy the file to our local environment variable path
+And load the data directly using ``tr.set_source('phpMYEkMl.csv')``
 
 .. code:: ipython3
 

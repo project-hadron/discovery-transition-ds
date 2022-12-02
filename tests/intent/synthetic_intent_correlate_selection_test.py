@@ -37,7 +37,7 @@ class SyntheticIntentCorrelateSelectionTest(unittest.TestCase):
         channels = ["MyPortal", "Phone", "Email", "SMS", "SocialMedia"]
         df['prf_channel_pref'] = builder.tools.get_category(selection=channels, relative_freq=[4, 1, 3, 2, 2], size=sample_size)
         selection = [builder.tools.select2dict(column='prf_has_phone', condition='@==0')]
-        action = builder.tools.action2dict(method='get_category', selection=["MyPortal", "Email", "SocialMedia"], relative_freq=[2, 1, 2, 0.1])
+        action = builder.tools.action2dict(method='get_category', selection=["MyPortal", "Email", "SocialMedia"], relative_freq=[2, 1, 2])
         default = builder.tools.action2dict(method='@header', header='prf_channel_pref')
         df['prf_channel_pref'] = builder.tools.correlate_selection(df, selection=selection, action=action, default_action=default)
         print(df.shape)

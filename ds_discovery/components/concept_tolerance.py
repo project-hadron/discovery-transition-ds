@@ -63,7 +63,7 @@ class ConceptTolerance(AbstractCommonComponent):
          :param has_contract: (optional) indicates the instance should have a property manager domain contract
          :return: the initialised class instance
          """
-        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'json'
+        pm_file_type = pm_file_type if isinstance(pm_file_type, str) else 'parquet'
         pm_module = pm_module if isinstance(pm_module, str) else 'ds_discovery.handlers.pandas_handlers'
         pm_handler = pm_handler if isinstance(pm_handler, str) else 'PandasPersistHandler'
         _pm = ConceptTolerancePropertyManager(task_name=task_name, creator=creator)
