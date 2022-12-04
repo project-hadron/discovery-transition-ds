@@ -145,7 +145,7 @@ class TransitionIntentModel(AbstractIntentModel):
 
 
     def auto_projection(self, df, headers: list = None, drop: bool = None, n_components: [int, float] = None,
-                  seed: int = None, save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                        seed: int = None, save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> pd.DataFrame:
         """
         Principal component analysis (PCA) is a linear dimensionality reduction using Singular Value Decomposition
