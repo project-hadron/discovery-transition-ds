@@ -5,6 +5,8 @@ import unittest
 import numpy as np
 import pandas as pd
 from aistac.properties.property_manager import PropertyManager
+
+from build.lib.ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition
@@ -107,6 +109,16 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = self.clean.auto_reinstate_nulls(df, nulls_list=[0], headers='nums')
         self.assertEqual([2, 0, 1, 0, 3, 1, 0, 0, 2, 3], df['nums'].to_list())
         self.assertEqual([2, 1, 3, 1, 2, 3], result['nums'].dropna().to_list())
+
+    def test_auto_(self):
+        tr = Transition.from_memory()
+        builder = SyntheticBuilder.from_memory()
+        df = builder.tools.model_synthetic_classification(1000, n_features=10)
+        df['cat'] = builder.tools.get_category(selection=['A', 'B'], size=1000)
+        result = tr.tools.auto_projection(df, n_components=5, headers=['target'], drop=True)
+        control = ['target', 'cat', 'pca_A', 'pca_B', 'pca_C', 'pca_D', 'pca_E']
+        self.assertEqual(control, result.columns.to_list())
+        self.assertEqual((1000, 7), result.shape)
 
     def test_auto_drop_duplicates(self):
         tools = self.tools
