@@ -1,5 +1,5 @@
-Running a Component in Python
-=============================
+Running in Python
+=================
 
 Project Hadron is designed using Microservices. The components services
 are represented as a single Domain Contract or as a Domain Contract

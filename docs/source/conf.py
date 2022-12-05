@@ -7,7 +7,7 @@ copyright = '2022, gigas64'
 author = 'gigas64'
 
 release = '1.0'
-version = '1.0.8'
+version = '1.0.9'
 
 # -- General configuration
 

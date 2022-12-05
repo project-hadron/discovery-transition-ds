@@ -1,5 +1,5 @@
-Running a Component in Docker
-=============================
+Running in Docker
+=================
 Project Hadron is designed using Microservices. These components services are represented as a
 `Domain Contract Ensemble`, the metadata files of a Project Hadron component build. To run a Docker
 container we need to set the run parameters, primarily the location of the `Domain Contract Ensemble`,
