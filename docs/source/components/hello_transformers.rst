@@ -1,5 +1,5 @@
-Adding Component Transformers
-=============================
+Adding Variable Transformers
+============================
 
 Project Hadron provides a library of transformers, which may clean,
 reduce, expand or generate feature representations. Machine learning
@@ -531,7 +531,7 @@ mean of each observation and then dividing by the standard deviation.
 .. math::
     z = \frac{(x - \bar{x})}{ \text s}
 
-where :math:`s` is the standard deviation of :math:`x`, and :math:`s`i
+where :math:`s` is the standard deviation of :math:`x`, and :math:`s`
 
 .. math::
 
