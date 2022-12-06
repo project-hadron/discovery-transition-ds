@@ -528,6 +528,30 @@ Standardisation involves centering the variable at zero, and
 standardising the variance to 1. The procedure involves subtracting the
 mean of each observation and then dividing by the standard deviation.
 
+.. math::
+    z = \frac{(x - \bar{x})}{ \text s}
+
+where :math:`s` is the standard deviation of :math:`x`, and :math:`s`i
+
+.. math::
+
+    s = \sqrt{ \frac{\sum{(X - \bar{x})^2}}{n - 1}}
+
+- :math:`s` = sample standard deviation
+- :math:`\sum` = sum of…
+- :math:`X` = each value
+- :math:`\bar{x}` = sample mean
+- :math:`n` = number of values in the sample
+
+The result of the above transformation is z, which is called the z-score, and
+represents how many standard deviations a given observation deviates from the
+mean. A z-score specifies the location of the observation within a distribution
+(in numbers of standard deviations respect to the mean of the distribution).
+The sign of the z-score (+ or - ) indicates whether the observation is
+above (+) or below ( - ) the mean.
+
+The shape of a standardised (or z-scored normalised) distribution will be identical to the original distribution of the variable. If the original distribution is normal, then the standardised distribution will be normal. But, if the original distribution is skewed, then the standardised distribution of the variable will also be skewed. In other words, standardising a variable does not normalize the distribution of the data
+
 .. code:: ipython3
 
     df['standardize'] = wr.tools.correlate_numbers(df, header='dist', standardize=True)
@@ -541,6 +565,15 @@ Normalisation involves centering the variable at zero, and re-scaling a
 given value range. The procedure involves subtracting the mean of each
 observation and then dividing it by difference between the minimum and
 maximum value.
+
+.. math::
+
+    \acute{x} = \frac{x - \bar{x}}{ x_{max} - x_{min}}
+
+The result of the above transformation is a distribution that is centered at 0, and its
+minimum and maximum values are within the range of -1 to 1. The shape of a mean normalised
+distribution will be very similar to the original distribution of the variable, but the
+variance may change, so not identical.
 
 .. code:: ipython3
 
