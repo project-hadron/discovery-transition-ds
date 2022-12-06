@@ -1,5 +1,5 @@
-Synthetic Builder
-=================
+Synthetic Builder Use Case
+==========================
 
 .. toctree::
    :caption: Table of Contents

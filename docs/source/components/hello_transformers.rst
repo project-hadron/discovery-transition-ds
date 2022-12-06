@@ -1,5 +1,5 @@
-Overview of Transformers
-========================
+Adding Component Transformers
+=============================
 
 Project Hadron provides a library of transformers, which may clean,
 reduce, expand or generate feature representations. Machine learning

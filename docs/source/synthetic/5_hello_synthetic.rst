@@ -1,5 +1,5 @@
-Building a Synthetic Component
-==============================
+Use Case : Synthetic Profile
+============================
 
 Synthetic Builder is another example of a Project Hadron capability,
 having seen selection and feature engineering in our previous examples.
@@ -64,7 +64,7 @@ Building a Distribution
 This new component works in exactly the same way as the other components
 demonstrated earlier, whereby we create the instance pertinent to our
 intentions and where to persist the results. Then we add the component
-actions (intent), which in this case is to generste the features we have
+actions (intent), which in this case is to generate the features we have
 built and make them appropriate for a machine learning model or for
 other uses.
 
@@ -83,8 +83,8 @@ sample size that can be applied to all required build methods.
     sample_size = 1000
     df = pd.DataFrame(index=range(sample_size))
 
-Building a Member
-~~~~~~~~~~~~~~~~~
+Building a profile
+~~~~~~~~~~~~~~~~~~
 
 We initially need to create the distribution data using the ``get_``
 methods. In this case we are using ``get-numbers`` to retrieve a random
@@ -95,14 +95,14 @@ Next use ``get_catagory`` to define ``language`` using the
 ``relative_freq`` parameter to specify the distribution of these
 catagories.
 
-Finally use ``get_datetime`` to get a date of birth of the member based
+Finally use ``get_datetime`` to get a date of birth of the profile based
 on current time. We achieve this by using seconds from now, be they
 posative or negative, to calculate a datetime. Dates now stay up to date
 each run, though real date margins can be used.
 
 .. code:: ipython3
 
-    df['member_id'] = builder.tools.get_number(from_value=100000, to_value=999999, at_most=1, size=sample_size, column_name='member_id')
+    df['profile_id'] = builder.tools.get_number(from_value=100000, to_value=999999, at_most=1, size=sample_size, column_name='profile_id')
 
 .. code:: ipython3
 
@@ -146,7 +146,7 @@ the data you want to retrieve, be that columns or rows.
 Adding Preferences
 ~~~~~~~~~~~~~~~~~~
 
-Finially add preferances for now and to use later as we improve the
+Finally add preferences for now and to use later as we improve the
 logic. Remember synthetic building is an iterative process that builds
 up as ones knowledge improves. For an example we may want to add logic
 to ensure that those without phone numbers cannot be contacted by SMS or
