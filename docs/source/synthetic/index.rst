@@ -7,6 +7,5 @@ Synthetic Builder Use Case
    :glob:
 
    synthetic_intro
-   5_hello_synthetic
    demo_synthetic_score
    demo_logic
