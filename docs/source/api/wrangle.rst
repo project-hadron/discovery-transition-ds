@@ -1,7 +1,7 @@
-Intent API: Feature Engineer
-============================
+API: Feature Engineer
+=====================
 
-.. automodule:: wrangle_intent
+.. automodule:: components.wrangling
 
-.. autoclass:: WrangleIntentModel
+.. autoclass:: Wrangle
    :members:

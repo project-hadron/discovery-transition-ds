@@ -1,7 +1,7 @@
-Intent API: Transition & Select
-===============================
+API: Transition & Select
+========================
 
-.. automodule:: transition_intent
+.. automodule:: components.transitioning
 
-.. autoclass:: TransitionIntentModel
+.. autoclass:: Transition
    :members:

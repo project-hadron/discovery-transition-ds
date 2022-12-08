@@ -1,5 +1,5 @@
-Component API
-=============
+Component Intent API
+====================
 
 .. toctree::
    :caption: Table of Contents

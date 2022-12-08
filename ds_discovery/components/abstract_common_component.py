@@ -122,17 +122,20 @@ class AbstractCommonComponent(AbstractComponent):
     def save_report_canonical(self, reports: [str, list], report_canonical: [dict, pd.DataFrame],
                               replace_connectors: bool=None, auto_connectors: bool=None, save: bool=None, **kwargs):
         """saves one or a list of reports using the TEMPLATE_PERSIST connector contract. Though a report can be of any
-         name, for convention and consistency each component has a set of REPORT constants <Component>.REPORT_<NAME>
-         where <Component> is the component Class name and <name> is the name of the report_canonical.
+        name, for convention and consistency each component has a set of REPORT constants <Component>.REPORT_<NAME>
+        where <Component> is the component Class name and <name> is the name of the report_canonical.
 
-         The reports can be a simple string name or a list of names. The name list can be a string or a dictionary
-         providing more detailed parameters on how to represent the report. These parameters keys are
-            :key report: the name of the report
-            :key file_type: (optional) a file type other than the default .json
-            :key versioned: (optional) if the filename should be versioned
-            :key stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
+        The reports can be a simple string name or a list of names. The name list can be a string or a dictionary
+        providing more detailed parameters on how to represent the report. These parameters keys are
+            - key report: the name of the report
+            - key file_type: (optional) a file type other than the default .json
+            - key versioned: (optional) if the filename should be versioned
+            - key stamped: (optional) A string of the timestamp options ['days', 'hours', 'minutes', 'seconds', 'ns']
 
         Some examples
+
+        .. code-block:: py3
+
             self.REPORT_SCHEMA
             [self.REPORT_NOTES, self.REPORT_SCHEMA]
             [self.REPORT_NOTES, {'report': self.REPORT_SCHEMA, 'uri_file': '<file_name>'}]

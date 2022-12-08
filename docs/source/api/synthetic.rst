@@ -1,7 +1,8 @@
-Intent API: Synthetic Build
-===========================
+API: Synthetic Build
+====================
 
-.. automodule:: synthetic_intent
+.. automodule:: components.synthetic_builder
 
-.. autoclass:: SyntheticIntentModel
+.. autoclass:: SyntheticBuilder
    :members:
+   :inherited-members:

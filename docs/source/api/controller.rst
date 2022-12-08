@@ -1,7 +1,7 @@
-Register API: Controller
-========================
+API: Controller
+===============
 
-.. automodule:: controller_intent
+.. automodule:: components.controller
 
-.. autoclass:: ControllerIntentModel
+.. autoclass:: Controller
    :members:

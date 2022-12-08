@@ -14,3 +14,4 @@ Project Hadron Data Science and Synthetic Toolset
    reports/index
    synthetic/index
    api/index
+   api_intent/index
