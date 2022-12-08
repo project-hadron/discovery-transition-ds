@@ -272,7 +272,7 @@ times in the dataset.
 
 .. code:: ipython3
 
-    df_encoded = wr.tools.model_encode_count(df, headers=['gender', 'code'],)
+    df_encoded = wr.tools.model_encode_count(df, headers=['gender', 'code'])
 
 .. image:: /images/transform/tra_img06.png
   :align: center

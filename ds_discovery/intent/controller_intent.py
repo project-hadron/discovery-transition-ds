@@ -13,6 +13,11 @@ __author__ = 'Darryl Oatridge'
 
 class ControllerIntentModel(AbstractIntentModel):
 
+    """This component provides a set of actions that focuses on the Controller. The Controller is a unique component
+    that independently orchestrates the components registered to it. It executes the components Domain Contract and
+    not its code. The Controller orchestrates how those components should run with the components being independent
+    in their actions and therefore a separation of concerns."""
+
     def __init__(self, property_manager: ControllerPropertyManager, default_save_intent: bool=None,
                  default_intent_level: [str, int, float]=None, order_next_available: bool=None,
                  default_replace_intent: bool=None):
@@ -49,7 +54,7 @@ class ControllerIntentModel(AbstractIntentModel):
         :param controller_repo: (optional) the controller repo to use if no uri_pm_repo is within the intent parameters
         :param persist_result: (optional) if the intent results should be persisted as well as returned in memory
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
-        :return Canonical with parameterised intent applied
+        :return: Canonical with parameterised intent applied
         """
         # get the list of levels to run
         intent_level = intent_level if isinstance(intent_level, (int, str)) else self._pm.DEFAULT_INTENT_LEVEL
@@ -262,110 +267,110 @@ class ControllerIntentModel(AbstractIntentModel):
             return canonical
         return
 
-    def feature_catalog(self, canonical: Any, task_name: str, feature_name: [int, str]=None, uri_pm_repo: str=None,
-                        run_task: bool=None, train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
-                        persist_result: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
-                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ register a Feature Catalog component task pipeline
-
-        :param canonical: the canonical to run through the component pipeline
-        :param task_name: the task_name reference for this component
-        :param feature_name: feature to run
-        :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param train_size: (optional) If float, should be between 0.0 and 1.0 and represent the proportion of the
-                            dataset to include in the train split. If int, represents the absolute number of train
-                            samples. If None, then not used
-        :param seed: (optional) if shuffle is True a seed value for the choice
-        :param shuffle: (optional) Whether or not to shuffle the data before splitting or just split on train size.
-        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
-        :param persist_result: (optional) if the resulting canonical should be persisted.
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-       """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # create the event book
-        if isinstance(run_task, bool) and run_task:
-            persist_result = persist_result if isinstance(persist_result, bool) else False
-            params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
-            fc: FeatureCatalog = eval(f"FeatureCatalog.from_env(task_name=task_name, default_save=False, "
-                                      f"has_contract=True, **{params})", globals(), locals())
-            if isinstance(canonical, str) and canonical.startswith('@'):
-                if fc.pm.has_connector(canonical[1:]):
-                    canonical = fc.load_canonical(canonical[1:])
-                else:
-                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
-            if canonical.shape == (0, 0):
-                canonical = fc.load_source_canonical()
-            canonical = fc.intent_model.run_intent_pipeline(canonical=canonical, feature_name=feature_name,
-                                                            train_size=train_size, seed=seed, shuffle=shuffle)
-            if persist_result and fc.pm.has_connector(feature_name):
-                fc.save_catalog_feature(feature_name=feature_name, canonical=canonical)
-            # create reports
-            self._common_reports(fc)
-            # customer reports
-
-            return canonical
-        return
-
-    def data_drift(self, canonical: Any, task_name: str, measure: [int, str], uri_pm_repo: str=None,
-                   run_task: bool=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
-                   intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ register a data tolerance component task pipeline
-
-        :param canonical: the canonical to run through the component pipeline
-        :param task_name: the task_name reference for this component
-        :param measure: a single measure to fun
-        :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
-        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
-        :param persist_result: (optional) if the resulting canonical should be persisted.
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-       """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # create the event book
-        if isinstance(run_task, bool) and run_task:
-            persist_result = persist_result if isinstance(persist_result, bool) else False
-            params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
-            ct: ConceptTolerance = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
-                                 f"has_contract=True, **{params})", globals(), locals())
-            if isinstance(canonical, str) and canonical.startswith('@'):
-                if ct.pm.has_connector(canonical[1:]):
-                    canonical = ct.load_canonical(canonical[1:])
-                else:
-                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
-            if canonical.shape == (0, 0):
-                canonical = ct.load_source_canonical()
-            canonical = ct.intent_model.run_intent_pipeline(canonical=canonical, measure=measure)
-            if persist_result and ct.pm.has_connector(measure):
-                ct.save_persist_canonical(feature_name=measure, canonical=canonical)
-            # create reports
-            self._common_reports(ct)
-            # customer reports
-
-            return canonical
-        return
+    # def feature_catalog(self, canonical: Any, task_name: str, feature_name: [int, str]=None, uri_pm_repo: str=None,
+    #                     run_task: bool=None, train_size: [float, int]=None, seed: int=None, shuffle: bool=None,
+    #                     persist_result: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+    #                     intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    #     """ register a Feature Catalog component task pipeline
+    #
+    #     :param canonical: the canonical to run through the component pipeline
+    #     :param task_name: the task_name reference for this component
+    #     :param feature_name: feature to run
+    #     :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
+    #     :param train_size: (optional) If float, should be between 0.0 and 1.0 and represent the proportion of the
+    #                         dataset to include in the train split. If int, represents the absolute number of train
+    #                         samples. If None, then not used
+    #     :param seed: (optional) if shuffle is True a seed value for the choice
+    #     :param shuffle: (optional) Whether or not to shuffle the data before splitting or just split on train size.
+    #     :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+    #     :param persist_result: (optional) if the resulting canonical should be persisted.
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
+    #     :param intent_level: (optional) the level name that groups intent by a reference name
+    #     :param intent_order: (optional) the order in which each intent should run.
+    #                     If None: default's to -1
+    #                     if -1: added to a level above any current instance of the intent section, level 0 if not found
+    #                     if int: added to the level specified, overwriting any that already exist
+    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
+    #                     True - replaces the current intent method with the new
+    #                     False - leaves it untouched, disregarding the new intent
+    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+    #    """
+    #     # resolve intent persist options
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
+    #     # create the event book
+    #     if isinstance(run_task, bool) and run_task:
+    #         persist_result = persist_result if isinstance(persist_result, bool) else False
+    #         params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
+    #         fc: FeatureCatalog = eval(f"FeatureCatalog.from_env(task_name=task_name, default_save=False, "
+    #                                   f"has_contract=True, **{params})", globals(), locals())
+    #         if isinstance(canonical, str) and canonical.startswith('@'):
+    #             if fc.pm.has_connector(canonical[1:]):
+    #                 canonical = fc.load_canonical(canonical[1:])
+    #             else:
+    #                 raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
+    #         if canonical.shape == (0, 0):
+    #             canonical = fc.load_source_canonical()
+    #         canonical = fc.intent_model.run_intent_pipeline(canonical=canonical, feature_name=feature_name,
+    #                                                         train_size=train_size, seed=seed, shuffle=shuffle)
+    #         if persist_result and fc.pm.has_connector(feature_name):
+    #             fc.save_catalog_feature(feature_name=feature_name, canonical=canonical)
+    #         # create reports
+    #         self._common_reports(fc)
+    #         # customer reports
+    #
+    #         return canonical
+    #     return
+    #
+    # def data_drift(self, canonical: Any, task_name: str, measure: [int, str], uri_pm_repo: str=None,
+    #                run_task: bool=None, persist_result: bool=None, save_intent: bool=None, intent_order: int=None,
+    #                intent_level: [int, str]=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    #     """ register a data tolerance component task pipeline
+    #
+    #     :param canonical: the canonical to run through the component pipeline
+    #     :param task_name: the task_name reference for this component
+    #     :param measure: a single measure to fun
+    #     :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
+    #     :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+    #     :param persist_result: (optional) if the resulting canonical should be persisted.
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
+    #     :param intent_level: (optional) the level name that groups intent by a reference name
+    #     :param intent_order: (optional) the order in which each intent should run.
+    #                     If None: default's to -1
+    #                     if -1: added to a level above any current instance of the intent section, level 0 if not found
+    #                     if int: added to the level specified, overwriting any that already exist
+    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
+    #                     True - replaces the current intent method with the new
+    #                     False - leaves it untouched, disregarding the new intent
+    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+    #    """
+    #     # resolve intent persist options
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
+    #     # create the event book
+    #     if isinstance(run_task, bool) and run_task:
+    #         persist_result = persist_result if isinstance(persist_result, bool) else False
+    #         params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
+    #         ct: ConceptTolerance = eval(f"DataTolerance.from_env(task_name=task_name, default_save=False, "
+    #                              f"has_contract=True, **{params})", globals(), locals())
+    #         if isinstance(canonical, str) and canonical.startswith('@'):
+    #             if ct.pm.has_connector(canonical[1:]):
+    #                 canonical = ct.load_canonical(canonical[1:])
+    #             else:
+    #                 raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
+    #         if canonical.shape == (0, 0):
+    #             canonical = ct.load_source_canonical()
+    #         canonical = ct.intent_model.run_intent_pipeline(canonical=canonical, measure=measure)
+    #         if persist_result and ct.pm.has_connector(measure):
+    #             ct.save_persist_canonical(feature_name=measure, canonical=canonical)
+    #         # create reports
+    #         self._common_reports(ct)
+    #         # customer reports
+    #
+    #         return canonical
+    #     return
 
     def _set_intend_signature(self, intent_params: dict, intent_level: [int, str]=None, intent_order: int=None,
                               replace_intent: bool=None, remove_duplicates: bool=None, save_intent: bool=None):

@@ -16,6 +16,10 @@ __author__ = 'Darryl Oatridge'
 
 
 class SyntheticIntentModel(WrangleIntentModel):
+
+    """Synthetic data is representative data that, depending on its application, holds statistical and
+    distributive characteristics of its real world counterpart. This component provides a set of actions
+    that focuses on building a synthetic data through knowledge and statistical analysis"""
     
     def __init__(self, property_manager: SyntheticPropertyManager, default_save_intent: bool=None,
                  default_intent_level: [str, int, float]=None, order_next_available: bool=None,
@@ -50,12 +54,14 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
 
@@ -86,15 +92,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: an optional size of the return. default to 1
         :param at_most: the most times a selection should be chosen
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an item or list of items chosen from the list
         """
@@ -116,9 +124,8 @@ class SyntheticIntentModel(WrangleIntentModel):
                      save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a random date between two date and/or times. weighted patterns can be applied to the overall date
-        range.
-        if a signed 'int' type is passed to the start and/or until dates, the inferred date will be the current date
-        time with the integer being the offset from the current date time in 'days'.
+        range. if a signed 'int' type is passed to the start and/or until dates, the inferred date will be the current
+        date time with the integer being the offset from the current date time in 'days'.
 
         Note: If no patterns are set this will return a linearly random number between the range boundaries.
 
@@ -134,20 +141,24 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample to return. Default to 1
         :param seed: a seed value for the random function: default to None
         :param year_first: specifies if to parse with the year first
-                If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
-                If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
+                    - If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
+                    - If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
+
         :param day_first: specifies if to parse with the day first
-                If True, parses dates with the day first, eg %d-%m-%Y.
-                If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+                    - If True, parses dates with the day first, eg %d-%m-%Y.
+                    - If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a date or size of dates in the format given.
          """
@@ -200,7 +211,7 @@ class SyntheticIntentModel(WrangleIntentModel):
     #     :param day_first: specifies if to parse with the day first
     #             If True, parses dates with the day first, eg %d-%m-%Y.
     #             If False default to the a preferred preference, normally %m-%d-%Y (but not strict)
-    #     :param save_intent (optional) if the intent contract should be saved to the property manager
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
     #     :param column_name: (optional) the column name that groups intent to create a column
     #     :param intent_order: (optional) the order in which each intent should run.
     #                     If None: default's to -1
@@ -354,15 +365,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample
         :param quantity: a number between 0 and 1 representing data that isn't null
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
         """
@@ -389,15 +402,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample. if a tuple of intervals, size must match the tuple
         :param quantity: a number between 0 and 1 representing data that isn't null
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
         """
@@ -422,7 +437,7 @@ class SyntheticIntentModel(WrangleIntentModel):
        :param size: the size of the sample. if a tuple of intervals, size must match the tuple
        :param quantity: a number between 0 and 1 representing data that isn't null
        :param seed: a seed value for the random function: default to None
-       :param save_intent (optional) if the intent contract should be saved to the property manager
+       :param save_intent: (optional) if the intent contract should be saved to the property manager
        :param column_name: (optional) the column name that groups intent to create a column
        :param intent_order: (optional) the order in which each intent should run.
                        If None: default's to -1
@@ -458,15 +473,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample
         :param quantity: a number between 0 and 1 representing data that isn't null
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
         """
@@ -496,15 +513,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample
         :param quantity: a number between 0 and 1 representing data that isn't null
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a random number
         """
@@ -532,15 +551,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: (optional) the size of the sample
         :param quantity: (optional) a number between 0 and 1 representing data that isn't null
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :param kwargs: the parameters of the method
         :return: a random number
@@ -562,18 +583,25 @@ class SyntheticIntentModel(WrangleIntentModel):
                            choice_only: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                            intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ Returns a random string based on the pattern given. The pattern is made up from the choices passed but
-            by default is as follows:
+        by default is as follows:
+
+        .. code:: text
+
                 c = random char [a-z][A-Z]
                 d = digit [0-9]
                 l = lower case char [a-z]
                 U = upper case char [A-Z]
                 p = all punctuation
                 s = space
-            you can also use punctuation in the pattern that will be retained
-            A pattern example might be
-                    uuddsduu => BA12 2NE or dl-{uu} => 4g-{FY}
 
-            to create your own choices pass a dictionary with a reference char key with a list of choices as a value
+        you can also use punctuation in the pattern that will be retained
+        A pattern example might be
+
+        .. code:: text
+
+                uuddsduu => BA12 2NE or dl-{uu} => 4g-{FY}
+
+        to create your own choices pass a dictionary with a reference char key with a list of choices as a value
 
         :param pattern: the pattern to create the string from
         :param choices: an optional dictionary of list of choices to replace the default.
@@ -581,15 +609,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the return list. if None returns a single value
         :param choice_only: if to only use the choices given or to take not found characters as is
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a string based on the pattern
         """
@@ -645,15 +675,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param size: (optional) size of the return. default to 1
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: list
 
@@ -705,15 +737,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param size: (optional) size of the return. default to 1
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a sample list
         """
@@ -734,34 +768,41 @@ class SyntheticIntentModel(WrangleIntentModel):
                  replace_intent: bool=None, remove_duplicates: bool=None, **kwargs) -> list:
         """ returns a list of UUID's based on the version presented. By default the uuid version is 4. optional
         parameters for the version number UUID generator can be passed as kwargs.
-        Version 1: Generate a UUID from a host ID, sequence number, and the current time. Note as uuid1 contains the
-                   computers network address it may compromise privacy
-                param node: (optional) used instead of getnode() which returns a hardware address
-                param clock_seq: (optional) used as a sequence number alternative
+
+        Version 1: Generate a UUID from a host ID, sequence number, and the current time. Note as uuid1
+
+        contains the computers network address it may compromise privacy
+            - param node: (optional) used instead of getnode() which returns a hardware address
+            - param clock_seq: (optional) used as a sequence number alternative
+
         Version 3: Generate a UUID based on the MD5 hash of a namespace identifier and a name
-                param namespace: an alternative namespace as a UUID e.g. uuid.NAMESPACE_DNS
-                param name: a string name
+            - param namespace: an alternative namespace as a UUID e.g. uuid.NAMESPACE_DNS
+            - param name: a string name
+
         Version 4: Generate a random UUID
+
         Version 5: Generate a UUID based on the SHA-1 hash of a namespace identifier and name
-                param namespace: an alternative namespace as a UUID e.g. uuid.NAMESPACE_DNS
-                param name: a string name
+            - param namespace: an alternative namespace as a UUID e.g. uuid.NAMESPACE_DNS
+            - param name: a string name
 
         :param version: The version of the UUID to use. 1, 3, 4 or 5
         :param as_hex: if the return value is in hex format, else as a string
         :param size: the size of the sample. Must be smaller than the range
         :param quantity: a number between 0 and 1 representing the percentage quantity of the data
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a unique identifer randomly selected from the range
+        :return: a unique identifier randomly selected from the range
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -783,12 +824,15 @@ class SyntheticIntentModel(WrangleIntentModel):
                            column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                            remove_duplicates: bool=None) -> list:
         """ Returns the pattern with the tags substituted by tag choice
-            example ta dictionary:
-                { '<slogan>': {'action': '', 'kwargs': {}},
-                  '<phone>': {'action': '', 'kwargs': {}}
-                }
-            where action is a self method name and kwargs are the arguments to pass
-            for sample data use get_custom
+        example ta dictionary:
+
+        .. code:: python
+
+            { '<slogan>': {'action': '', 'kwargs': {}},
+              '<phone>': {'action': '', 'kwargs': {}}
+            }
+
+        where action is a method name and kwargs are the arguments to pass for sample data use that method
 
         :param pattern: a string or list of strings to apply the ta substitution too
         :param tags: a dictionary of tas and actions
@@ -796,15 +840,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param quantity: a number between 0 and 1 representing the percentage quantity of the data
         :param size: an optional size of the return. default to 1
         :param seed: a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of patterns with tas replaced
         """
@@ -853,15 +899,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param with_labels: (optional) if labels should be included. Default is True
         :param seed: (optional) a seed value for the random function: default to None
         :param kwargs: a set of kwargs for the generator
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd. DataFrame
         """
@@ -900,15 +948,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param with_labels: (optional) if labels should be included. Default is True
         :param seed: (optional) a seed value for the random function: default to None
         :param kwargs: a set of kwargs for the generator
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd. DataFrame
         """
@@ -950,15 +1000,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param with_labels: (optional) if labels should be included. Default is True
         :param seed: (optional) a seed value for the random function: default to None
         :param kwargs: a set of kwargs for the generator
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd. DataFrame
         """
@@ -992,15 +1044,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param num_columns: the number of columns of noise
         :param inc_targets: (optional) if a predictor target should be included. default is false
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
 
@@ -1068,15 +1122,17 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param headers: a header or list of headers to filter on
         :param shuffle: (optional) if the selection should be shuffled before selection. Default is true
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :param kwargs: any additional parameters to pass to the sample map
         :return: a DataFrame

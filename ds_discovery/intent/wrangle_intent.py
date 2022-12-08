@@ -9,6 +9,11 @@ __author__ = 'Darryl Oatridge'
 
 
 class WrangleIntentModel(AbstractBuilderIntentModel):
+
+    """This component provides a set of actions that focuses on data and feature engineering.
+    The class contains a number of transformers to engineer features to use in machine learning
+    models or statistical analysis
+    """
     
     def __init__(self, property_manager: [WranglePropertyManager, SyntheticPropertyManager],
                  default_save_intent: bool=None, default_intent_level: [str, int, float]=None,
@@ -41,8 +46,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param choice: a number of rows to select, randomly selected from the index
         :param selection: a list of selections where conditions are filtered on, executed in list order
-                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        .. code-block:: py3
+
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
         :param dtype: the column types to include or excluse. Default None else int, float, bool, object, 'number'
@@ -54,12 +64,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd.DataFrame
 
@@ -71,25 +83,28 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
         - int -> generates an empty pd.Dataframe with an index size of the int passed.
         - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
+
+        methods:
+            - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+            - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                :size sets the index size of the dataframe
+                :headers any initial headers for the dataframe
+            - @generate -> generate a synthetic file from a remote Domain Contract
+                :task_name the name of the SyntheticBuilder task to run
+                :repo_uri the location of the Domain Product
+                :size (optional) a size to generate
+                :seed (optional) if a seed should be applied
+                :run_book (optional) if specific intent should be run only
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
         options available to build a condition.
-        An example of a condition with the minimum requirements is
-                [{'column': 'genre', 'condition': "=='Comedy'"}]
+        An example of a condition with the minimum requirements is [{'column': 'genre', 'condition': "=='Comedy'"}]
 
         an example of using the helper method
+
+        .. code-block:: py3
+
                 selection = [inst.select2dict(column='gender', condition="=='M'"),
                              inst.select2dict(column='age', condition=">65", logic='XOR')]
 
@@ -118,8 +133,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param selection: a list of selections where conditions are filtered on, executed in list order
-                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        .. code-block:: py3
+
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+
         :param choice: a number of rows to select, randomly selected from the index
         :param headers: a list of headers to drop or filter on type
         :param drop: to drop or not drop the headers
@@ -131,22 +151,26 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: pd.DataFrame
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
         options available to build a condition.
-        An example of a condition with the minimum requirements is
-                [{'column': 'genre', 'condition': "=='Comedy'"}]
+        An example of a condition with the minimum requirements is [{'column': 'genre', 'condition': "=='Comedy'"}]
 
         an example of using the helper method
+
+        .. code-block:: py3
+
                 selection = [inst.select2dict(column='gender', condition="=='M'"),
                              inst.select2dict(column='age', condition=">65", logic='XOR')]
 
@@ -168,27 +192,27 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_custom(self, canonical: Any, code_str: str, seed: int=None, save_intent: bool=None,
                      column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                      remove_duplicates: bool=None, **kwargs):
-        """ Commonly used for custom methods, takes code string that when executed changes the the canonical returning
+        """ Commonly used for custom methods, takes code string that when executed changes the canonical returning
         the modified canonical. If the method passes returns a pd.Dataframe this will be returned else the assumption is
         the canonical has been changed inplace and thus the modified canonical will be returned
         When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
         or the short cut '@' symbol. kwargs can also be passed into the code string but must be preceded by a '$' symbol
-        for example:
-            code_str =
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param code_str: an action on those column values
         :param kwargs: a set of kwargs to include in any executable function
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list or pandas.DataFrame
         """
@@ -228,15 +252,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param remove_aggregated: (optional) if used in conjunction with the weighting then drops the aggrigator column
         :param remove_weighting_zeros: (optional) removes zero values
         :param seed: (optional) this is a place holder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -273,15 +299,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param agg_header: (optional) the name to give the aggregated column. By default 'latent_aggregator'
         :param precision: (optional) the value precision of the return values
         :param seed: (optional) this is a placeholder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
@@ -342,16 +370,18 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                             “many_to_one” or “m:1”: checks if merge keys are unique in right dataset.
                             “many_to_many” or “m:m”: allowed, but does not result in checks.
         :param replace_nulls: (optional) replaces nulls with an appropriate value dependent upon the field type
-        :param seed: this is a place holder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param seed: this is a placeholder, here for compatibility across methods
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
@@ -404,15 +434,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
         :param shuffle: (optional) if the rows in the loaded canonical should be shuffled
         :param seed: this is a place holder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
 
@@ -457,15 +489,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param header: the header of the column to be convert
         :param convert_str: (optional) if the header has the dict as a string convert to dict using ast.literal_eval()
         :param seed: (optional) this is a place holder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -489,15 +523,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param threshold: (optional) a null threshold between 0 and 1 where 1 is all nulls. Default to 0.5
         :param seed: (optional) a placeholder
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -539,12 +575,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
          :param save_intent: (optional) if the intent contract should be saved to the property manager
          :param column_name: (optional) the column name that groups intent to create a column
          :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
          :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
          :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
          :return: an equal length list of correlated values
         """
@@ -574,15 +612,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param seed: (optional) a placeholder
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -606,22 +646,23 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply multi-hot
-        :param prefix : str, list of str, or dict of str, String to append DataFrame column names,
-                list with length equal to the number of columns. Alternatively, dictionary mapping column names to prefixes.
-        :param prefix_sep : str separator, default '_'
-        :param dummy_na : Add a column to indicate null values, if False nullss are ignored.
-        :param drop_first :  Whether to get k-1 dummies out of k categorical levels by removing the first level.
-        :param dtype : Data type for new columns. Only a single dtype is allowed.
+        :param prefix: str, list of str, or dict of str, String to append DataFrame column names, with equal length.
+        :param prefix_sep: str separator, default '_'
+        :param dummy_na: Add a column to indicate null values, if False nullss are ignored.
+        :param drop_first:  Whether to get k-1 dummies out of k categorical levels by removing the first level.
+        :param dtype: Data type for new columns. Only a single dtype is allowed.
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -657,15 +698,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param headers: the header(s) to apply the encoding
         :param prefix: a str to prefix the column
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -690,15 +733,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param headers: the header(s) to apply the encoding
         :param prefix: a str to prefix the column
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -742,7 +787,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     #     :param target: The woe target
     #     :param prefix: a str value to put before the column name
     #     :param seed: seed: (optional) a seed value for the random function: default to None
-    #     :param save_intent (optional) if the intent contract should be saved to the property manager
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
     #     :param column_name: (optional) the column name that groups intent to create a column
     #     :param intent_order: (optional) the order in which each intent should run.
     #                     If None: default's to -1
@@ -773,15 +818,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header of the column to be exploded
         :param seed: (optional) this is a place holder, here for compatibility across methods
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a pd.DataFrame
         """
@@ -806,15 +853,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param replace: assuming other is bigger than canonical, selects without replacement when True
         :param relative_freq: (optional) a weighting pattern that does not have to add to 1
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
         """
@@ -846,15 +895,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param strict_typing: (optional) stops objects and string types being seen as categories
         :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
         :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
 
@@ -896,15 +947,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param size: size of the list to return
         :param ones: (optional) by default set to True returning a list of ones, else returning a list of zeros
         :param seed: (optional) placeholder for continuity
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
         """
@@ -929,34 +982,49 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param selection: a list of selections where conditions are filtered on, executed in list order
-                An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        An example of a selection with the minimum requirements is: (see 'select2dict(...)')
+
+        .. code-block:: py3
+
                 [{'column': 'genre', 'condition': "=='Comedy'"}]
+
         :param action: a value or dict to act upon if the select is successful. see below for more examples
-                An example of an action as a dict: (see 'action2dict(...)')
+
+        An example of an action as a dict: (see 'action2dict(...)')
+
+        .. code-block:: py3
+
                 {'method': 'get_category', 'selection': ['M', 'F', 'U']}
+
         :param default_action: (optional) a default action to take if the selection is not fulfilled
         :param seed: (optional) a seed value for the random function: default to None
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+                - other than the int, float, category, string and object, passing 'as-is' will return as is
+
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: value set based on the selection list and the action
 
         Selections are a list of dictionaries of conditions and optional additional parameters to filter.
         To help build conditions there is a static helper method called 'select2dict(...)' that has parameter
         options available to build a condition.
-        An example of a condition with the minimum requirements is
-                [{'column': 'genre', 'condition': "=='Comedy'"}]
+        An example of a condition with the minimum requirements is [{'column': 'genre', 'condition': "=='Comedy'"}]
 
         an example of using the helper method
+
+        .. code-block:: py3
+
                 selection = [inst.select2dict(column='gender', condition="=='M'"),
                              inst.select2dict(column='age', condition=">65", logic='XOR')]
 
@@ -968,22 +1036,34 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         action2dict(...) that takes a method as a mandatory attribute.
 
         With actions there are special keyword 'method' values:
-            @header: use a column as the value reference, expects the 'header' key
-            @constant: use a value constant, expects the key 'value'
-            @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
-            @eval: evaluate a code string, expects the key 'code_str' and any locals() required
+            - @header: use a column as the value reference, expects the 'header' key
+            - @constant: use a value constant, expects the key 'value'
+            - @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
+            - @eval: evaluate a code string, expects the key 'code_str' and any locals() required
 
         An example of a simple action to return a selection from a list:
+
+        .. code-block:: py3
+
                 {'method': 'get_category', selection: ['M', 'F', 'U']}
 
         This same action using the helper method would look like:
+
+        .. code-block:: text
+
                 inst.action2dict(method='get_category', selection=['M', 'F', 'U'])
 
         an example of using the helper method, in this example we use the keyword @header to get a value from another
         column at the same index position:
+
+        .. code-block:: py3
+
                 inst.action2dict(method="@header", header='value')
 
         We can even execute some sort of evaluation at run time:
+
+        .. code-block:: py3
+
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
         """
         # intent persist options
@@ -1009,15 +1089,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param units: (optional) The Timedelta units e.g. 'D', 'W', 'M', 'Y'. default is 'D'
         :param precision: the precision of the result
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :param kwargs: a set of kwargs to include in any executable function
         :return: value set based on the selection list and the action
@@ -1043,24 +1125,32 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         When referencing the canonical in the code_str it should be referenced either by use parameter label 'canonical'
         or the short cut '@' symbol.
         for example:
+
+        .. code-block:: py3
+
             code_str = "[x + 2 for x in @['A']]" # where 'A' is a header in the canonical
 
         kwargs can also be passed into the code string but must be preceded by a '$' symbol
         for example:
+
+        .. code-block:: py3
+
             code_str = "[True if x == $v1 else False for x in @['A']]" # where 'v1' is a kwargs
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param code_str: an action on those column values. to reference the canonical use '@'
         :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :param kwargs: a set of kwargs to include in any executable function
         :return: value set based on the selection list and the action
@@ -1095,12 +1185,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
         """
@@ -1146,12 +1238,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
         """
@@ -1179,16 +1273,19 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param sep: (optional) a separator between the values
         :param seed: (optional) a seed value for the random function: default to None
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
+                - other than the int, float, category, string and object, passing 'as-is' will return as is
+
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
 
@@ -1197,20 +1294,30 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         action2dict(...) that takes a method as a mandatory attribute.
 
         With actions there are special keyword 'method' values:
-            @header: use a column as the value reference, expects the 'header' key
-            @constant: use a value constant, expects the key 'value'
-            @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
-            @eval: evaluate a code string, expects the key 'code_str' and any locals() required
+            - @header: use a column as the value reference, expects the 'header' key
+            - @constant: use a value constant, expects the key 'value'
+            - @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
+            - @eval: evaluate a code string, expects the key 'code_str' and any locals() required
 
         An example of a simple action to return a selection from a list:
+
+        .. code-block:: py3
+
                 {'method': 'get_category', selection=['M', 'F', 'U']
 
         an example of using the helper method, in this example we use the keyword @header to get a value from another
         column at the same index position:
+
+        .. code-block:: text
+
                 inst.action2dict(method="@header", header='value')
 
         We can even execute some sort of evaluation at run time:
+
+        .. code-block:: py3
+
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
+
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1227,8 +1334,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                           save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
         """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
-        between (0,1) and is defined as
-                                        f(x) = 1/(1+exp(-x)
+        between (0,1) and is defined as f(x) = 1/(1+exp(-x)
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
@@ -1239,12 +1345,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
         """
@@ -1265,7 +1373,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         """ creates a polynomial using the reference header values and apply the coefficients where the
         index of the list represents the degree of the term in reverse order.
 
-                  e.g  [6, -2, 0, 4] => f(x) = 4x**3 - 2x + 6
+        e.g  [6, -2, 0, 4] => f(x) = 4x**3 - 2x + 6
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
@@ -1277,12 +1385,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
         """
@@ -1325,12 +1435,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
          :param save_intent: (optional) if the intent contract should be saved to the property manager
          :param column_name: (optional) the column name that groups intent to create a column
          :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
          :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
          :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
          :return: an equal length list of correlated values
         """
@@ -1393,12 +1505,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
         """
@@ -1444,12 +1558,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
         """
@@ -1482,7 +1598,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param normalize: (optional) normalise the column between two values. the tuple is the lower and upper bounds
         :param scalarize: (optional) assuming standard normally distributed, removes the mean and scaling
         :param transform: (optional) attempts normal distribution of values.
-                            options are log, sqrt, cbrt, reciprocal, boxcox, yeojohnson
+                    - options are log, sqrt, cbrt, reciprocal, boxcox, yeojohnson
+
         :param transform: (optional) transform the columns options are log, sqrt, cbrt, reciprocal
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
@@ -1491,27 +1608,34 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
+                - other than the int, float, category, string and object, passing 'as-is' will return as is
+
         :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
         :param min_value: a minimum value not to go below
         :param max_value: a max value not to go above
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
 
         The offset can be a numeric offset that is added to the value, e.g. passing 2 will add 2 to all values.
         If a string is passed if format should be a calculation with the '@' character used to represent the column
         value. e.g.
+
+        .. code-block:: text
+
             '1-@' would subtract the column value from 1,
             '@*0.5' would multiply the column value by 0.5
+
         """
         # intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1531,15 +1655,31 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         """ correlation of a set of values to an action, the correlations must map to the dictionary index values.
         Note. to use the current value in the passed values as a parameter value pass an empty dict {} as the keys
         value. If you want the action value to be the current value of the passed value then again pass an empty dict
-        action to be the current value
-            simple correlation list:
-                ['A', 'B', 'C'] # if values is 'A' then action is 0 and so on
-            multiple choice correlation
-                [['A','B'], 'C'] # if values is 'A' OR 'B' then action is 0 and so on
-            actions dictionary where the method is a class method followed by its parameters
-                {0: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
-            you can also use the action to specify a specific value:
-                {0: 'F', 1: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
+        action to be the current value.
+
+        simple correlation list:
+
+        .. code-block:: py3
+
+            ['A', 'B', 'C'] # if values is 'A' then action is 0 and so on
+
+        multiple choice correlation
+
+        .. code-block:: py3
+
+            [['A','B'], 'C'] # if values is 'A' OR 'B' then action is 0 and so on
+
+        actions dictionary where the method is a class method followed by its parameters
+
+        .. code-block:: py3
+
+            {0: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
+
+        you can also use the action to specify a specific value:
+
+        .. code-block:: py3
+
+            {0: 'F', 1: {'method': 'get_numbers', 'from_value': 0, to_value: 27}}
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param header: the header in the DataFrame to correlate
@@ -1552,12 +1692,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
 
@@ -1566,19 +1708,28 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         action2dict(...) that takes a method as a mandatory attribute.
 
         With actions there are special keyword 'method' values:
-            @header: use a column as the value reference, expects the 'header' key
-            @constant: use a value constant, expects the key 'value'
-            @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
-            @eval: evaluate a code string, expects the key 'code_str' and any locals() required
+            - @header: use a column as the value reference, expects the 'header' key
+            - @constant: use a value constant, expects the key 'value'
+            - @sample: use to get sample values, expected 'name' of the Sample method, optional 'shuffle' boolean
+            - @eval: evaluate a code string, expects the key 'code_str' and any locals() required
 
         An example of a simple action to return a selection from a list:
+
+        .. code-block:: python3
+
                 {'method': 'get_category', selection=['M', 'F', 'U']
 
         an example of using the helper method, in this example we use the keyword @header to get a value from another
         column at the same index position:
+
+        .. code-block:: python3
+
                 inst.action2dict(method="@header", header='value')
 
         We can even execute some sort of evaluation at run time:
+
+        .. code-block:: python3
+
                 inst.action2dict(method="@eval", code_str='sum(values)', values=[1,4,2,1])
 
         """
@@ -1603,24 +1754,27 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param granularity: (optional) the granularity of the analysis across the range. Default is 3
-                int passed - represents the number of periods
-                float passed - the length of each interval
-                list[tuple] - specific interval periods e.g []
-                list[float] - the percentile or quantities, All should fall between 0 and 1
+                - int passed - represents the number of periods
+                - float passed - the length of each interval
+                - list[tuple] - specific interval periods e.g []
+                -list[float] - the percentile or quantities, All should fall between 0 and 1
+
         :param lower: (optional) the lower limit of the number value. Default min()
         :param upper: (optional) the upper limit of the number value. Default max()
         :param precision: (optional) The precision of the range and boundary values. by default set to 5.
-        :param categories:(optional)  a set of labels the same length as the intervals to name the categories
+        :param categories: (optional)  a set of labels the same length as the intervals to name the categories
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal length to the one passed
         """
@@ -1663,12 +1817,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a list of equal size to that given
         """
@@ -1708,15 +1864,17 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         intent with the same intent (name) and the same parameter values, are removed from any level.
 
         :param intent_params: a dictionary type set of configuration representing a intent section contract
-        :param save_intent (optional) if the intent contract should be saved to the property manager
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
-                        If None: default's to -1
-                        if -1: added to a level above any current instance of the intent section, level 0 if not found
-                        if int: added to the level specified, overwriting any that already exist
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+                    
         :param replace_intent: (optional) if the intent method exists at the level, or default level
-                        True - replaces the current intent method with the new
-                        False - leaves it untouched, disregarding the new intent
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+                    
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         """
         if save_intent or (not isinstance(save_intent, bool) and self._default_save_intent):

@@ -13,3 +13,4 @@ Project Hadron Data Science and Synthetic Toolset
    components/docker
    reports/index
    synthetic/index
+   api/index

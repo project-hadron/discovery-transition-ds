@@ -1,4 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../ds_discovery/intent'))
 
 # -- Project information
 
@@ -17,6 +20,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.napoleon',
 ]
 
 intersphinx_mapping = {
@@ -33,3 +37,5 @@ html_theme = 'sphinx_rtd_theme'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
+
+exclude_patterns = ['.DS_Store', '.ipynd_checkpoints', ]

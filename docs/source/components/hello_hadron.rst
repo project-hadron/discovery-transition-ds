@@ -1,15 +1,24 @@
 Introducing Components
 ======================
 
+Project Hadron is designed using Microservices. Microservices are an
+architectural patterns that structures an application as a collection
+of component services.
+
+Component services are built for business capabilities and each service
+performs a single function. Because they are independently run, each
+component can be updated, deployed, and scaled to meet demands for specific
+functions of an application. Component services provide a separation of concerns
+that are weakly coupled and highly cohesive increasing code quality and developer
+productivity.
+
 This tutorial shows the fundamentals of how to run a basic Project
 Hadron component. It is the simplest form of running a task
 demonstrating the input, throughput and output of a dataset. Each
 instance of the component is given a unique reference name whereby the
-Domain Contract uses that name as its unique identifier and thus can be
-used to reference the said Domain Contract for the purposes of
-referencing and reloading. Though this may seem complicated at this
-early stage it is important to understand the relationship between a
-named component and its Domain Contract.
+component uses that name as its unique identifier and thus can be
+used to reference the said component for the purposes of
+referencing and reloading.
 
 First Steps
 -----------
@@ -19,18 +28,17 @@ this demonstration. It should be noted, the choice of component is
 arbitrary for this demonstration, as even though each component has its
 own unique set of tasks it also has methods shared across all
 components. In this demonstration we only use these common tasks, this
-is why our choice of component is arbitrary.
+is why the choice of component is arbitrary.
 
 .. code:: ipython3
 
     from ds_discovery import Transition
 
-To create a Domain Contract instance of the component we have used the
-Factory method ``from_env`` and given it a referencable name
-``hello_comp``, and as this is the first instantiation, we have used the
-one off parameter call ``has_contract`` that by default is set to True
-and is used to avoid the accidential loading of a Domain Contract
-instance of the same task name. As common practice we capture the
+To create a named component we have used the Factory method ``from_env``
+and given it a referencable name ``hello_comp``, and as this is the first
+instantiation, we have used the one off parameter call ``has_contract`` that
+by default is set to True and is used to avoid the accidental loading of a
+component instance of the same task name. As common practice we capture the
 instance of this specific component ``transition`` as ``tr``.
 
 .. code:: ipython3
@@ -63,15 +71,15 @@ This concludes building a component and though the component doesn’t
 change the throughput, it shows the core steps to building any
 component.
 
-Reloading and Extending our Component
+Reloading and Extending the Component
 -------------------------------------
 
 Though this is a single notebook, one of the powers of Project Hadron is
 the ability to reload component state across new notebooks, not just
-locally but even across locations and teams. To load our component state
+locally but even across locations and teams. To load the component state
 we use the same factory method ``from_env`` passing the unique component
-name ``hello_comp`` which reloads the Domain Contract. We have now
-reinstated our origional component state and can continue to work on
+name ``hello_comp`` which reloads the named component. We have now
+reinstated the original component state and can continue to work on
 this component.
 
 .. code:: ipython3
@@ -79,7 +87,7 @@ this component.
     tr = Transition.from_env('hello_comp')
 
 Lets look at a sample of some commonly used features that allow us to
-peek inside our components. These features are extremely useful to
+peek inside the components. These features are extremely useful to
 navigate the component and should become familiar.
 
 The first and probably most useful method call is to be able to retrieve
@@ -150,15 +158,15 @@ offers.
 Environment Variables
 ---------------------
 
-To this point we have using the default settings of where to store the
-Domain Contract and the persisted dataset. These are in general local
+To this point we have been using the default settings of where to store the
+named contract and the persisted dataset. These are in general local
 and within your working directory. The use of environment variables
 frees us up to use an extensive list of connector contracts to store the
-data to a location of the choice or requirements.
+data to a location of choice.
 
 Hadron provides an extensive list of environment variables to tailor how
 your components retrieve and persist their information, this is beyond
-the scope of this tutorial and tend to be for specialist use, therefore
+the scope of this tutorial and tends to be for specialist use, therefore
 we are going to focus on the two most commonly used for the majority of
 projects.
 
@@ -175,10 +183,17 @@ tutorial, we will import the packages and set up the two environment
 variables within each notebook.
 
 The first environment variable we set up is for the location of the
-Domain Contract, this is critical to the components and the other
-components that rely on it (more of this later). In this case we are
-setting the Domain Contract location to be in a common local directory
-of our naming.
+Domain Contract. Domain Contracts are the outcome of named component
+instances and collect together metadata that are pertinent to the
+specific component tasks and actions. Domain Contracts are critical
+references of the components and other components that rely on them.
+
+From this point on we use the name 'Domain Contract' to represent the
+outcome of the named component instance which constitute the components
+task and used to run the component.
+
+In this case we are setting the Domain Contract location to be in a
+common local directory of our naming.
 
 .. code:: ipython3
 
@@ -236,7 +251,7 @@ and check everything runs okay.
 
 And we are there! We now know how to build a component and set its
 environment variables. The next step is to build a real pipeline and
-join that with other pipelines to construct our complete master Domain
+join that with other pipelines to construct the complete master Domain
 Contract.
 
 Building a Component for Selection
@@ -286,7 +301,7 @@ must set up the input and the output of the component. The input here is a
 direct URL to a resource on the Internet. We can also use this technique
 to access other common storage such as AWS S3 where we prefix the bucket and
 file name with ``s3`` for example ``s3://<bucket>/<path>/<name.ext>``.
-Alternatively we could copy the file to our local environment variable path
+Alternatively we could copy the file to the local environment variable path
 And load the data directly using ``tr.set_source('phpMYEkMl.csv')``
 
 .. code:: ipython3
@@ -356,7 +371,7 @@ When looking for features of interest, through observation, it appears,
 within some columns ``space`` has been repalaced by a question mark
 ``?``. In this instance we would use the ``auto_reinstate_nulls`` to
 replace all the obfuscated cells with nulls. In addition we can
-immediately observe columns that are inappropriate for our needs. In
+immediately observe columns that are inappropriate for the needs. In
 this case we do not need the column **name** and it is removed using
 ``to_remove`` passing the name of the attribute.
 
@@ -545,7 +560,7 @@ to a production ready selection. By setting up two Run Books we can
 select which component intent is appropriate to their objectives and
 ``run_component_pipeline`` to produce the appropriate outcome.
 
-In the example we add our list of intent to a book in the order needed.
+In the example we add the list of intent to a book in the order needed.
 In this case we have not specified a book name so this book is allocated
 to the primary Run Book. Now each time we run pipeline, it is set to run
 the primary Run Book.
@@ -575,7 +590,7 @@ books;
 In this next example we add an additional Run Book that is a subset of
 the tasks to only clean the data. By passing this named Run Book to the
 run pipeline it is obliged to only run this subset and only clean the
-data. We can see the results of this in our canonical report below.
+data. We can see the results of this in the canonical report below.
 
 .. code:: ipython3
 
@@ -614,7 +629,7 @@ Building a Component for Engineering
 ====================================
 
 This new component works in exactly the same way as the selection
-component, whereby we create the instance pertinent to our intentions,
+component, whereby we create the instance pertinent to the intentions,
 give it a location to retrieve data from, the source, and where to
 persist the results. Then we add the component intent, which in this
 case is to engineer the features we have selected and make them
@@ -727,7 +742,7 @@ indicates passengers travelling on their own.
     selection = [wr.tools.select2dict(column='family', condition='@==0')]
     df['is_alone'] = wr.tools.correlate_selection(df, selection=selection, action=1, default_action=0, column_name='is_alone')
 
-Finally we ensure each of our new features are appropriately ``typed``
+Finally we ensure each of the new features are appropriately ``typed``
 as a category. We also want to ensure the change to catagory runs after
 the newly created columns so we add the parameter ``intent_order`` with
 a value of one.
