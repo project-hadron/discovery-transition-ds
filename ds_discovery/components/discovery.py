@@ -170,13 +170,18 @@ class Visualisation(object):
     @staticmethod
     def show_categories(canonical, headers=None, top=None):
         headers = headers if isinstance(headers, (str, list)) else Commons.filter_headers(canonical, dtype=['category'])
-        if len(headers) == 0:
+        if not headers:
             return
         if isinstance(headers, str):
             headers = [headers]
         sns.set(style='darkgrid', color_codes=True)
         if len(headers) == 1:
             c = headers[0]
+            width = canonical[c].nunique() + 1
+            if width > 20:
+                width = 20
+            _ = plt.subplots(1, 1, figsize=(width, 6))
+            _ = sns.countplot(c)
             _ = sns.countplot(x=c, data=canonical, palette="summer")
             _ = plt.xticks(rotation=-90)
             _ = plt.xlabel(str.title(c))
@@ -186,7 +191,7 @@ class Visualisation(object):
         else:
             wide_col, thin_col = [], []
             for c in headers:
-                if len(canonical[c].cat.categories) > 10:
+                if canonical[c].nunique() > 10:
                     wide_col += [c]
                 else:
                     thin_col += [c]
