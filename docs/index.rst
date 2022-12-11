@@ -6,12 +6,12 @@ Project Hadron Data Science and Synthetic Toolset
    :maxdepth: 2
    :glob:
 
-   components/intro
-   components/hello_hadron
-   components/hello_transformers
-   components/hello_pipeline
-   components/docker
-   reports/index
-   synthetic/index
-   api/index
-   api_intent/index
+   source/components/intro
+   source/components/hello_hadron
+   source/components/hello_transformers
+   source/components/hello_pipeline
+   source/components/docker
+   source/reports/index
+   source/synthetic/index
+   source/api/index
+   source/api_intent/index

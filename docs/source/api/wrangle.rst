@@ -1,7 +1,7 @@
 API: Feature Engineer
 =====================
 
-.. automodule:: components.wrangling
+.. automodule:: ds_discovery.components.wrangling
 
 .. autoclass:: Wrangle
    :members:

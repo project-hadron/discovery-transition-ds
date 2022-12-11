@@ -1,7 +1,7 @@
 API: Transition & Select
 ========================
 
-.. automodule:: components.transitioning
+.. automodule:: ds_discovery.components.transitioning
 
 .. autoclass:: Transition
    :members:

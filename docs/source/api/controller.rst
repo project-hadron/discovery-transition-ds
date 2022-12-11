@@ -1,7 +1,7 @@
 API: Controller
 ===============
 
-.. automodule:: components.controller
+.. automodule:: ds_discovery.components.controller
 
 .. autoclass:: Controller
    :members:

@@ -584,15 +584,12 @@ class SyntheticIntentModel(WrangleIntentModel):
                            intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ Returns a random string based on the pattern given. The pattern is made up from the choices passed but
         by default is as follows:
-
-        .. code:: text
-
-                c = random char [a-z][A-Z]
-                d = digit [0-9]
-                l = lower case char [a-z]
-                U = upper case char [A-Z]
-                p = all punctuation
-                s = space
+                - c = random char [a-z][A-Z]
+                - d = digit [0-9]
+                - l = lower case char [a-z]
+                - U = upper case char [A-Z]
+                - p = all punctuation
+                - s = space
 
         you can also use punctuation in the pattern that will be retained
         A pattern example might be
@@ -645,7 +642,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             for k, v in choices.items():
                 if not isinstance(v, list):
                     raise ValueError(
-                        "The key '{}' must contain a 'list' of replacements opotions. '{}' found".format(k, type(v)))
+                        "The key '{}' must contain a 'list' of replacements options. '{}' found".format(k, type(v)))
 
         generator = np.random.default_rng(seed=seed)
         rtn_list = []

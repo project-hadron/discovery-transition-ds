@@ -1,7 +1,7 @@
 Intent API: Synthetic Build
 ===========================
 
-.. automodule:: intent.synthetic_intent
+.. automodule:: ds_discovery.intent.synthetic_intent
 
 .. autoclass:: SyntheticIntentModel
    :members:

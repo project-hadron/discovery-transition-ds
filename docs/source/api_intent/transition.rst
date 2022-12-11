@@ -1,7 +1,7 @@
 Intent API: Transition & Select
 ===============================
 
-.. automodule:: intent.transition_intent
+.. automodule:: ds_discovery.intent.transition_intent
 
 .. autoclass:: TransitionIntentModel
    :members:

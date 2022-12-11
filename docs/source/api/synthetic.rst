@@ -1,7 +1,7 @@
 API: Synthetic Build
 ====================
 
-.. automodule:: components.synthetic_builder
+.. automodule:: ds_discovery.components.synthetic_builder
 
 .. autoclass:: SyntheticBuilder
    :members:
