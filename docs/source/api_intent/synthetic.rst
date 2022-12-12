@@ -5,3 +5,4 @@ Intent API: Synthetic Build
 
 .. autoclass:: SyntheticIntentModel
    :members:
+   :inherited-members:

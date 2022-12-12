@@ -148,6 +148,15 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         result = tools._get_canonical(data=action)
         self.assertEqual((100, 3), result.shape)
 
+    def test_string_pattern(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        result = tools.get_string_pattern(pattern='d' ,size=3, tolerance=10000, no_dup=True)
+
+
+        print(result)
+
+
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
             env = os.environ['NoEnvValueTest']

@@ -5,3 +5,4 @@ API: Feature Engineer
 
 .. autoclass:: Wrangle
    :members:
+   :inherited-members:

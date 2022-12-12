@@ -5,3 +5,4 @@ API: Transition & Select
 
 .. autoclass:: Transition
    :members:
+   :inherited-members:

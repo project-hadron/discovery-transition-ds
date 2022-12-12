@@ -5,3 +5,4 @@ API: Controller
 
 .. autoclass:: Controller
    :members:
+   :inherited-members:
