@@ -579,8 +579,8 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_distribution(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_string_pattern(self, pattern: str, choices: dict=None, no_dup: bool=None, tolerance: int=None,
-                           quantity: [float, int]=None, size: int=None, choice_only: bool=None, seed: int=None,
+    def get_string_pattern(self, pattern: str, choices: dict=None, quantity: [float, int]=None,
+                           size: int=None, choice_only: bool=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ Returns a random string based on the pattern given. The pattern is made up from the choices passed but
@@ -603,8 +603,6 @@ class SyntheticIntentModel(WrangleIntentModel):
 
         :param pattern: the pattern to create the string from
         :param choices: (optional) an optional dictionary of list of choices to replace the default.
-        :param no_dup: (optional) if the string pattern can be duplicated. Default is False
-        :param tolerance: (optional) if no dups, tolerance of iterations where dups are found. Default 100
         :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param size: (optional) the size of the return list. if None returns a single value
         :param choice_only: (optional) if to only use the choices given or to take not found characters as is
@@ -628,7 +626,6 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-        no_dup = no_dup if isinstance(no_dup, bool) else False
         choice_only = False if choice_only is None or not isinstance(choice_only, bool) else choice_only
         quantity = self._quantity(quantity)
         size = size if isinstance(size, int) and size > 0 else 1
