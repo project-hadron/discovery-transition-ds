@@ -1,19 +1,24 @@
 # Configuration file for the Sphinx documentation builder.
 import os
 import sys
+from unittest import mock
+
 sys.path.insert(0, os.path.abspath('../'))
 
-# -- Project information
+# Mock ds_discovery because it fails to build in readthedocs
+MOCK_MODULES = ["ds_discovery"]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
 
-project = 'ds_discovery'
+# -- Project information
+project = 'Project Hadron'
 copyright = '2022, gigas64'
 author = 'gigas64'
 
 release = '1.0'
-version = '1.1.1'
+version = '1.1.2'
 
 # -- General configuration
-
 extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
