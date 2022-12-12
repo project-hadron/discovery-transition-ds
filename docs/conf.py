@@ -6,7 +6,7 @@ from unittest import mock
 sys.path.insert(0, os.path.abspath('../'))
 
 # Mock ds_discovery because it fails to build in readthedocs
-MOCK_MODULES = ["ds_discovery"]
+MOCK_MODULES = ["ds_discovery.component.transitioning"]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
