@@ -105,13 +105,13 @@ class Visualisation(object):
         plt.clf()
 
     @staticmethod
-    def show_pca(canonical: pd.DataFrame, headers: list, hue: str):
+    def show_pca(canonical: pd.DataFrame, headers: list, hue: str, figsize: tuple=None):
         """Principal Component Analysis (PCA) is a common technique to reduce feature dimensionality. This assumes
         classification. Principal component analysis (PCA) is a technique for reducing the dimensionality of such
         datasets, increasing interpretability but at the same time minimizing information loss. It does so by creating
         new uncorrelated variables that successively maximize variance.
         """
-        fig = plt.figure(figsize=(12, 8))
+        figsize = figsize if isinstance(figsize, tuple) else (8, 5)
         sns.set(style='darkgrid', color_codes=True)
         x = canonical.loc[:, headers].values
         x = StandardScaler().fit_transform(x)
@@ -121,6 +121,7 @@ class Visualisation(object):
         principalDf = pd.DataFrame(data=principalComponents, columns=['principal component one',
                                                                       'principal component two'])
         finalDf = pd.concat([principalDf, canonical[[hue]]], axis=1)
+        sns.set(rc={'figure.figsize': figsize})
         sns.scatterplot(data=finalDf, x='principal component one', y='principal component two', hue=hue)
         plt.title('Principle Component Analysis', fontdict={'size': 20})
         plt.show()
