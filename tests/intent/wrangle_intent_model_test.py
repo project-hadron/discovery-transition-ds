@@ -60,6 +60,16 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual('category', result.family.dtype)
         self.assertEqual('category', result.deck.dtype)
 
+    def test_model_to_float(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("B2DE56B")})
+        self.assertEqual('int64 object object', f'{df.A.dtype} {df.B.dtype} {df.C.dtype}')
+        result = tools.model_to_float(df, headers='A')
+        self.assertEqual('float32 object object', f'{result.A.dtype} {result.B.dtype} {result.C.dtype}')
+        result = tools.model_to_float(df, headers=['A', 'C'])
+        print(result)
+
     def test_model_to_category(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools

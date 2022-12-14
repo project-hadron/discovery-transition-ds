@@ -911,9 +911,9 @@ class TransitionIntentModel(AbstractIntentModel):
                 df[c] = df[c].fillna(fillna)
 
             if str(numeric_type).lower().startswith('int') or precision == 0:
-                df[c] = df[c].round(0).astype(int)
+                df[c] = pd.to_numeric(df[c], errors='raise').as_type('int')
             elif str(numeric_type).lower().startswith('float'):
-                df[c] = df[c].round(precision).astype(float)
+                df[c] = pd.to_numeric(df[c], downcast='float', errors='coerce').round(precision)
         return df
 
     def to_numeric_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
