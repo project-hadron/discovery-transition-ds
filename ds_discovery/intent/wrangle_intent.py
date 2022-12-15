@@ -637,12 +637,12 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_to_category(seed=seed, **params)
 
     # convert objects to categories
-    def model_to_float(self, canonical: Any, headers: [str, list]=None, drop: bool=None,
-                       dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                       re_ignore_case: bool=None, precision: int=None, seed: int=None, save_intent: bool=None,
-                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                       remove_duplicates: bool=None):
-        """ converts columns to float
+    def model_to_numeric(self, canonical: Any, headers: [str, list]=None, drop: bool=None,
+                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                         re_ignore_case: bool=None, precision: int=None, seed: int=None, save_intent: bool=None,
+                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None):
+        """ converts columns to numeric value
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: a list of headers to drop or filter on type
@@ -675,7 +675,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._model_to_float(seed=seed, **params)
+        return self._model_to_numeric(seed=seed, **params)
 
     def model_encode_one_hot(self, canonical: Any, headers: [str, list], prefix=None, dtype: Any=None,
                              prefix_sep: str=None, dummy_na: bool=False, drop_first: bool=False, seed: int=None,
