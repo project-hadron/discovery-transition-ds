@@ -63,12 +63,17 @@ class WrangleIntentModelTest(unittest.TestCase):
     def test_model_to_float(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("B2DE56B")})
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDCBA"), 'C': list("B2DE56B"),
+                                'D': [True, False, False, False, True, False, True], 'E': [0,0,1,0,1,1,0]})
+        df['E'] = df['E'].astype('bool')
         self.assertEqual('int64 object object', f'{df.A.dtype} {df.B.dtype} {df.C.dtype}')
         result = tools.model_to_float(df, headers='A')
         self.assertEqual('float32 object object', f'{result.A.dtype} {result.B.dtype} {result.C.dtype}')
         result = tools.model_to_float(df, headers=['A', 'C'])
-        print(result)
+        self.assertEqual('float32 object float32', f'{result.A.dtype} {result.B.dtype} {result.C.dtype}')
+        result = tools.model_to_float(df, headers=['D', 'E'])
+        self.assertEqual('float32 float32', f'{result.D.dtype} {result.E.dtype}')
+
 
     def test_model_to_category(self):
         builder = SyntheticBuilder.from_memory()
