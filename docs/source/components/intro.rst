@@ -1,5 +1,9 @@
 Filling the Gap - Project Hadron
 ================================
+
+Introduction
+------------
+
 Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
 machine learning business outcomes and the final product.
 
@@ -47,7 +51,6 @@ This is what gives us the Domain Contract for each tenant which sits at the hear
 reusable, translatable, transferable and brings the data scientist closer to the production engineer along with
 building a production ready component solution.
 
-
 Main features
 -------------
 
@@ -55,8 +58,37 @@ Main features
 * Feature Selection
 * Feature Engineering
 * Feature Cataloguing
+* Model Capture
+* Custom Build
 * Augmented Knowledge
 * Synthetic Feature Build
+
+Component capabilities
+----------------------
+
+The Project Hadron package comes with a number of component capabilities some of which are listed below
+as the component name. Each capability represents a separation of concerns across the stakeholders and
+data science teams model build workflow.
+
+* SyntheticBuild - Synthetic data through Sampling, Subject Matter Expertise, artifacts and insight
+* Transition - Selection through dimensionality reduction
+* Wrangle - Feature Engineering through variable transformation
+* FeatureCatalog - Feature cataloging through label optimisation
+* Model - Model capture once the algorithm is trained and optimised
+
+The diagram illustrates a typical workflow for stakeholders and data science teams looking to
+implement business objectives. Highlighted within the diagram are where the capability components
+sit within the workflow.
+
+.. image:: /images/hello_hadron/0_img01.png
+  :align: center
+  :width: 800
+
+The rectangles with a dotted outline box, that surround the processes, represent the components used at that
+point within the workflow. Found within the rectangle is the name of the component used and in brackets its use.
+This may not fit every workflow but when building a model, be it for production or as a proof of concept, each
+of these capabilities are at the core of any model build and allow bridging the gap between data science and
+production engineering.-
 
 Feature transformers
 --------------------
@@ -70,9 +102,8 @@ across a synthetic build, statistics and machine learning.
 * Outlier capping or removal
 * Numerical transformation
 * Redundant feature removal
-* Synthetic variable creation
-* Synthetic multivariate
-* Synthetic model distributions
+* Synthetic variables creation
+* Synthetic variables engineer
 * Datetime features
 * Time series
 
