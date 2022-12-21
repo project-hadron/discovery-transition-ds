@@ -44,13 +44,13 @@ class ModelsIntentModel(AbstractIntentModel):
         defined by the intent_contract.
 
         It is expected that all intent methods have the 'canonical' as the first parameter of the method signature
-        and will contain 'inplace' and 'save_intent' as parameters.
+        and will contain 'save_intent' as parameters.
 
         :param canonical: this is the iterative value all intent are applied to and returned.
         :param intent_levels: (optional) an single or list of levels to run, if list, run in order given
         :param run_book: (optional) a preset runbook of intent_level to run in order
         :param kwargs: additional kwargs to add to the parameterised intent, these will replace any that already exist
-        :return Canonical with parameterised intent applied or None if inplace is True
+        :return Canonical with parameterised intent applied
         """
         # test if there is any intent to run
         # test if there is any intent to run
