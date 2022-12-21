@@ -75,7 +75,7 @@ class ModelsIntentModel(AbstractIntentModel):
                             # remove the creator param
                             _ = params.pop('intent_creator', 'Unknown')
                             # add excluded params and set to False
-                            params.update({'inplace': False, 'save_intent': False})
+                            params.update({'save_intent': False})
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
