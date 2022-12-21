@@ -6,6 +6,8 @@ __author__ = 'Darryl Oatridge'
 
 class ModelsPropertyManager(AbstractPropertyManager):
 
+    CONNECTOR_PREDICT = 'ml_predict_connector'
+
     def __init__(self, task_name: str, creator: str):
         # set additional keys
         root_keys = []

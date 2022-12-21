@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+import os
+import pickle
+from contextlib import closing
+from typing import Any
+
+import numpy as np
+from aistac import ConnectorContract
+
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 from ds_discovery.intent.models_intent import ModelsIntentModel
 from ds_discovery.managers.models_property_manager import ModelsPropertyManager
@@ -8,9 +16,6 @@ __author__ = 'Darryl Oatridge'
 
 
 class ModelsBuilder(AbstractCommonComponent):
-
-    CONNECTOR_TRAINED = 'trained_connector'
-    CONNECTOR_PREDICT = 'predict_connector'
 
     @classmethod
     def from_uri(cls, task_name: str, uri_pm_path: str, creator: str, uri_pm_repo: str=None, pm_file_type: str=None,
@@ -75,9 +80,39 @@ class ModelsBuilder(AbstractCommonComponent):
     def models(self) -> ModelsIntentModel:
         return self._intent_model
 
-    def run_component_pipeline(self, intent_levels: [str, int, list] = None, reset_changed: bool=None,
-                               has_changed: bool=None):
-        """Runs the components pipeline from source to persist"""
+    def set_trained_model(self, trained_model: Any, save: bool=None):
+        """ A utility method to save the trained model ready for prediction.
+
+        :param trained_model: model object that has been trained
+        :param save: override of the default save action set at initialisation.
+        """
+        uri_file =  self.pm.file_pattern(name='model_predict', file_type='pickle', versioned=True)
+        template = self.pm.get_connector_contract(connector_name=self.TEMPLATE_PERSIST)
+        # uri = ConnectorContract.parse_environ(os.path.join(template.raw_uri, uri_file))
+        uri = os.path.join(template.raw_uri, uri_file)
+        cc = ConnectorContract(uri=uri, module_name=template.raw_module_name, handler=template.raw_handler,
+                               version=self.pm.version)
+        self.add_connector_contract(connector_name=self.pm.CONNECTOR_PREDICT, connector_contract=cc,
+                                    template_aligned=True, save=save)
+        self.persist_canonical(connector_name=self.pm.CONNECTOR_PREDICT, canonical=trained_model)
+        return
+
+    def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None,
+                               reset_changed: bool=None, has_changed: bool=None):
+        """ Runs the component's pipeline from source to persist
+
+        :param intent_levels: a single or list of intent levels to run
+        :param run_book: a saved runbook to run
+        :param use_default: if the default runbook should be used if it exists
+        :param reset_changed: (optional) resets the has_changed boolean to True
+        :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
+        :return:
+        """
         canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
-        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, inplace=False)
+        use_default = use_default if isinstance(use_default, bool) else True
+        if not isinstance(run_book, str) and use_default:
+            if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
+                run_book = self.pm.PRIMARY_RUN_BOOK
+        result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, run_book=run_book,
+                                                       inplace=False)
         self.save_persist_canonical(result)
