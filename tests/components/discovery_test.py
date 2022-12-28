@@ -59,19 +59,43 @@ class DiscoveryTest(unittest.TestCase):
         print(result)
 
     def test_bootstrap_confidence_interval(self):
-        normal = pd.Series(np.random.normal(size=10000))
-        expo = pd.Series(np.random.exponential(size=10000))
-        result = DataDiscovery.bootstrap_confidence_interval(normal)
-        print(result)
-        result = DataDiscovery.bootstrap_confidence_interval(expo)
-        print(result)
+        rng = np.random.default_rng(13)
+        normal = pd.Series(rng.normal(size=10000))
+        expo = pd.Series(rng.exponential(size=10000))
+        p, q = DataDiscovery.bootstrap_confidence_interval(normal)
+        self.assertAlmostEqual(-0.01, p, 2)
+        self.assertAlmostEqual(0.03, q, 2)
+        p, q = DataDiscovery.bootstrap_confidence_interval(expo)
+        self.assertAlmostEqual(0.97, p, 2)
+        self.assertAlmostEqual(1.01, q, 2)
+
+    def test_hellinger_distance(self):
+        p = [0.36, 0.48, 0.16]
+        q = [0.30, 0.50, 0.20]
+        result = Discover.distance_hellinger(p, q, precision=4)
+        self.assertEqual(0.0508, result)
+        p = np.array([0.36, 0.48, 0.16], dtype=np.float32)
+        q = np.array([0.30, 0.50, 0.20], dtype=np.float32)
+        result = Discover.distance_hellinger(p, q, precision=4)
+        self.assertEqual(0.0508, result)
+        p = pd.Series([0.36, 0.48, 0.16])
+        q = pd.Series([0.30, 0.50, 0.20])
+        result = Discover.distance_hellinger(p, q, precision=4)
+        self.assertEqual(0.0508, result)
 
     def test_jensen_shannon_distance(self):
-        p = [0.20, 0.60, 0.20]
-        q = [0.20, 0.599, 0.201]
-        result = Discover.jensen_shannon_distance(p, q, precision=5)
-        print(result)
-
+        p = [0.36, 0.48, 0.16]
+        q = [0.30, 0.50, 0.20]
+        result = Discover.distance_jensen_shannon(p, q, precision=4)
+        self.assertEqual(0.0508, result)
+        p = np.array([0.36, 0.48, 0.16], dtype=np.float32)
+        q = np.array([0.30, 0.50, 0.20], dtype=np.float32)
+        result = Discover.distance_jensen_shannon(p, q, precision=4)
+        self.assertEqual(0.0508, result)
+        p = pd.Series([0.36, 0.48, 0.16])
+        q = pd.Series([0.30, 0.50, 0.20])
+        result = Discover.distance_jensen_shannon(p, q, precision=4)
+        self.assertEqual(0.0508, result)
 
     def test_filter_univariate_roc_auc(self):
         tr = Transition.from_env('test', default_save=False, default_save_intent=False, has_contract=False)

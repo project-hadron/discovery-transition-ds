@@ -10,6 +10,7 @@ Project Hadron Data Science and Synthetic Toolset
    source/components/hello_hadron
    source/components/hello_transformers
    source/components/hello_pipeline
+   source/custom/index
    source/components/docker
    source/reports/index
    source/synthetic/index

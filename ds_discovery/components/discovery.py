@@ -745,22 +745,32 @@ class DataDiscovery(object):
     def _distance_validator(p: pd.Series, q: pd.Series, precision: int=None):
         """Distance validator as a preprocess"""
         precision = precision if isinstance(precision, int) else 4
-        p = pd.Series(p)
-        q = pd.Series(q)
-        if round(p.sum(), 3) != 1 or round(q.sum(), 3) != 1:
-            raise ValueError(f"the probability scores must add up to 1. "
-                             f"sum(p)={round(p.sum(), 3)}, sum(q)={round(q.sum(), 3)}")
-        if p.size > q.size:
-            q = q.append(pd.Series([0] * (p.size - q.size)), ignore_index=True)
-        if p.size < q.size:
-            p = p.append(pd.Series([0] * (q.size - p.size)), ignore_index=True)
+        if isinstance(p, list):
+            p = np.array(p)
+        if isinstance(q, list):
+            q = np.array(q)
+        if isinstance(p, pd.Series):
+            p.to_numpy(dtype=np.float32)
+        if isinstance(q, pd.Series):
+            q.to_numpy(dtype=np.float32)
+        if np.sum(p) != 1 or np.sum(q) != 1:
+            raise ValueError(f"the probability scores must add up to 1. sum(p)={p.sum()}, sum(q)={q.sum()}")
         return p, q, precision
 
     @staticmethod
-    def hellinger_distance(p: pd.Series, q: pd.Series, precision: int=None):
-        """Hellinger distance between distributions (Hoens et al, 2011)
+    def distance_hellinger(p: pd.Series, q: pd.Series, precision: int=None):
+        """Hellinger distance (Hoens et al, 2011). The Hellinger distance is a measure of similarity between
+        two probability distributions. It is based on the squared Euclidean distance between the normalized
+        probability vectors of the two distributions. The Hellinger distance is sometimes referred to as the
+        Bhattacharyya distance, and is used to compare two probability distributions in a variety of applications,
+        including clustering, classification and pattern recognition.
 
-        Hellinger distance is a metric to measure the difference between two probability distributions.
+        .. math::
+            \mathit{D(P,Q)} = \frac{1}{\sqrt{2}} \sqrt{\sum_{i} \left(\sqrt{p_i} - \sqrt{q_i}\right)^2}
+
+        where P and Q are two probability distributions, p and q are the ith elements of each distribution,
+        and D(P,Q)} is the Hellinger's Distance.
+
         It is the probabilistic analog of Euclidean distance.
                 [1,0] -> [1,0] => 0.0
                 [1,0] -> [0.9999, 0.0001] => 0.0
@@ -773,12 +783,20 @@ class DataDiscovery(object):
                 [1,0] -> [0, 1] => 1.414
         """
         p, q, precision = DataDiscovery._distance_validator(p, q, precision)
-        r = sum([(np.sqrt(t[0]) - np.sqrt(t[1])) * (np.sqrt(t[0]) - np.sqrt(t[1])) for t in zip(p, q)])/np.sqrt(2.)
-        return np.round(r, precision)
+        total = np.sum((np.sqrt(p) - np.sqrt(q)) ** 2)
+        return np.around((1.0 / np.sqrt(2.0)) * np.sqrt(total), precision)
 
     @staticmethod
-    def total_variation_distance(p: pd.Series, q: pd.Series, precision: int=None):
-        """Total Variation Distance (Levin et al, 2008)
+    def distance_total_variation(p: pd.Series, q: pd.Series, precision: int=None):
+        """Total Variation Distance (TVD) is a measure of dissimilarity between two probability distributions.
+        It is calculated as the absolute value of the difference between the cumulative distributions of the
+        two distributions, taken over all possible values. The TVD is a useful tool for comparing two discrete
+        or continuous probability distributions. It is a metric that can be used to compare the difference
+        between two probability distributions, where higher values indicate greater dissimilarity. It is
+        considered to be a more robust measure than the Kullback-Leibler divergence.
+
+        .. math::
+            \mathit{tvd \left(P,Q \right)} = \frac{1}{2} \sum_i \lvert p_i - q_i \rvert
 
         Total Variation Distance is a distance measure for probability distributions. It is an example of a
         statistical distance metric, and is sometimes called the statistical distance or variational distance
@@ -793,16 +811,30 @@ class DataDiscovery(object):
                 [1,0] -> [0, 1] => 1.0
          """
         p, q, precision = DataDiscovery._distance_validator(p, q, precision)
-        return np.round((sum(abs(p - q)) / 2), precision)
+        return np.around((sum(abs(p - q)) / 2), precision)
 
     @staticmethod
-    def jensen_shannon_distance(p: pd.Series, q: pd.Series, precision: int=None):
-        """Jensen-Shannon Divergence. Distance between two probability distributions
+    def distance_jensen_shannon(p: np.array, q: np.array, precision: int=None):
+        """Jensen-Shannon Divergence. Jensen Shannon Distance (JSD) is a measure of the similarity between
+        two probability distributions. It is a symmetric version of the Kullback-Leibler divergence and is
+        based on the square root of the Jensen-Shannon divergence. JSD is calculated by taking the weighted
+        average of the Kullback-Leibler divergence of the two distributions and is used to quantify the
+        difference between two probability distributions. It is often used in natural language processing
+        applications to measure the similarity between documents.
 
-        the Jensen–Shannon divergence is a method of measuring the similarity between two probability distributions.
-        It is based on the Kullback–Leibler divergence, with some notable (and useful) differences, including that
-        it is symmetric and it always has a finite value. The square root of the Jensen–Shannon divergence is a metric
-        often referred to as Jensen-Shannon distance
+        .. math::
+            JS(P,Q) = \frac{1}{2} KL(P,M) + \frac{1}{2} KL(Q,M)
+
+        where M = (P + Q)/2
+
+        So the key to computing Jensen-Shannon is understanding how to compute KL.
+
+        .. math::
+            KL(P,Q) = \sum_{n=1}^N \left(p_n \times \log \left(\frac{p_n}{q_n}\right) \right)
+
+        The Jensen-Shannon distance is symmetric, meaning $ JS(P,Q) = JS(Q,P) $. This is in contrast to
+        Kullback-Leibler divergence which is not symmetric.
+
                 [1,0] -> [1,0] => 0.0
                 [1,0] -> [0.999, 0.001] => 0.019
                 [1,0] -> [0.99, 0.01] => 0.059
@@ -814,13 +846,20 @@ class DataDiscovery(object):
                 [1,0] -> [0, 1] => 0.833
         """
         p, q, precision = DataDiscovery._distance_validator(p, q, precision)
-        # calculate m
-        m = (p + q) / 2
-        # compute Jensen Shannon Divergence
-        divergence = (stats.entropy(p, m) + stats.entropy(q, m)) / 2
-        # compute the Jensen Shannon Distance
-        distance = np.sqrt(divergence)
-        return np.round(distance, precision)
+
+        def KL(p, q):
+            # Kullback-Leibler "from q to p"
+            # p and q are np array prob distributions
+            n = len(p)
+            sum = p.dot(np.log(p / q))
+            return sum
+
+        # Jensan-Shannon "from q to p"
+        m = 0.5 * (p + q)  # avg of P and Q
+        left = KL(p, m)
+        right = KL(q, m)
+        js = np.sqrt((left + right) / 2)
+        return np.around(js, decimals=precision)
 
     @staticmethod
     def filter_univariate_roc_auc(df: pd.DataFrame, target: [str, list], package: str=None, model: str=None,

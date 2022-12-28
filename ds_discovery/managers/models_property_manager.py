@@ -8,11 +8,13 @@ class ModelsPropertyManager(AbstractPropertyManager):
 
     CONNECTOR_PREDICT = 'ml_predict_connector'
 
-    def __init__(self, task_name: str, creator: str):
+    def __init__(self, task_name: str, creator: str, root_keys: list=None, knowledge_keys: list=None):
+        root_keys = root_keys if isinstance(root_keys, list) else []
+        knowledge_keys = knowledge_keys if isinstance(knowledge_keys, list) else []
         # set additional keys
-        root_keys = []
-        knowledge_keys = ['features', 'observations', 'models']
-        super().__init__(task_name=task_name, root_keys=root_keys, knowledge_keys=knowledge_keys, creator=creator)
+        r_extended = Commons.list_unique(root_keys + [])
+        k_extended = Commons.list_unique(knowledge_keys + ['features', 'observations', 'models'])
+        super().__init__(task_name=task_name, root_keys=r_extended, knowledge_keys=k_extended, creator=creator)
 
     @staticmethod
     def list_formatter(value) -> list:
