@@ -78,9 +78,10 @@ class ModelsIntentModel(AbstractIntentModel):
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def get_prediction(self, canonical: Any, save_intent: bool=None, intent_level: [int, str]=None,
-                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ Retrieves a trained model and applies it to the canonical, returning the canonical with a prediction column
+    def label_predict(self, canonical: Any, save_intent: bool=None, intent_level: [int, str]=None,
+                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ Retrieves a trained model and applies it to the canonical, returning the canonical with prediction labels.
+        This assumes a trained model with a predict function
 
         :param canonical: the model canonical
         :param save_intent: (optional) if the intent contract should be saved to the property manager

@@ -77,7 +77,7 @@ class ModelsBuilder(AbstractCommonComponent):
     def models(self) -> ModelsIntentModel:
         return self._intent_model
 
-    def set_trained_model(self, trained_model: Any, save: bool=None):
+    def add_trained_model(self, trained_model: Any, save: bool=None):
         """ A utility method to save the trained model ready for prediction.
 
         :param trained_model: model object that has been trained

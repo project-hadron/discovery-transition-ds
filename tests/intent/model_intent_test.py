@@ -45,7 +45,7 @@ class SyntheticTest(unittest.TestCase):
         except:
             pass
 
-    def test_set_trained_model(self):
+    def test_label_predict(self):
         builder = SyntheticBuilder.from_memory()
         df = builder.tools.model_synthetic_classification(1000, n_features=10)
         X = df.drop('target', axis=1)
@@ -54,9 +54,9 @@ class SyntheticTest(unittest.TestCase):
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
         log_reg = LogisticRegression(solver='liblinear')
         log_reg.fit(X_train, y_train)
-        ml.set_trained_model(log_reg)
-        result = ml.intent_model.get_prediction(X)
-        print(result.shape)
+        ml.add_trained_model(log_reg)
+        result = ml.intent_model.label_predict(X)
+        self.assertEqual((1000, 11), result.shape)
 
 
     def test_raise(self):
