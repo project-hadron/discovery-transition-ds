@@ -107,9 +107,8 @@ class ModelsIntentModel(AbstractIntentModel):
             canonical = self._get_canonical(canonical)
             handler = self._pm.get_connector_handler(self._pm.CONNECTOR_PREDICT)
             model = handler.load_canonical()
-            predict = model.predict(canonical.copy(deep=True))
-            df_pred = pd.DataFrame(predict, columns=['predict'])
-            return pd.concat([df_pred, canonical], axis=1)
+            score =  model.predict(canonical.copy(deep=True))
+            return pd.DataFrame(score, columns=['predict'])
         raise FileNotFoundError("The trained model cannot be found. Check it has been set using the ModelsBuilder")
 
     """

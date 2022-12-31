@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 from ds_discovery import ModelsBuilder as Model, SyntheticBuilder
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 from aistac.properties.property_manager import PropertyManager
 
 
@@ -45,9 +45,9 @@ class SyntheticTest(unittest.TestCase):
         except:
             pass
 
-    def test_label_predict(self):
+    def test_label_predict_log(self):
         builder = SyntheticBuilder.from_memory()
-        df = builder.tools.model_synthetic_classification(1000, n_features=10)
+        df = builder.tools.model_synthetic_classification(1000, n_features=4)
         X = df.drop('target', axis=1)
         y = df['target']
         ml = Model.from_env('tester', has_contract=False)
@@ -56,7 +56,22 @@ class SyntheticTest(unittest.TestCase):
         log_reg.fit(X_train, y_train)
         ml.add_trained_model(log_reg)
         result = ml.intent_model.label_predict(X)
-        self.assertEqual((1000, 11), result.shape)
+        self.assertEqual((1000,1), result.shape)
+        print(result.head())
+
+    def test_label_predict_lin(self):
+        builder = SyntheticBuilder.from_memory()
+        df = builder.tools.model_synthetic_regression(1000, n_features=4)
+        X = df.drop('target', axis=1)
+        y = df['target']
+        ml = Model.from_env('tester', has_contract=False)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+        log_reg = LinearRegression()
+        log_reg.fit(X_train, y_train)
+        ml.add_trained_model(log_reg)
+        result = ml.intent_model.label_predict(X)
+        self.assertEqual((1000, 1), result.shape)
+        print(result.head())
 
 
     def test_raise(self):
