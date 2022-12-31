@@ -1,5 +1,5 @@
-Component API
-=============
+Component Class Context Help
+============================
 
 .. toctree::
    :caption: Table of Contents

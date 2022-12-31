@@ -1,5 +1,5 @@
-API: Transition & Select
-========================
+Transition Class
+================
 
 .. automodule:: ds_discovery.components.transitioning
 

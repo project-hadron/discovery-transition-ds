@@ -1,5 +1,5 @@
-Intent API: Feature Engineer
-============================
+IntentWrangle Class
+===================
 
 .. automodule:: ds_discovery.intent.wrangle_intent
 

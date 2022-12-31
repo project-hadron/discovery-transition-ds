@@ -880,23 +880,27 @@ class SyntheticIntentModel(WrangleIntentModel):
             rtn_list.append(choice)
         return self._set_quantity(rtn_list, quantity=quantity, seed=_seed)
 
-    def model_synthetic_classification(self, canonical: Any, n_features: int=None, with_labels: bool=None,
-                                       seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None,
-                                       **kwargs):
+    def model_synthetic_classification(self, canonical: Any, n_features: int=None,  *, n_informative: int=None,
+                                       n_redundant: int=None, n_repeated: int=None, n_classes: int=None,
+                                       n_clusters_per_class: int=None, weights: list=None, seed: int=None,
+                                       save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                                       replace_intent: bool=None, remove_duplicates: bool=None):
         """ By default, a binary classifier dataset with a given number of features concatenated with an existing
-        canonical. Based upon the Scikit-learn datasets generators, `make_classification` parameters can be passed as
-        keyword arguments (kwargs)
+        canonical. Based upon the Scikit-learn datasets generators.
 
         This initially creates clusters of points normally distributed (std=1) and assigns an equal number of clusters
         to each class. It introduces interdependence between these features and adds various types of further noise to
         the data.
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param n_features: (optional) The total number of features
-        :param with_labels: (optional) if labels should be included. Default is True
+        :param n_features: (optional) The total number of features. Default 20
+        :param n_informative: (optional) The number of informative features. Default 2
+        :param n_redundant: (optional) The number of redundant features. Default 2
+        :param n_repeated: (optional)The number of duplicated features, Default 0
+        :param n_classes: (optional) The number of classes (or labels) of the classification problem. Default 2
+        :param n_clusters_per_class: (optional) The number of clusters per class. Default 2
+        :param weights: (optional) The proportions of samples assigned to each class. If None then classes are balanced.
         :param seed: (optional) a seed value for the random function: default to None
-        :param kwargs: a set of kwargs for the generator
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -917,35 +921,43 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         canonical = self._get_canonical(canonical)
-        seed = seed if isinstance(seed, int) else self._seed()
         n_features = n_features if isinstance(n_features, int) else 20
-        with_labels = with_labels if isinstance(with_labels, bool) else True
-        for param in ['n_samples', 'n_features', 'random_state']:
-            kwargs.pop(param, None)
-        kwargs.update({'n_features': n_features, 'random_state': seed})
-        sample, labels = make_classification(n_samples=canonical.shape[0], **kwargs)
+        n_informative = n_informative if isinstance(n_informative, int) else 2
+        n_redundant = n_redundant if isinstance(n_redundant, int) else 2
+        n_repeated = n_repeated if isinstance(n_repeated, int) else 0
+        n_classes = n_classes if isinstance(n_classes, int) else 2
+        n_clusters_per_class = n_clusters_per_class if isinstance(n_clusters_per_class, int) else 2
+        weights = np.asarray(weights) if isinstance(weights, list) and len(list) == n_classes else None
+        seed = seed if isinstance(seed, int) else self._seed()
+        sample, labels = make_classification(n_samples=canonical.shape[0], n_features=n_features,
+                                             n_informative=n_informative, n_redundant=n_redundant,
+                                             n_repeated=n_repeated, n_classes=n_classes, weights=weights,
+                                             n_clusters_per_class=n_clusters_per_class, random_state=seed)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        if with_labels:
-            return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
-        return pd.concat([canonical, pd.DataFrame(sample)], axis=1)
+        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
 
-    def model_synthetic_regression(self, canonical: Any, n_features: int=None, with_labels: bool=None, seed: int=None,
+    def model_synthetic_regression(self, canonical: Any, n_features: int=None, *, n_informative: int=None,
+                                   n_targets: int=None, bias: float=None, effective_rank: int=None,
+                                   tail_strength: float=None, noise: float=None, seed: int=None,
                                    save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                   replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
+                                   replace_intent: bool=None, remove_duplicates: bool=None):
         """ A generated regression dataset with a given number of features concatenated with an existing canonical.
-        Based upon the Scikit-learn datasets generators, `make_regression` parameters can be passed as
-        keyword arguments (kwargs)
+        Based upon the Scikit-learn datasets generators,
 
         Produces regression targets as an optionally-sparse random linear combination of random features, with noise.
         Its informative features may be uncorrelated, or low rank with few features account for most of the variance.
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param n_features: (optional) The total number of features
-        :param with_labels: (optional) if labels should be included. Default is True
+        :param n_features: (optional) The total number of features. Default 100
+        :param n_informative: (optional) The number of features used to build the linear model.
+        :param n_targets:The number of regression targets, i.e., the dimension of the y output associated with a sample.
+        :param bias: (optional) The bias term in the underlying linear model.
+        :param effective_rank: (optional) The approximate number of features required to explain most of the input data
+        :param tail_strength: (optional) The relative importance of the fat noisy tail, Should be between 0 and 1.
+        :param noise: (optional) The standard deviation of the gaussian noise applied to the output.
         :param seed: (optional) a seed value for the random function: default to None
-        :param kwargs: a set of kwargs for the generator
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -966,27 +978,29 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         canonical = self._get_canonical(canonical)
-        seed = seed if isinstance(seed, int) else self._seed()
         n_features = n_features if isinstance(n_features, int) else 100
-        with_labels = with_labels if isinstance(with_labels, bool) else True
-        for param in ['n_samples', 'n_features', 'random_state']:
-            kwargs.pop(param, None)
-        kwargs.update({'n_features': n_features, 'random_state': seed})
-        sample, labels = make_regression(n_samples=canonical.shape[0], **kwargs)
+        n_informative = n_informative if isinstance(n_informative, int) else 10
+        n_targets = n_targets if isinstance(n_targets, int) else 1
+        bias = bias if isinstance(bias, float) else 0.0
+        effective_rank = effective_rank if isinstance(effective_rank, int) else None
+        tail_strength = tail_strength if isinstance(tail_strength, float) else 0.5
+        noise = noise if isinstance(noise, float) else 0.0
+        seed = seed if isinstance(seed, int) else self._seed()
+        sample, labels = make_regression(n_samples=canonical.shape[0], n_features=n_features, bias=bias,
+                                         n_informative=n_informative, n_targets=n_targets, noise=noise,
+                                         effective_rank=effective_rank, tail_strength=tail_strength,
+                                         random_state=seed)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        if with_labels:
-            return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
-        return pd.concat([canonical, pd.DataFrame(sample)], axis=1)
+        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
 
-    def model_synthetic_clusters(self, canonical: Any, n_features: int=None, clusters: list=None,
-                                 with_labels: bool=None, seed: int=None, save_intent: bool=None,
+    def model_synthetic_clusters(self, canonical: Any, n_features: int=None, *, clusters: list=None,
+                                 cluster_std: float=None, seed: int=None, save_intent: bool=None,
                                  column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                 remove_duplicates: bool=None, **kwargs):
+                                 remove_duplicates: bool=None):
         """ A generated isotropic Gaussian blobs dataset for clustering with a given number of features, concatenated
-        with an existing canonical. Based upon the Scikit-learn datasets generators, `make_blobs` parameters can be
-        passed as keyword arguments (kwargs)
+        with an existing canonical. Based upon the Scikit-learn datasets generators.
 
         The clusters parameter, by default, is None creating equal size clusters. Passing a list of sample sizes, with
         total size equal to the canonical size, creates the list length number of clusters with each cluster the size
@@ -995,9 +1009,8 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param n_features: (optional) The total number of features
         :param clusters: (optional) A list of cluster sample sizes equal to the canonical sample size
-        :param with_labels: (optional) if labels should be included. Default is True
+        :param cluster_std: (optional) The standard deviation of the clusters.
         :param seed: (optional) a seed value for the random function: default to None
-        :param kwargs: a set of kwargs for the generator
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
@@ -1018,20 +1031,15 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         canonical = self._get_canonical(canonical)
-        seed = seed if isinstance(seed, int) else self._seed()
         n_features = n_features if isinstance(n_features, int) else 100
-        n_sample = np.asarray(clusters) if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
-        with_labels = with_labels if isinstance(with_labels, bool) else True
-        for param in ['n_samples', 'n_features', 'random_state']:
-            kwargs.pop(param, None)
-        kwargs.update({'n_features': n_features, 'random_state': seed})
-        sample, labels = make_blobs(n_samples=n_sample, **kwargs)
+        clusters = clusters if isinstance(clusters, list) else None
+        n_samples = np.asarray(clusters) if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
+        cluster_std = cluster_std if isinstance(cluster_std, float) else 1.0
+        sample, labels = make_blobs(n_samples=n_samples, n_features=n_features, cluster_std=cluster_std)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        if with_labels:
-            return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
-        return pd.concat([canonical, pd.DataFrame(sample)], axis=1)
+        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
 
     def model_noise(self, canonical: Any, num_columns: int, inc_targets: bool=None, seed: int=None,
                     save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,

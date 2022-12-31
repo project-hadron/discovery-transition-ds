@@ -1,5 +1,5 @@
-Extending AbstractIntentModel
-=============================
+AbstractIntentModel
+===================
 The ``AbstractIntentModel`` facilitates the Parameterised Intent, giving the base methods to record and replay intent.
 
 Abstract AI Single Task Application Component (AI-STAC) Class for Parameterised Intent containing parameterised

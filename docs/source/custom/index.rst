@@ -10,4 +10,3 @@ Extending or Building a Capability
    main
    property
    intent
-   actions

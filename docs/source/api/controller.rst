@@ -1,5 +1,5 @@
-API: Controller
-===============
+Controller Class
+================
 
 .. automodule:: ds_discovery.components.controller
 

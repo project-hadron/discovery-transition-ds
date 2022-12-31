@@ -1,5 +1,5 @@
-Intent API: Transition & Select
-===============================
+IntentTransition Class
+======================
 
 .. automodule:: ds_discovery.intent.transition_intent
 

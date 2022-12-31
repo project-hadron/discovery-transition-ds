@@ -1,10 +1,9 @@
 import inspect
 from copy import deepcopy
 from typing import Any
-import os
 import numpy as np
 import pandas as pd
-from aistac.handlers.abstract_handlers import HandlerFactory, ConnectorContract
+from aistac.handlers.abstract_handlers import HandlerFactory
 from aistac.intent.abstract_intent import AbstractIntentModel
 from ds_discovery.components.commons import Commons
 from ds_discovery.managers.models_property_manager import ModelsPropertyManager

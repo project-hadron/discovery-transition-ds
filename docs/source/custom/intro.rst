@@ -1,6 +1,9 @@
 Introduction
 ============
 
+Overview of Abstractions
+------------------------
+
 When building a capability we use the abstract foundation package with three key abstracted classes that need to
 be extended, ``AbstractPropertyManager``, ``AbstractIntentModel`` and ``AbstractComponent``.
 
@@ -17,14 +20,23 @@ of ML model data with seamless integration.
 The diagram illustrates the synergy between the conceptual foundation’s abstract parts. It also illustrates the
 output of each of these concept classes.
 
+AbstractIntentModel
+-------------------
+
 The ``AbstractIntentModel``, holds the intended actions of the capability, defining a finite set of methods, encapsulating
 that capability, that can be selected and set, through parameterization, to create a component task. This combination
 of finite methods, or actions, and parameter fine tuning is called parameterised intent or just Intent
+
+AbstractPropertyManager
+-----------------------
 
 The ``AbstractPropertyManager`` is a ultra fast in-memory multi-tenant NoSQL data store with each tenant representing a
 moment-in-time snapshot of the components state, behavior, and actions. According to Brewer's theorem, focus for the
 ``AbstractPropertyManager`` focuses on partition tolerance through tenancy and availability through in-memory
 accessibility.
+
+AbstractComponent
+-----------------
 
 The ``AbstractComponent`` class is a foundation abstract class when extending or creating a Project Hadron
 capability. It provides an encapsulated view of the Property Management and Intent Modeling as a first class object.
@@ -32,10 +44,24 @@ In other words the concrete implementation of the ``AbstractPropertyManager`` an
 instantiated and accessed by or through this class object. The ``AbstractComponent`` class acts as the entrypoint
 to the components functionality.
 
+Reporting
+*********
+
 In addition the ``AbstractComponent`` presents a common set of reporting tools provides a detail view of the
 components state, behavior, and actions. This provides transparency and traceability into each aspect of a run-time
 component providing visibility, trust and the integration of knowledge to other systems.
 
+ConnectorContract
+*****************
+
 Finally the ``AbstractComponent`` manages connectivity through the ``AbstractConnectorContract`` providing a
 communication broker between external data stores and the internal canonical of the component.
+
+.. raw:: html
+
+   <p>To get a full rundown of Connector Contracts, how they work, their class structure and how they are
+      implemented, watch the following link:
+   <a href="https://youtu.be/6oUAImzhV5g" target="_blank">View of a Connector Contract</a>
+
+\
 

@@ -1,5 +1,5 @@
-API: Feature Engineer
-=====================
+Wrangle Class
+=============
 
 .. automodule:: ds_discovery.components.wrangling
 

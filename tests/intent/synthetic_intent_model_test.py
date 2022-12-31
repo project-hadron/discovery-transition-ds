@@ -126,8 +126,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 21), result.shape)
         result = tools.model_synthetic_classification(1000, n_features=10)
         self.assertEqual((1000, 11), result.shape)
-        result = tools.model_synthetic_classification(1000, n_features=10, with_labels=False)
-        self.assertEqual((1000, 10), result.shape)
         result = tools.model_synthetic_classification(1000, n_features=10, n_classes=3, n_informative=3)
         self.assertEqual((1000, 11), result.shape)
 
@@ -138,8 +136,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 101), result.shape)
         result = tools.model_synthetic_regression(1000, n_features=40)
         self.assertEqual((1000, 41), result.shape)
-        result = tools.model_synthetic_regression(1000, n_features=40, with_labels=False)
-        self.assertEqual((1000, 40), result.shape)
 
     def test_model_cluster(self):
         builder = SyntheticBuilder.from_memory()
@@ -148,13 +144,9 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((1000, 101), result.shape)
         result = tools.model_synthetic_clusters(1000, n_features=40)
         self.assertEqual((1000, 41), result.shape)
-        result = tools.model_synthetic_clusters(1000, n_features=40, with_labels=False)
-        self.assertEqual((1000, 40), result.shape)
         result = tools.model_synthetic_clusters(1000, n_features=40, clusters=[800, 150, 50])
         self.assertEqual((1000, 41), result.shape)
         self.assertEqual([800, 150, 50], result.target.value_counts().to_list())
-
-
 
     def test_model_modifier(self):
         builder = SyntheticBuilder.from_memory()

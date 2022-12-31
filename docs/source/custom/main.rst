@@ -1,5 +1,5 @@
-Extending AbstractComponent
-===========================
+AbstractComponent
+=================
 
 The ``AbstractComponent`` class is a foundation capability class when extending or creating a Project Hadron
 capability. It provides an encapsulated view of the Property Management and Intent Modeling as a first class object.

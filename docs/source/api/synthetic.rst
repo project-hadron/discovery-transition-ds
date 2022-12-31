@@ -1,4 +1,4 @@
-API: Synthetic Build
+SyntheticBuild Class
 ====================
 
 .. automodule:: ds_discovery.components.synthetic_builder

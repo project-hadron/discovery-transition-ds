@@ -1,5 +1,5 @@
-Intent API: Synthetic Build
-===========================
+IntentSyntheticBuild Class
+==========================
 
 .. automodule:: ds_discovery.intent.synthetic_intent
 

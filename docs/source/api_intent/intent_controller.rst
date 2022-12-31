@@ -1,5 +1,5 @@
-Register API: Controller
-========================
+IntentController Class
+======================
 
 .. automodule:: ds_discovery.intent.controller_intent
 

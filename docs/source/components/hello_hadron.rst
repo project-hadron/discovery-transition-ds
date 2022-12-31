@@ -1,261 +1,5 @@
-Introducing Components
-======================
-
-Project Hadron is designed using Microservices. Microservices are an
-architectural patterns that structures an application as a collection
-of component services.
-
-Component services are built for business capabilities and each service
-performs a single function. Because they are independently run, each
-component can be updated, deployed, and scaled to meet demands for specific
-functions of an application. Component services provide a separation of concerns
-that are weakly coupled and highly cohesive increasing code quality and developer
-productivity.
-
-This tutorial shows the fundamentals of how to run a basic Project
-Hadron component. It is the simplest form of running a task
-demonstrating the input, throughput and output of a dataset. Each
-instance of the component is given a unique reference name whereby the
-component uses that name as its unique identifier and thus can be
-used to reference the said component for the purposes of
-referencing and reloading.
-
-First Steps
------------
-
-Firstly we have imported a component from the Project Hadron library for
-this demonstration. It should be noted, the choice of component is
-arbitrary for this demonstration, as even though each component has its
-own unique set of tasks it also has methods shared across all
-components. In this demonstration we only use these common tasks, this
-is why the choice of component is arbitrary.
-
-.. code:: ipython3
-
-    from ds_discovery import Transition
-
-To create a named component we have used the Factory method ``from_env``
-and given it a referencable name ``hello_comp``, and as this is the first
-instantiation, we have used the one off parameter call ``has_contract`` that
-by default is set to True and is used to avoid the accidental loading of a
-component instance of the same task name. As common practice we capture the
-instance of this specific component ``transition`` as ``tr``.
-
-.. code:: ipython3
-
-    tr = Transition.from_env('hello_comp', has_contract=False)
-
-We have set where the data is coming from and where the resulting data
-is going to. The source identifies a URI (URL) from which the data will
-be collected and in this case persistence uses the default settings,
-more on this later.
-
-.. code:: ipython3
-
-    tr.set_source_uri('https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv')
-    tr.set_persist()
-
-Run Component
--------------
-
-To run a component we use the common method ``run_component_pipeline``
-which loads the source data, executes the component task then persists
-the results. This is the only method you can use to run the tasks of a
-component and produce its results and should be a familiarized method.
-
-.. code:: ipython3
-
-    tr.run_component_pipeline()
-
-This concludes building a component and though the component doesn’t
-change the throughput, it shows the core steps to building any
-component.
-
-Reloading and Extending the Component
--------------------------------------
-
-Though this is a single notebook, one of the powers of Project Hadron is
-the ability to reload component state across new notebooks, not just
-locally but even across locations and teams. To load the component state
-we use the same factory method ``from_env`` passing the unique component
-name ``hello_comp`` which reloads the named component. We have now
-reinstated the original component state and can continue to work on
-this component.
-
-.. code:: ipython3
-
-    tr = Transition.from_env('hello_comp')
-
-Lets look at a sample of some commonly used features that allow us to
-peek inside the components. These features are extremely useful to
-navigate the component and should become familiar.
-
-The first and probably most useful method call is to be able to retrieve
-the results of ``run_component_pipeline``. We do this using the
-component method ``load_persist_canonical``. Because of the retained
-state the component already knows the location of the results, and in
-this instance returns a report.
-
-Note: All the components from a package internally work with a canonical
-data set. With this package of components, because they are data science
-based, use Pandas Dataframes as their canonical, therefore wherever you
-see the word canonical this will relate to a Pandas Dataframe.
-
-.. code:: ipython3
-
-    df = tr.load_persist_canonical()
-
-The second most used feature is the reporting tool for the canonical. It
-allows us to look at the results of the run as an informative
-dictionary, this gives a deeper insight into the canonical results.
-Though unlike other reports it requests the canonical of interest, this
-means it can be used on a wider trajectory of circumstances such as
-looking at source or other data that is being injested by the task.
-
-Below we have an example of the processed canonical where we can see the
-results of the pipeline that was persisted. The report has a wealth of
-information and is worth taking time to explore as it is likely to speed
-up your data discovery and the understanding of the dataset.
-
-.. code:: ipython3
-
-    tr.canonical_report(df)
-
-.. image:: /images/hello_hadron/1_img01.png
-  :align: center
-  :width: 700
-
--------------------
-
-When we set up the source and persist we use something called Connector
-contracts, these act like brokers between external data and the internal
-canonical. These are powerful tools that we will talk more about in a
-dedicated tutorial but for now consider them as the means to talk data
-to different data storage solutions. In this instance we are only using
-a local connection and thus a Connector contract that manages this type
-of connectivity.
-
-In order to report on where the source and persist are located, along
-with any other data we have connected to, we can use
-``report_connectors`` which gives us, in part, the name of the connector
-and the location of the data.
-
-.. code:: ipython3
-
-    tr.report_connectors()
-
-.. image:: /images/hello_hadron/1_img02.png
-  :align: center
-  :width: 650
-
-----------------
-
-This gives a flavour of the tools available to look inside a component
-and time should be taken viewing the different reports a component
-offers.
-
-
-Environment Variables
----------------------
-
-To this point we have been using the default settings of where to store the
-named contract and the persisted dataset. These are in general local
-and within your working directory. The use of environment variables
-frees us up to use an extensive list of connector contracts to store the
-data to a location of choice.
-
-Hadron provides an extensive list of environment variables to tailor how
-your components retrieve and persist their information, this is beyond
-the scope of this tutorial and tends to be for specialist use, therefore
-we are going to focus on the two most commonly used for the majority of
-projects.
-
-We initially import Python’s ``os`` package.
-
-.. code:: ipython3
-
-    import os
-
-In general and as good practice, most notebooks would ``run`` a set up
-file that contains imports and environment variables that are common
-across all notebooks. In this case, for visibility, because this is a
-tutorial, we will import the packages and set up the two environment
-variables within each notebook.
-
-The first environment variable we set up is for the location of the
-Domain Contract. Domain Contracts are the outcome of named component
-instances and collect together metadata that are pertinent to the
-specific component tasks and actions. Domain Contracts are critical
-references of the components and other components that rely on them.
-
-From this point on we use the name 'Domain Contract' to represent the
-outcome of the named component instance which constitute the components
-task and used to run the component.
-
-In this case we are setting the Domain Contract location to be in a
-common local directory of our naming.
-
-.. code:: ipython3
-
-    os.environ['HADRON_PM_PATH'] = '0_hello_meta/demo/contracts'
-
-The second environment variable is for the location of where the data is
-to be persisted. This allows us to place data away from the working
-files and have a common directory where data can be sourced or
-persisted. This is also used internally within the component to avoid
-having to remember where data is located.
-
-.. code:: ipython3
-
-    os.environ['HADRON_DEFAULT_PATH'] = '0_hello_meta/demo/data'
-
-As a tip we can see where the default path environment variable is set
-by using ``report_connectors``. By passing the parameter
-``inc_template=True`` to the ``report_connectors`` method, showing us
-the connector names. By each name is the location path (uri) where, by
-default, the component will source or persist the data set, this is
-taken from the environment variable set. Likewise we can see where the
-Domain Contract is being persisted by including the parameter ``inc_pm``
-giving the location path (uri) given by the environment variable.
-
-.. code:: ipython3
-
-    tr.report_connectors(inc_template=True)
-
-.. image:: /images/hello_hadron/1_img03.png
-  :align: center
-  :width: 650
-
--------------------
-
-Because we have now changed the location of where the Domain Contract
-can be found we need to reset things from the start giving the source
-location and using the default persist location which we now know has
-been set by the environment variable.
-
-.. code:: ipython3
-
-    tr = Transition.from_env('hello_tr,', has_contract=False)
-
-.. code:: ipython3
-
-    tr.set_source_uri('https://www.openml.org/data/get_csv/16826755/phpMYEkMl.csv')
-    tr.set_persist()
-
-Finally we run the pipeline with the new environment variables in place
-and check everything runs okay.
-
-.. code:: ipython3
-
-    tr.run_component_pipeline()
-
-And we are there! We now know how to build a component and set its
-environment variables. The next step is to build a real pipeline and
-join that with other pipelines to construct the complete master Domain
-Contract.
-
-Building a Component for Selection
-==================================
+Building for Feature Selection
+==============================
 
 Now we know what a component looks like we can start to build the
 pipeline adding in actions that gives the component purpose.
@@ -354,7 +98,7 @@ of interest.
   :align: center
   :width: 650
 
--------------------
+\
 
 Features of Interest
 --------------------
@@ -404,7 +148,7 @@ with them later. We have also removed the column **name**.
   :align: center
   :width: 650
 
--------------------
+\
 
 As we continue the observations we see more columns that are of limited
 interest and need to be removed as part of the selection process.
@@ -444,7 +188,7 @@ Intent currently looks like all together.
   :align: center
   :width: 500
 
--------------------
+\
 
 Adding these actions or the components intent is a process of looking at
 the raw data and the observer making decisions on the selection of the
@@ -509,7 +253,7 @@ ordering algorithm.
   :align: center
   :width: 500
 
--------------------
+\
 
 As we have taken the time to capture the reasoning to include the
 component Intent we can use the reports to produce a view of the Intent
@@ -524,10 +268,10 @@ understanding why decisions were made.
   :align: center
   :width: 500
 
--------------------
+\
 
-Run Component
--------------
+Run Ordered Actions
+-------------------
 
 As usual we can now run the Component to apply the components
 tasks.
@@ -545,8 +289,8 @@ specifically defined the Intent order we wanted to run.
     tr.run_component_pipeline(intent_levels=['remove', 'reinstate', 'auto_category', 'to_dtype'])
 
 
-Run Books
----------
+Include a Run Book
+------------------
 
 A challenge faced with the component intent is its order, as you have
 seen. The solution thus far only applies at run time and is therefore
@@ -585,7 +329,7 @@ books;
   :align: center
   :width: 400
 
--------------------
+\
 
 In this next example we add an additional Run Book that is a subset of
 the tasks to only clean the data. By passing this named Run Book to the
@@ -623,10 +367,10 @@ Intent the resulting outcome is shown below in the canonical report.
   :align: center
   :width: 650
 
--------------------
+\
 
-Building a Component for Engineering
-====================================
+Building for Feature Engineering
+================================
 
 This new component works in exactly the same way as the selection
 component, whereby we create the instance pertinent to the intentions,
@@ -694,7 +438,7 @@ current source.
   :align: center
   :width: 650
 
--------------------
+\
 
 Engineering the Features
 ------------------------
@@ -762,7 +506,7 @@ intent level.
   :align: center
   :width: 500
 
--------------------
+\
 
 Run Component
 -------------
@@ -788,7 +532,7 @@ features.
   :align: center
   :width: 650
 
--------------------
+\
 
 Imputation
 ----------
@@ -819,7 +563,7 @@ anything.
   :align: center
   :width: 200
 
--------------------
+\
 
 With ``fare`` we chose a random number whereby this number is more
 likely to fall within a populated area and preserves the distribution of
@@ -850,10 +594,10 @@ Using the Intent report we can check on the additional intent added.
   :align: center
   :width: 700
 
--------------------
+\
 
-Run Book
-~~~~~~~~
+Include a Run Book
+------------------
 
 We have touched on Run Book before where by the Run Book allows us to
 define a run order that is preserved longer term. With the need for
@@ -885,7 +629,7 @@ engineering has made.
   :align: center
   :width: 400
 
--------------------
+\
 
 .. code:: ipython3
 
@@ -895,16 +639,25 @@ engineering has made.
   :align: center
   :width: 650
 
--------------------
+\
 
-Building a Component Controller
-===============================
+Building a Controller
+=====================
 
-The Controller is a unique component that independently orchestrates the
-components registered to it. It executes the components Domain Contract
-and not its code. Domain Contracts belonging to a Controller should be
-in the same path location as the Controllers Domain Contract. The
-Controller executes the registered Controllers Domain Contracts in
+The Controller is a unique capability that independently orchestrates the
+components registered to it. It allows several component Domain Contracts
+to be run in a given order as a richer distributable microservice task.
+This allows for capability actions to be captured within a known ensemble
+of components providing the separation of concerns, separation of product
+management over process management and the reduction is complexities system
+microservice orchestration and, with it, cost.
+
+The Controller executes the component's Domain Contract intention, or run
+metadata, and not its code,  giving it separation from its conception. Domain
+Contracts belonging to a Controller should be in the same path location as the
+Controllers Domain Contract.
+
+The Controller executes the registered Controllers Domain Contracts in
 accordance to the instructions given to it when the ``run_components``
 is executed. The Controller orchestrates how those components should run
 with the components being independent in their actions and therefore a
@@ -966,7 +719,7 @@ Using the Task report we can check the components have been added.
   :align: center
   :width: 400
 
--------------------
+\
 
 As with all components the Controller executes the components in the
 order given. By using the Controller’s special Run Book we are given
@@ -1008,8 +761,6 @@ it to another component or as an external data set. The
 ``run_controller`` has useful tools to monitor changes in incoming data
 and provide a run report of how all the components ran.
 
---------------
-
 In the section below we will demonstrate a couple of these features.
 
 One of the most useful parameters that comes with the ``run_controller``
@@ -1025,7 +776,7 @@ the run time of the controller and the components there in.
   :align: center
   :width: 300
 
--------------------
+\
 
 Now we have the ``run_cycle_report`` we can observe the other
 parameters. In this case we are adding the ``run_time`` parameter that
@@ -1040,7 +791,7 @@ runs the controllers components for a time period of three seconds
   :align: center
   :width: 300
 
--------------------
+\
 
 In this example we had the parameters ``repeat`` and ``sleep`` where the
 first defines the number of times to repeat the component cycleand the
@@ -1055,7 +806,7 @@ second, and the number of seconds to pause between each cycle.
   :align: center
   :width: 300
 
--------------------
+\
 
 Finally we use the ``source_check_uri`` parameter as a pointer to and
 input source to watch for changes.
@@ -1069,5 +820,4 @@ input source to watch for changes.
   :align: center
   :width: 300
 
-
-
+\

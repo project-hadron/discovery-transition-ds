@@ -1,5 +1,6 @@
-Extending AbstractPropertyManager
-=================================
+AbstractPropertyManager
+=======================
+
 The ``AbstractPropertiesManager`` facilitates the management of all the contract properties  including that of the
 connector handlers, parameterised intent and Augmented Knowledge
 
