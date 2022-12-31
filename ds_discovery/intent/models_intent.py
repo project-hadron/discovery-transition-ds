@@ -104,12 +104,12 @@ class ModelsIntentModel(AbstractIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         if self._pm.has_connector(self._pm.CONNECTOR_PREDICT):
-            df_working = self._get_canonical(canonical)
+            canonical = self._get_canonical(canonical)
             handler = self._pm.get_connector_handler(self._pm.CONNECTOR_PREDICT)
             model = handler.load_canonical()
-            predict = model.predict(df_working)
+            predict = model.predict(canonical.copy(deep=True))
             df_pred = pd.DataFrame(predict, columns=['predict'])
-            return pd.concat([df_pred, df_working], axis=1)
+            return pd.concat([df_pred, canonical], axis=1)
         raise FileNotFoundError("The trained model cannot be found. Check it has been set using the ModelsBuilder")
 
     """
