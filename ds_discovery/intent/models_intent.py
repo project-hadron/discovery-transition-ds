@@ -78,12 +78,16 @@ class ModelsIntentModel(AbstractIntentModel):
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def label_predict(self, canonical: Any, save_intent: bool=None, intent_level: [int, str]=None,
-                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    def label_predict(self, canonical: Any, *, id_header: str=None, inc_features :bool=None, save_intent: bool=None,
+                      intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                      remove_duplicates: bool=None):
         """ Retrieves a trained model and applies it to the canonical, returning the canonical with prediction labels.
-        This assumes a trained model with a predict function
+        This assumes a trained model with a predict function. if an ``id_header`` name is given, that column will be
+        removed from the feature and reapplied with the predictions.
 
         :param canonical: the model canonical
+        :param id_header: (optional) the name of a header that is not a feature that uniquely identifies each row
+        :param inc_features: (optional) if the features should be included with the predictions, default is False
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
         :param intent_order: (optional) the order in which each intent should run.
@@ -105,10 +109,23 @@ class ModelsIntentModel(AbstractIntentModel):
         # Code block for intent
         if self._pm.has_connector(self._pm.CONNECTOR_PREDICT):
             canonical = self._get_canonical(canonical)
+            inc_features = inc_features if isinstance(inc_features, bool) else False
             handler = self._pm.get_connector_handler(self._pm.CONNECTOR_PREDICT)
             model = handler.load_canonical()
-            score =  model.predict(canonical.copy(deep=True))
-            return pd.DataFrame(score, columns=['predict'])
+            ref = None
+            if isinstance(id_header, str) and id_header in canonical.columns:
+                ref = canonical[id_header]
+                canonical = canonical.drop(id_header, axis=1)
+            features = canonical.to_numpy()
+            score = model.predict(features).reshape(-1, 1)
+            result = np.hstack([score, features]) if inc_features else score
+            columns = ['predict'] + canonical.columns.to_list()  if inc_features else ['predict']
+            df_rtn = pd.DataFrame(result, columns=columns)
+            if isinstance(ref, pd.Series):
+                return ref.to_frame().join(df_rtn, how='inner')
+            return df_rtn
+
+
         raise FileNotFoundError("The trained model cannot be found. Check it has been set using the ModelsBuilder")
 
     """
