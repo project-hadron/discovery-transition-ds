@@ -1,5 +1,5 @@
-About
-=====
+Maintainers
+===========
 
 Darryl Oatridge
 ---------------

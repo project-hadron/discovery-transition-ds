@@ -7,14 +7,11 @@ Project Hadron Data Science and Synthetic Toolset
    :glob:
 
    source/components/intro
-   source/components/hello_component
+   source/components/getting_started
    source/components/index
-   source/components/hello_transformers
-   source/components/hello_pipeline
-   source/components/docker
+   source/run/index
    source/custom/index
-   source/reports/index
    source/synthetic/index
-   source/api/index
-   source/api_intent/index
-   source/about/personal
+   api
+   source/about/index
+

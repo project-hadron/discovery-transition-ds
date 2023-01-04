@@ -1,4 +1,4 @@
-Building a Capability
+The Contributor Guide
 =====================
 
 .. toctree::
@@ -6,7 +6,5 @@ Building a Capability
    :maxdepth: 2
    :glob:
 
-   intro
-   main
-   property
-   intent
+   contribute
+   personal

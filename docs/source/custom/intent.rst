@@ -2,6 +2,10 @@ AbstractIntentModel
 ===================
 The ``AbstractIntentModel`` facilitates the Parameterised Intent, giving the base methods to record and replay intent.
 
+.. image:: /images/custom/abs_intent.png
+   :align: center
+   :width: 600
+
 Abstract AI Single Task Application Component (AI-STAC) Class for Parameterised Intent containing parameterised
 intent registration methods ``_intent_builder(...)`` and ``_set_intend_signature(...)``.
 

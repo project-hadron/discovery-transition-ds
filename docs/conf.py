@@ -1,6 +1,8 @@
 # Configuration file for the Sphinx documentation builder.
 import os
 import sys
+from ds_discovery import __version__
+
 sys.path.insert(0, os.path.abspath('../'))
 
 # -- Project information
@@ -8,8 +10,10 @@ project = 'Project Hadron'
 copyright = '2022, gigas64'
 author = 'gigas64'
 
-release = '1.0'
-version = '1.1.4'
+# The short X.Y version.
+version = __version__
+# The full version, including alpha/beta/rc tags.
+release = version
 
 # -- General configuration
 extensions = [

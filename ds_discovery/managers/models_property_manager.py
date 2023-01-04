@@ -6,7 +6,7 @@ __author__ = 'Darryl Oatridge'
 
 class ModelsPropertyManager(AbstractPropertyManager):
 
-    CONNECTOR_PREDICT = 'ml_predict_connector'
+    CONNECTOR_ML_TRAINED = 'ml_trained_connector'
 
     def __init__(self, task_name: str, creator: str, root_keys: list=None, knowledge_keys: list=None):
         root_keys = root_keys if isinstance(root_keys, list) else []

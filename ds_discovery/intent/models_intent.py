@@ -107,10 +107,10 @@ class ModelsIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-        if self._pm.has_connector(self._pm.CONNECTOR_PREDICT):
+        if self._pm.has_connector(self._pm.CONNECTOR_ML_TRAINED):
             canonical = self._get_canonical(canonical)
             inc_features = inc_features if isinstance(inc_features, bool) else False
-            handler = self._pm.get_connector_handler(self._pm.CONNECTOR_PREDICT)
+            handler = self._pm.get_connector_handler(self._pm.CONNECTOR_ML_TRAINED)
             model = handler.load_canonical()
             ref = None
             if isinstance(id_header, str) and id_header in canonical.columns:

@@ -74,7 +74,7 @@ data science teams model build workflow.
 * Transition - Selection through dimensionality reduction
 * Wrangle - Feature Engineering through variable transformation
 * FeatureCatalog - Feature cataloging through label optimisation
-* Model - Model capture once the algorithm is trained and optimised
+* ModelsBuilder - Model predict once the algorithm is trained and optimised
 
 The diagram illustrates a typical workflow for stakeholders and data science teams looking to
 implement business objectives. Highlighted within the diagram are where the capability components
@@ -121,30 +121,3 @@ It also aims to improve the communication outputs needed by ML delivery to talk 
 Business SME's, Data SME's product coders and tooling engineers while still remaining within familiar code
 paradigms.
 
-Getting Started
-===============
-The ``discovery-transition-ds`` package is a set of python components that are focussed on Data Science. They
-are a concrete implementation of the Project Hadron abstract core. It is build to be very light weight
-in terms of package dependencies requiring nothing beyond what would be found in an basic Data Science environment.
-Its designed to be used easily within multiple python based interfaces such as Jupyter, IDE or command-line python.
-
-Installation
-------------
-The best way to install the component packages is directly from the Python Package Index repository using pip.
-
-The component package for the Data Science and Synthetic tolling is ``discovery-transition-ds`` and pip installed with:
-
-.. code-block:: bash
-
-    $ pip install discovery-transition-ds
-
-if you want to upgrade your current version then using pip install upgrade with:
-
-.. code-block:: bash
-
-    $ pip install --upgrade discovery-transition-ds
-
-This will also install or update dependent third party packages. The dependencies are
-limited to python and related Data Science tooling such as pandas, numpy, scipy,
-scikit-learn and visual packages matplotlib and seaborn, and thus have a limited
-footprint and non-disruptive in a machine learning environment.

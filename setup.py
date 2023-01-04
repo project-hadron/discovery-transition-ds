@@ -1,48 +1,30 @@
-"""
-
-A setuptools based setup module
-with single-source versioning
-
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://packaging.python.org/guides/single-sourcing-package-version/
-
-"""
-
-import re
 # To use a consistent encoding
 from codecs import open
-from os import path
+import os
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 
-here = path.abspath(path.dirname(__file__))
+here = os.path.abspath(os.path.dirname(__file__))
 
 
-def read(*parts):
-    filename = path.join(here, *parts)
-    with open(filename, encoding='utf-8') as fp:
-        return fp.read()
+about = {}
+with open(os.path.join(here, 'requests', '__version__.py'), 'r', 'utf-8') as f:
+    exec(f.read(), about)
 
-
-def find_version(*file_paths):
-    version_file = read(*file_paths)
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError("Unable to find version string.")
+with open('README.rst', 'r', 'utf-8') as f:
+    readme = f.read()
 
 
 setup(
-    name='discovery-transition-ds',
-    version=find_version('ds_discovery', '__init__.py'),
-    description='Advanced data cleaning, data wrangling and feature extraction tools for ML engineers',
-    long_description=read('README.rst'),
-    url='http://github.com/gigas64/discovery-transition-ds',
-    author='Gigas64',
-    author_email='gigas64@opengrass.net',
-    classifiers=[
+    name=about['__title__'],
+    version=about['__version__'],
+    description=about['__description__'],
+    long_description=readme,
+    long_description_content_type='text/x-rst',
+    author=about['__author__'],
+    author_email=about['__author_email__'],
+    url=about['__url__'],    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
         'Intended Audience :: Developers',

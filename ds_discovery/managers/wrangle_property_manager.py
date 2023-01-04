@@ -11,7 +11,7 @@ class WranglePropertyManager(AbstractPropertyManager):
         """initialises the properties manager.
 
         :param task_name: the name of the task name within the property manager
-        :param username: a username of this instance
+        :param creator: a username of this instance
         """
         root_keys = []
         knowledge_keys = ['describe']

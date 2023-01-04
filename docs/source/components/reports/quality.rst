@@ -1,5 +1,5 @@
 
-Reports : Data Veracity and Insight
+Reports: Data Veracity and Insight
 ===================================
 
 The review of a dataset by an expert with similar credentials and

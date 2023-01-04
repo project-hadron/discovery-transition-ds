@@ -1,42 +1,30 @@
 Introduction
 ============
 
-Overview of Abstractions
-------------------------
+The Abstracted foundation package of Project Hadron is written in pure Object Python, built using advanced Object
+Orientated Design (OOD) and Object Oriented Programming (OOP) principles. As well as the many advantages given through
+Polymorphism, Abstraction, Encapsulation and Inheritance, it lends itself to a microservice architecture built
+from component tasks. The abstraction package gives this foundation.
 
 When building a capability we use the abstract foundation package with three key abstracted classes that need to
 be extended, ``AbstractPropertyManager``, ``AbstractIntentModel`` and ``AbstractComponent``.
-
-The Abstracted foundation package of Project Hadron is written in pure Python and based on Object Orientated
-Design (OOD), not only to reduce its dependency management but to allow application to multiple packages that
-are Python based. As an example, the installation of data science tools, NumPy, Pandas, SkiPy, SciKit Learn and
-Matplotlib and incorporated them into a new concrete implementation of a component to deal with the pre-processing
-of ML model data with seamless integration.
 
 .. image:: /images/custom/abstract_classes.png
    :align: center
    :width: 700
 
-The diagram illustrates the synergy between the conceptual foundation’s abstract parts. It also illustrates the
-output of each of these concept classes.
+The conceptual diagram visualises the relationship between the foundation’s abstract classes and illustrates each
+classes managed outcome.
 
-AbstractIntentModel
--------------------
+The ``AbstractIntentModel``, holds the intended actions of the capability, defining a finite set of methods,
+encapsulating that capability, that can be selected and set, through parameterization, to create a component
+task. This combination of finite methods, or actions, and parameter fine tuning is called parameterised intent
+or just Intent
 
-The ``AbstractIntentModel``, holds the intended actions of the capability, defining a finite set of methods, encapsulating
-that capability, that can be selected and set, through parameterization, to create a component task. This combination
-of finite methods, or actions, and parameter fine tuning is called parameterised intent or just Intent
-
-AbstractPropertyManager
------------------------
-
-The ``AbstractPropertyManager`` is a ultra fast in-memory multi-tenant NoSQL data store with each tenant representing a
-moment-in-time snapshot of the components state, behavior, and actions. According to Brewer's theorem, focus for the
-``AbstractPropertyManager`` focuses on partition tolerance through tenancy and availability through in-memory
-accessibility.
-
-AbstractComponent
------------------
+The ``AbstractPropertyManager`` is a ultra fast in-memory multi-tenant NoSQL data store with each tenant
+representing a moment-in-time snapshot of the components state, behavior, and actions.  The
+``AbstractPropertyManager`` has responsibility for the Domain Contract for each tenant but is not responsible
+for its persistance.
 
 The ``AbstractComponent`` class is a foundation abstract class when extending or creating a Project Hadron
 capability. It provides an encapsulated view of the Property Management and Intent Modeling as a first class object.
@@ -44,15 +32,9 @@ In other words the concrete implementation of the ``AbstractPropertyManager`` an
 instantiated and accessed by or through this class object. The ``AbstractComponent`` class acts as the entrypoint
 to the components functionality.
 
-Reporting
-*********
-
 In addition the ``AbstractComponent`` presents a common set of reporting tools provides a detail view of the
 components state, behavior, and actions. This provides transparency and traceability into each aspect of a run-time
 component providing visibility, trust and the integration of knowledge to other systems.
-
-ConnectorContract
-*****************
 
 Finally the ``AbstractComponent`` manages connectivity through the ``AbstractConnectorContract`` providing a
 communication broker between external data stores and the internal canonical of the component.
@@ -60,8 +42,9 @@ communication broker between external data stores and the internal canonical of 
 .. raw:: html
 
    <p>To get a full rundown of Connector Contracts, how they work, their class structure and how they are
-      implemented, watch the following link:
+      implemented, ensure your video quality is set to the highest quality and watch the following short video:
    <a href="https://youtu.be/6oUAImzhV5g" target="_blank">View of a Connector Contract</a>
+
 
 \
 

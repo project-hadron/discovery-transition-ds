@@ -89,9 +89,9 @@ class ModelsBuilder(AbstractCommonComponent):
         uri = os.path.join(template.raw_uri, uri_file)
         cc = ConnectorContract(uri=uri, module_name=template.raw_module_name, handler=template.raw_handler,
                                version=self.pm.version)
-        self.add_connector_contract(connector_name=self.pm.CONNECTOR_PREDICT, connector_contract=cc,
+        self.add_connector_contract(connector_name=self.pm.CONNECTOR_ML_TRAINED, connector_contract=cc,
                                     template_aligned=True, save=save)
-        self.persist_canonical(connector_name=self.pm.CONNECTOR_PREDICT, canonical=trained_model)
+        self.persist_canonical(connector_name=self.pm.CONNECTOR_ML_TRAINED, canonical=trained_model)
         return
 
     def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None,
@@ -108,7 +108,7 @@ class ModelsBuilder(AbstractCommonComponent):
         canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         use_default = use_default if isinstance(use_default, bool) else True
         if not isinstance(run_book, str) and use_default:
-            if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
-                run_book = self.pm.PRIMARY_RUN_BOOK
+            if self.pm.has_run_book(book_name=self.pm.CONNECTOR_ML_TRAINED):
+                run_book = self.pm.CONNECTOR_ML_TRAINED
         result = self.intent_model.run_intent_pipeline(canonical, intent_levels=intent_levels, run_book=run_book)
         self.save_persist_canonical(result)

@@ -6,5 +6,8 @@ Building Components
    :maxdepth: 2
    :glob:
 
+   hello_component
    hello_hadron
+   hello_transformers
+   reports/index
 
