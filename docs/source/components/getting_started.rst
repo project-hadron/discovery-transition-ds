@@ -49,8 +49,6 @@ package, or install it into your site-packages easily running:
 Release Process and Rules
 -------------------------
 
-.. versionadded:: 3.5.27
-
 Versions to be released after ``3.5.27``, the following rules will govern
 and describe how the ``discovery-transition-ds`` produces a new release.
 
