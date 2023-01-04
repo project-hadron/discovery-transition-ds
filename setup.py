@@ -23,7 +23,8 @@ setup(
     long_description=readme,
     author=about['__author__'],
     author_email=about['__author_email__'],
-    url=about['__url__'],    classifiers=[
+    url=about['__url__'],
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
         'Intended Audience :: Developers',
