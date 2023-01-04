@@ -11,6 +11,4 @@ from ds_discovery.components.commons import Commons
 from aistac.components.aistac_commons import DataAnalytics
 
 # release version number picked up in the setup.py
-from .__version__ import __title__, __description__, __url__, __version__
-from .__version__ import __author__, __author_email__, __license__, __copyright__
-
+__version__ = '4.0.1'

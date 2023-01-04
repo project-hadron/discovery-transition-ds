@@ -1,29 +1,35 @@
 # To use a consistent encoding
-from codecs import open
-import os
-
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
+# To use a consistent encoding
+from codecs import open
+from os import path
+import re
 
-here = os.path.abspath(os.path.dirname(__file__))
+here = path.abspath(path.dirname(__file__))
+
+def read(*parts):
+    filename = path.join(here, *parts)
+    with open(filename, encoding='utf-8') as fp:
+        return fp.read()
 
 
-about = {}
-with open(os.path.join(here, 'ds_discovery', '__version__.py'), 'r', 'utf-8') as f:
-    exec(f.read(), about)
-
-with open('README.rst', 'r', 'utf-8') as f:
-    readme = f.read()
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 
 setup(
-    name=about['__title__'],
-    version=about['__version__'],
-    description=about['__description__'],
-    long_description=readme,
-    author=about['__author__'],
-    author_email=about['__author_email__'],
-    url=about['__url__'],
+    name='discovery-transition-ds',
+    version=find_version('ds_discovery', '__init__.py'),
+    description='Data Science to production accelerator',
+    long_description=read('README.rst'),
+    url='https://github.com/gigas64/discovery-transition-ds',
+    author='Gigas64',
+    author_email='gigas64@opengrass.net',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
