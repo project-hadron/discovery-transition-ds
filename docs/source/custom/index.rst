@@ -9,3 +9,4 @@ Building a Capability
    intro
    main
    property
+   intent
