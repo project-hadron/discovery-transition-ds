@@ -7,3 +7,4 @@ Building a Capability
    :glob:
 
    intro
+   main
