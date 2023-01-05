@@ -5,8 +5,6 @@ Project Hadron Data Science Tools and Synthetic Feature Builder
 
 .. contents:: Table of Contents
 
-.. section-numbering::
-
 Filling the Gap - Project Hadron
 ================================
 Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
@@ -100,6 +98,7 @@ paradigms.
 
 Getting Started
 ===============
+
 The ``discovery-transition-ds`` package is a set of python components that are focussed on Data Science. They
 are a concrete implementation of the Project Hadron abstract core. It is build to be very light weight
 in terms of package dependencies requiring nothing beyond what would be found in an basic Data Science environment.
@@ -107,6 +106,7 @@ Its designed to be used easily within multiple python based interfaces such as J
 
 Package Installation
 --------------------
+
 The best way to install the component packages is directly from the Python Package Index repository using pip.
 
 The component package is ``discovery-transition-ds`` and pip installed with:
@@ -203,15 +203,6 @@ as ``v10.2.8``.
 Reference
 =========
 
-Documentation
--------------
-
-.. raw:: html
-
-   <p>For a full set of documentation, including tutorials on building and running components go to
-   <a href="https://discovery-transition-ds.readthedocs.io/en/latest/" target="_blank">ReadTheDocs</a>
-
-
 Python version
 --------------
 
@@ -226,6 +217,7 @@ major release of Pandas.
 
 GitHub Project
 --------------
+
 discovery-transition-ds: `<https://github.com/Gigas64/discovery-transition-ds>`_.
 
 Change log

@@ -6,5 +6,4 @@ The Contributor Guide
    :maxdepth: 2
    :glob:
 
-   contribute
    personal
