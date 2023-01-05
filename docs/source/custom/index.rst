@@ -6,3 +6,4 @@ Building a Capability
    :maxdepth: 2
    :glob:
 
+   intro
