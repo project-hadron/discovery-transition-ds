@@ -7,11 +7,6 @@ Project Hadron Data Science Tools and Synthetic Feature Builder
 
 .. section-numbering::
 
-.. raw:: html
-
-   <p>Full documentation can be found at
-   <a href="https://discovery-transition-ds.readthedocs.io/en/latest/" target="_blank">ReadTheDocs</a>
-
 Filling the Gap - Project Hadron
 ================================
 Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
@@ -165,7 +160,7 @@ terminal run:
     $ python -c "import ds_discovery; print(ds_discovery.__version__)"
 
 Major Releases
-~~~~~~~~~~~~~~
+**************
 
 A major release will include breaking changes. When it is versioned, it will
 be versioned as ``vX.0.0``. For example, if the previous release was
@@ -184,7 +179,7 @@ Major releases will be infrequent and will need strong justifications before the
 are considered.
 
 Minor Releases
-~~~~~~~~~~~~~~
+**************
 
 A minor release will include addition methods, or noticeable changes to
 code in a backward-compatable manner and miscellaneous bug fixes. If the previous
@@ -196,7 +191,7 @@ major version number. In other words, all versions that would start with
 ``v10.`` should be compatible with each other.
 
 Patch Releases
-~~~~~~~~~~~~~~
+**************
 
 A patch release include small and encapsulated code changes that do
 not directly effect a Major or Minor release, for example changing
