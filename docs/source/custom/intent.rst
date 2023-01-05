@@ -1,7 +1,10 @@
 AbstractIntentModel
 ===================
 
-The ``AbstractIntentModel`` facilitates the Parameterised Intent, giving the base methods to record and replay intent.
+The ``AbstractIntentModel``, holds the intended actions of the capability, defining a finite set of methods,
+encapsulating that capability, that can be selected and set, through parameterization, to create a component
+task. This combination of finite methods, or actions, and parameter fine tuning is called parameterised intent
+or just Intent
 
 .. image:: /images/custom/abs_intent.png
    :align: center
@@ -17,7 +20,9 @@ As an example of an initialisation method
 
 .. code-block:: python
 
-    def __init__(self, property_manager: AbstractPropertyManager, default_save_intent: bool=None,
+    # TODO: Replace <<capability_name>> with your component class name. This assumes the PropertyManager
+    # follow the recommended prefix naming convention
+    def __init__(self, property_manager: <<capability_name>>PropertyManager, default_save_intent: bool=None,
                  default_intent_level: bool=None, order_next_available: bool=None, default_replace_intent: bool=None):
         # set all the defaults
         default_save_intent = default_save_intent if isinstance(default_save_intent, bool) else True
@@ -59,7 +64,9 @@ As an example of a run_pipeline that iteratively updates a canonical with each i
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-The code signature for an intent method would have the following construct
+When writing the intent, it must include a code signature and at the top of the method a code snippet
+which allows the intent action to be registered. The below represents a template method starter where
+<method> and <params>... are the method name and method parameters for this intent.
 
 .. code-block:: python
 
