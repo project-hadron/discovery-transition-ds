@@ -46,3 +46,57 @@ package, or install it into your site-packages easily running:
     $ cd discovery-transition-ds
     $ python -m pip install .
 
+Release Process and Rules
+-------------------------
+
+Versions to be released after ``3.5.27``, the following rules will govern
+and describe how the ``discovery-transition-ds`` produces a new release.
+
+To find the current version of ``discovery-transition-ds``, from your
+terminal run:
+
+.. code-block:: bash
+
+    $ python -c "import ds_discovery; print(ds_discovery.__version__)"
+
+Major Releases
+**************
+
+A major release will include breaking changes. When it is versioned, it will
+be versioned as ``vX.0.0``. For example, if the previous release was
+``v10.2.7`` the next version will be ``v11.0.0``.
+
+Breaking changes are changes that break backwards compatibility with prior
+versions. If the project were to change an existing methods signature or
+alter a class or method name, that would only happen in a Major release.
+The majority of changes to the dependant core abstraction will result in a
+major release. Major releases may also include miscellaneous bug fixes that
+have significant implications.
+
+Project Hadron is committed to providing a good user experience
+and as such, committed to preserving backwards compatibility as much as possible.
+Major releases will be infrequent and will need strong justifications before they
+are considered.
+
+Minor Releases
+**************
+
+A minor release will include addition methods, or noticeable changes to
+code in a backward-compatable manner and miscellaneous bug fixes. If the previous
+version released was ``v10.2.7`` a minor release would be versioned as
+``v10.3.0``.
+
+Minor releases will be backwards compatible with releases that have the same
+major version number. In other words, all versions that would start with
+``v10.`` should be compatible with each other.
+
+Patch Releases
+**************
+
+A patch release include small and encapsulated code changes that do
+not directly effect a Major or Minor release, for example changing
+``round(...`` to ``np.around(...``, and bug fixes that were missed
+when the project released the previous version. If the previous
+version released ``v10.2.7`` the hotfix release would be versioned
+as ``v10.2.8``.
+
