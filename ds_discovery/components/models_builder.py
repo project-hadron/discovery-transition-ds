@@ -105,8 +105,7 @@ class ModelsBuilder(AbstractCommonComponent):
         :param has_changed: (optional) tests if the underline canonical has changed since last load else error returned
         :return:
         """
-        canonical = self.load_canonical(connector_name=self.pm.CONNECTOR_ML_TRAINED, reset_changed=reset_changed,
-                                        has_changed=has_changed)
+        canonical = self.load_source_canonical(reset_changed=reset_changed, has_changed=has_changed)
         use_default = use_default if isinstance(use_default, bool) else True
         if not isinstance(run_book, str) and use_default:
             if self.pm.has_run_book(book_name=self.pm.PRIMARY_RUN_BOOK):
