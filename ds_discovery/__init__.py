@@ -8,7 +8,6 @@ from ds_discovery.components.concept_tolerance import ConceptTolerance
 from ds_discovery.components.models_builder import ModelsBuilder
 from ds_discovery.components.controller import Controller
 from ds_discovery.components.commons import Commons
-from aistac.components.aistac_commons import DataAnalytics
 
 # release version number picked up in the setup.py
-__version__ = '4.2.1'
+__version__ = '4.3.0'
