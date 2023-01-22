@@ -5,7 +5,7 @@ import pandas as pd
 from aistac.intent.abstract_intent import AbstractIntentModel
 from ds_discovery.components.abstract_common_component import AbstractCommonComponent
 
-from ds_discovery import FeatureCatalog, Transition, ConceptTolerance, Wrangle, SyntheticBuilder
+from ds_discovery import FeatureCatalog, Transition, ConceptTolerance, Wrangle, SyntheticBuilder, ModelsBuilder
 from ds_discovery.managers.controller_property_manager import ControllerPropertyManager
 
 __author__ = 'Darryl Oatridge'
@@ -266,6 +266,66 @@ class ControllerIntentModel(AbstractIntentModel):
 
             return canonical
         return
+
+    def models_builder(self, canonical: Any, task_name: str, columns: [str, list]=None, run_book: list=None,
+                       seed: int=None, uri_pm_repo: str=None, run_task: bool=None,
+                       models_intent: [int, str, list]=None, persist_result: bool=None, save_intent: bool=None,
+                       intent_order: int=None, intent_level: [int, str]=None, replace_intent: bool=None,
+                       remove_duplicates: bool=None):
+        """ register a ModelsBuilder component task pipeline
+
+        :param canonical: the canonical to run through the component pipeline
+        :param task_name: the task_name reference for this component
+        :param columns: (optional) a single or list of intent_level to run, if list, run in order given
+        :param run_book: (optional) a runbook to execute. If None and there is a default runbook this will be used
+        :param seed: (optional) a seed for the run
+        :param uri_pm_repo: (optional) A repository URI to initially load the property manager but not save to.
+        :param run_task: (optional) if when adding the task it should also be run returning the canonical outcome
+        :param models_intent: (optional) an single or list of models levels to run, if list, run in order given
+        :param persist_result: (optional) if the resulting canonical should be persisted.
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                        If None: default's to -1
+                        if -1: added to a level above any current instance of the intent section, level 0 if not found
+                        if int: added to the level specified, overwriting any that already exist
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                        True - replaces the current intent method with the new
+                        False - leaves it untouched, disregarding the new intent
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+       """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # create the event book
+        if isinstance(run_task, bool) and run_task:
+            persist_result = persist_result if isinstance(persist_result, bool) else False
+            params = {'uri_pm_repo': uri_pm_repo} if isinstance(uri_pm_repo, str) else {}
+            ml: ModelsBuilder = eval(f"ModelsBuilder.from_env(task_name=task_name, default_save=False, "
+                                     f"has_contract=True, **{params})", globals(), locals())
+            if isinstance(canonical, str) and canonical.startswith('@'):
+                if ml.pm.has_connector(canonical[1:]):
+                    canonical = ml.load_canonical(canonical[1:])
+                else:
+                    raise ValueError(f"The task '{task_name}' source connector '{canonical[1:]}' has not been set")
+            if canonical.shape == (0, 0):
+                canonical = ml.load_source_canonical()
+            if not isinstance(run_book, list) and not isinstance(columns, (str, int, list)):
+                if ml.pm.has_run_book(ml.pm.PRIMARY_RUN_BOOK):
+                    run_book = ml.pm.PRIMARY_RUN_BOOK
+            canonical = ml.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
+                                                            run_book=run_book, seed=seed, inplace=False)
+            # persist the canonical
+            if persist_result and ml.pm.has_connector(ml.CONNECTOR_PERSIST):
+                ml.save_persist_canonical(canonical=canonical)
+            # create reports
+            self._common_reports(ml)
+            # customer reports
+
+            return canonical
+        return
+
 
     # def feature_catalog(self, canonical: Any, task_name: str, feature_name: [int, str]=None, uri_pm_repo: str=None,
     #                     run_task: bool=None, train_size: [float, int]=None, seed: int=None, shuffle: bool=None,

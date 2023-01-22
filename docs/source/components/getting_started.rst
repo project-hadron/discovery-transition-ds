@@ -97,6 +97,6 @@ A patch release include small and encapsulated code changes that do
 not directly effect a Major or Minor release, for example changing
 ``round(...`` to ``np.around(...``, and bug fixes that were missed
 when the project released the previous version. If the previous
-version released ``v10.2.7`` the hotfix release would be versioned
+version released ``v10.2.7`` the patch release would be versioned
 as ``v10.2.8``.
 
