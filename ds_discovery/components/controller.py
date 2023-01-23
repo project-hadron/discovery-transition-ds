@@ -232,7 +232,8 @@ class Controller(AbstractComponent):
         """
         report = pd.DataFrame.from_dict(data=self.pm.report_intent())
         intent_replace = {'transition': 'Transition', 'synthetic_builder': 'SyntheticBuilder', 'wrangle': 'Wrangle',
-                          'feature_catalog': 'FeatureCatalog', 'data_tolerance': 'DataTolerance'}
+                          'feature_catalog': 'FeatureCatalog', 'data_tolerance': 'DataTolerance',
+                          'models_builder': 'ModelsBuilder'}
         report['component'] = report.intent.replace(to_replace=intent_replace)
         report['task'] = [x[0][10:] for x in report['parameters']]
         report['parameters'] = [x[1:] for x in report['parameters']]
