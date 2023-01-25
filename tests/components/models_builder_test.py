@@ -48,8 +48,6 @@ class SyntheticTest(unittest.TestCase):
         except:
             pass
 
-    def test_run_pipeline(self):
-
 
     def test_add_trained_model(self):
         ml = ModelsBuilder.from_env('tester', has_contract=False)
