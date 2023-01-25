@@ -77,21 +77,23 @@ class ModelsBuilder(AbstractCommonComponent):
     def models(self) -> ModelsIntentModel:
         return self._intent_model
 
-    def add_trained_model(self, trained_model: Any, save: bool=None):
+    def add_trained_model(self, trained_model: Any, model_name: str=None, save: bool=None):
         """ A utility method to save the trained model ready for prediction.
 
         :param trained_model: model object that has been trained
-        :param save: override of the default save action set at initialisation.
+        :param model_name: (optional) a unique name for the model
+        :param save: (optional) override of the default save action set at initialisation.
         """
-        uri_file =  self.pm.file_pattern(name='model_predict', file_type='pickle', versioned=True)
+        connector_name = model_name if isinstance(model_name, str) else self.pm.CONNECTOR_ML_TRAINED
+        uri_file =  self.pm.file_pattern(name=connector_name, file_type='pickle', versioned=True)
         template = self.pm.get_connector_contract(connector_name=self.TEMPLATE_PERSIST)
         # uri = ConnectorContract.parse_environ(os.path.join(template.raw_uri, uri_file))
         uri = os.path.join(template.raw_uri, uri_file)
         cc = ConnectorContract(uri=uri, module_name=template.raw_module_name, handler=template.raw_handler,
                                version=self.pm.version)
-        self.add_connector_contract(connector_name=self.pm.CONNECTOR_ML_TRAINED, connector_contract=cc,
+        self.add_connector_contract(connector_name=connector_name, connector_contract=cc,
                                     template_aligned=True, save=save)
-        self.persist_canonical(connector_name=self.pm.CONNECTOR_ML_TRAINED, canonical=trained_model)
+        self.persist_canonical(connector_name=connector_name, canonical=trained_model)
         return
 
     def run_component_pipeline(self, intent_levels: [str, int, list]=None, run_book: str=None, use_default: bool=None,

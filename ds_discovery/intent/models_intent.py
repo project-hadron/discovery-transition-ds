@@ -73,12 +73,13 @@ class ModelsIntentModel(AbstractIntentModel):
                                 params.update(kwargs)
                             # remove the creator param
                             _ = params.pop('intent_creator', 'Unknown')
+                            _ = params.pop('seed')
                             # add excluded params and set to False
                             params.update({'save_intent': False})
                             canonical = eval(f"self.{method}(canonical, **{params})", globals(), locals())
         return canonical
 
-    def label_predict(self, canonical: Any, *, id_header: str=None, save_intent: bool=None,
+    def label_predict(self, canonical: Any, *, model_name: str=None, id_header: str=None, save_intent: bool=None,
                       intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                       remove_duplicates: bool=None):
         """ Retrieves a trained model and applies it to the canonical, returning the canonical with prediction labels.
@@ -86,6 +87,7 @@ class ModelsIntentModel(AbstractIntentModel):
         removed from the feature and reapplied with the predictions.
 
         :param canonical: the model canonical
+        :param model_name: (optional) a unique name for the model
         :param id_header: (optional) the name of a header that is not a feature that uniquely identifies each row
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -106,9 +108,10 @@ class ModelsIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-        if self._pm.has_connector(self._pm.CONNECTOR_ML_TRAINED):
+        connector_name = model_name if isinstance(model_name, str) else self._pm.CONNECTOR_ML_TRAINED
+        if self._pm.has_connector(connector_name):
             canonical = self._get_canonical(canonical)
-            handler = self._pm.get_connector_handler(self._pm.CONNECTOR_ML_TRAINED)
+            handler = self._pm.get_connector_handler(connector_name)
             model = handler.load_canonical()
             df_id = None
             if isinstance(id_header, str) and id_header in canonical.columns:
