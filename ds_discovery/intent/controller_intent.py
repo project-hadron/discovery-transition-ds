@@ -315,7 +315,7 @@ class ControllerIntentModel(AbstractIntentModel):
                 if ml.pm.has_run_book(ml.pm.PRIMARY_RUN_BOOK):
                     run_book = ml.pm.PRIMARY_RUN_BOOK
             canonical = ml.intent_model.run_intent_pipeline(canonical=canonical, intent_levels=intent_level,
-                                                            run_book=run_book, seed=seed, inplace=False)
+                                                            run_book=run_book)
             # persist the canonical
             if persist_result and ml.pm.has_connector(ml.CONNECTOR_PERSIST):
                 ml.save_persist_canonical(canonical=canonical)
