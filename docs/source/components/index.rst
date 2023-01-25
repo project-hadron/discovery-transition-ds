@@ -10,4 +10,5 @@ Building Components
    hello_hadron
    hello_transformers
    reports/index
+   hello_models
 
