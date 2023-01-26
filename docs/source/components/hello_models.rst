@@ -193,7 +193,8 @@ aligns with that unique reference identifier.
 
 .. image:: /images/hello_hadron/6_img01.png
   :align: center
-  :width: 200
+  :width: 150
 
+\
 
 
