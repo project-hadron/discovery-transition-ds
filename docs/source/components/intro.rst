@@ -39,6 +39,12 @@ independently run, each service can be updated, deployed, and scaled to meet dem
 application. Project Hadron microservices enable the rapid, frequent and reliable delivery of large, complex
 applications. It also enables an organization to evolve its data science stack and experiment with innovative ideas.
 
+.. image:: /images/hello_hadron/ml_component_activities.png
+  :align: center
+  :width: 700
+
+\
+
 At the heart of Project Hadron is a multi-tenant, NoSQL, singleton, in memory data store that has minimal code and
 functionality and has been custom built specifically for Hadron tasks in  mind. Abstracted from this is the component
 store which allows us to build a reusable set of methods that define each tenanted component that sits separately

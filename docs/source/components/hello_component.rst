@@ -12,6 +12,12 @@ functions of an application. Component services provide a separation of concerns
 that are weakly coupled and highly cohesive increasing code quality and developer
 productivity.
 
+.. image:: /images/hello_hadron/ml_component_activities.png
+  :align: center
+  :width: 700
+
+\
+
 This tutorial shows the fundamentals of how to run a basic Project
 Hadron component. It is the simplest form of running a task
 demonstrating the input, throughput and output of a dataset. Each

@@ -372,6 +372,21 @@ Intent the resulting outcome is shown below in the canonical report.
 Building for Feature Engineering
 ================================
 
+Machine learning models are only as good as the data that is used
+to train them. A key characteristic of good training data is that
+it is provided in a way that is optimized for learning and generalization.
+The process of putting together the data in this optimal format is
+known in the industry as feature transformation using feature
+engineering.
+
+After selection, based on your application background knowledge and
+data analysis, you might decide which data fields (or features) are
+important to include in the input data. Once you have decided on
+which fields to include, you transform these features to help the
+learning process. Transformations add background experience to the
+input data, enabling the machine learning model to benefit from
+this experience.
+
 This new component works in exactly the same way as the selection
 component, whereby we create the instance pertinent to the intentions,
 give it a location to retrieve data from, the source, and where to
