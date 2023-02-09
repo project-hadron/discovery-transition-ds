@@ -404,7 +404,7 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
         rtn_list = list(generator.normal(loc=mean, scale=std, size=size))
         return list(np.around(rtn_list, precision))
 
-    def _get_dist_choice(self, number: [int, str], size: int=None, seed: int=None) -> list:
+    def _get_dist_choice(self, number: [int, str, float], size: int=None, seed: int=None) -> list:
         """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given.
 
        :param number: The number of true (1) values to randomly chose from the canonical. see below
@@ -414,12 +414,21 @@ class AbstractBuilderIntentModel(AbstractCommonsIntentModel):
 
         As choice is a fixed value, number can be represented by an environment variable with the format '${NAME}'
         where NAME is the environment variable name
+
+        If number is an int then that number of 1's are chosen. If number is a float between 0 and 1 it is taken as
+        a fraction of the total variable count
         """
         size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         if isinstance(number, str) and number.startswith('${') and number.endswith('}'):
             number = ConnectorContract.parse_environ(number)
-            number = int(number) if number.isnumeric() else 0
+            if number.isnumeric():
+                number = int(number)
+            elif number.replace('.', '', 1).isnumeric():
+                number = float(number)
+            else:
+                raise ValueError(f"When used, the environment variable must be either a float or int")
+        number = int(number * size) if isinstance(number, float) and 0 <= number <= 1 else int(number)
         number = number if 0 <= number < size else size
         if isinstance(number, int) and 0 <= number <= size:
             rtn_list = pd.Series(data=[0] * size)

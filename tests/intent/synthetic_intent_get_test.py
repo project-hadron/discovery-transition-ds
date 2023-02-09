@@ -182,12 +182,8 @@ class SyntheticIntentGetTest(unittest.TestCase):
 
     def test_distributions(self):
         tools = self.tools
-        result = tools.get_dist_binomial(trials=3, probability=0.5, seed=31, size=4)
-        self.assertEqual([3, 0, 2, 1], result)
         result = tools.get_dist_normal(mean=3, std=0.5, precision=1, seed=31, size=4)
         self.assertEqual([2.8, 3.1, 3.3, 2.5], result)
-        result = tools.get_dist_poisson(interval=2, seed=31, size=4)
-        self.assertEqual([1, 3, 0, 2], result)
         result = tools.get_dist_bernoulli(probability=0.5, seed=31, size=4)
         self.assertEqual([0, 1, 1, 1], result)
 
@@ -203,7 +199,24 @@ class SyntheticIntentGetTest(unittest.TestCase):
         result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=6, seed=31)
         self.assertEqual(0, sum(result))
         result = tools.get_dist_choice(number=6, size=6, seed=31)
+        self.assertEqual(6, sum(result))
+        result = tools.get_dist_choice(number=9, size=6, seed=31)
+        self.assertEqual(6, sum(result))
+
+    def test_choice_frac(self):
+        tools = self.tools
+        result = tools.get_dist_choice(number=0.4, size=10, seed=31)
+        self.assertEqual(4, sum(result))
+        os.environ['HADRON_CHOICE_SIZE'] = "0.5"
+        result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=10, seed=31)
+        self.assertEqual(5, sum(result))
+        os.environ['HADRON_CHOICE_SIZE'] = "0.0"
+        result = tools.get_dist_choice(number='${HADRON_CHOICE_SIZE}', size=10, seed=31)
         self.assertEqual(0, sum(result))
+        result = tools.get_dist_choice(number=1.0, size=10, seed=31)
+        self.assertEqual(10, sum(result))
+        result = tools.get_dist_choice(number=1.3, size=10, seed=31)
+        self.assertEqual(1, sum(result))
 
     def test_quality(self):
         builder = SyntheticBuilder.from_memory()

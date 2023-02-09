@@ -81,10 +81,10 @@ are considered.
 Minor Releases
 **************
 
-A minor release will include addition methods, or noticeable changes to
-code in a backward-compatable manner and miscellaneous bug fixes. If the previous
-version released was ``v10.2.7`` a minor release would be versioned as
-``v10.3.0``.
+A minor release will include additional methods, classes, or noticeable modifications
+to code in a backward-compatable manner which may include miscellaneous bug fixes.
+If the previous version released was ``v10.2.7`` a minor release would be versioned
+as ``v10.3.0``.
 
 Minor releases will be backwards compatible with releases that have the same
 major version number. In other words, all versions that would start with
@@ -94,9 +94,9 @@ Patch Releases
 **************
 
 A patch release include small and encapsulated code changes that do
-not directly effect a Major or Minor release, for example changing
-``round(...`` to ``np.around(...``, and bug fixes that were missed
-when the project released the previous version. If the previous
+not directly effect a major or minor release, for example changing
+``round(...`` to ``np.around(...``, and patch bug fixes that can't
+wait to be released before a major or minor release. If the previous
 version released ``v10.2.7`` the patch release would be versioned
 as ``v10.2.8``.
 
