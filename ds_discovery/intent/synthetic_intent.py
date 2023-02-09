@@ -428,7 +428,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_dist_normal(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_dist_choice(self, number: [int, str], size: int=None, quantity: float=None, seed: int=None,
+    def get_dist_choice(self, number: [int, str, float], size: int=None, quantity: float=None, seed: int=None,
                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given.
