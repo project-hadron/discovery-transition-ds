@@ -884,7 +884,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                        n_redundant: int=None, n_repeated: int=None, n_classes: int=None,
                                        n_clusters_per_class: int=None, weights: list=None, seed: int=None,
                                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                       replace_intent: bool=None, remove_duplicates: bool=None):
+                                       replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ By default, a binary classifier dataset with a given number of features concatenated with an existing
         canonical. Based upon the Scikit-learn datasets generators.
 
@@ -932,7 +932,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         sample, labels = make_classification(n_samples=canonical.shape[0], n_features=n_features,
                                              n_informative=n_informative, n_redundant=n_redundant,
                                              n_repeated=n_repeated, n_classes=n_classes, weights=weights,
-                                             n_clusters_per_class=n_clusters_per_class, random_state=seed)
+                                             n_clusters_per_class=n_clusters_per_class, random_state=seed, **kwargs)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
@@ -942,7 +942,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    n_targets: int=None, bias: float=None, effective_rank: int=None,
                                    tail_strength: float=None, noise: float=None, seed: int=None,
                                    save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                   replace_intent: bool=None, remove_duplicates: bool=None):
+                                   replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ A generated regression dataset with a given number of features concatenated with an existing canonical.
         Based upon the Scikit-learn datasets generators,
 
@@ -989,7 +989,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         sample, labels = make_regression(n_samples=canonical.shape[0], n_features=n_features, bias=bias,
                                          n_informative=n_informative, n_targets=n_targets, noise=noise,
                                          effective_rank=effective_rank, tail_strength=tail_strength,
-                                         random_state=seed)
+                                         random_state=seed, **kwargs)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
@@ -998,7 +998,7 @@ class SyntheticIntentModel(WrangleIntentModel):
     def model_synthetic_clusters(self, canonical: Any, n_features: int=None, *, clusters: list=None,
                                  cluster_std: float=None, seed: int=None, save_intent: bool=None,
                                  column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                 remove_duplicates: bool=None):
+                                 remove_duplicates: bool=None, **kwargs):
         """ A generated isotropic Gaussian blobs dataset for clustering with a given number of features, concatenated
         with an existing canonical. Based upon the Scikit-learn datasets generators.
 
@@ -1035,7 +1035,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         clusters = clusters if isinstance(clusters, list) else None
         n_samples = np.asarray(clusters) if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
         cluster_std = cluster_std if isinstance(cluster_std, float) else 1.0
-        sample, labels = make_blobs(n_samples=n_samples, n_features=n_features, cluster_std=cluster_std)
+        sample, labels = make_blobs(n_samples=n_samples, n_features=n_features, cluster_std=cluster_std, **kwargs)
         labels = pd.DataFrame(labels, columns=['target']).astype(int)
         gen = Commons.label_gen()
         sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
