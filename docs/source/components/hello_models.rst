@@ -8,6 +8,12 @@ and where to persist the results. Then we add the component intent,
 which in this case is to register a trained model and run its
 predictions.
 
+.. image:: /images/hello_hadron/component_pipeline.png
+  :align: center
+  :width: 700
+
+\
+
 In order to run the component you need an appropriate classification
 dataset that has already been preprocessed and optimized for the model.
 To do this we use the synthetic builder to create this unlabeled

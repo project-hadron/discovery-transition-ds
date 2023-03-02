@@ -4,6 +4,12 @@ Building for Feature Selection
 Now we know what a component looks like we can start to build the
 pipeline adding in actions that gives the component purpose.
 
+.. image:: /images/hello_hadron/component_pipeline.png
+  :align: center
+  :width: 700
+
+\
+
 The first component we will build as part of the pipeline is the data
 selection component with the class name Transition. This component
 provides a set of actions that focuses on tidying raw data by removing
@@ -394,6 +400,12 @@ persist the results. Then we add the component intent, which in this
 case is to engineer the features we have selected and make them
 appropriate for a machine learning model or for further investigation.
 
+.. image:: /images/hello_hadron/component_pipeline.png
+  :align: center
+  :width: 700
+
+\
+
 Setting Up
 ----------
 
@@ -666,6 +678,12 @@ This allows for capability actions to be captured within a known ensemble
 of components providing the separation of concerns, separation of product
 management over process management and the reduction is complexities system
 microservice orchestration and, with it, cost.
+
+.. image:: /images/hello_hadron/controller_ensemble.png
+  :align: center
+  :width: 600
+
+\
 
 The Controller executes the component's Domain Contract intention, or run
 metadata, and not its code,  giving it separation from its conception. Domain

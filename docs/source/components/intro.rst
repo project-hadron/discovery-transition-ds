@@ -5,7 +5,8 @@ Introduction
 ------------
 
 Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
-machine learning business outcomes and the final product.
+machine learning business outcomes and the final product.  It translates the work of data scientists into meaningful,
+production ready solutions that can be easily managed by product engineers.
 
 Project Hadron is a core set of abstractions that are the foundation of the three key elements that represent data
 science, those being: (1) feature engineering, (2) the construction of synthetic data with simulators, and generators

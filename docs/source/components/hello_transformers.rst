@@ -209,7 +209,7 @@ closest to that sample and average nearby points to fill in the value.
 
 .. code:: ipython3
 
-    df['knn'] = wr.tools.correlate_missing(df, header='num_nulls', method='neighbour', seed=11)
+    df['knn'] = wr.tools.correlate_missing(df, header='num_nulls', method='neighbour', weights='weighted', seed=11)
 
 .. image:: /images/transform/tra_img03.png
   :align: center
@@ -235,19 +235,22 @@ missing data.
   :align: center
   :width: 400
 
-Weighted sampling imputation is in principle similar to random
-imputation in that it considers that missing values should look like
-those already existing in the distribution. Unlike random data, it
-generates a pool of data weighted towards the distribution
-characteristics of that data and replaces the missing values.
+One of the metod options is Indicator. Indicator is not an imputation method but an imputation
+techniques. Imputations such as mean, median and random will affect the variable distribution
+quite dramatically and is a good idea to flag them with a missing indicator before their imputation
+to tag values are where real and those that have been modified.
 
 .. code:: ipython3
 
-    df['probability'] = wr.tools.correlate_missing_weighted(df, header='num_nulls', seed=11)
+    df['indicator'] = wr.tools.correlate_missing(df, header='num_nulls', method='indicator')
 
-.. image:: /images/transform/tra_img05.png
-  :align: center
-  :width: 400
+Resulting with a flag in each row there is a null.
+
+.. code:: py3
+
+    0    90
+    1    10
+    Name: indicator, dtype: int64
 
 Categorical encoding
 --------------------
