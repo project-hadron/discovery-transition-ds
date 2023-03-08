@@ -675,11 +675,16 @@ The Controller is a unique capability that independently orchestrates the
 components registered to it. It allows several component Domain Contracts
 to be run in a given order as a richer distributable microservice task.
 This allows for capability actions to be captured within a known ensemble
-of components providing the separation of concerns, separation of product
-management over process management and the reduction is complexities system
+of components providing the separation of concerns, separation of product,
+management over process management and the reduction of complexities in system
 microservice orchestration and, with it, cost.
 
-.. image:: /images/hello_hadron/controller_ensemble.png
+When components are completed the controller orchestrates those components
+producing its own Domain Contract which is passed on with the component
+Domain Contracts to produce a Domain Contract Ensemble. This can then be
+run as a microservice.
+
+.. image:: /images/hello_hadron/controller_overview.png
   :align: center
   :width: 600
 
@@ -694,7 +699,15 @@ The Controller executes the registered Controllers Domain Contracts in
 accordance to the instructions given to it when the ``run_components``
 is executed. The Controller orchestrates how those components should run
 with the components being independent in their actions and therefore a
-separation of concerns. With Controller you do not need to give it a
+separation of concern.
+
+.. image:: /images/hello_hadron/controller_ensemble.png
+  :align: center
+  :width: 600
+
+\
+
+With Controller you do not need to give it a
 name as this is assumed in each folder containing Domain Contracts for
 this set of components, known as a Domain Contract Cluster. This allows
 us the entry point to integrate the Controller and its components.

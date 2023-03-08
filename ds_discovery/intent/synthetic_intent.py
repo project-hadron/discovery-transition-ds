@@ -658,9 +658,9 @@ class SyntheticIntentModel(WrangleIntentModel):
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
     def get_selection(self, select_source: str, column_header: str, relative_freq: list=None, sample_size: int=None,
-                      selection_size: int=None, size: int=None, at_most: bool=None, shuffle: bool=None,
-                      quantity: float=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
+                      selection_size: int=None, size: int=None, shuffle: bool=None, quantity: float=None,
+                      seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                      replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a random list of values where the selection of those values is taken from a connector source.
 
         :param select_source: the selection source for the reference dataframe
@@ -668,7 +668,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param relative_freq: (optional) a weighting pattern of the final selection
         :param selection_size: (optional) the selection to take from the sample size, normally used with shuffle
         :param sample_size: (optional) the size of the sample to take from the reference file
-        :param at_most: (optional) the most times a selection should be chosen
         :param shuffle: (optional) if the selection should be shuffled before selection. Default is true
         :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param size: (optional) size of the return. default to 1

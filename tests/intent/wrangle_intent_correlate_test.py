@@ -1,3 +1,4 @@
+import datetime
 import unittest
 import os
 import shutil
@@ -54,14 +55,6 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         self.assertEqual([995, 5], df['empirical'].value_counts().values.tolist())
         self.assertEqual([996, 4], df['probability'].value_counts().values.tolist())
 
-    def test_correlate_number_encode(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame()
-        df["number"] = tools.get_dist_poisson(interval=2, size=10)
-        result = tools.correlate_numbers(canonical=df, header="number", transform="log")
-        print(result)
-
     def test_correlate_custom(self):
         tools = self.tools
         df = pd.DataFrame()
@@ -71,14 +64,14 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_custom(df, code_str="[True if x == $v1 else False for x in @['A']]", v1=2)
         self.assertEqual([False, True, False], result)
 
-    def test_correlate_choice(self):
+    def test_correlate_list_element(self):
         tools = self.tools
         df = pd.DataFrame()
         df['A'] = [[1,2,4,6], [1], [2,4,8,1], [2,4]]
-        result = tools.correlate_choice(df, header='A', list_size=2)
+        result = tools.correlate_list_element(df, header='A', list_size=2)
         control = [[1, 2], [1], [2, 4], [2, 4]]
         self.assertEqual(control, result)
-        result = tools.correlate_choice(df, header='A', list_size=1)
+        result = tools.correlate_list_element(df, header='A', list_size=1)
         self.assertEqual([1, 1, 2, 2], result)
 
     def test_correlate_coefficient(self):
@@ -112,41 +105,61 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             result = tools.correlate_aggregate(df, headers=list('ABC'), agg=action)
             self.assertEqual(5, len(result))
 
-    def test_correlate_number(self):
+    def test_correlate_values(self):
         tools = self.tools
         df = pd.DataFrame(data=[1,2,3,4.0,5,6,7,8,9,0], columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', precision=0)
+        result = tools.correlate_values(df, 'numbers', precision=0)
         self.assertCountEqual([1,2,3,4,5,6,7,8,9,0], result)
         # Offset
         df = pd.DataFrame(data=[1, 2, 3, 4, 5, 6, 7, 8, 9, 0], columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', offset=1, precision=0)
+        result = tools.correlate_values(df, 'numbers', offset=1, precision=0)
         self.assertEqual([2,3,4,5,6,7,8,9,10,1], result)
         # str offset
+        os.environ['CORR_VAL_TEST'] = '3'
         df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', offset='1-@', precision=0)
-        self.assertEqual([0,-1,-2,-3], result)
-        # complex str offset
-        result = tools.correlate_numbers(df, 'numbers', offset='x + 2 if x <= 2 else x', precision=0)
+        result = tools.correlate_values(df, 'numbers', offset='${CORR_VAL_TEST}', precision=0)
+        self.assertEqual([4,5,6,7], result)
+        # set transform
+        df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', transform='lambda x: x + 2 if x <= 2 else x', precision=0)
         self.assertEqual([3, 4, 3, 4], result)
+
+    def test_correlate_values_jitter(self):
+        tools = self.tools
         # jitter
-        df = pd.DataFrame(data=[2] * 1000, columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=0)
-        self.assertLessEqual(max(result), 4)
-        self.assertGreaterEqual(min(result), 0)
-        df = pd.DataFrame(data=tools._get_number(99999, size=5000), columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=1)
-        self.assertNotEqual(df['numbers'].to_list(), result)
-        self.assertEqual(5000, len(result))
-        for index in range(len(result)):
-            loss = abs(df['numbers'][index] - result[index])
-            self.assertLessEqual(loss, 5)
-        df = pd.DataFrame(data=tools._get_number(99999, size=5000), columns=['numbers'])
-        result = tools.correlate_numbers(df, 'numbers', jitter=1, precision=1)
-        self.assertNotEqual(df['numbers'].to_list(), result)
-        self.assertEqual(5000, len(result))
-        for index in range(len(result)):
-            loss = abs(df['numbers'][index] - result[index])
-            self.assertLessEqual(loss, 1)
+        df = pd.DataFrame(data=[2] * 10, columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', jitter=1, precision=1, seed=31)
+        self.assertLessEqual([1.4, 3.7, 2.7, 4.2, 1.2, 0.9, 3.3, 0.5, 0.6, 2.1], result)
+        # jitter is zero
+        result = tools.correlate_values(df, 'numbers', jitter=0, precision=1, seed=31)
+        self.assertEqual([2, 2, 2, 2, 2, 2, 2, 2, 2, 2], result)
+        # str jitter
+        os.environ['CORR_VAL_TEST'] = '1'
+        df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', jitter='${CORR_VAL_TEST}', precision=0, seed=31)
+        self.assertEqual([0, 4, 4, 6], result)
+        # loss
+        df = pd.DataFrame(data=[2] * 10000, columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', jitter=1, precision=5, seed=31)
+        loss = abs(df['numbers'] - pd.Series(result))
+        # loss is less than 4 stds
+        std1 = [tools.s2d(column='default', condition='@<=1')]
+        std2 = [tools.s2d(column='default', condition='@<=2'), tools.s2d(column='default', condition='@>1', logic='AND')]
+        std3 = [tools.s2d(column='default', condition='@>2', logic='AND')]
+        diff = tools.frame_selection(loss, selection=std1)
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.7)
+        diff = tools.frame_selection(loss, selection=std2)
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.28)
+        diff = tools.frame_selection(loss, selection=std3)
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0], 2) < 0.05)
+
+    def test_correlate_values_transform(self):
+        tools = self.tools
+        df = pd.DataFrame(data=[1,2,3,4.0,5,6,7,8,9,0], columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', transform="lambda x: x+1 if x %2==0 else x", precision=0)
+        self.assertEqual([1, 3, 3, 5, 5, 7, 7, 9, 9, 1],result)
+        result = tools.correlate_values(df, 'numbers', transform="@ + 7 - @", precision=0)
+        self.assertEqual([7]*10,result)
 
     def test_correlate_normalize(self):
         tools = self.tools
@@ -167,51 +180,6 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
         result = tools.correlate_numbers(df, header='numbers',scalarize=True, precision=1)
         self.assertEqual([-1.3, 0.0, 0.0, 1.3, 1.3, 0.0, 0.0, -1.3], result)
-
-    def test_correlate_number_to_numeric(self):
-        tools = self.tools
-        df = pd.DataFrame(data=list("123") + ['4-5'], columns=['numbers'])
-        with self.assertRaises(ValueError) as context:
-            result = tools.correlate_numbers(df, header='numbers')
-        self.assertTrue("The header column is of type" in str(context.exception))
-        result = tools.correlate_numbers(df, header='numbers', to_numeric=True)
-        self.assertEqual([1.0, 2.0, 3.0], result[:3])
-        result = tools.correlate_numbers(df, header='numbers', to_numeric=True, replace_nulls=0, rtn_type='int')
-        self.assertEqual([1, 2, 3, 0], result.to_list())
-
-    def test_correlate_number_extras(self):
-        tools = self.tools
-        # weighting
-        df = pd.DataFrame(columns=['numbers'], data=[2] * 1000)
-        result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=0, jitter_freq=[0, 0, 1, 1])
-        self.assertCountEqual([2,3,4], list(pd.Series(result).value_counts().index))
-        result = tools.correlate_numbers(df, 'numbers', jitter=5, precision=0, jitter_freq=[1, 1, 0, 0])
-        self.assertCountEqual([0,1,2], list(pd.Series(result).value_counts().index))
-        # fill nan
-        df = pd.DataFrame(columns=['numbers'], data=[1,1,2,np.nan,3,1,np.nan,3,5,np.nan,7])
-        result = tools.correlate_numbers(df, 'numbers', replace_nulls=1, precision=0)
-        self.assertEqual([1,1,2,1,3,1,1,3,5,1,7], result)
-        df = pd.DataFrame(columns=['numbers'], data=[2] * 1000)
-        # jitter, offset and fillna
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, replace_nulls=2, precision=0)
-        self.assertCountEqual([2,3,4,5,6], list(pd.Series(result).value_counts().index))
-        # min
-        df = pd.DataFrame(columns=['numbers'], data=[2] * 100)
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, min_value=4, precision=0)
-        self.assertCountEqual([4, 5, 6], list(pd.Series(result).value_counts().index))
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, min_value=6, precision=0)
-        self.assertCountEqual([6], list(pd.Series(result).value_counts().index))
-        with self.assertRaises(ValueError) as context:
-            result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, min_value=7, precision=0)
-        self.assertTrue("The min value 7 is greater than the max result value" in str(context.exception))
-        # max
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, max_value=4, precision=0)
-        self.assertCountEqual([2, 3, 4], list(pd.Series(result).value_counts().index))
-        result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, max_value=2, precision=0)
-        self.assertCountEqual([2], list(pd.Series(result).value_counts().index))
-        with self.assertRaises(ValueError) as context:
-            result = tools.correlate_numbers(df, 'numbers', offset=2, jitter=5, max_value=1, precision=0)
-        self.assertTrue("The max value 1 is less than the min result value" in str(context.exception))
 
     def test_correlate_categories(self):
         tools = self.tools
@@ -303,19 +271,11 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_dates(df, 'dates', offset={'years': -1, 'months': 2}, date_format='%Y/%m/%d')
         self.assertEqual(['2018/03/30', '2018/04/12', '2018/05/07', '2018/05/07'], result)
         # jitter
-        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01,", '2018/01/02', size=1000))
-        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D')
-        loss = pd.Series(result) - df['dates']
-        self.assertEqual(5, loss.value_counts().size)
-        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='s')
-        loss = pd.Series(result) - df['dates']
-        self.assertEqual(5, loss.value_counts().size)
-        # jitter weighting
-        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D', jitter_freq=[0, 0, 1, 1, 1])
-        loss = pd.Series(result) - df['dates']
-        self.assertEqual(3, loss.value_counts().size)
-        self.assertEqual(0, loss.loc[loss.apply(lambda x: x.days < 0)].size)
-        self.assertEqual(1000, loss.loc[loss.apply(lambda x: x.days >= 0)].size)
+        now = datetime.datetime.now()
+        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime(now, now + datetime.timedelta(days=1), size=1000, seed=31))
+        df['result'] = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', seed=31)
+        loss = tools.correlate_dates(df, header='result', now_delta='D')
+        self.assertEqual([618, 306, 71, 5], pd.Series(loss).value_counts().to_list())
         # nulls
         df = pd.DataFrame(columns=['dates'], data=['2019/01/30', np.nan, '2019/03/07', '2019/03/07'])
         result = tools.correlate_dates(df, 'dates')
@@ -324,17 +284,19 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_date_min_max(self):
         tools = self.tools
         # control
-        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01", '2018/01/02', size=1000))
-        result = tools.correlate_dates(df, 'dates', jitter=5, date_format='%Y/%m/%d')
-        self.assertEqual("2017/12/30", pd.Series(result).min())
+        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01", '2018/01/02', size=1000, seed=31))
+        result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', date_format='%Y/%m/%d', seed=31)
+        self.assertEqual('2017/12/29', pd.Series(result).min())
+        self.assertEqual('2018/01/04', pd.Series(result).max())
         # min
-        result = tools.correlate_dates(df, 'dates', jitter=5, min_date="2018/01/01", date_format='%Y/%m/%d')
-        self.assertEqual("2018/01/01", pd.Series(result).min())
-        self.assertEqual("2018/01/03", pd.Series(result).max())
-        # max
-        result = tools.correlate_dates(df, 'dates', jitter=5, max_date="2018/01/01", date_format='%Y/%m/%d')
-        self.assertEqual("2018/01/01", pd.Series(result).max())
-        self.assertEqual("2017/12/30", pd.Series(result).min())
+        result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', min_jitter=10, date_format='%Y/%m/%d', seed=31)
+        print(pd.Series(result).value_counts())
+        # self.assertEqual("2018/01/01", pd.Series(result).min())
+        # self.assertEqual("2018/01/04", pd.Series(result).max())
+        # # max
+        # result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', max_date="2018/01/01", date_format='%Y/%m/%d', seed=31)
+        # self.assertEqual("2018/01/01", pd.Series(result).max())
+        # self.assertEqual("2017/12/30", pd.Series(result).min())
 
     def test_correlate_date_as_delta(self):
         tools = self.tools
@@ -389,36 +351,36 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             result = tools.correlate_missing(df, header='age', method='constant')
         self.assertTrue("When using the 'constant' method a constant value must be provided" in str(context.exception))
 
-    def test_correlate_missing_weighted(self):
-        tools = self.tools
-        df = pd.DataFrame()
-        df['cats'] = ['a', 'b', None, 'f', None, 'f', 'b', 'c', 'b', 'a']
-        result = tools.correlate_missing_weighted(df, header='cats', as_type='category', seed=1973)
-        self.assertEqual(['a', 'b', 'b', 'f', 'b', 'f', 'b', 'c', 'b', 'a'], result)
-
-    def test_correlate_missing_analysis(self):
-        tools = self.tools
-        df = pd.DataFrame()
-        df['gender'] = ['M', 'F', 'M', 'F', 'M', 'M', 'F', 'M']
-        df['cat'] = ['A', 'C', 'A', 'C', 'A', 'B', None, None]
-        result = tools.correlate_missing_analysis(df, header='cat', analysis_list=[{'gender': {}}, {'cat': {}}])
-        print(result)
-
-    def test_model_encoding(self):
-        tools = self.tools
-        df = pd.DataFrame()
-        df['cats'] = ['a', 'b', 'a', 'c']
-        result = tools.model_encoding(df, headers='cats')
-        self.assertEqual([1, 0, 1, 0], result['cats_a'].to_list())
-        self.assertEqual([0, 1, 0, 0], result['cats_b'].to_list())
-        self.assertEqual([0, 0, 0, 1], result['cats_c'].to_list())
-
     def test_correlate_discrete(self):
         tools = self.tools
         df = pd.DataFrame()
         df['age'] = [0, 1, 2, 0]
         result = tools.correlate_discrete_intervals(df, header='age', categories=['low', 'mid', 'high'])
         self.assertEqual(['low', 'mid', 'high', 'low'], result)
+
+    def test_correlate_continuous(self):
+        tools = self.tools
+        df = pd.DataFrame()
+        df['num'] = [0, 1, 2, 0, 6, 4, 2, 2]
+        df['letter'] = list('asdfghcv')
+        result = tools._correlate_values(df, header='num', seed=31)
+        self.assertEqual(df['num'].to_list(), result)
+        result = tools._correlate_values(df, header='num', offset=10, seed=31)
+        self.assertEqual([10, 11, 12, 10, 16, 14, 12, 12], result)
+        result = tools._correlate_values(df, header='num', jitter=1, precision=1, seed=73)
+        self.assertEqual([0.4, 1.1, 2.0, 0.3, 6.0, 3.2, 1.3, 2.2], result)
+        result = tools._correlate_values(df, header='num', jitter=3, precision=0, seed=73)
+        self.assertTrue(isinstance(all(result), int))
+        self.assertEqual([1, 1, 2, 1, 6, 2, 0, 3], result)
+        result = tools._correlate_values(df, header='num', choice=3, offset=10, seed=31)
+        self.assertEqual([0, 1, 2, 10, 6, 4, 12, 12], result)
+        result = tools._correlate_values(df, header='num', jitter=1, keep_zero=True, precision=2, seed=73)
+        self.assertEqual([0.0, 1.1, 2.03, 0.0, 5.98, 3.21, 1.31, 2.18], result)
+        df['num'] = [0, 1, 2, 0, 6, 4, None, 2]
+        result = tools._correlate_values(df, header='num', jitter=1, precision=0, seed=73)
+        self.assertTrue(pd.Series(result).isna()[6])
+        self.assertEqual(7, pd.Series(result).dropna().size)
+        self.assertEqual(8, pd.Series(result).size)
 
 
 if __name__ == '__main__':

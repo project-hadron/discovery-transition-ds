@@ -53,12 +53,12 @@ class SyntheticTest(unittest.TestCase):
     def test_get_noise(self):
         builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
         tools: SyntheticIntentModel = builder.tools
-        result = tools.get_noise(10)
+        result = tools.get_ones_zeros(10)
         self.assertEqual(list(np.ones(10)), result)
-        result = tools.get_noise(10, ones=False)
+        result = tools.get_ones_zeros(10, ones=False)
         self.assertEqual(list(np.zeros(10)), result)
 
-    def test_correlate_date(self):
+    def test_correlate_date_diff(self):
         builder = SyntheticBuilder.from_env('tester', default_save_intent=False)
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
@@ -89,7 +89,7 @@ class SyntheticTest(unittest.TestCase):
         df['cat'] = tools.get_category(selection=['A', 'B', 'C'], size=sample_size)
         df['num'] = tools.get_number(from_value=1, to_value=9, size=sample_size)
         df['value'] = tools.get_number(from_value=1, to_value=3, size=sample_size)
-        result = tools.model_multihot(df, header='cat')
+        result = tools.model_encode_one_hot(df, headers='cat')
         self.assertEqual(['num', 'value', 'cat_A', 'cat_B', 'cat_C'], result.columns.to_list())
 
     def test_flatten_onehot(self):
@@ -101,7 +101,7 @@ class SyntheticTest(unittest.TestCase):
         df['cat'] = tools.get_category(selection=['A', 'B', 'C'], size=sample_size)
         df['num'] = tools.get_number(from_value=1, to_value=9, size=sample_size)
         df['value'] = tools.get_number(from_value=1, to_value=3, size=sample_size)
-        result = tools.model_multihot(df, header='cat')
+        result = tools.model_encode_one_hot(df, headers='cat')
         result = tools.model_group(result, group_by='profile', headers=['cat', 'value'], regex=True)
         self.assertCountEqual(['profile', 'value', 'cat_A', 'cat_B', 'cat_C'], result.columns.to_list())
 

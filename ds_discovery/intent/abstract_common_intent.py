@@ -4,7 +4,8 @@ from copy import deepcopy
 from typing import Any
 import numpy as np
 import pandas as pd
-from aistac.handlers.abstract_handlers import HandlerFactory
+from matplotlib import dates as mdates
+from aistac.handlers.abstract_handlers import HandlerFactory, ConnectorContract
 from aistac.intent.abstract_intent import AbstractIntentModel
 from ds_discovery.components.commons import Commons
 
@@ -18,9 +19,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         """returns the list of available methods associated with the parameterized intent"""
         rtn_list = []
         for m in dir(cls):
-            if m.startswith('_get'):
-                rtn_list.append(m)
-            elif not m.startswith('_'):
+            if not m.startswith('_'):
                 rtn_list.append(m)
         return rtn_list
 
@@ -29,6 +28,11 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         """ Collectively runs all parameterised intent taken from the property manager against the code base as
         defined by the intent_contract.
         """
+
+    @staticmethod
+    def s2d(column: str, condition: str, expect: str=None, logic: str=None, date_format: str=None,
+            offset: int=None) -> dict:
+        return AbstractCommonsIntentModel.select2dict(column, condition, expect, logic, date_format, offset)
 
     @staticmethod
     def select2dict(column: str, condition: str, expect: str=None, logic: str=None, date_format: str=None,
@@ -55,6 +59,10 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
             ANY: the intersect of the level index with the condition result irrelevant of current state index
         """
         return Commons.param2dict(**locals())
+
+    @staticmethod
+    def a2d(method: Any, **kwargs) -> dict:
+        return AbstractCommonsIntentModel.action2dict(method, **kwargs)
 
     @staticmethod
     def action2dict(method: Any, **kwargs) -> dict:
@@ -347,6 +355,21 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                          f"str, list or dict expected, {type(data)} passed")
 
     @staticmethod
+    def _extract_value(number: [str, int, float]):
+        if isinstance(number, str):
+            if number.startswith('${') and number.endswith('}'):
+                number = ConnectorContract.parse_environ(number)
+                if number.isnumeric():
+                    number = int(number)
+                elif number.replace('.', '', 1).isnumeric():
+                    number = float(number)
+                else:
+                    raise ValueError(f"The environment variable '{number}' is not set or not numeric.")
+            else:
+                raise ValueError("Numeric values can not be a string unless an environment variable wrapped in '${}'.")
+        return number
+
+    @staticmethod
     def _seed(seed: int=None, increment: bool=False):
         if not isinstance(seed, int):
             return int(time.time() * np.random.default_rng().random())
@@ -355,3 +378,86 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
             if seed > 2 ** 31:
                 seed = int(time.time() * np.random.default_rng(seed=seed-1).random())
         return seed
+
+    """
+        UTILITY METHODS SECTION
+    """
+
+    @staticmethod
+    def _convert_date2value(dates: Any, day_first: bool = True, year_first: bool = False):
+        values = pd.to_datetime(dates, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                yearfirst=year_first)
+        return mdates.date2num(pd.Series(values)).tolist()
+
+    @staticmethod
+    def _convert_value2date(values: Any, date_format: str=None):
+        dates = []
+        for date in mdates.num2date(values):
+            date = pd.Timestamp(date)
+            if isinstance(date_format, str):
+                date = date.strftime(date_format)
+            dates.append(date)
+        return dates
+
+    @staticmethod
+    def _freq_dist_size(relative_freq: list, size: int, dist_length: int=None, dist_on: str=None, seed: int=None):
+        """ utility method taking a list of relative frequencies and based on size returns the size distribution
+        of element based on the frequency. The distribution is based upon binomial distributions.
+
+        :param relative_freq: a list of int or float values representing a relative distribution frequency
+        :param size: the size of the values to be distributed
+        :param dist_length: (optional) the expected length of the element's in relative_freq
+        :param dist_on: (optional) if element length differs. distribute on 'left', 'right' or 'center'. Default 'right'
+        :param seed: (optional) a seed value for the random function: default to None
+        :return: an integer list of the distribution that sum to the size
+        """
+        if not isinstance(relative_freq, list) or not all(isinstance(x, (int, float)) for x in relative_freq):
+            raise ValueError("The weighted pattern must be an list of numbers")
+        dist_length = dist_length if isinstance(dist_length, int) else len(relative_freq)
+        dist_on = dist_on if dist_on in ['right', 'left'] else 'both'
+        seed = seed if isinstance(seed, int) else int(time.time() * np.random.random())
+        # sort the width
+        if len(relative_freq) > dist_length:
+            a = np.array(relative_freq)
+            trim = dist_length - a.size
+            if dist_on.startswith('right'):
+                relative_freq = a[:trim]
+            elif dist_on.startswith('left'):
+                relative_freq = a[abs(trim):]
+            else:
+                l_size = int(trim/2)
+                r_size = a.size + l_size - dist_length
+                relative_freq = a[r_size:l_size].tolist()
+        if len(relative_freq) < dist_length:
+            a = np.array(relative_freq)
+            rvalue = a[-1:]
+            lvalue = a[:1]
+            if dist_on.startswith('left'):
+                r_dist = []
+                l_dist = np.tile(lvalue, dist_length - a.size)
+            elif dist_on.startswith('right'):
+                r_dist = np.tile(rvalue, dist_length - a.size)
+                l_dist = []
+            else:
+                l_size = int((dist_length - a.size) / 2)
+                r_dist = np.tile(rvalue, l_size)
+                l_dist = np.tile(lvalue, dist_length - l_size - a.size)
+            relative_freq = np.hstack([l_dist, a, r_dist]).tolist()
+        # turn it to percentage
+        if sum(relative_freq) != 1:
+            relative_freq = np.round(relative_freq / np.sum(relative_freq), 5)
+        generator = np.random.default_rng(seed=seed)
+        result = list(generator.binomial(n=size, p=relative_freq, size=len(relative_freq)))
+        diff = size - sum(result)
+        adjust = [0] * len(relative_freq)
+        # There is a possibility the required size is not fulfilled, therefore add or remove elements based on freq
+        if diff != 0:
+            unit = diff / sum(relative_freq)
+            for idx in range(len(relative_freq)):
+                adjust[idx] = int(round(relative_freq[idx] * unit, 0))
+        result = [a + b for (a, b) in zip(result, adjust)]
+        # rounding can still make us out by 1
+        if sum(result) > size or sum(result) < size:
+            gap = sum(result) - size
+            result[result.index(max(result))] -= gap
+        return result

@@ -148,13 +148,29 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         result = tools._get_canonical(data=action)
         self.assertEqual((100, 3), result.shape)
 
-    def test_string_pattern(self):
+    def test_get_dist_bounded_normal(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        result = tools.get_string_pattern(pattern='d' ,size=3, tolerance=10000, no_dup=True)
+        df = {'A': [1, 2, 3, 4, 5], 'B': list('ABCDE'), 'C': list('ABCDE')}
+        result = tools.get_dist_bounded_normal(mean=0, std=2, lower=-1, upper=20, precision=0, size=100, seed=31)
+        self.assertEqual([35, 24, 16, 15, 6, 3, 1], pd.Series(result).value_counts().to_list())
 
+    def test_get_category(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        select = list('ABC')
+        # check distribution
+        result = tools.get_category(selection=select, size=600, seed=31)
+        result = pd.Series(result)
+        self.assertEqual([224, 188, 188], result.value_counts().values.tolist())
+        # check shuffle
+        result = tools.get_category(selection=select, size=7, seed=31)
+        self.assertEqual(['C', 'A', 'A', 'C', 'B', 'A', 'C'], result)
+        # with relative freq
+        result = tools.get_category(selection=select, size=900, relative_freq=[5,3,1], seed=31)
+        result = pd.Series(result)
+        self.assertEqual([507, 291, 102], result.value_counts().values.tolist())
 
-        print(result)
 
 
     def test_raise(self):

@@ -87,12 +87,15 @@ class SyntheticIntentGetTest(unittest.TestCase):
         os.environ["HADRON_START_VALUE"] = "A"
         with self.assertRaises(ValueError) as context:
             result = tools.get_number("${HADRON_START_VALUE}", "${HADRON_END_VALUE}", size=10, seed=31)
-        self.assertTrue("The environment variable for to_value" in str(context.exception))
+        self.assertTrue("The environment variable 'A' is not set or not numeric." in str(context.exception))
         os.environ["HADRON_START_VALUE"] = "2"
         os.environ["HADRON_END_VALUE"] = "A"
         with self.assertRaises(ValueError) as context:
             result = tools.get_number("${HADRON_START_VALUE}", "${HADRON_END_VALUE}", size=10, seed=31)
-        self.assertTrue("The environment variable for to_value" in str(context.exception))
+        self.assertTrue("The environment variable 'A' is not set or not numeric." in str(context.exception))
+        with self.assertRaises(ValueError) as context:
+            result = tools.get_number("HADRON_START_VALUE", 10000, size=10, seed=31)
+        self.assertTrue("Numeric values can not be a string unless an environment variable wrapped in '${}'." in str(context.exception))
 
     def test_get_number_at_most(self):
         tools = self.tools

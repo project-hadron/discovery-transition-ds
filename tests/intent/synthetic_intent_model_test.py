@@ -166,27 +166,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual([0.5, 1.0, 1.5, 2.0, 2.5], result["A"].to_list())
         self.assertEqual([5.0, 10.0, 15.0, 20.0, 25.0], result["B"].to_list())
 
-    def test_model_modify_agg(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 'A', 4, 5]})
-        other = {"headers": ["A", "B"], "target": [2, 0.2]}
-        result = tools.model_modifier(df, other, aggregator='sum')
-        self.assertEqual(['A', 'B', 'latent_aggregator'], result.columns.to_list())
-        self.assertEqual([4.2, 6.2, 8.2, 10.2, 12.2], result['latent_aggregator'].to_list())
-        result = tools.model_modifier(df, other, aggregator='max', agg_header='my_agg')
-        self.assertEqual(['A', 'B', 'my_agg'], result.columns.to_list())
-        self.assertEqual([3.0, 4.0, 5.0, 6.0, 7.0], result['my_agg'].to_list())
-
-    def test_model_modify_except(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5], "B": [1, 2, 'A', 4, 5]})
-        other = {"headers": ["A", "B"], "target": [2, 0.2]}
-        with self.assertRaises(TypeError) as context:
-            result = tools.model_modifier(df, other, aggregator='sum')
-        self.assertTrue("The column B is not of type numeric" in str(context.exception))
-        
     def test_model_merge(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -205,21 +184,37 @@ class SyntheticIntentModelTest(unittest.TestCase):
         self.assertEqual((5, 3), result.shape)
         self.assertEqual(["A", "B", "X"], result.columns.to_list())
 
+    def test_model_merge_str(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        #build files
+        sb.add_connector_persist('source', uri_file='sourcefile.parquet')
+        sb.add_connector_persist('other', uri_file='otherfile.parquet')
+        dfA = pd.DataFrame()
+        dfA['ref'] = tools.get_number(10_000, 99_000, precision=0, at_most=1, size=1000)
+        dfA['A'] = tools.get_category(selection=[1, 0], relative_freq=[9.1], size=1000)
+        dfB = pd.DataFrame()
+        dfB['ref'] = dfA['ref'].sample(frac=1)
+        dfB['B'] = tools.get_category(selection=[1, 0], relative_freq=[8, 1], size=1000)
+        sb.save_canonical('source', dfA)
+        sb.save_canonical('other', dfB)
+        # merge files
+        wr = Wrangle.from_memory()
+        wr.set_source('sourcefile.parquet')
+        sb.add_connector_persist('other', uri_file='otherfile.parquet')
+        df = wr.load_source_canonical()
+        df = sb.tools.model_merge(df, other='other', on='ref')
+        self.assertEqual((1000, 3), df.shape)
+        self.assertEqual(['ref', 'A', 'B'], df.columns.to_list())
+
+
     def test_model_code(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6], "B": ['M', 'F', 'F', 'U', 'U', 'F']})
-        result = tools.model_encoding(df, headers='B', encoding='ordinal')
+        result = tools.model_encode_ordinal(df, headers='B')
         self.assertEqual(['A', 'B'], df.columns.to_list())
         self.assertEqual([2, 1, 1, 3, 3, 1], result.B.to_list())
-        result = tools.model_encoding(df, headers='B', encoding='label')
-        self.assertEqual(['A', 'B'], df.columns.to_list())
-        self.assertEqual([1, 0, 0, 2, 2, 0], result.B.to_list())
-        result = tools.model_encoding(df, headers='B', encoding='onehot')
-        self.assertEqual(['A', 'B_F', 'B_M', 'B_U'], result.columns.to_list())
-        self.assertEqual([0, 1, 1, 0, 0, 1], result.B_F.to_list())
-        self.assertEqual([1, 0, 0, 0, 0, 0], result.B_M.to_list())
-        self.assertEqual([0, 0, 0, 1, 1, 0], result.B_U.to_list())
 
     def test_modal_merge_nulls(self):
         builder = SyntheticBuilder.from_memory()

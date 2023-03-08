@@ -278,25 +278,19 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_group(seed=seed, **params)
 
     def model_modifier(self, canonical: Any, other: Any, targets_header: str=None, values_header: str=None,
-                       modifier: str=None, aggregator: str=None, agg_header: str=None, seed: int=None,
-                       precision: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                       intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+                       modifier: str=None, seed: int=None, precision: int=None, save_intent: bool=None,
+                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                       remove_duplicates: bool=None) -> pd.DataFrame:
         """Modifies a given set of target header names, within the canonical with the target value for that name. The
         aggregator indicates the type of modification to be performed. It is assumed the other DataFrame has the
         target headers as the first column and the target values as the second column, if this is not the case the
         targets_header and values_handler parameters can be used to specify the other header names.
-
-        Additionally, the given headers, from other, can be aggregated to a single value. The new aggregated column
-        can be given a header name with agg_header.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param other: a direct or generated pd.DataFrame. see context notes below
         :param targets_header: (optional) the name of the target header where the header names are listed
         :param values_header: (optional) The name of the value header where the target values are listed
         :param modifier: (optional) how the value is to be modified. Options are 'add', 'sub', 'mul', 'div'
-        :param aggregator: (optional) the aggregation function name to enact. The available functions are:
-                           'sum', 'prod', 'count', 'min', 'max', 'mean' and 'list' which combines the columns as a list
-        :param agg_header: (optional) the name to give the aggregated column. By default 'latent_aggregator'
         :param precision: (optional) the value precision of the return values
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -424,7 +418,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         """ returns the full column values directly from another connector data source.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param other: a direct or generated pd.DataFrame. to concatenate
         :param as_rows: (optional) how to concatenate, True adds the connector dataset as rows, False as columns
         :param headers: (optional) a filter of headers from the 'other' dataset
         :param drop: (optional) to drop or not drop the headers if specified
@@ -717,26 +711,21 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_encode_one_hot(seed=seed, **params)
 
-    def model_encode_ordinal(self, canonical: Any, headers: [str, list], prefix=None, seed: int=None,
-                             save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                             replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ encodes categorical data types, Integer encoding consist in replacing the categories by digits from 1 to n
-        (or 0 to n-1, depending the implementation), where n is the number of distinct categories of the variable.
-        The numbers are assigned arbitrarily. This encoding method allows for quick benchmarking of machine learning
-        models.
+    def model_encode_ordinal(self, canonical: Any, headers: [str, list], ranking: list=None, prefix=None,
+                             seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                             intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ encodes categorical data into nominal or ordinal data, where the categorical value is represented by an
+        integer value from 0 to n-1. Nominal data is categorical variables with no inherent order, while ordinal
+        data is categorical variables with an inherent order. Ordinal data represents categories with an inherent
+        order or ranking.
 
-        Advantages
-        - Straightforward to implement
-        - Does not expand the feature space
-        Limitations
-        - Does not capture any information about the categories labels
-        - Not suitable for linear models.
-
-        Integer encoding is better suited for non-linear methods which are able to navigate through the arbitrarily
-        assigned digits to try and find patters that relate them to the target.
+        If ranking is given, the return will be ordinal values based on the ranking order of the list. If a
+        categorical value is not found in the list it is grouped with other missing values and given the last
+        ranking.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param headers: the header(s) to apply the encoding
+        :param ranking: (optional) if used, ranks the categorical values to the list given
         :param prefix: a str to prefix the column
         :param seed: seed: (optional) a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -918,71 +907,71 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_sample(seed=seed, **params)
 
-    def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
-                       detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None, seed: int=None,
-                       save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
-        if a reference DataFrame is passed then as the analysis is run if the column already exists the row
-        value will be taken as the reference to the sub category and not the random value. This allows already
-        constructed association to be used as reference for a sub category.
+    # def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
+    #                    detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None, seed: int=None,
+    #                    save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+    #                    replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    #     """ builds a set of columns based on an analysis dictionary of weighting (see analyse_association)
+    #     if a reference DataFrame is passed then as the analysis is run if the column already exists the row
+    #     value will be taken as the reference to the sub category and not the random value. This allows already
+    #     constructed association to be used as reference for a sub category.
+    #
+    #     :param canonical: a direct or generated pd.DataFrame. see context notes below
+    #     :param other: a direct or generated pd.DataFrame. see context notes below
+    #     :param columns_list: a list structure of columns to select for association
+    #     :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration
+    #             (e.g. ['age.gender.salary']
+    #     :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
+    #     :param strict_typing: (optional) stops objects and string types being seen as categories
+    #     :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
+    #     :param seed: seed: (optional) a seed value for the random function: default to None
+    #     :param save_intent: (optional) if the intent contract should be saved to the property manager
+    #     :param column_name: (optional) the column name that groups intent to create a column
+    #     :param intent_order: (optional) the order in which each intent should run.
+    #                 - If None: default's to -1
+    #                 - if -1: added to a level above any current instance of the intent section, level 0 if not found
+    #                 - if int: added to the level specified, overwriting any that already exist
+    #
+    #     :param replace_intent: (optional) if the intent method exists at the level, or default level
+    #                 - True - replaces the current intent method with the new
+    #                 - False - leaves it untouched, disregarding the new intent
+    #
+    #     :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+    #     :return: a DataFrame
+    #
+    #     The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
+    #     parameter instructions on how to generate a pd.Dataframe. the description of each is:
+    #
+    #     - pd.Dataframe -> a deep copy of the pd.DataFrame
+    #     - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
+    #     - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+    #     - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+    #         methods:
+    #             - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+    #             - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+    #                 :size sets the index size of the dataframe
+    #                 :headers any initial headers for the dataframe
+    #             - @generate -> generate a synthetic file from a remote Domain Contract
+    #                 :task_name the name of the SyntheticBuilder task to run
+    #                 :repo_uri the location of the Domain Product
+    #                 :size (optional) a size to generate
+    #                 :seed (optional) if a seed should be applied
+    #                 :run_book (optional) if specific intent should be run only
+    #
+    #     """
+    #     self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+    #                                column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+    #                                remove_duplicates=remove_duplicates, save_intent=save_intent)
+    #     # remove intent params
+    #     params = locals()
+    #     [params.pop(k) for k in self._INTENT_PARAMS]
+    #     # set the seed and call the method
+    #     seed = self._seed(seed=seed)
+    #     return self._model_analysis(seed=seed, **params)
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param other: a direct or generated pd.DataFrame. see context notes below
-        :param columns_list: a list structure of columns to select for association
-        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration
-                (e.g. ['age.gender.salary']
-        :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
-        :param strict_typing: (optional) stops objects and string types being seen as categories
-        :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
-        :param seed: seed: (optional) a seed value for the random function: default to None
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a DataFrame
-
-        The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
-        parameter instructions on how to generate a pd.Dataframe. the description of each is:
-
-        - pd.Dataframe -> a deep copy of the pd.DataFrame
-        - pd.Series or list -> creates a pd.DataFrameof one column with the 'header' name or 'default' if not given
-        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
-        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
-            methods:
-                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
-                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
-                    :size sets the index size of the dataframe
-                    :headers any initial headers for the dataframe
-                - @generate -> generate a synthetic file from a remote Domain Contract
-                    :task_name the name of the SyntheticBuilder task to run
-                    :repo_uri the location of the Domain Product
-                    :size (optional) a size to generate
-                    :seed (optional) if a seed should be applied
-                    :run_book (optional) if specific intent should be run only
-
-        """
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._model_analysis(seed=seed, **params)
-
-    def get_noise(self, size: int, ones: bool=None, seed: int=None, save_intent: bool=None,
-                  column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                  remove_duplicates: bool=None) -> list:
+    def get_ones_zeros(self, size: int, ones: bool=None, seed: int=None, save_intent: bool=None,
+                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                       remove_duplicates: bool=None) -> list:
         """ A noise bias column of ones unless ones is False, then returns zeros
 
         :param size: size of the list to return
@@ -1010,7 +999,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._get_noise(seed=seed, **params)
+        return self._get_ones_zeros(seed=seed, **params)
 
     def correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
                             default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None,
@@ -1248,10 +1237,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_aggregate(seed=seed, **params)
 
-    def correlate_choice(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
-                         replace: bool=None, shuffle: bool=None, convert_str: bool=None, rtn_type: str=None,
-                         seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                         replace_intent: bool=None, remove_duplicates: bool=None):
+    def correlate_list_element(self, canonical: Any, header: str, list_size: int=None, random_choice: bool=None,
+                               replace: bool=None, shuffle: bool=None, convert_str: bool=None, rtn_type: str=None,
+                               seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                               replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a column where the elements of the columns contains a list, and a choice is taken from that list.
         if the list_size == 1 then a single value is correlated otherwise a list is correlated
 
@@ -1299,7 +1288,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_element_choice(seed=seed, **params)
+        return self._correlate_list_element(seed=seed, **params)
 
     def correlate_join(self, canonical: Any, header: str, action: [str, dict], sep: str=None, rtn_type: str=None,
                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
@@ -1568,103 +1557,33 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_missing(seed=seed, **params)
 
-    def correlate_missing_weighted(self, canonical: Any, header: str, granularity: [int, float, list]=None,
-                                   as_type: str=None, lower: [int, float]=None, upper: [int, float]=None,
-                                   exclude_dominant: bool=None, replace_zero: [int, float]=None,
-                                   precision: int=None, day_first: bool=None, year_first: bool=None, seed: int=None,
-                                   rtn_type: str=None, save_intent: bool=None, column_name: [int, str]=None,
-                                   intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ imputes missing data with a weighted distribution based on the analysis of the other elements in the
-            column
+    def correlate_numbers(self, canonical: Any, header: str, standardize: bool=None, normalize: tuple=None,
+                          scalarize: bool=None, transform: str=None, precision: int=None, seed: int=None,
+                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                          replace_intent: bool=None, remove_duplicates: bool=None):
+        """ Provides a number of value transformations
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param granularity: (optional) the granularity of the analysis across the range. Default is 5
-                int passed - represents the number of periods
-                float passed - the length of each interval
-                list[tuple] - specific interval periods e.g []
-                list[float] - the percentile or quantities, All should fall between 0 and 1
-        :param as_type: (optional) specify the type to analyse
-        :param lower: (optional) the lower limit of the number value. Default min()
-        :param upper: (optional) the upper limit of the number value. Default max()
-        :param exclude_dominant: (optional) if overly dominant are to be excluded from analysis to avoid bias (numbers)
-        :param replace_zero: (optional) with categories, a non-zero minimal chance relative frequency to replace zero
-                This is useful when the relative frequency of a category is so small the analysis returns zero
-        :param precision: (optional) by default set to 3.
-        :param day_first: (optional) if the date provided has day first
-        :param year_first: (optional) if the date provided has year first
-        :param seed: (optional) the random seed. defaults to current datetime
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: an equal length list of correlated values
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._correlate_missing_weighted(seed=seed, **params)
-
-    def correlate_numbers(self, canonical: Any, header: str, to_numeric: bool=None, standardize: bool=None,
-                          normalize: tuple=None, scalarize: bool=None, transform: str=None, jitter: float=None,
-                          jitter_freq: list=None, offset: [int, float, str]=None, precision: int=None, seed: int=None,
-                          keep_zero: bool=None, replace_nulls: [int, float]=None, rtn_type: str=None,
-                          min_value: [int, float]=None, max_value: [int, float]=None, save_intent: bool=None,
-                          column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                          remove_duplicates: bool=None):
-        """ Returns a number that correlates to the value given. The numbers can be standardized, normalize between
-        given limits, scalarized or transformed and offers offset and jitters. The jitter is based on a normal
-        distribution with the correlated value being the mean and the jitter its  standard deviation from that mean
-
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param header: the header in the DataFrame to correlate
-        :param to_numeric: (optional) ensures numeric type. None convertable strings are set to null
-        :param standardize: (optional) if the column should be standardised
-        :param normalize: (optional) normalise the column between two values. the tuple is the lower and upper bounds
+        :param standardize: (optional) if the column should be standardized
+        :param normalize: (optional) normalize the column between two values. the tuple is the lower and upper bounds
         :param scalarize: (optional) assuming standard normally distributed, removes the mean and scaling
         :param transform: (optional) attempts normal distribution of values.
-                    - options are log, sqrt, cbrt, reciprocal, boxcox, yeojohnson
-
-        :param transform: (optional) transform the columns options are log, sqrt, cbrt, reciprocal
-        :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
-        :param jitter: (optional) a perturbation of the value where the jitter is a std. defaults to 0
-        :param jitter_freq: (optional)  a relative freq with the pattern mid point the mid point of the jitter
+                            options are log, sqrt, cbrt, boxcox, yeojohnson
         :param precision: (optional) how many decimal places. default to 3
-        :param replace_nulls: (optional) a numeric value to replace nulls
         :param seed: (optional) the random seed. defaults to current datetime
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                - other than the int, float, category, string and object, passing 'as-is' will return as is
-
-        :param keep_zero: (optional) if True then zeros passed remain zero, Default is False
-        :param min_value: a minimum value not to go below
-        :param max_value: a max value not to go above
+        :return: an equal length list of correlated values
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.
                     - If None: default's to -1
                     - if -1: added to a level above any current instance of the intent section, level 0 if not found
                     - if int: added to the level specified, overwriting any that already exist
-                    
+
         :param replace_intent: (optional) if the intent method exists at the level, or default level
                     - True - replaces the current intent method with the new
                     - False - leaves it untouched, disregarding the new intent
-                    
+
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: an equal length list of correlated values
 
@@ -1688,6 +1607,52 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         # set the seed and call the method
         seed = self._seed(seed=seed)
         return self._correlate_numbers(seed=seed, **params)
+
+    def correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, precision: int=None,
+                         jitter: [int, float, str]=None, offset: [int, float, str]=None, transform: Any=None,
+                         lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None, seed: int=None,
+                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                         replace_intent: bool=None, remove_duplicates: bool=None) -> list:
+        """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
+        normalised jitter (std from the value) along with a value offset. ``choice``, ``jitter`` and ``offset``
+        can accept environment variable string names starting with ``${`` and ending with ``}``.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param choice: (optional) The number of values to choose to apply the change to. Can be an environment variable.
+        :param precision: (optional) to what precision the return values should be
+        :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
+        :param transform: (optional) passing a lambda function to transform the value. e.g. ``lambda x: (x - 3) / 2``
+        :param jitter: (optional) a perturbation of the value where the jitter is a random normally distributed std
+        :param precision: (optional) how many decimal places. default to 3
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param keep_zero: (optional) if True then zeros passed remain zero despite a change, Default is False
+        :param lower: a minimum value not to go below
+        :param upper: a max value not to go above
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: an equal length list of correlated values
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        params = locals()
+        [params.pop(k) for k in self._INTENT_PARAMS]
+        # set the seed and call the method
+        seed = self._seed(seed=seed)
+        return self._correlate_values(seed=seed, **params)
 
     def correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
                              default_action: [str, int, float, dict]=None, rtn_type: str=None,
@@ -1831,9 +1796,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_discrete_intervals(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                        jitter_units: str=None, jitter_freq: list=None, now_delta: str=None, date_format: str=None,
-                        min_date: str=None, max_date: str=None, fill_nulls: bool=None, day_first: bool=None,
-                        year_first: bool=None, seed: int=None, rtn_type: str=None, save_intent: bool=None,
+                        jitter_units: str=None, now_delta: str=None, date_format: str=None,
+                        min_jitter: int=None, max_jitter: int=None, day_first: bool=None,
+                        year_first: bool=None, seed: int=None, save_intent: bool=None,
                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None):
         """ correlates dates to an existing date or list of dates. The return is a list
@@ -1844,17 +1809,13 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                 int or dictionary associated with pd. eg {'days': 1}
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'
-        :param jitter_freq: (optional) a relative freq with the pattern mid point the mid point of the jitter
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
-        :param min_date: (optional)a minimum date not to go below
-        :param max_date: (optional)a max date not to go above
-        :param fill_nulls: (optional) if no date values should remain untouched or filled based on the list mode date
+        :param min_jitter: (optional) a positive integer of the minimum number of jitter_units from the variable.
+        :param max_jitter: (optional) a positive integer of the maximum number of jitter_units from the variable.
         :param day_first: (optional) if the dates given are day first firmat. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
         :param seed: (optional) a seed value for the random function: default to None
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
         :param intent_order: (optional) the order in which each intent should run.

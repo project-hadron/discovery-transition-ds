@@ -10,7 +10,7 @@ from typing import Any, Tuple
 
 import numpy as np
 import pandas as pd
-import matplotlib.dates as mdates
+from matplotlib.dates import num2date, date2num
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
@@ -1074,13 +1074,13 @@ class DataDiscovery(object):
     @staticmethod
     def analyse_category(categories: Any, lower: [int, float]=None, upper: [int, float]=None, top: int=None,
                          nulls_list: list=None, replace_zero: [int, float]=None, freq_precision: int=None):
-        """Analyses a set of categories and returns a dictionary of intent and patterns and statitics.
+        """Analyses a set of categories and returns a dictionary of intent and patterns and statistics.
 
         :param categories: the categories to analyse
-        :param lower: outliers lower limit and below to remove. (optional)
+        :param lower: (optional) outliers lower limit and below to remove.
                          int represents the category count, (removed before the weighting pattern)
                          float between 0 and 1 represents normalised value (removed from weighting pattern)
-        :param upper: outliers upper limit and above to remove. (optional
+        :param upper: (optional) outliers upper limit and above to remove.
                          integer represents category count, (removed before the weighting pattern)
                          float between 0 and 1 represents normalised value (removed from weighting pattern)
         :param top: (optional) only select the top n from a selection, regardless of weighting equivalence.
@@ -1394,12 +1394,12 @@ class DataDiscovery(object):
                                yearfirst=year_first)
         params_lower = lower if isinstance(lower, pd.Timestamp) else None
         params_upper = upper if isinstance(upper, pd.Timestamp) else None
-        values = mdates.date2num(values)
+        values = date2num(values)
         values = pd.Series(values)
-        lower = values.min() if not isinstance(lower, pd.Timestamp) else mdates.date2num(lower)
-        upper = values.max() if not isinstance(upper, pd.Timestamp) else mdates.date2num(upper)
+        lower = values.min() if not isinstance(lower, pd.Timestamp) else date2num(lower)
+        upper = values.max() if not isinstance(upper, pd.Timestamp) else date2num(upper)
         if isinstance(granularity, pd.Timedelta):
-            granularity = mdates.date2num(mdates.num2date(lower) + granularity) - lower
+            granularity = date2num(num2date(lower) + granularity) - lower
         rtn_dict = DataDiscovery.analyse_number(values, granularity=granularity, lower=lower, upper=upper,
                                                 precision=10, freq_precision=freq_precision, detail_stats=False)
         # add the specific data
@@ -1412,16 +1412,16 @@ class DataDiscovery(object):
         if isinstance(day_first, bool):
             rtn_dict.get('params')['day_first'] = day_first
         # tidy back all the dates
-        rtn_dict.get('intent')['intervals'] = [(pd.Timestamp(mdates.num2date(p[0])),
-                                                pd.Timestamp(mdates.num2date(p[1])),
+        rtn_dict.get('intent')['intervals'] = [(pd.Timestamp(num2date(p[0])),
+                                                pd.Timestamp(num2date(p[1])),
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
         if params_lower:
             rtn_dict.get('params')['lower'] = params_lower
         if params_upper:
             rtn_dict.get('params')['upper'] = params_upper
-        rtn_dict.get('stats')['lowest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['lowest']))
-        rtn_dict.get('stats')['highest'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['highest']))
-        rtn_dict.get('stats')['mean'] = pd.Timestamp(mdates.num2date(rtn_dict.get('stats')['mean']))
+        rtn_dict.get('stats')['lowest'] = pd.Timestamp(num2date(rtn_dict.get('stats')['lowest']))
+        rtn_dict.get('stats')['highest'] = pd.Timestamp(num2date(rtn_dict.get('stats')['highest']))
+        rtn_dict.get('stats')['mean'] = pd.Timestamp(num2date(rtn_dict.get('stats')['mean']))
         if isinstance(date_format, str):
             rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
                                                     p[2]) for p in rtn_dict.get('intent')['intervals']]
