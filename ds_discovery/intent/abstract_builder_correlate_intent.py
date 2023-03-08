@@ -698,7 +698,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 's'
         # convert values into datetime
         s_values = pd.Series(pd.to_datetime(values, errors='coerce', infer_datetime_format=True,
-                                            dayfirst=day_first, yearfirst=year_first, utc=True))
+                                            dayfirst=day_first, yearfirst=year_first))
+        dt_tz = s_values.dt.tz
         if isinstance(jitter, int):
             size = s_values.size
             # set jitters to time deltas
@@ -717,14 +718,18 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
         if now_delta:
-            s_values = (s_values.dt.tz_convert(None) - pd.Timestamp.now()).abs()
+            s_values = s_values.dt.tz_convert(None) if s_values.dt.tz else s_values
+            s_values = (s_values - pd.Timestamp.now()).abs()
             s_values = (s_values / np.timedelta64(1, now_delta))
             s_values = s_values.round(0) if null_idx.size > 0 else s_values.astype(int)
         else:
             if isinstance(date_format, str):
                 s_values = s_values.dt.strftime(date_format)
             else:
-                s_values = s_values.dt.tz_convert(None)
+                if s_values.dt.tz:
+                    s_values = s_values.dt.tz_convert(dt_tz)
+                else:
+                    s_values = s_values.dt.tz_localize(dt_tz)
             if null_idx.size > 0:
                 s_values.iloc[null_idx].apply(lambda x: np.nan)
         return s_values.to_list()
