@@ -624,11 +624,11 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         headers = Commons.list_formatter(headers)
         _ = self._seed() if seed is None else seed
         for header in headers:
-            ranking = ranking if isinstance(ranking, list) else canonical[header].unique().tolist()
-            missing = Commons.list_diff(canonical[header].unique().tolist(), ranking, symmetric=False)
-            full_rank = ranking + missing
-            values = np.arange(len(ranking)).tolist()
-            values = values + ([len(ranking)] * (len(full_rank) - len(ranking)))
+            rank = ranking if isinstance(ranking, list) else canonical[header].unique().tolist()
+            missing = Commons.list_diff(canonical[header].unique().tolist(), rank, symmetric=False)
+            full_rank = rank + missing
+            values = np.arange(len(rank)).tolist()
+            values = values + ([len(rank)] * (len(full_rank) - len(rank)))
             mapper = dict(zip(full_rank, values))
             canonical[header] =  canonical[header].replace(mapper)
             if isinstance(prefix, str):
