@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from aistac.properties.property_manager import PropertyManager
 
-from build.lib.ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition

@@ -1194,7 +1194,6 @@ class TransitionIntentModel(AbstractIntentModel):
         - min: minute
         - woy: week of year
         = doy: day of year
-        - ordinal: numeric float value of date
         """
         # resolve intent persist options
         self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
@@ -1235,14 +1234,12 @@ class TransitionIntentModel(AbstractIntentModel):
                 df[f"{c}_woy"] = df[c].dt.isocalendar().week
             if 'doy' in matrix:
                 df[f"{c}_doy"] = df[c].dt.dayofyear
-            if 'ordinal' in matrix:
-                df[f"{c}_ordinal"] = mdates.date2num(df[c])
         if not inplace:
             return df
         return
 
     def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, as_num=None,
+                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, utc: bool=None,
                      day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
                      save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
@@ -1256,7 +1253,7 @@ class TransitionIntentModel(AbstractIntentModel):
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :param as_num: if true returns number of days since 0001-01-01 00:00:00 with fraction being hours/mins/secs
+        :param utc: if true inputs are localized as UTC. if false (default) inputs will remain naive.
         :param year_first: specifies if to parse with the year first
                 If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
                 If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
@@ -1287,7 +1284,7 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        as_num = as_num if isinstance(as_num, bool) else False
+        utc = utc if isinstance(utc, bool) else False
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
         infer_datetime_format = date_format is None
@@ -1299,9 +1296,7 @@ class TransitionIntentModel(AbstractIntentModel):
             df[c] = df[c].fillna(np.nan)
             df[c] = df[c].astype('object')
             df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
-                                   dayfirst=day_first, yearfirst=year_first, format=date_format)
-            if as_num:
-                df[c] = mdates.date2num(df[c])
+                                   dayfirst=day_first, yearfirst=year_first, format=date_format, utc=utc)
         if not inplace:
             return df
         return

@@ -2,6 +2,8 @@ import numpy as np
 from abc import abstractmethod
 import pandas as pd
 from typing import Any
+
+from aistac.components.aistac_commons import DataAnalytics
 from matplotlib import dates as mdates
 from scipy import stats
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
@@ -128,7 +130,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
                                                   dist_on='right', seed=seed)
         rtn_list = []
         for idx in range(len(select_index)):
-            rtn_list += selection[idx]*select_index[idx]
+            rtn_list += [selection[idx]]*select_index[idx]
         gen = np.random.default_rng(seed)
         gen.shuffle(rtn_list)
         return rtn_list
@@ -407,3 +409,62 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         return self._get_category(selection=_values.to_list(), relative_freq=relative_freq, size=size,
                                   seed=_seed)
 
+    def _get_analysis(self, schema: dict, size: int):
+
+        def get_level(analysis: dict, sample_size: int, _seed: int=None):
+            _seed = self._seed(seed=_seed, increment=True)
+            for name, values in analysis.items():
+                if row_dict.get(name) is None:
+                    row_dict[name] = list()
+                _analysis = DataAnalytics(analysis=values.get('insight', {}))
+                result_type = object
+                if str(_analysis.intent.dtype).startswith('cat'):
+                    result_type = 'category'
+                    result = self._get_category(selection=_analysis.intent.categories,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                seed=_seed, size=sample_size)
+                elif str(_analysis.intent.dtype).startswith('num'):
+                    result_type = 'int' if _analysis.params.precision == 0 else 'float'
+                    result = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
+                                                 relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                 precision=_analysis.params.get('precision', None),
+                                                 seed=_seed, size=sample_size)
+                elif str(_analysis.intent.dtype).startswith('date'):
+                    result_type = 'object' if _analysis.params.is_element('data_format') else 'date'
+                    result = self._get_datetime(start=_analysis.stats.lowest,
+                                                until=_analysis.stats.highest,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                date_format=_analysis.params.get('data_format', None),
+                                                day_first=_analysis.params.get('day_first', None),
+                                                year_first=_analysis.params.get('year_first', None),
+                                                seed=_seed, size=sample_size)
+                else:
+                    result = []
+                # if the analysis was done with excluding dominance then se if they should be added back
+                if _analysis.patterns.is_element('dominant_excluded'):
+                    _dom_percent = _analysis.patterns.dominant_percent/100
+                    _dom_values = _analysis.patterns.dominant_excluded
+                    if len(_dom_values) > 0:
+                        s_values = pd.Series(result, dtype=result_type)
+                        non_zero = s_values[~s_values.isin(_dom_values)].index
+                        choice_size = int((s_values.size * _dom_percent) - (s_values.size - len(non_zero)))
+                        if choice_size > 0:
+                            generator = np.random.default_rng(_seed)
+                            _dom_choice = generator.choice(_dom_values, size=choice_size)
+                            s_values.iloc[generator.choice(non_zero, size=choice_size, replace=False)] = _dom_choice
+                            result = s_values.to_list()
+                # now add the result to the row_dict
+                row_dict[name] += result
+                if sum(_analysis.patterns.relative_freq) == 0:
+                    unit = 0
+                else:
+                    unit = sample_size / sum(_analysis.patterns.relative_freq)
+                if values.get('sub_category'):
+                    leaves = values.get('branch', {}).get('leaves', {})
+                    for idx in range(len(leaves)):
+                        section_size = int(round(_analysis.patterns.relative_freq[idx] * unit, 0)) + 1
+                        next_item = values.get('sub_category').get(leaves[idx])
+                        get_level(next_item, section_size, _seed)
+            return
+
+        row_dict = dict()

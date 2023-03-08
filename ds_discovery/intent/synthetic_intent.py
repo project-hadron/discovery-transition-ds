@@ -81,7 +81,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
     def get_category(self, selection: list, relative_freq: list=None, quantity: float=None, size: int=None,
-                     at_most: int=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                     seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a category from a list. Of particular not is the at_least parameter that allows you to
         control the number of times a selection can be chosen.
@@ -90,7 +90,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param relative_freq: a weighting pattern that does not have to add to 1
         :param quantity: a number between 0 and 1 representing the percentage quantity of the data
         :param size: an optional size of the return. default to 1
-        :param at_most: the most times a selection should be chosen
         :param seed: a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
