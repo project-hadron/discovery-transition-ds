@@ -310,7 +310,6 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = tools.model_custom(canonical=df, code_str=code_str, header='"gender"', value=['M', 'F'])
         print(result)
 
-
     def test_to_date(self):
         tools = self.tools
         cleaner = self.clean
@@ -322,9 +321,20 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertEqual(df['date'].iloc[0], result['date'].iloc[0].strftime(format='%m-%d-%Y'))
         self.assertEqual(df['datetime'].iloc[0], result['datetime'].iloc[0].strftime(format='%m-%d-%Y %H:%M:%S'))
 
-        df['numtime'] = df['datetime']
-        result = cleaner.to_date_type(df, headers=['numtime'], as_num=True)
-        self.assertEqual(float, result['numtime'].iloc[0].dtype)
+    def test_to_date_tz(self):
+        tools = self.tools
+        cleaner = self.clean
+        df = pd.DataFrame()
+        df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', size=5, seed=101)
+        df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', size=5, seed=102)
+        result = cleaner.to_date_type(df, headers=['date', 'datetime'])
+        self.assertIsNone(result['date'].dt.tz)
+        result = cleaner.to_date_type(df, headers=['date'], timezone='UTC')
+        self.assertIsNotNone(result['date'].dt.tz)
+        result = cleaner.to_date_type(df, headers=['numtime'])
+        self.assertIsNone(result['date'].dt.tz)
+
+
 
     def test_currency(self):
         cleaner = self.clean
