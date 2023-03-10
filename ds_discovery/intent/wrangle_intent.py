@@ -1801,12 +1801,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                         year_first: bool=None, seed: int=None, save_intent: bool=None,
                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                         remove_duplicates: bool=None):
-        """ correlates dates to an existing date or list of dates. The return is a list
+        """ correlates dates to the parameters given.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
+        a singular name {'hour': 3} to replace the current with 3 hours.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param offset: (optional) and offset to the date. if int then assumed a 'days' offset
-                int or dictionary associated with pd. eg {'days': 1}
+        :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'

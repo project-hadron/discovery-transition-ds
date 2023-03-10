@@ -656,12 +656,14 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
     def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
                          jitter_units: str=None, now_delta: str=None, date_format: str=None, min_jitter: int=None,
                          max_jitter: int=None, day_first: bool=None, year_first: bool=None, seed: int=None):
-        """ correlates dates to an existing date or list of dates. The return is a list of pd
+        """ correlates dates to the parameters given.
+
+        When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
+        a singular name {'hour': 3} to replace the current with 3 hours.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param offset: (optional) and offset to the date. if int then assumed a 'days' offset
-                int or dictionary associated with pd. eg {'days': 1}
+        :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
@@ -679,7 +681,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         values = canonical[header].copy()
 
         def _clean(control):
-            _unit_type = ['years', 'months', 'weeks', 'days', 'leapdays', 'hours', 'minutes', 'seconds']
+            _unit_type = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds',
+                          'year', 'month', 'week', 'day', 'hour', 'minute', 'second']
             _params = {}
             if isinstance(control, int):
                 control = {'days': control}
