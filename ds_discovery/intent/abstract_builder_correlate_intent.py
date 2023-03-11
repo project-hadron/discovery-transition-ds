@@ -421,7 +421,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         method = method if isinstance(method, str) else 'interquartile'
         if method.startswith('emp'):
             result_idx = DataDiscovery.empirical_outliers(values=s_values, std_width=measure)
-        elif method.startswith('int'):
+        elif method.startswith('int') or method.startswith('qua'):
             result_idx = DataDiscovery.interquartile_outliers(values=s_values, k_factor=measure)
         else:
             raise ValueError(f"The method '{method}' is not recognised. Please use one of interquartile or empirical")
@@ -654,8 +654,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         return s_values.to_list()
 
     def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                         jitter_units: str=None, now_delta: str=None, date_format: str=None, min_jitter: int=None,
-                         max_jitter: int=None, day_first: bool=None, year_first: bool=None, seed: int=None):
+                         jitter_units: str=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
+                         year_first: bool=None, seed: int=None):
         """ correlates dates to the parameters given.
 
         When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
@@ -667,8 +667,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
-        :param min_jitter: (optional) a positive integer of the minimum number of jitter_units from the variable.
-        :param max_jitter: (optional) a positive integer of the maximum number of jitter_units from the variable.
         :param day_first: (optional) if the dates given are day first format. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output
@@ -706,15 +704,10 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(jitter, int):
             size = s_values.size
             # set jitters to time deltas
-            jitter_inf = pd.Timedelta(value=jitter * 100, unit=jitter_units)
             jitter = pd.Timedelta(value=jitter, unit=jitter_units) if isinstance(jitter, int) else pd.Timedelta(value=0)
-            lower = pd.Timedelta(value=min_jitter, unit=jitter_units) if isinstance(min_jitter, int) else jitter_inf
-            upper = pd.Timedelta(value=max_jitter, unit=jitter_units) if isinstance(max_jitter, int) else jitter_inf
             jitter = int(jitter.to_timedelta64().astype(int) / 10 ** 3)
-            lower = int(lower.to_timedelta64().astype(int) / 10 ** 3)
-            upper = int(upper.to_timedelta64().astype(int) / 10 ** 3)
-            rand_gen = stats.truncnorm(-lower, upper, loc=0, scale=jitter)
-            results = rand_gen.rvs(size, random_state=seed)
+            gen = np.random.default_rng(seed)
+            results = gen.normal(loc=0, scale=jitter, size=size)
             results = pd.Series(pd.to_timedelta(results, unit='micro'))
             s_values = s_values + results
         null_idx = s_values[s_values.isna()].index

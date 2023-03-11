@@ -711,13 +711,18 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_encode_one_hot(seed=seed, **params)
 
-    def model_encode_ordinal(self, canonical: Any, headers: [str, list], ranking: list=None, prefix=None,
+    def model_encode_integer(self, canonical: Any, headers: [str, list], ranking: list=None, prefix=None,
                              seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                              intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ encodes categorical data into nominal or ordinal data, where the categorical value is represented by an
-        integer value from 0 to n-1. Nominal data is categorical variables with no inherent order, while ordinal
-        data is categorical variables with an inherent order. Ordinal data represents categories with an inherent
-        order or ranking.
+        """ Integer encoding replaces the categories by digits from 1 to n, where n is the number of distinct
+        categories of the variable. Integer encoding can be either nominal or orinal.
+
+        Nominal data is categorical variables without any particular order between categories. This means that
+        the categories cannot be sorted and there is no natural order between them.
+
+        Ordinal data represents categories with a natural, ordered relationship between each category. This means
+        that the categories can be sorted in either ascending or descending order. In order to encode integers as
+        ordinal, a ranking must be provided.
 
         If ranking is given, the return will be ordinal values based on the ranking order of the list. If a
         categorical value is not found in the list it is grouped with other missing values and given the last
@@ -750,7 +755,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._model_encode_ordinal(seed=seed, **params)
+        return self._model_encode_integer(seed=seed, **params)
 
     def model_encode_count(self, canonical: Any, headers: [str, list], prefix=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
@@ -1796,11 +1801,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_discrete_intervals(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                        jitter_units: str=None, now_delta: str=None, date_format: str=None,
-                        min_jitter: int=None, max_jitter: int=None, day_first: bool=None,
-                        year_first: bool=None, seed: int=None, save_intent: bool=None,
-                        column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                        remove_duplicates: bool=None):
+                        jitter_units: str=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
+                        year_first: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlates dates to the parameters given.
 
         When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
@@ -1812,8 +1815,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
-        :param min_jitter: (optional) a positive integer of the minimum number of jitter_units from the variable.
-        :param max_jitter: (optional) a positive integer of the maximum number of jitter_units from the variable.
         :param day_first: (optional) if the dates given are day first firmat. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
         :param date_format: (optional) the format of the output

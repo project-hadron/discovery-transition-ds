@@ -45,15 +45,12 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
         df["number"] = tools.get_dist_normal(2,1,size=1000, seed=99)
-        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=1.5, method='quantile')
-        df['quantile'] = result
+        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=1.5, method='quartile')
+        df['quartile'] = result
         result = tools.correlate_mark_outliers(canonical=df, header="number", measure=3, method='empirical')
         df['empirical'] = result
-        result = tools.correlate_mark_outliers(canonical=df, header="number", measure=0.002, method='probability')
-        df['probability'] = result
-        self.assertEqual([992, 8], df['quantile'].value_counts().values.tolist())
+        self.assertEqual([992, 8], df['quartile'].value_counts().values.tolist())
         self.assertEqual([995, 5], df['empirical'].value_counts().values.tolist())
-        self.assertEqual([996, 4], df['probability'].value_counts().values.tolist())
 
     def test_correlate_custom(self):
         tools = self.tools
@@ -275,28 +272,11 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df = pd.DataFrame(columns=['dates'], data=tools._get_datetime(now, now + datetime.timedelta(days=1), size=1000, seed=31))
         df['result'] = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', seed=31)
         loss = tools.correlate_dates(df, header='result', now_delta='D')
-        self.assertEqual([618, 306, 71, 5], pd.Series(loss).value_counts().to_list())
+        self.assertEqual([579, 329, 83, 9], pd.Series(loss).value_counts().to_list())
         # nulls
         df = pd.DataFrame(columns=['dates'], data=['2019/01/30', np.nan, '2019/03/07', '2019/03/07'])
         result = tools.correlate_dates(df, 'dates')
         self.assertEqual('NaT', str(result[1]))
-
-    def test_correlate_date_min_max(self):
-        tools = self.tools
-        # control
-        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01", '2018/01/02', size=1000, seed=31))
-        result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', date_format='%Y/%m/%d', seed=31)
-        self.assertEqual('2017/12/29', pd.Series(result).min())
-        self.assertEqual('2018/01/04', pd.Series(result).max())
-        # min
-        result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', min_jitter=10, date_format='%Y/%m/%d', seed=31)
-        print(pd.Series(result).value_counts())
-        # self.assertEqual("2018/01/01", pd.Series(result).min())
-        # self.assertEqual("2018/01/04", pd.Series(result).max())
-        # # max
-        # result = tools.correlate_dates(df, 'dates', jitter=1, jitter_units='D', max_date="2018/01/01", date_format='%Y/%m/%d', seed=31)
-        # self.assertEqual("2018/01/01", pd.Series(result).max())
-        # self.assertEqual("2017/12/30", pd.Series(result).min())
 
     def test_correlate_date_as_delta(self):
         tools = self.tools
@@ -327,8 +307,8 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df['cat'] = ['A', 'C', 'A', 'B', 'A', 'C', None, None]
         result = tools.correlate_missing(df, header='cat', method='mode')
         self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
-        result = tools.correlate_missing(df, header='cat', method='random')
-        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'A', 'A'], result)
+        result = tools.correlate_missing(df, header='cat', method='random', seed=31)
+        self.assertEqual(['A', 'C', 'A', 'B', 'A', 'C', 'B', 'C'], result)
         result = tools.correlate_missing(df, header='cat', method='indicator')
         self.assertEqual([0,0,0,0,0,0,1,1], result)
         with self.assertRaises(ValueError) as context:

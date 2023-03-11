@@ -212,7 +212,7 @@ class SyntheticIntentModelTest(unittest.TestCase):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6], "B": ['M', 'F', 'F', 'U', 'U', 'F']})
-        result = tools.model_encode_ordinal(df, headers='B')
+        result = tools.model_encode_integer(df, headers='B')
         self.assertEqual(['A', 'B'], df.columns.to_list())
         self.assertEqual([2, 1, 1, 3, 3, 1], result.B.to_list())
 

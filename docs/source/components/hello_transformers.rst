@@ -52,12 +52,12 @@ meaningful properties of the original dataset.
     sample_size = 1000
     df = pd.DataFrame(index=range(sample_size))
     df['nulls'] = [np.nan] * sample_size
-    df['ones'] = builder.tools.get_noise(sample_size)
+    df['ones'] = builder.tools.get_ones_zeros(sample_size)
     df['more_ones'] = df['ones']
-    df['zeroes'] = builder.tools.get_noise(sample_size, ones=False)
+    df['zeroes'] = builder.tools.get_ones_zeros(sample_size, ones=False)
     df['cats'] = builder.tools.get_category(selection=['A','B'], size=sample_size)
     df['nums'] = builder.tools.get_number(100, size=sample_size)
-    df['more_nums'] = builder.tools.correlate_numbers(df, header='nums', jitter=0.3)
+    df['more_nums'] = builder.tools.correlate_values(df, header='nums', jitter=0.3)
     df.columns.to_list()
 
 .. code:: ipython3
@@ -281,14 +281,22 @@ times in the dataset.
   :align: center
   :width: 350
 
-Ordinal or Integer encoding replaces the categories by digits from 1 to
-n, where n is the number of distinct categories of the variable wherby
-the numbers are assigned arbitrarily. This encoding method allows for
-quick benchmarking of machine learning models.
+Integer encoding replaces the categories by digits from 1 to n, where n
+is the number of distinct categories of the variable. Integer encoding
+can be either nominal or orinal.
+
+Nominal data is categorical variables without any particular order
+between categories. This means that the categories cannot be sorted
+and there is no natural order between them.
+
+Ordinal data represents categories with a natural, ordered relationship
+between each category. This means that the categories can be sorted in
+either ascending or descending order. In order to encode integers as
+ordinal, a ranking must be provided.
 
 .. code:: ipython3
 
-    df_encoded = wr.tools.model_encode_ordinal(df, headers=['gender', 'code'])
+    df_encoded = wr.tools.model_encode_integer(df, headers=['gender', 'code'])
 
 .. image:: /images/transform/tra_img07.png
   :align: center

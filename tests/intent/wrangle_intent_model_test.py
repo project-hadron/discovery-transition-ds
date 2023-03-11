@@ -103,14 +103,14 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_encode_one_hot(df, headers=['B', 'C'])
         self.assertCountEqual(['A', 'B_A', 'B_B', 'B_C', 'B_D', 'C_B', 'C_C', 'C_D', 'C_E', 'C_F'], result.columns.to_list())
 
-    def test_model_encode_ordinal(self):
+    def test_model_encode_integer(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame(data={"A": [1, 2, 3, 4, 3, 2, 1], "B": list("ABCDEFA"), 'C': list("BCDECFB")})
-        result = tools.model_encode_ordinal(df, headers=['B', 'C'])
+        result = tools.model_encode_integer(df, headers=['B', 'C'], seed=31)
         self.assertCountEqual([0, 1, 2, 3, 4, 5, 0], result['B'].to_list())
-        self.assertCountEqual([1, 2, 3, 4, 2, 5, 1], result['C'].to_list())
-        result = tools.model_encode_ordinal(df, headers=['B', 'C'], ranking=list('ABCDX'))
+        self.assertCountEqual([0, 1, 2, 3, 1, 4, 0], result['C'].to_list())
+        result = tools.model_encode_integer(df, headers=['B', 'C'], ranking=list('ABCDX'), seed=31)
         self.assertCountEqual([0, 1, 2, 3, 5, 5, 0], result['B'].to_list())
         self.assertCountEqual([1, 2, 3, 5, 2, 5, 1], result['C'].to_list())
 

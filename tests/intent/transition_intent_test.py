@@ -97,19 +97,22 @@ class TransitionIntentModelTest(unittest.TestCase):
         tools = self.tools
         sample_size = 10
         df = pd.DataFrame()
-        df['nums'] = tools.get_number(4, size=sample_size, seed=0)
-        df['bool_num'] = tools.get_category([1, 0, '?'], size=sample_size, seed=0)
-        df['cats'] = tools.get_category(list('ABC?'), size=sample_size, seed=0)
+        df['nums'] = tools.get_number(4, size=sample_size, seed=31)
+        df['bool_num'] = tools.get_category([1, 0, '?'], size=sample_size, seed=31)
+        df['cats'] = tools.get_category(list('ABC?'), size=sample_size, seed=31)
         result = self.clean.auto_reinstate_nulls(df)
-        self.assertEqual(['C', 'A', 'B', 'A', '?', 'B', 'A', 'A', 'C', '?'], df['cats'].to_list())
-        self.assertEqual(['C', 'A', 'B', 'A', 'B', 'A', 'A', 'C'], result['cats'].dropna().to_list())
-        self.assertEqual([0.0, 1.0, 1.0, 1.0, '?', 1.0, 1.0, 1.0, 0.0, '?'], df['bool_num'].to_list())
-        self.assertEqual([0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0], result['bool_num'].dropna().to_list())
+        self.assertEqual(['C', '?', 'B', 'A', 'A', 'C', 'C', 'A', 'A', '?'], df['cats'].to_list())
+        self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
+        self.assertEqual(['?', '?', 1, 1, 1, '?', 0, 1, 1, '?'], df['bool_num'].to_list())
+        self.assertEqual([1, 1, 1,  0, 1, 1], result['bool_num'].dropna().to_list())
+        result = self.clean.auto_reinstate_nulls(df,  headers='cats')
+        self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
+        self.assertEqual(['?', '?', 1, 1, 1, '?', 0, 1, 1, '?'], result['bool_num'].dropna().to_list())
         result = self.clean.auto_reinstate_nulls(df, nulls_list=[0], headers='nums')
-        self.assertEqual([2, 0, 1, 0, 3, 1, 0, 0, 2, 3], df['nums'].to_list())
-        self.assertEqual([2, 1, 3, 1, 2, 3], result['nums'].dropna().to_list())
+        self.assertEqual([1, 0, 2, 2, 1, 2, 1, 2, 0, 3], df['nums'].to_list())
+        self.assertEqual([1, 2, 2, 1, 2, 1, 2, 3], result['nums'].dropna().to_list())
 
-    def test_auto_(self):
+    def test_auto_projection(self):
         tr = Transition.from_memory()
         builder = SyntheticBuilder.from_memory()
         df = builder.tools.model_synthetic_classification(1000, n_features=10)

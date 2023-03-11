@@ -212,15 +212,14 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', '?']
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', '?', '-', '*', '#']
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
-            for item in nulls_list:
-                df[c] = df[c].replace(item, np.nan)
+            df[c] = df[c].where(~df[c].isin(nulls_list))
         if inplace:
             return
         return df

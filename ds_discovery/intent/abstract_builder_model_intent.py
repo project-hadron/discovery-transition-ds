@@ -601,12 +601,17 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             canonical[c] = pd.to_numeric(canonical[c], errors='coerce').round(precision)
         return canonical
 
-    def _model_encode_ordinal(self, canonical: Any, headers: [str, list], ranking: list=None, prefix :str=None,
+    def _model_encode_integer(self, canonical: Any, headers: [str, list], ranking: list=None, prefix :str=None,
                               seed: int=None):
-        """ encodes categorical data into nominal or ordinal data, where the categorical value is represented by an
-        integer value from 0 to n-1. Nominal data is categorical variables with no inherent order, while ordinal
-        data is categorical variables with an inherent order. Ordinal data represents categories with an inherent
-        order or ranking.
+        """ Integer encoding replaces the categories by digits from 1 to n, where n is the number of distinct
+        categories of the variable. Integer encoding can be either nominal or orinal.
+
+        Nominal data is categorical variables without any particular order between categories. This means that
+        the categories cannot be sorted and there is no natural order between them.
+
+        Ordinal data represents categories with a natural, ordered relationship between each category. This means
+        that the categories can be sorted in either ascending or descending order. In order to encode integers as
+        ordinal, a ranking must be provided.
 
         If ranking is given, the return will be ordinal values based on the ranking order of the list. If a
         categorical value is not found in the list it is grouped with other missing values and given the last
