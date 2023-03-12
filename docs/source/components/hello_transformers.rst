@@ -296,7 +296,7 @@ ordinal, a ranking must be provided.
 
 .. code:: ipython3
 
-    df_encoded = wr.tools.model_encode_integer(df, headers=['gender', 'code'])
+    df_encoded = wr.tools.model_encode_integer(df, headers=['code'], ranking=['90674', '90682', '90686', '90694', '90688', '90756'])
 
 .. image:: /images/transform/tra_img07.png
   :align: center
