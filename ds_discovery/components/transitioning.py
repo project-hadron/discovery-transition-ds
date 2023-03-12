@@ -244,6 +244,7 @@ class Transition(AbstractCommonComponent):
         _numeric_fields = len(Commons.filter_headers(canonical, dtype='number'))
         _category_fields = len(Commons.filter_headers(canonical, dtype='category'))
         _date_fields = len(Commons.filter_headers(canonical, dtype='datetime'))
+        _date_tz_fields =  len(Commons.filter_headers(canonical, dtype='datetimetz'))
         _bool_fields = len(Commons.filter_headers(canonical, dtype='bool'))
         _other_fields = len(Commons.filter_headers(canonical, dtype=['category', 'datetime', 'bool',
                                                                      'number'],  exclude=True))
@@ -260,7 +261,7 @@ class Transition(AbstractCommonComponent):
                   'data_shape': {'rows': canonical.shape[0], 'columns': canonical.shape[1],
                                  'memory': Commons.bytes2human(canonical.memory_usage(deep=True).sum())},
                   'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                'datetime': _date_fields, 'bool': _bool_fields,
+                                'datetime': _date_fields, 'datetime_tz': _date_tz_fields, 'bool': _bool_fields,
                                 'others': _other_fields},
                   'usability': {'mostly_null': len(_null_columns),
                                 'predominance': len(_dom_columns),

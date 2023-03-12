@@ -1072,11 +1072,11 @@ class DataDiscovery(object):
         return list(importance_set)
 
     @staticmethod
-    def analyse_category(categories: Any, lower: [int, float]=None, upper: [int, float]=None, top: int=None,
+    def analyse_category(categories: [pd.Series, list], lower: [int, float]=None, upper: [int, float]=None, top: int=None,
                          nulls_list: list=None, replace_zero: [int, float]=None, freq_precision: int=None):
-        """Analyses a set of categories and returns a dictionary of intent and patterns and statistics.
+        """Analyses a set of categories and returns a dictionary of the characteristics, patterns and statistics.
 
-        :param categories: the categories to analyse
+        :param categories: a pandas Series or list of categories to analyse
         :param lower: (optional) outliers lower limit and below to remove.
                          int represents the category count, (removed before the weighting pattern)
                          float between 0 and 1 represents normalised value (removed from weighting pattern)
@@ -1090,17 +1090,16 @@ class DataDiscovery(object):
         :return: a dictionary of results
         """
         categories = pd.Series(categories)
-        freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
-        nulls_list = ['<NA>', '', ' ', 'NaN', 'nan'] if not isinstance(nulls_list, list) else nulls_list
-        replace_zero = 0 if not isinstance(replace_zero, (int, float)) else replace_zero
+        freq_precision = freq_precision if isinstance(freq_precision, int) else 2
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['',' ','NaN','nan','None','null','Null','NULL']
+        replace_zero = replace_zero if isinstance(replace_zero, (int, float)) else 0
         lower = lower if isinstance(lower, (int, float)) else None
         upper = upper if isinstance(upper, (int, float)) else None
         param_lower = lower
         param_upper = upper
         param_top = top if isinstance(top, int) else 0
         _original_size = categories.size
-        for item in nulls_list:
-            categories = categories.replace(item, np.nan)
+        categories = categories.where(~categories.isin(nulls_list))
         categories = categories.dropna()
         nulls_percent = round(((_original_size - categories.size) / _original_size) * 100,
                               freq_precision) if _original_size > 0 else 0

@@ -48,27 +48,29 @@ class DiscoveryAnalysisTest(unittest.TestCase):
         self.assertEqual(['cat', 'gender'], list(result))
 
     def test_discovery_analytics_class(self):
-        tools = SyntheticBuilder.scratch_pad()
-        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
-        result = Discover.analyse_category(dataset)
+        tools = SyntheticBuilder.from_memory().tools
+        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694,)
+        result = Discover.analyse_category(dataset, top=4)
         analytics = DataAnalytics(analysis=result)
-        self.assertEqual(analytics.intent.selection, analytics.sample_map.index.to_list())
-        self.assertEqual(analytics.patterns.sample_distribution, analytics.sample_map.to_list())
+        self.assertEqual(['intent', 'params', 'patterns', 'stats'], analytics.section_names)
+        self.assertEqual(analytics.to_dict(), result)
+        self.assertEqual(analytics.sections[0], result.get('intent'))
+        self.assertTrue(analytics.is_section('patterns'))
 
     def test_analyse_category(self):
-        builer = SyntheticBuilder.from_memory()
-        tools = builer.tools
-        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694)
+        builder = SyntheticBuilder.from_memory()
+        tools = builder.tools
+        dataset = tools.get_category(list('ABCDE')+[np.nan], relative_freq=[1,3,2,7,4], size=694, seed=31)
         result = Discover.analyse_category(dataset)
         control = ['intent', 'patterns', 'stats', 'params']
         self.assertCountEqual(control, list(result.keys()))
-        control = ['dtype', 'categories', 'highest_unique', 'lowest_unique', 'category_count']
+        control = ['dtype', 'categories']
         self.assertCountEqual(control, list(result.get('intent').keys()))
         control = ['relative_freq', 'sample_distribution']
         self.assertCountEqual(control, list(result.get('patterns').keys()))
         control = ['nulls_percent', 'sample_size', 'excluded_percent']
         self.assertCountEqual(control, list(result.get('stats').keys()))
-        control = ['freq_precision']
+        control = ['freq_precision', 'highest_unique', 'lowest_unique', 'category_count']
         self.assertCountEqual(control, list(result.get('params').keys()))
 
     def test_analyse_category_limits(self):

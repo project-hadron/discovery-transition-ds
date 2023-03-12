@@ -212,7 +212,7 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', '?', '-', '*', '#']
+        nulls_list = nulls_list if isinstance(nulls_list, list) else ['',' ','NaN','nan','None','null','Null','NULL']
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = deepcopy(df)
