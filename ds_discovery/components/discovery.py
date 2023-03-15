@@ -10,7 +10,6 @@ from typing import Any, Tuple
 
 import numpy as np
 import pandas as pd
-from matplotlib.dates import num2date, date2num
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
@@ -1377,30 +1376,46 @@ class DataDiscovery(object):
         :param granularity: (optional) the granularity of the analysis across the range.
                 int passed - the number of sections to break the value range into
                 pd.Timedelta passed - a frequency time delta
-        :param lower: (optional) the lower limit of the number value. Takes min() if not set
-        :param upper: (optional) the upper limit of the number value. Takes max() if not set
+        :param lower: (optional) the lower limit of the date value. Takes min() if not set
+        :param upper: (optional) the upper limit of the date value. Takes max() if not set
         :param day_first: if the date provided has day first
         :param year_first: if the date provided has year first
         :param date_format: the format of the output dates, if None then pd.Timestamp
         :param freq_precision: (optional) The precision of the weighting values. by default set to 2.
         :return: a dictionary of results
         """
-        values = pd.to_datetime(values, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                                yearfirst=year_first)
-        lower = pd.to_datetime(lower, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                               yearfirst=year_first)
-        upper = pd.to_datetime(upper, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                               yearfirst=year_first)
+        values = pd.Series(pd.to_datetime(values, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                yearfirst=year_first))
+        dt_tz = values.dt.tz
+        if lower:
+            lower = pd.to_datetime(lower, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                   yearfirst=year_first)
+        if upper:
+            upper = pd.to_datetime(upper, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                   yearfirst=year_first)
         params_lower = lower if isinstance(lower, pd.Timestamp) else None
         params_upper = upper if isinstance(upper, pd.Timestamp) else None
-        values = date2num(values)
-        values = pd.Series(values)
-        lower = values.min() if not isinstance(lower, pd.Timestamp) else date2num(lower)
-        upper = values.max() if not isinstance(upper, pd.Timestamp) else date2num(upper)
+
+        # convert to number
+        def to_num(v):
+            v_native = v.dt.tz_convert(None) if v.dt.tz else v
+            return ((v_native - pd.Timestamp.now()) / pd.Timedelta(microseconds=1)).astype(int)
+
+        n_values = to_num(values)
+        n_lower = to_num(lower) if isinstance(lower, pd.Timestamp) else None
+        n_upper = to_num(upper) if isinstance(upper, pd.Timestamp) else None
         if isinstance(granularity, pd.Timedelta):
-            granularity = date2num(num2date(lower) + granularity) - lower
-        rtn_dict = DataDiscovery.analyse_number(values, granularity=granularity, lower=lower, upper=upper,
-                                                precision=10, freq_precision=freq_precision, detail_stats=False)
+            granularity = int(granularity.to_timedelta64().astype(int) / pd.Timedelta(microseconds=1))
+        rtn_dict = DataDiscovery.analyse_number(n_values, granularity=granularity, lower=n_lower, upper=n_upper,
+                                                freq_precision=freq_precision, detail_stats=False)
+
+        # convert to time
+        def to_time(n):
+            dt_value = pd.to_timedelta(n, unit='micro') + pd.Timestamp.now()
+            return dt_value.tz_localize(dt_tz)
+
+        # remove not relevant
+        _ = rtn_dict.get('stats').pop('std')
         # add the specific data
         rtn_dict.get('params')['day_first'] = False if not isinstance(day_first, bool) else day_first
         rtn_dict.get('params')['year_first'] = False if not isinstance(year_first, bool) else year_first
@@ -1411,16 +1426,16 @@ class DataDiscovery(object):
         if isinstance(day_first, bool):
             rtn_dict.get('params')['day_first'] = day_first
         # tidy back all the dates
-        rtn_dict.get('intent')['intervals'] = [(pd.Timestamp(num2date(p[0])),
-                                                pd.Timestamp(num2date(p[1])),
+        rtn_dict.get('intent')['intervals'] = [(to_time(p[0]),
+                                                to_time(p[1]),
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
         if params_lower:
             rtn_dict.get('params')['lower'] = params_lower
         if params_upper:
             rtn_dict.get('params')['upper'] = params_upper
-        rtn_dict.get('stats')['lowest'] = pd.Timestamp(num2date(rtn_dict.get('stats')['lowest']))
-        rtn_dict.get('stats')['highest'] = pd.Timestamp(num2date(rtn_dict.get('stats')['highest']))
-        rtn_dict.get('stats')['mean'] = pd.Timestamp(num2date(rtn_dict.get('stats')['mean']))
+        rtn_dict.get('stats')['lowest'] = to_time(rtn_dict.get('stats')['lowest'])
+        rtn_dict.get('stats')['highest'] = to_time(rtn_dict.get('stats')['highest'])
+        rtn_dict.get('stats')['mean'] = to_time(rtn_dict.get('stats')['mean'])
         if isinstance(date_format, str):
             rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
                                                     p[2]) for p in rtn_dict.get('intent')['intervals']]

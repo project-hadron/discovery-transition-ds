@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from aistac.components.aistac_commons import DataAnalytics
 from aistac.properties.property_manager import PropertyManager
+from pandas import Timestamp
+
 from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition
@@ -189,58 +191,56 @@ class DiscoveryAnalysisTest(unittest.TestCase):
         tools = SyntheticBuilder.scratch_pad()
         str_dates = tools.get_datetime('12/01/2016', '12/01/2018', date_format='%d-%m-%Y', size=10, seed=31)
         ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
+        ts_dates = pd.Series(ts_dates).dt.tz_localize('UTC')
         result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
-        control = {'intent': {'date_format': '%Y-%m-%d',
+        pprint(result)
+        control = {'intent': {'dtype': 'date',
+                              'intervals': [('2016-12-29', '2017-08-14', 'both'),
+                                            ('2017-08-14', '2018-03-31', 'right'),
+                                            ('2018-03-31', '2018-11-15', 'right')]},
+                   'params': {'date_format': '%Y-%m-%d',
                               'day_first': False,
-                              'dtype': 'date',
-                              'granularity': 3,
-                              'lowest': '2017-12-02',
-                              'selection': [('2017-12-02', '2018-03-13', 'both'),
-                                            ('2018-03-13', '2018-06-22', 'right'),
-                                            ('2018-06-22', '2018-10-01', 'right')],
-                              'highest': '2018-10-01',
+                              'detail_stats': False,
                               'freq_precision': 2,
+                              'granularity': 3,
                               'year_first': False},
-                   'patterns': {'sample_distribution': [1, 0, 3],
-                                'relative_freq': [25.0, 0.0, 75.0]},
-                   'stats': {'bootstrap_bci': (17572.5, 17797.75),
-                             'emp_outliers': [0, 0],
-                             'excluded_percent': 0.0,
-                             'irq_outliers': [1, 0],
-                             'kurtosis': 3.86,
-                             'mean': '2018-07-04',
-                             'nulls_percent': 60.0,
-                             'sample': 4,
-                             'skew': -1.96}}
+                   'patterns': {'relative_freq': [50.0, 10.0, 40.0],
+                                'sample_distribution': [5, 1, 4]},
+                   'stats': {'excluded_percent': 0.0,
+                             'excluded_sample': 0,
+                             'highest': '2018-11-15',
+                             'lowest': '2016-12-29',
+                             'mean': '2017-10-13',
+                             'nulls_percent': 0.0,
+                             'sample_size': 10}}
         self.assertEqual(control, result)
         result = Discover.analyse_date(ts_dates, granularity=3)
-        control = {'intent': {'day_first': False,
-                              'dtype': 'date',
-                              'granularity': 3,
-                              'lowest': pd.Timestamp('2017-02-12 19:02:11.531780+0000', tz='UTC'),
-                              'selection': [(pd.Timestamp('2017-02-12 19:02:11.531780+0000', tz='UTC'),
-                                             pd.Timestamp('2017-09-08 17:43:30.973860+0000', tz='UTC'),
+        pprint(result)
+
+        control = {'intent': {'dtype': 'date',
+                              'intervals': [(Timestamp('2016-12-29 22:48:32.859016+0000', tz='UTC'),
+                                             Timestamp('2017-08-15 10:38:12.809098+0000', tz='UTC'),
                                              'both'),
-                                            (pd.Timestamp('2017-09-08 17:43:30.973860+0000', tz='UTC'),
-                                             pd.Timestamp('2018-04-04 16:24:50.415940+0000', tz='UTC'),
+                                            (Timestamp('2017-08-15 10:38:12.809145+0000', tz='UTC'),
+                                             Timestamp('2018-03-31 22:27:52.759190031+0000', tz='UTC'),
                                              'right'),
-                                            (pd.Timestamp('2018-04-04 16:24:50.415940+0000', tz='UTC'),
-                                             pd.Timestamp('2018-10-29 15:06:09.858020+0000', tz='UTC'),
-                                             'right')],
-                              'highest': pd.Timestamp('2018-10-29 15:06:09.858020+0000', tz='UTC'),
+                                            (Timestamp('2018-03-31 22:27:52.759230031+0000', tz='UTC'),
+                                             Timestamp('2018-11-15 10:17:32.709271984+0000', tz='UTC'),
+                                             'right')]},
+                   'params': {'day_first': False,
+                              'detail_stats': False,
                               'freq_precision': 2,
+                              'granularity': 3,
                               'year_first': False},
-                   'patterns': {'sample_distribution': [2, 3, 5],
-                                'relative_freq': [20.0, 30.0, 50.0]},
-                   'stats': {'bootstrap_bci': (17493.5054775573, 17724.4628926684),
-                             'emp_outliers': [0, 0],
-                             'excluded_percent': 0.0,
-                             'irq_outliers': [1, 0], 'kurtosis': 0.64,
-                             'mean': pd.Timestamp('2018-03-22 17:31:12+0000', tz='UTC'),
+                   'patterns': {'relative_freq': [50.0, 10.0, 40.0],
+                                'sample_distribution': [5, 1, 4]},
+                   'stats': {'excluded_percent': 0.0,
+                             'excluded_sample': 0,
+                             'highest': Timestamp('2018-11-15 10:17:32.709335+0000', tz='UTC'),
+                             'lowest': Timestamp('2016-12-29 22:48:32.859298+0000', tz='UTC'),
+                             'mean': Timestamp('2017-10-13 22:47:58.383122094+0000', tz='UTC'),
                              'nulls_percent': 0.0,
-                             'excluded_percent': 0.0,
-                             'sample': 10,
-                             'skew': -0.94}}
+                             'sample_size': 10}}
         self.assertEqual(control, result)
 
     def test_analyse_associate_single(self):
