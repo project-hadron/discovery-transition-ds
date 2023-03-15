@@ -122,6 +122,25 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_encode_count(df, headers=['B'])
         self.assertCountEqual([685, 137, 102, 74, 2], result['B'].value_counts().to_list())
 
+    def test_model_difference_num(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": [1, 2, 3, 4, 3, 3, 1], 'C': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 1, 4, 3, 2, 1]})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        result = tools.model_difference(df, 'target')
+        self.assertEqual([0,7,2,9], result.index.tolist())
+
+    def test_model_difference_str(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": list("ABCFCBA"), 'C': list("BCDECFB")})
+        target = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": list("ABCDCBA"), 'C': list("BCDECFP")})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        result = tools.model_difference(df, 'target')
+        self.assertEqual([10,3,6,13], result.index.tolist())
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

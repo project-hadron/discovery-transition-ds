@@ -182,6 +182,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         if not isinstance(headers, list) or len(headers) < 2:
             raise ValueError("The headers value must be a list of at least two header str")
+        agg_choice = ['sum', 'prod', 'count', 'min', 'max', 'mean']
         if agg not in ['sum', 'prod', 'count', 'min', 'max', 'mean', 'list']:
             raise ValueError("The only allowed func values are 'sum', 'prod', 'count', 'min', 'max', 'mean', 'list'")
         # Code block for intent

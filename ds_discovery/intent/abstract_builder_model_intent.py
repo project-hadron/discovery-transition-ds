@@ -217,6 +217,46 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 Commons.fillna(df_rtn[column])
         return df_rtn
 
+    def _model_difference(self, canonical: Any, other: Any, seed: int=None) -> pd.DataFrame:
+        """Compares two Datasets and returns the non-duplicate pairs
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param other: a direct or generated pd.DataFrame. to concatenate
+        :param seed: this is a placeholder, here for compatibility across methods
+
+        The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
+        """
+        canonical = self._get_canonical(canonical)
+        other = self._get_canonical(other, size=canonical.shape[0])
+        _ = self._seed() if seed is None else seed
+        # concat
+        df = pd.concat([canonical, other])
+        df = df.reset_index(drop=True)
+        # group by
+        df_gpby = df.groupby(list(df.columns))
+        # get index of unique records
+        idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
+        return df.reindex(idx)
+
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
                       re_ignore_case: bool=None, shuffle: bool=None, seed: int=None) -> pd.DataFrame:
