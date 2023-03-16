@@ -217,11 +217,12 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 Commons.fillna(df_rtn[column])
         return df_rtn
 
-    def _model_difference(self, canonical: Any, other: Any, seed: int=None) -> pd.DataFrame:
+    def _model_difference(self, canonical: Any, other: Any, on: str, seed: int=None) -> pd.DataFrame:
         """Compares two Datasets and returns the non-duplicate pairs
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
+        :param on: The header name of the key that joins the 2 files
         :param seed: this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -248,6 +249,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _ = self._seed() if seed is None else seed
+        canonical.sort_values(on, inplace=True)
+        other.sort_values(on, inplace=True)
         # concat
         df = pd.concat([canonical, other])
         df = df.reset_index(drop=True)

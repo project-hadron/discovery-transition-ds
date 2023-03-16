@@ -410,13 +410,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_merge(seed=seed, **params)
 
-    def model_difference(self, canonical: Any, other: Any, seed: int=None, save_intent: bool=None,
+    def model_difference(self, canonical: Any, other: Any, on: str, seed: int=None, save_intent: bool=None,
                      column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                      remove_duplicates: bool=None) -> pd.DataFrame:
         """ Compares two Datasets and returns the non-duplicate pairs
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
+        :param on: The header name of the key that joins the 2 files
         :param seed: this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
