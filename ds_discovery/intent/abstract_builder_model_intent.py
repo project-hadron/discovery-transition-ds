@@ -249,6 +249,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _ = self._seed() if seed is None else seed
+        on = self._extract_value(on)
         canonical.sort_values(on, inplace=True)
         other.sort_values(on, inplace=True)
         # concat

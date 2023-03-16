@@ -355,19 +355,19 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                          f"str, list or dict expected, {type(data)} passed")
 
     @staticmethod
-    def _extract_value(number: [str, int, float]):
-        if isinstance(number, str):
-            if number.startswith('${') and number.endswith('}'):
-                number = ConnectorContract.parse_environ(number)
-                if number.isnumeric():
-                    number = int(number)
-                elif number.replace('.', '', 1).isnumeric():
-                    number = float(number)
+    def _extract_value(value: [str, int, float]):
+        if isinstance(value, str):
+            if value.startswith('${') and value.endswith('}'):
+                value = ConnectorContract.parse_environ(value)
+                if value.isnumeric():
+                    return int(value)
+                elif value.replace('.', '', 1).isnumeric():
+                    return float(value)
                 else:
-                    raise ValueError(f"The environment variable '{number}' is not set or not numeric.")
+                    return str(value)
             else:
-                raise ValueError("Numeric values can not be a string unless an environment variable wrapped in '${}'.")
-        return number
+                return str(value)
+        return value
 
     @staticmethod
     def _seed(seed: int=None, increment: bool=False):
