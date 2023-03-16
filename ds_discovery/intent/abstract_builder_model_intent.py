@@ -217,13 +217,14 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 Commons.fillna(df_rtn[column])
         return df_rtn
 
-    def _model_difference(self, canonical: Any, other: Any, on: str, seed: int=None) -> pd.DataFrame:
+    def _model_difference(self, canonical: Any, other: Any, on: str, reset_index: bool=None, seed: int=None):
         """Compares two Datasets and returns the non-duplicate pairs
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
         :param on: The header name of the key that joins the 2 files
-        :param seed: this is a placeholder, here for compatibility across methods
+        :param reset_index: (optional) resets the index
+        :param seed: (optional) this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
@@ -248,7 +249,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         """
         canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
-        _ = self._seed() if seed is None else seed
+        _ = seed if isinstance(seed, int) else self._seed()
+        reset_index = reset_index if isinstance(reset_index, bool) else True
         on = self._extract_value(on)
         canonical.sort_values(on, inplace=True)
         other.sort_values(on, inplace=True)
@@ -259,6 +261,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         df_gpby = df.groupby(list(df.columns))
         # get index of unique records
         idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
+        if reset_index:
+            return df.reindex(idx).reset_index(drop=True)
         return df.reindex(idx)
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,

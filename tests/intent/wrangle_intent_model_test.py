@@ -129,7 +129,8 @@ class WrangleIntentModelTest(unittest.TestCase):
         target = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 1, 4, 3, 2, 1]})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target')
+        result = tools.model_difference(df, 'target', on='A', reset_index=False)
+        self.assertEqual((4,3), result.shape)
         self.assertEqual([0,7,2,9], result.index.tolist())
 
     def test_model_difference_str(self):
@@ -139,7 +140,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         target = pd.DataFrame(data={"A": [1, 2, 3, 4, 5, 6, 7], "B": list("ABCDCBA"), 'C': list("BCDECFP")})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on='A')
+        result = tools.model_difference(df, 'target', on='A', reset_index=False)
         self.assertEqual([10,3,6,13], result.index.tolist())
 
     def test_model_difference_order(self):
@@ -149,7 +150,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         target = pd.DataFrame(data={"A": [6, 2, 3, 4, 5, 1, 7], "B": list("BBCDCAA"), 'C': list("FCDECBP")})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on='A')
+        result = tools.model_difference(df, 'target', on='A', reset_index=False)
         self.assertEqual([10,3,6,13], result.index.tolist())
 
     def test_raise(self):
