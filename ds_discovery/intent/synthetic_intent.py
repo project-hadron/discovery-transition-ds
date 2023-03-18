@@ -430,7 +430,10 @@ class SyntheticIntentModel(WrangleIntentModel):
     def get_dist_choice(self, number: [int, str, float], size: int=None, quantity: float=None, seed: int=None,
                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> list:
-        """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given.
+        """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given. The
+        ``number`` parameter can be a direct reference to the canonical column header or to an environment variable.
+        If the environment variable is used ``number`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
+        <<YOUR_ENVIRON>> is the environment variable name
 
        :param number: The number of true (1) values to randomly chose from the canonical. see below
        :param size: the size of the sample. if a tuple of intervals, size must match the tuple

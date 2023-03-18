@@ -413,11 +413,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_on_key: bool=None,
                          seed: int=None, save_intent: bool=None,column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ Compares two Datasets and returns the non-duplicate pairs
+        """ returns the difference, by distance, between two canonicals, joined on a common and unique key. The
+        ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
+        If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
+        <<YOUR_ENVIRON>> is the environment variable name
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
-        :param on_key: The header name of the key that uniquely joins the canonical to others
+        :param on_key: The name of the key that uniquely joins the canonical to others
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
         :param seed: (optional) this is a placeholder, here for compatibility across methods
