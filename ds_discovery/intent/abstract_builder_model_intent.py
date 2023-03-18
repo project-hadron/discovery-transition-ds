@@ -1,4 +1,6 @@
 import ast
+from difflib import ndiff
+
 import numpy as np
 import pandas as pd
 from abc import abstractmethod
@@ -217,13 +219,15 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 Commons.fillna(df_rtn[column])
         return df_rtn
 
-    def _model_difference(self, canonical: Any, other: Any, on: str, reset_index: bool=None, seed: int=None):
+    def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_on_key: bool=None,
+                          seed: int=None):
         """Compares two Datasets and returns the non-duplicate pairs
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
-        :param on: The header name of the key that joins the 2 files
-        :param reset_index: (optional) resets the index
+        :param on_key: The header name of the key that uniquely joins the canonical to others
+        :param drop_no_diff: (optional) drops columns with no difference
+        :param index_on_key: (optional) set the index to be the key
         :param seed: (optional) this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -250,20 +254,54 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _ = seed if isinstance(seed, int) else self._seed()
-        reset_index = reset_index if isinstance(reset_index, bool) else True
-        on = self._extract_value(on)
-        canonical.sort_values(on, inplace=True)
-        other.sort_values(on, inplace=True)
+        drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
+        index_on_key = index_on_key if isinstance(index_on_key, bool) else False
+        on_key = self._extract_value(on_key)
+        canonical.sort_values(on_key, inplace=True)
+        other.sort_values(on_key, inplace=True)
         # concat
         df = pd.concat([canonical, other])
         df = df.reset_index(drop=True)
         # group by
-        df_gpby = df.groupby(list(df.columns))
+        grouped = df.groupby(list(df.columns))
         # get index of unique records
-        idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
-        if reset_index:
-            return df.reindex(idx).reset_index(drop=True)
-        return df.reindex(idx)
+        idx = [x[0] for x in grouped.groups.values() if len(x) == 1]
+        df = df.reindex(idx)
+        # ensure union of the ket
+
+        def levenshtein_distance(str1, str2, ):
+            counter = {"+": 0, "-": 0}
+            distance = 0
+            for edit_code, *_ in ndiff(str1, str2):
+                if edit_code == " ":
+                    distance += max(counter.values())
+                    counter = {"+": 0, "-": 0}
+                else:
+                    counter[edit_code] += 1
+            distance += max(counter.values())
+            return distance
+
+        # get the distance between differences
+        diff = pd.DataFrame()
+        for idx in range(0, df.shape[0], 2):
+            line = pd.Series(data=0, index=df.iloc[idx].index, dtype='int')
+            try:
+                for index, value in df.iloc[idx].items():
+                    if index == on_key:
+                        line.at[index] = value
+                    else:
+                        line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
+            except IndexError:
+                continue
+            diff = pd.concat([diff, line], axis=1)
+        diff = diff.T.reset_index(drop=True)
+        # set the index to the key
+        if index_on_key:
+            diff = diff.set_index(on_key)
+        # drop zeros
+        if drop_no_diff:
+            return diff.loc[:, (diff != 0).any(axis=0)]
+        return diff
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
                       drop: bool=None, dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
