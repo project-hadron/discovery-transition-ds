@@ -24,7 +24,6 @@ from sklearn.model_selection import train_test_split
 
 from aistac.handlers.abstract_handlers import HandlerFactory
 from sklearn.preprocessing import StandardScaler
-
 from ds_discovery.components.commons import Commons
 
 __author__ = 'Darryl Oatridge'
@@ -1384,6 +1383,7 @@ class DataDiscovery(object):
         :param freq_precision: (optional) The precision of the weighting values. by default set to 2.
         :return: a dictionary of results
         """
+
         values = pd.Series(pd.to_datetime(values, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                 yearfirst=year_first))
         dt_tz = values.dt.tz
@@ -1395,24 +1395,13 @@ class DataDiscovery(object):
                                    yearfirst=year_first)
         params_lower = lower if isinstance(lower, pd.Timestamp) else None
         params_upper = upper if isinstance(upper, pd.Timestamp) else None
-
-        # convert to number
-        def to_num(v):
-            v_native = v.dt.tz_convert(None) if v.dt.tz else v
-            return ((v_native - pd.Timestamp.now()) / pd.Timedelta(microseconds=1)).astype(int)
-
-        n_values = to_num(values)
-        n_lower = to_num(lower) if isinstance(lower, pd.Timestamp) else None
-        n_upper = to_num(upper) if isinstance(upper, pd.Timestamp) else None
+        n_values = Commons.date2value(values)
+        n_lower = Commons.date2value(lower) if isinstance(lower, pd.Timestamp) else None
+        n_upper = Commons.date2value(upper) if isinstance(upper, pd.Timestamp) else None
         if isinstance(granularity, pd.Timedelta):
             granularity = int(granularity.to_timedelta64().astype(int) / pd.Timedelta(microseconds=1))
         rtn_dict = DataDiscovery.analyse_number(n_values, granularity=granularity, lower=n_lower, upper=n_upper,
                                                 freq_precision=freq_precision, detail_stats=False)
-
-        # convert to time
-        def to_time(n):
-            dt_value = pd.to_timedelta(n, unit='micro') + pd.Timestamp.now()
-            return dt_value.tz_localize(dt_tz)
 
         # remove not relevant
         _ = rtn_dict.get('stats').pop('std')
@@ -1426,26 +1415,19 @@ class DataDiscovery(object):
         if isinstance(day_first, bool):
             rtn_dict.get('params')['day_first'] = day_first
         # tidy back all the dates
-        rtn_dict.get('intent')['intervals'] = [(to_time(p[0]),
-                                                to_time(p[1]),
+        rtn_dict.get('intent')['intervals'] = [(Commons.value2date(p[0], date_format=date_format, dt_tz=dt_tz)[0],
+                                                Commons.value2date(p[1], date_format=date_format, dt_tz=dt_tz)[0],
                                                 p[2]) for p in rtn_dict.get('intent')['intervals']]
         if params_lower:
             rtn_dict.get('params')['lower'] = params_lower
         if params_upper:
             rtn_dict.get('params')['upper'] = params_upper
-        rtn_dict.get('stats')['lowest'] = to_time(rtn_dict.get('stats')['lowest'])
-        rtn_dict.get('stats')['highest'] = to_time(rtn_dict.get('stats')['highest'])
-        rtn_dict.get('stats')['mean'] = to_time(rtn_dict.get('stats')['mean'])
-        if isinstance(date_format, str):
-            rtn_dict.get('intent')['intervals'] = [(p[0].strftime(date_format), p[1].strftime(date_format),
-                                                    p[2]) for p in rtn_dict.get('intent')['intervals']]
-            if params_lower:
-                rtn_dict.get('params')['lower'] = rtn_dict.get('params')['lower'].strftime(date_format)
-            if params_upper:
-                rtn_dict.get('params')['upper'] = rtn_dict.get('params')['upper'].strftime(date_format)
-            rtn_dict.get('stats')['lowest'] = rtn_dict.get('stats')['lowest'].strftime(date_format)
-            rtn_dict.get('stats')['highest'] = rtn_dict.get('stats')['highest'].strftime(date_format)
-            rtn_dict.get('stats')['mean'] = rtn_dict.get('stats')['mean'].strftime(date_format)
+        rtn_dict.get('stats')['lowest'] = Commons.value2date(rtn_dict.get('stats')['lowest'],
+                                                             date_format=date_format, dt_tz=dt_tz)[0]
+        rtn_dict.get('stats')['highest'] = Commons.value2date(rtn_dict.get('stats')['highest'],
+                                                              date_format=date_format, dt_tz=dt_tz)[0]
+        rtn_dict.get('stats')['mean'] = Commons.value2date(rtn_dict.get('stats')['mean'],
+                                                           date_format=date_format, dt_tz=dt_tz)[0]
         rtn_dict.get('intent')['dtype'] = 'date'
         # remove things that don't make sense to dates
         rtn_dict.get('params').pop('precision', None)
@@ -1661,6 +1643,89 @@ class DataDiscovery(object):
         return df[df['name'].str.contains(find_name)]
 
     @staticmethod
+    def data_quality(df):
+        """ Analyses a dataset, passed as a DataFrame and returns a quality summary
+
+        :param df: The dataset, as a DataFrame.
+        :return: pd.DataFrame
+        """
+        df = df.copy()
+        # correlate
+        threshold = 0.98
+        df_num = Commons.filter_columns(df, dtype=['number'], exclude=False)
+        col_corr = set()
+        corr_matrix = df_num.dropna().corr()
+        for i in range(len(corr_matrix.columns)):
+            for j in range(i):
+                if abs(corr_matrix.iloc[i, j]) > threshold:  # we are interested in absolute coeff value
+                    col_corr.add(corr_matrix.columns[i])  # getting the name of column
+        _correlated = col_corr
+        # transition data
+        _null_headers = []
+        _date_headers = []
+
+        _bool_headers = []
+        _cat_headers = []
+        _num_headers = []
+        for c in Commons.filter_headers(df, dtype=object):
+            try:
+                if df[c].isnull().all():
+                    _null_headers.append(c)
+                elif all(Commons.valid_date(x) for x in df[c].dropna()):
+                    _date_headers.append(c)
+                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
+                    _bool_headers.append(c)
+                elif df[c].nunique() < 100 and round(df[c].isnull().sum() / df.shape[0], 3) < 0.8:
+                    _cat_headers.append(c)
+                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+                    _num_headers.append(c)
+            except TypeError:
+                pass
+            if len(_bool_headers) > 0:
+                if df[c].dtype.name != 'bool':
+                    df[c] = df[c].map({1: True, 0: False})
+                    df[c] = df[c].fillna(False)
+                    df[c] = df[c].astype('bool')
+            if len(_date_headers) > 0:
+                df[c] = pd.to_datetime(df[c], errors='coerce')
+            if len(_cat_headers) > 0:
+                if not all(df[c].astype(str).str.isnumeric()):
+                    df[c] = df[c].astype(str).str.strip()
+                df[c] = df[c].astype('category')
+            if len(_num_headers) > 0:
+                df[c] = pd.to_numeric(df[c], errors='raise')
+        # dictionary
+        _dictionary = DataDiscovery.data_dictionary(df=df, stylise=False, inc_next_dom=False)
+        _total_fields = _dictionary.shape[0]
+        _null_total = _dictionary['%_Null'].sum()
+        _dom_fields = _dictionary['%_Dom'].sum()
+        _null_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
+        _dom_columns = _dictionary['%_Dom'].where(_dictionary['%_Dom'] > 0.98).dropna()
+        _usable_fields = set(_null_columns)
+        _usable_fields.update(_dom_columns)
+        _numeric_fields = len(Commons.filter_headers(df, dtype='number'))
+        _category_fields = len(Commons.filter_headers(df, dtype='category'))
+        _date_fields = len(Commons.filter_headers(df, dtype='datetime'))
+        _date_tz_fields = len(Commons.filter_headers(df, dtype='datetimetz'))
+        _bool_fields = len(Commons.filter_headers(df, dtype='bool'))
+        _other_fields = len(Commons.filter_headers(df, dtype=['category', 'datetime', 'bool',
+                                                                     'number'], exclude=True))
+        _null_avg = _null_total / df.shape[1]
+        _dom_avg = _dom_fields / df.shape[1]
+        _quality_avg = int(round(100 - (((_null_avg + _dom_avg) / 2) * 100), 0))
+        _usable = int(round(100 - (len(_usable_fields) / df.columns.size) * 100, 2))
+        report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%"},
+                  'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
+                                 'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+                  'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
+                                'datetime': _date_fields, 'datetime_tz': _date_tz_fields, 'bool': _bool_fields,
+                                'others': _other_fields},
+                  'usability': {'mostly_null': len(_null_columns),
+                                'predominance': len(_dom_columns),
+                                'correlated': len(_correlated),}}
+        return report
+
+    @staticmethod
     def data_dictionary(df, stylise: bool=None, inc_next_dom: bool=None, report_header: str=None,
                         condition: str=None):
         """ returns a DataFrame of a data dictionary showing 'Attribute', 'Type', '% Nulls', 'Count',
@@ -1684,7 +1749,7 @@ class DataDiscovery(object):
         pd.set_option('max_colwidth', 200)
         df_len = len(df)
         file = []
-        labels = [f'Attributes ({len(df.columns)})', 'dType', '%_Null', '%_Dom', '%_Nxt', 'Count', 'Unique',
+        labels = [f'Attributes_({len(df.columns)})', 'dType', '%_Null', '%_Dom', '%_Nxt', 'Count', 'Unique',
                   'Observations']
         for c in df.columns.sort_values().values:
             line = [c,

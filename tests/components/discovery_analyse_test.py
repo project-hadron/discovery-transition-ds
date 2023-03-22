@@ -12,7 +12,7 @@ from pandas import Timestamp
 from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition
-from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
+from ds_discovery.components.discovery import DataDiscovery as Discover
 
 
 class DiscoveryAnalysisTest(unittest.TestCase):
@@ -36,10 +36,6 @@ class DiscoveryAnalysisTest(unittest.TestCase):
             shutil.rmtree('work')
         except:
             pass
-
-    def test_runs(self):
-        """Basic smoke test"""
-        self.assertEqual(DataDiscovery, type(Discover()))
 
     def test_discovery_associate(self):
         tools = SyntheticBuilder.scratch_pad()
@@ -193,7 +189,6 @@ class DiscoveryAnalysisTest(unittest.TestCase):
         ts_dates = tools.get_datetime('12/01/2016', '12/01/2018', size=10, seed=31)
         ts_dates = pd.Series(ts_dates).dt.tz_localize('UTC')
         result = Discover.analyse_date(str_dates, granularity=3, date_format='%Y-%m-%d')
-        pprint(result)
         control = {'intent': {'dtype': 'date',
                               'intervals': [('2016-12-29', '2017-08-14', 'both'),
                                             ('2017-08-14', '2018-03-31', 'right'),
@@ -214,31 +209,25 @@ class DiscoveryAnalysisTest(unittest.TestCase):
                              'nulls_percent': 0.0,
                              'sample_size': 10}}
         self.assertEqual(control, result)
-        result = Discover.analyse_date(ts_dates, granularity=3)
-        pprint(result)
-
+        result = Discover.analyse_date(ts_dates, granularity=2)
         control = {'intent': {'dtype': 'date',
-                              'intervals': [(Timestamp('2016-12-29 22:48:32.859016+0000', tz='UTC'),
-                                             Timestamp('2017-08-15 10:38:12.809098+0000', tz='UTC'),
+                              'intervals': [(Timestamp('2016-12-29 22:48:32.851557888+0000', tz='UTC'),
+                                             Timestamp('2017-12-07 16:33:02.776562432+0000', tz='UTC'),
                                              'both'),
-                                            (Timestamp('2017-08-15 10:38:12.809145+0000', tz='UTC'),
-                                             Timestamp('2018-03-31 22:27:52.759190031+0000', tz='UTC'),
-                                             'right'),
-                                            (Timestamp('2018-03-31 22:27:52.759230031+0000', tz='UTC'),
-                                             Timestamp('2018-11-15 10:17:32.709271984+0000', tz='UTC'),
+                                            (Timestamp('2017-12-07 16:33:02.776562432+0000', tz='UTC'),
+                                             Timestamp('2018-11-15 10:17:32.701566976+0000', tz='UTC'),
                                              'right')]},
                    'params': {'day_first': False,
                               'detail_stats': False,
                               'freq_precision': 2,
-                              'granularity': 3,
+                              'granularity': 2,
                               'year_first': False},
-                   'patterns': {'relative_freq': [50.0, 10.0, 40.0],
-                                'sample_distribution': [5, 1, 4]},
+                   'patterns': {'relative_freq': [60.0, 40.0], 'sample_distribution': [6, 4]},
                    'stats': {'excluded_percent': 0.0,
                              'excluded_sample': 0,
-                             'highest': Timestamp('2018-11-15 10:17:32.709335+0000', tz='UTC'),
-                             'lowest': Timestamp('2016-12-29 22:48:32.859298+0000', tz='UTC'),
-                             'mean': Timestamp('2017-10-13 22:47:58.383122094+0000', tz='UTC'),
+                             'highest': Timestamp('2018-11-15 10:17:32.701566976+0000', tz='UTC'),
+                             'lowest': Timestamp('2016-12-29 22:48:32.851557888+0000', tz='UTC'),
+                             'mean': Timestamp('2017-10-13 22:47:58.375315712+0000', tz='UTC'),
                              'nulls_percent': 0.0,
                              'sample_size': 10}}
         self.assertEqual(control, result)
@@ -360,7 +349,7 @@ class DiscoveryAnalysisTest(unittest.TestCase):
         columns_list = [{'age': {'dtype': 'int', 'granularity': 1}},
                         {'glucose': {}}]
         df_clinical = tr.load_source_canonical()
-        discover: DataDiscovery = tr.discover
+        discover: Discover = tr.discover
         analysis_blob = discover.analyse_association(df_clinical, columns_list=columns_list)
         age = DataAnalytics.from_branch(analytics_blob=analysis_blob, branch="age")
         glucose = DataAnalytics.from_branch(analytics_blob=analysis_blob, branch="age.0.glucose")

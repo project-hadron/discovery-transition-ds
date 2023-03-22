@@ -1,6 +1,7 @@
 import os
 import shutil
 import unittest
+from pprint import pprint
 
 import numpy as np
 import pandas as pd
@@ -156,6 +157,14 @@ class DiscoveryTest(unittest.TestCase):
         df['col2'] = [1,2,3,4,5,6,7]
         self.assertNotIn('%_Nxt', builder.canonical_report(df, stylise=False).columns)
         self.assertIn('%_Nxt', builder.canonical_report(df, stylise=False, inc_next_dom=True).columns)
+
+    def test_data_quality(self):
+        builder = SyntheticBuilder.from_memory()
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, None, 4, 3, 2, 1]})
+        result = DataDiscovery.data_quality(df)
+        self.assertEqual(['score', 'data_shape', 'data_type', 'usability'], list(result.keys()))
+
+
 
 if __name__ == '__main__':
     unittest.main()

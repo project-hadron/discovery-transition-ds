@@ -4,8 +4,9 @@ import pandas as pd
 from typing import Any
 
 from aistac.components.aistac_commons import DataAnalytics
-from matplotlib import dates as mdates
 from scipy import stats
+
+from ds_discovery.components.commons import Commons
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
 
 __author__ = 'Darryl Oatridge'
@@ -169,36 +170,36 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         if start is None or until is None:
             raise ValueError("The start or until parameters cannot be of NoneType")
         # Code block for intent
-        as_num = False if not isinstance(as_num, bool) else as_num
-        ignore_time = False if not isinstance(ignore_time, bool) else ignore_time
+        as_num = as_num if isinstance(as_num, bool) else False
+        ignore_time = ignore_time if isinstance(ignore_time, bool) else False
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
         if isinstance(start, int):
             start = (pd.Timestamp.now() + pd.Timedelta(days=start))
+        start = pd.Series(pd.to_datetime(start, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                         yearfirst=year_first))
         if isinstance(until, int):
             until = (pd.Timestamp.now() + pd.Timedelta(days=until))
-        if isinstance(until, dict):
+        elif isinstance(until, dict):
             until = (start + pd.Timedelta(**until))
-        if start == until:
-            rtn_list = [self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]] * size
+        until = pd.Series(pd.to_datetime(until, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                                         yearfirst=year_first))
+        if start.equals(until):
+            rtn_list = pd.Series([start] * size)
         else:
-            _dt_start = self._convert_date2value(start, day_first=day_first, year_first=year_first)[0]
-            _dt_until = self._convert_date2value(until, day_first=day_first, year_first=year_first)[0]
+            _dt_start = Commons.date2value(start, day_first=day_first, year_first=year_first)[0]
+            _dt_until = Commons.date2value(until, day_first=day_first, year_first=year_first)[0]
             precision = 15
-            if ignore_time:
-                _dt_start = int(_dt_start)
-                _dt_until = int(_dt_until)
-                precision = 0
-    
             rtn_list = self._get_number(from_value=_dt_start, to_value=_dt_until, relative_freq=relative_freq,
                                         at_most=at_most, ordered=ordered, precision=precision, size=size, seed=seed)
-        if not as_num:
-            rtn_list = mdates.num2date(rtn_list)
-            if isinstance(date_format, str):
-                rtn_list = pd.Series(rtn_list).dt.strftime(date_format).to_list()
-            else:
-                rtn_list = pd.Series(rtn_list).dt.tz_convert(None).to_list()
-        return rtn_list
+            rtn_list = pd.Series(Commons.value2date(rtn_list))
+        if ignore_time:
+            rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
+        if  as_num:
+            return Commons.date2value(rtn_list)
+        if isinstance(date_format, str):
+            rtn_list = rtn_list.dt.strftime(date_format)
+        return rtn_list.to_list()
     
     
     def _get_intervals(self, intervals: list, relative_freq: list=None, precision: int=None, size: int=None,

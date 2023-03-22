@@ -58,6 +58,21 @@ class CommonsTest(unittest.TestCase):
         df['cat'] = tools.get_category(list('ABCDEF'), size=sample_size)
         df['object'] = tools.get_string_pattern("cccccccc", size=sample_size)
 
+    def test_date2value(self):
+        date = ['2023-04-21', '2023-02-09', '2023-02-11']
+        d_num = Commons.date2value(date)
+        self.assertEqual([1682035200000000, 1675900800000000, 1676073600000000], d_num)
+        result = Commons.value2date(d_num)
+        self.assertEqual(pd.to_datetime(date).to_list(), result)
+        date_tz = (pd.to_datetime(date, utc=True).map(lambda x: x.tz_convert('US/Central'))).to_list()
+        result = Commons.value2date(d_num, dt_tz='US/Central')
+        self.assertEqual(date_tz, result)
+        result = Commons.value2date(d_num, date_format='%Y-%m-%d')
+        self.assertEqual(date, result)
+        result = Commons.value2date(d_num, date_format='%Y-%m-%d %H:%M:%S %Z', dt_tz='US/Central')
+        self.assertEqual(['2023-04-20 19:00:00 CDT', '2023-02-08 18:00:00 CST', '2023-02-10 18:00:00 CST'], result)
+
+
 
 if __name__ == '__main__':
     unittest.main()

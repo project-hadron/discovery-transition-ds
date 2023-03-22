@@ -219,8 +219,49 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 Commons.fillna(df_rtn[column])
         return df_rtn
 
-    def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_on_key: bool=None,
-                          seed: int=None):
+    def _model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
+                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                         re_ignore_case: bool=None, seed: int=None):
+        """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
+        overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
+        identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
+        profiling available 'canonical', 'schema' or 'quality'
+
+        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
+        :param headers: (optional) a filter of headers from the 'other' dataset
+        :param drop: (optional) to drop or not drop the headers if specified
+        :param dtype: (optional) a filter on data type for the 'other' dataset. int, float, bool, object
+        :param exclude: (optional) to exclude or include the data types if specified
+        :param regex: (optional) a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt'
+        :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
+        :param seed:(optional) this is a placeholder, here for compatibility across methods
+        :return: pd.DataFrame
+        """
+        canonical = self._get_canonical(canonical)
+        columns = Commons.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
+                                        regex=regex, re_ignore_case=re_ignore_case)
+        _seed = self._seed() if seed is None else seed
+        if profiling == 'canonical':
+            return DataDiscovery.data_dictionary(df=canonical, stylise=False, inc_next_dom=True)
+        if profiling == 'schema':
+            blob = DataDiscovery.analyse_association(df=canonical, columns_list=columns)
+            df = pd.DataFrame(columns=['root', 'section', 'element', 'value'])
+            root_list = DataAnalytics.get_tree_roots(analytics_blob=blob)
+            for root_items in root_list:
+                data_analysis = DataAnalytics.from_root(analytics_blob=blob, root=root_items)
+                for section in data_analysis.section_names:
+                    for element, value in data_analysis.get(section).items():
+                        to_append = [root_items, section, element, value]
+                        a_series = pd.Series(to_append, index=df.columns)
+                        df = pd.concat([df, a_series.to_frame().transpose()], ignore_index=True)
+            return df
+        if profiling == 'quality':
+            return DataDiscovery.data_quality(df=canonical)
+        raise ValueError(f"The report name '{profiling}' is not recognised. Use 'canonical', 'schema' or 'quality'")
+
+    def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
+                          index_on_key: bool=None, seed: int=None):
         """returns the difference, by distance, between two canonicals, joined on a common and unique key. The
         ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where

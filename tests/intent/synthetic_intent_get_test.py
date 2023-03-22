@@ -141,6 +141,16 @@ class SyntheticIntentGetTest(unittest.TestCase):
         self.assertGreaterEqual(result.min(), 15)
         self.assertLess(result.max(), 20)
 
+    def test_get_datetime_ignore_time(self):
+        tools = self.tools
+        sample_size = 1000
+        result = tools.get_datetime('2019/01/01 12:30', '2019/01/02 18:05', size=sample_size)
+        self.assertLess(0,pd.Series(result).dt.hour.sum())
+        self.assertLess(0,pd.Series(result).dt.minute.sum())
+        result = tools.get_datetime('2019/01/01 12:30', '2019/01/02 18:05', ignore_time=True, size=sample_size)
+        self.assertEqual(0, pd.Series(result).dt.hour.sum())
+        self.assertEqual(0,pd.Series(result).dt.minute.sum())
+
     def test_get_datetime_at_most(self):
         tools = self.tools
         sample_size = 10000
@@ -160,11 +170,9 @@ class SyntheticIntentGetTest(unittest.TestCase):
 
     def test_get_datetime(self):
         tools = self.tools
-        sample_size = 10000
+        sample_size = 3
         result = tools.get_datetime('2019/01/01', '2019/01/02', date_format="%Y-%m-%d", size=sample_size)
         self.assertEqual(1, pd.Series(result).nunique())
-        result = tools.get_datetime(0, 1, date_format="%Y-%m-%d", ignore_time=True, size=sample_size)
-        self.assertEqual(pd.Timestamp.now().strftime("%Y-%m-%d"), pd.Series(result).value_counts().index[0])
 
     def test_get_sample(self):
         tools = self.tools

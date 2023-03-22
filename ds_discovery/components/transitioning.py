@@ -403,12 +403,6 @@ class Transition(AbstractCommonComponent):
     def _correlated_columns(self, canonical: pd.DataFrame):
         """returns th percentage of useful colums"""
         threshold = 0.98
-        pad = self.scratch_pad()
-        canonical = pad.auto_to_category(canonical, unique_max=1000, inplace=False)
-        canonical = pad.to_category_type(canonical, dtype='category', as_num=True)
-        for c in canonical.columns:
-            if all(Commons.valid_date(x) for x in canonical[c].dropna()):
-                canonical = pad.to_date_type(canonical, dtype='datetime', as_num=True)
         canonical = Commons.filter_columns(canonical, dtype=['number'], exclude=False)
         for c in canonical.columns:
             canonical[c] = Commons.fillna(canonical[c])

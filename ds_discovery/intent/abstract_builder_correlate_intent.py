@@ -595,16 +595,18 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             rtn_list = rtn_list.astype(int)
         return rtn_list.to_list()
 
-    def _correlate_numbers(self, canonical: Any, header: str, standardize: bool=None, normalize: tuple=None,
-                           scalarize: bool=None, transform: str=None, precision: int=None, seed: int=None):
-        """ Provides a number of value transformations
+    def _correlate_numbers(self, canonical: Any, header: str, standardize: bool=None, normalize: bool=None,
+                           scalar: tuple=None, transform: str=None, precision: int=None, seed: int=None):
+        """ Allows for the scaling transformation of a continuous value set. scaling methods. Thse techniques
+        are used to alter the values of a variable so that they are expressed on a common scale. This is often
+        done to make it easier to compare different variables or to make it easier to analyze data.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param standardize: (optional) if the column should be standardized
-        :param normalize: (optional) normalize the column between two values. the tuple is the lower and upper bounds
-        :param scalarize: (optional) assuming standard normally distributed, removes the mean and scaling
-        :param transform: (optional) attempts normal distribution of values.
+        :param standardize: (optional) standardise continuous variables with mean 0 and std 1
+        :param normalize: (optional) normalize continuous variables between 0 an 1.
+        :param scalar: (optional) scales continuous variables between a mix and max value passed in the tuple pair.
+        :param transform: (optional) attempts normal distribution of continuous variables.
                             options are log, sqrt, cbrt, boxcox, yeojohnson
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
@@ -624,11 +626,13 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         null_idx = s_values[s_values.isna()].index
         if isinstance(standardize, bool) and standardize:
             s_values = pd.Series(Commons.list_standardize(s_values.to_list()))
-        if isinstance(normalize, tuple):
+        elif isinstance(normalize, bool):
+            s_values = pd.Series(Commons.list_normalize(s_values.to_list(), 0, 1))
+        elif isinstance(scalar, tuple):
             if normalize[0] >= normalize[1] or len(normalize) != 2:
-                raise ValueError("The normalize tuple must be of size 2 with the first value lower than the second")
+                raise ValueError("The scalar tuple must be of size two with the first value lower than the second")
             s_values = pd.Series(Commons.list_normalize(s_values.to_list(), normalize[0], normalize[1]))
-        if isinstance(transform, str):
+        elif isinstance(transform, str):
             if transform == 'log':
                 s_values = np.log(s_values)
             elif transform == 'sqrt':
@@ -643,10 +647,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
                 s_values = pd.Series(yj)
             else:
                 raise ValueError(f"The transformer {transform} is not recognized. See contacts notes for reference")
-        if isinstance(scalarize, bool):
-            s_mean = s_values.mean()
-            s_std = s_values.std()
-            s_values = s_values.apply(lambda x: (x - s_mean)/s_std if s_std != 0 else x - s_mean)
         s_values = s_values.round(precision)
         if precision == 0 and not s_values.isnull().any():
             s_values = s_values.astype(int)

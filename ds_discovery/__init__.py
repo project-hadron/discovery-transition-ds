@@ -7,7 +7,6 @@ from ds_discovery.components.event_book_portfolio import EventBookPortfolio
 from ds_discovery.components.concept_tolerance import ConceptTolerance
 from ds_discovery.components.models_builder import ModelsBuilder
 from ds_discovery.components.controller import Controller
-from ds_discovery.components.commons import Commons
 
 # release version number picked up in the setup.py
-__version__ = '4.10.0'
+__version__ = '4.10.1'

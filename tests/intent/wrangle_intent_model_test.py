@@ -173,7 +173,6 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual(['A', 'B', 'D'], result.columns.to_list())
         self.assertEqual(df['C'].to_list(), target['C'].to_list())
 
-
     def test_model_difference_index(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -197,6 +196,24 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_difference(df, 'target', on_key='A')
         self.assertEqual((2,3), result.shape)
         self.assertEqual(['D', 'G'], result['A'].tolist())
+
+    def test_model_profiling(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        size=1000
+        df = pd.DataFrame()
+        df['single_num'] = tools.get_number(1, 2, quantity=0.7, size=size)
+        df['nulls'] = tools.get_number(2.0, quantity=0.2, size=size)
+        df['cat'] = tools.get_category(list('ABCDE'), size=size)
+        df['number'] = tools.get_number(1, 100, size=size)
+        df['bool'] = tools.get_category([1,0], size=size)
+        df['date'] = tools.get_datetime(start='2022-12-01', until='2023-03-31', size=size)
+        df['date2'] = tools.get_datetime(start='12-02-20221', until='03-31-2023-', quantity=0.8, size=size)
+        print(df.head())
+
+
+
+
 
 
     def test_raise(self):

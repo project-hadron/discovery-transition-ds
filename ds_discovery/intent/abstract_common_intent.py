@@ -4,7 +4,6 @@ from copy import deepcopy
 from typing import Any
 import numpy as np
 import pandas as pd
-from matplotlib import dates as mdates
 from aistac.handlers.abstract_handlers import HandlerFactory, ConnectorContract
 from aistac.intent.abstract_intent import AbstractIntentModel
 from ds_discovery.components.commons import Commons
@@ -382,22 +381,6 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
     """
         UTILITY METHODS SECTION
     """
-
-    @staticmethod
-    def _convert_date2value(dates: Any, day_first: bool = True, year_first: bool = False):
-        values = pd.to_datetime(dates, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                                yearfirst=year_first)
-        return mdates.date2num(pd.Series(values)).tolist()
-
-    @staticmethod
-    def _convert_value2date(values: Any, date_format: str=None):
-        dates = []
-        for date in mdates.num2date(values):
-            date = pd.Timestamp(date)
-            if isinstance(date_format, str):
-                date = date.strftime(date_format)
-            dates.append(date)
-        return dates
 
     @staticmethod
     def _freq_dist_size(relative_freq: list, size: int, dist_length: int=None, dist_on: str=None, seed: int=None):

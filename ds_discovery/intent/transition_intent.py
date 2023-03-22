@@ -1286,7 +1286,6 @@ class TransitionIntentModel(AbstractIntentModel):
         timezone = timezone if isinstance(timezone, str) else None
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
-        infer_datetime_format = date_format is None
         if not inplace:
             df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
@@ -1294,8 +1293,7 @@ class TransitionIntentModel(AbstractIntentModel):
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
             df[c] = df[c].astype('object')
-            df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
-                                   dayfirst=day_first, yearfirst=year_first, format=date_format)
+            df[c] = pd.to_datetime(df[c], errors='coerce', dayfirst=day_first, yearfirst=year_first, format=date_format)
             if df[c].dt.tz:
                 df[c] = df[c].dt.tz_convert(timezone)
             else:
