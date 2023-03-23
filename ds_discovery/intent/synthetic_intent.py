@@ -648,7 +648,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                         "The key '{}' must contain a 'list' of replacements options. '{}' found".format(k, type(v)))
 
         generator = np.random.default_rng(seed=seed)
-        rtn_list = []
+        rtn_list = pd.Series()
         for c in list(pattern):
             if c in choices.keys():
                 result = generator.choice(choices[c], size=size)
@@ -656,8 +656,12 @@ class SyntheticIntentModel(WrangleIntentModel):
                 result = [c]*size
             else:
                 continue
-            rtn_list.append(result)
-        return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
+            s_result = pd.Series(result)
+            if rtn_list.empty:
+                rtn_list = s_result
+            else:
+                rtn_list += s_result
+        return self._set_quantity(rtn_list.to_list(), quantity=self._quantity(quantity), seed=seed)
 
     def get_selection(self, select_source: str, column_header: str, relative_freq: list=None, sample_size: int=None,
                       selection_size: int=None, size: int=None, shuffle: bool=None, quantity: float=None,

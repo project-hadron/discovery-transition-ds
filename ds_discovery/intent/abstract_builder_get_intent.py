@@ -96,21 +96,6 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         else:
             generator.shuffle(rtn_list)
         return rtn_list
-    
-    
-    def _get_ones_zeros(self, size: int, ones: bool=None, seed: int=None) -> list:
-        """ A noise bias column of ones unless ones is False, then returns zeros
-    
-        :param size: size of the list to return
-        :param ones: (optional) by default set to True returning a list of ones, else returning a list of zeros
-        :param seed: (optional) placeholder for continuity
-        :return: a list of ones or zeros
-        """
-        _seed = self._seed() if seed is None else seed
-        ones = ones if isinstance(ones, bool) else True
-        if ones:
-            return list(np.ones(size))
-        return list(np.zeros(size))
 
     def _get_category(self, selection: list, relative_freq: list=None, size: int=None,
                       seed: int=None) -> list:
