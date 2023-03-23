@@ -166,7 +166,11 @@ class Commons(AistacCommons):
         values = pd.Series(pd.to_datetime(dates, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
                                           yearfirst=year_first))
         v_native = values.dt.tz_convert(None) if values.dt.tz else values
-        return ((v_native - pd.Timestamp("1970-01-01")) / pd.Timedelta(microseconds=1)).astype(int).to_list()
+        null_idx = values[values.isna()].index
+        values.iloc[null_idx] = pd.to_datetime(0)
+        result =  ((v_native - pd.Timestamp("1970-01-01")) / pd.Timedelta(microseconds=1)).astype(int).to_list()
+        values.iloc[null_idx] = None
+        return result
 
     @staticmethod
     def value2date(values: Any, dt_tz: Any=None, date_format: str=None) -> list:

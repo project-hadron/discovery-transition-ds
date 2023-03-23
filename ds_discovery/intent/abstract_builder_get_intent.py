@@ -39,7 +39,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         from_value = self._extract_value(from_value)
         to_value = self._extract_value(to_value)
         if not isinstance(from_value, (int, float)) and not isinstance(to_value, (int, float)):
-            raise ValueError(f"either a 'range_value' or a 'range_value' and 'to_value' must be provided")
+            raise ValueError(f"either a 'from_value' or a 'from_value' and 'to_value' must be provided")
         if not isinstance(from_value, (float, int)):
             from_value = 0
         if not isinstance(to_value, (float, int)):
@@ -159,28 +159,31 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         ignore_time = ignore_time if isinstance(ignore_time, bool) else False
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
+        # start = start.to_pydatetime() if isinstance(start, pd.Timestamp) else start
+        # until = until.to_pydatetime() if isinstance(until, pd.Timestamp) else until
         if isinstance(start, int):
             start = (pd.Timestamp.now() + pd.Timedelta(days=start))
-        start = pd.Series(pd.to_datetime(start, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                                         yearfirst=year_first))
+        start = pd.to_datetime(start, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                               yearfirst=year_first)
         if isinstance(until, int):
             until = (pd.Timestamp.now() + pd.Timedelta(days=until))
         elif isinstance(until, dict):
             until = (start + pd.Timedelta(**until))
-        until = pd.Series(pd.to_datetime(until, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
-                                         yearfirst=year_first))
-        if start.equals(until):
+        until = pd.to_datetime(until, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+                               yearfirst=year_first)
+        if start == until:
             rtn_list = pd.Series([start] * size)
         else:
+            dt_tz = pd.Series(start).dt.tz
             _dt_start = Commons.date2value(start, day_first=day_first, year_first=year_first)[0]
             _dt_until = Commons.date2value(until, day_first=day_first, year_first=year_first)[0]
             precision = 15
             rtn_list = self._get_number(from_value=_dt_start, to_value=_dt_until, relative_freq=relative_freq,
                                         at_most=at_most, ordered=ordered, precision=precision, size=size, seed=seed)
-            rtn_list = pd.Series(Commons.value2date(rtn_list))
+            rtn_list = pd.Series(Commons.value2date(rtn_list, dt_tz=dt_tz))
         if ignore_time:
             rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
-        if  as_num:
+        if as_num:
             return Commons.date2value(rtn_list)
         if isinstance(date_format, str):
             rtn_list = rtn_list.dt.strftime(date_format)

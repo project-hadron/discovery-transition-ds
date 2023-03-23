@@ -174,7 +174,9 @@ class SyntheticIntentGetTest(unittest.TestCase):
         tools = self.tools
         sample_size = 3
         result = tools.get_datetime('2019/01/01', '2019/01/02', date_format="%Y-%m-%d", size=sample_size)
-        self.assertEqual(1, pd.Series(result).nunique())
+        self.assertEqual(['2019-01-01', '2019-01-01', '2019-01-01'], result)
+        result = tools.get_datetime(pd.Timestamp('2021-07-01', tz='CET'), pd.Timestamp('2021-07-02', tz='CET'), date_format="%Y-%m-%d %Z", size=sample_size)
+        self.assertEqual(['2021-07-01 CEST', '2021-07-01 CEST', '2021-07-01 CEST'], result)
 
     def test_get_sample(self):
         tools = self.tools
