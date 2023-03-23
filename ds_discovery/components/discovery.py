@@ -1663,7 +1663,6 @@ class DataDiscovery(object):
         # transition data
         _null_headers = []
         _date_headers = []
-
         _bool_headers = []
         _cat_headers = []
         _num_headers = []
@@ -1671,7 +1670,7 @@ class DataDiscovery(object):
             try:
                 if df[c].isnull().all():
                     _null_headers.append(c)
-                elif all(Commons.valid_date(x) for x in df[c].dropna()):
+                elif any(Commons.valid_date(x) for x in df[c].dropna()):
                     _date_headers.append(c)
                 elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
                     _bool_headers.append(c)
@@ -1708,8 +1707,8 @@ class DataDiscovery(object):
         _date_fields = len(Commons.filter_headers(df, dtype='datetime'))
         _date_tz_fields = len(Commons.filter_headers(df, dtype='datetimetz'))
         _bool_fields = len(Commons.filter_headers(df, dtype='bool'))
-        _other_fields = len(Commons.filter_headers(df, dtype=['category', 'datetime', 'bool',
-                                                                     'number'], exclude=True))
+        _other_fields = len(Commons.filter_headers(df, dtype=['category', 'datetime', 'datetimetz', 'bool', 'number'],
+                                                   exclude=True))
         _null_avg = _null_total / df.shape[1]
         _dom_avg = _dom_fields / df.shape[1]
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg) / 2) * 100), 0))
@@ -1818,7 +1817,7 @@ class DataDiscovery(object):
             _ = df_style.applymap(lambda x: 'color: white' if x < 2 else 'color: black', subset=['Unique'])
             _ = df_style.format({'%_Null': "{:.1%}", '%_Dom': '{:.1%}'})
             _ = df_style.set_caption('%_Dom: The % most dominant element ')
-            _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
+            _ = df_style.set_properties(subset=[f'Attributes_({len(df.columns)})'],  **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
             if inc_next_dom:
                 _ = df_style.applymap(DataDiscovery._highlight_next, subset=['%_Nxt'])
