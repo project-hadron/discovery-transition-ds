@@ -1748,7 +1748,7 @@ class DataDiscovery(object):
         pd.set_option('max_colwidth', 200)
         df_len = len(df)
         file = []
-        labels = [f'Attributes_({len(df.columns)})', 'dType', '%_Null', '%_Dom', '%_Nxt', 'Count', 'Unique',
+        labels = [f'Attributes ({len(df.columns)})', 'dType', '%_Null', '%_Dom', '%_Nxt', 'Count', 'Unique',
                   'Observations']
         for c in df.columns.sort_values().values:
             line = [c,
@@ -1817,7 +1817,7 @@ class DataDiscovery(object):
             _ = df_style.applymap(lambda x: 'color: white' if x < 2 else 'color: black', subset=['Unique'])
             _ = df_style.format({'%_Null': "{:.1%}", '%_Dom': '{:.1%}'})
             _ = df_style.set_caption('%_Dom: The % most dominant element ')
-            _ = df_style.set_properties(subset=[f'Attributes_({len(df.columns)})'],  **{'font-weight': 'bold',
+            _ = df_style.set_properties(subset=[f'Attributes ({len(df.columns)})'],  **{'font-weight': 'bold',
                                                                                         'font-size': "120%"})
             if inc_next_dom:
                 _ = df_style.applymap(DataDiscovery._highlight_next, subset=['%_Nxt'])

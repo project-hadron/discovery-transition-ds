@@ -175,7 +175,7 @@ class Transition(AbstractCommonComponent):
         :param stylise: if True present the report stylised.
         :return: pd.DataFrame
         """
-        labels = [f'Attributes_({len(canonical.columns)})', 'dType', 'Description']
+        labels = [f'Attributes ({len(canonical.columns)})', 'dType', 'Description']
         file = []
         for c in canonical.columns.sort_values().values:
             line = [c, str(canonical[c].dtype),
@@ -188,7 +188,7 @@ class Transition(AbstractCommonComponent):
             df_style = df_dd.style.set_table_styles(style)
             _ = df_style.applymap(self._dtype_color, subset=['dType'])
             _ = df_style.set_properties(subset=['Description'],  **{"text-align": "left"})
-            _ = df_style.set_properties(subset=[f'Attributes_({len(canonical.columns)})'], **{'font-weight': 'bold',
+            _ = df_style.set_properties(subset=[f'Attributes ({len(canonical.columns)})'], **{'font-weight': 'bold',
                                                                                               'font-size': "120%"})
             return df_style
         return df_dd
