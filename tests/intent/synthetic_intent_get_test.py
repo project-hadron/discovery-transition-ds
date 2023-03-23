@@ -5,6 +5,8 @@ import uuid
 
 import pandas as pd
 import numpy as np
+from ds_discovery.components.commons import Commons
+
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery import SyntheticBuilder
 from aistac.properties.property_manager import PropertyManager
@@ -230,13 +232,17 @@ class SyntheticIntentGetTest(unittest.TestCase):
         self.assertEqual(1, sum(result))
 
     def test_quality(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame()
-        df['cat'] = tools.get_category(['A', 'B', 'C'], size=10, quantity=0.6, seed=0)
-        self.assertEqual(['', 'A', 'A', 'A', '', '', '', '', 'B', ''], df['cat'].to_list())
-        df['cat'] = tools.get_category(['A', 'B', 'C'], size=10, quantity=90, seed=0)
-        self.assertEqual(['B', 'A', 'A', 'A', 'C', '', 'A', 'A', 'B', ''], df['cat'].to_list())
+        sb = SyntheticBuilder.from_memory()
+        selection = sb.tools.get_number(100.0, size=10_000)
+        result = sb.tools._set_quantity(selection, quantity=0.5)
+        s_result = pd.Series(result)
+        self.assertEqual(5_000, s_result.dropna().size)
+        result = sb.tools._set_quantity(selection, quantity=50)
+        s_result = pd.Series(result)
+        self.assertEqual(5_000, s_result.dropna().size)
+        result = sb.tools._set_quantity(selection, quantity=0.01)
+        s_result = pd.Series(result)
+        self.assertEqual(100, s_result.dropna().size)
 
 if __name__ == '__main__':
     unittest.main()

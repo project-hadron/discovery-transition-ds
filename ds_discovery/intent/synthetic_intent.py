@@ -1210,34 +1210,20 @@ class SyntheticIntentModel(WrangleIntentModel):
 
     def _set_quantity(self, selection, quantity, seed=None):
         """Returns the quantity percent of good values in selection with the rest fill"""
+        quantity = self._quantity(quantity)
         if quantity == 1:
             return selection
         if quantity == 0:
             return [np.nan] * len(selection)
         seed = self._seed(seed=seed)
-        generator = np.random.default_rng(seed=seed)
-
-        def replace_fill():
-            """Used to run through all the possible fill options for the list type"""
-            if isinstance(selection[i], float):
-                selection[i] = np.nan
-            elif isinstance(selection[i], str):
-                selection[i] = ''
-            else:
-                selection[i] = None
-            return
-
-        if len(selection) < 100:
-            for i in range(len(selection)):
-                if generator.random() > quantity:
-                    replace_fill()
-        else:
-            sample_count = int(round(len(selection) * (1 - quantity), 0))
-            generator = np.random.default_rng(seed=seed)
-            indices = generator.choice(list(range(len(selection))), sample_count)
-            for i in indices:
-                replace_fill()
-        return selection
+        quantity = 1 - quantity
+        generator = np.random.default_rng(seed)
+        length = len(selection)
+        size = int(length * quantity)
+        nulls_idx = generator.choice(length, size=size, replace=False)
+        result = pd.Series(selection)
+        result.iloc[nulls_idx] = np.nan
+        return result.to_list()
 
     @staticmethod
     def _quantity(quantity: [float, int]) -> float:
