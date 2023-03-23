@@ -648,7 +648,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                         "The key '{}' must contain a 'list' of replacements options. '{}' found".format(k, type(v)))
 
         generator = np.random.default_rng(seed=seed)
-        rtn_list = pd.Series()
+        rtn_list = pd.Series(dtype=str)
         for c in list(pattern):
             if c in choices.keys():
                 result = generator.choice(choices[c], size=size)
