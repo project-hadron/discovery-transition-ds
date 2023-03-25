@@ -261,7 +261,6 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         rtn_list = list(generator.normal(loc=mean, scale=std, size=size))
         return list(np.around(rtn_list, precision))
     
-    
     def _get_dist_choice(self, number: [int, str, float], size: int=None, seed: int=None) -> list:
         """Creates a list of latent values of 0 or 1 where 1 is randomly selected both upon the number given.
     
@@ -288,7 +287,6 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
             return rtn_list.reset_index(drop=True).to_list()
         return pd.Series(data=[0] * size).to_list()
     
-    
     def _get_dist_bernoulli(self, probability: float, size: int=None, seed: int=None) -> list:
         """A Bernoulli process is a discrete random distribution. Bernoulli trial is a random experiment with exactly
         two possible outcomes, "success" and "failure", in which the probability of success is the same every time
@@ -297,14 +295,18 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         The mathematical formalisation of the Bernoulli trial, this distribution,  is known as the Bernoulli process.
         A Bernoulli process is a finite or infinite sequence of binary random variables. Prosaically, a Bernoulli
         process is a repeated coin flipping, possibly with an unfair coin (but with consistent unfairness).
+
+        As probability is a fixed value, probability can be represented by an environment variable with the
+        format '${NAME}' where NAME is the environment variable name
     
-        :param probability: the probability occurrence
+        :param probability: the probability occurrence of getting a 1 or 0
         :param size: the size of the sample
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
+        probability = self._extract_value(probability)
         rtn_list = list(stats.bernoulli.rvs(p=probability, size=size, random_state=_seed))
         return rtn_list
 
