@@ -1180,8 +1180,8 @@ class DataDiscovery(object):
         values = pd.Series(values, dtype=np.number)
         _original_size = values.size
         precision = 3 if not isinstance(precision, int) else precision
-        freq_precision = 2 if not isinstance(freq_precision, int) else freq_precision
-        granularity = 3 if not isinstance(granularity, (int, float, list)) or granularity == 0 else granularity
+        freq_precision = freq_precision if isinstance(freq_precision, int) else 2
+        granularity = 5 if not isinstance(granularity, (int, float, list)) or granularity == 0 else granularity
         detail_stats = detail_stats if isinstance(detail_stats, bool) else True
         replicates = replicates if isinstance(replicates, int) else 1000
         p_percent = p_percent if isinstance(p_percent, float) and 0 <= p_percent <= 1 else 0.95
@@ -1213,7 +1213,7 @@ class DataDiscovery(object):
         _excluded_percent = round(((_values_size - values.size) / _values_size) * 100,
                                   freq_precision) if _values_size > 0 else 0
         # dominance
-        dominant = values.mode(dropna=True).to_list()[:10] if not isinstance(dominant, (int, float, list)) else dominant
+        dominant = values.dropna().mode(dropna=True).to_list()[:10] if not isinstance(dominant, (int, float, list)) else dominant
         dominant = Commons.list_formatter(dominant)
         _dominant_values = values[values.isin(dominant)]
         _dominant_count = _dominant_values.value_counts(normalize=False, dropna=True)
@@ -1309,13 +1309,16 @@ class DataDiscovery(object):
         if values.size > 0:
             _values_weights = _values_weights.apply(lambda x: round((x / values.size) * 100, freq_precision))
         _intervals = [(round(p[0], precision), round(p[1], precision), p[2]) for p in _intervals]
+        p_25, p_50, p_75 = np.percentile(values, [25, 50, 75])
         rtn_dict = {'intent': {'intervals': _intervals, 'dtype': 'number'},
                     'params': {'precision': precision, 'freq_precision': freq_precision, 'granularity': granularity,
                                'detail_stats': detail_stats},
                     'patterns': {'relative_freq': _values_weights.to_list(), 'sample_distribution': _sample_dist},
-                    'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
-                              'nulls_percent': _nulls_percent, 'sample_size': values.size,
-                              'excluded_sample': _excluded_size,'excluded_percent': _excluded_percent}}
+                    'stats': {'lowest': round(lower, precision), '25%': round(p_25, freq_precision),
+                              '50%': round(p_50, freq_precision), '75%': round(p_75, freq_precision),
+                              'highest': round(upper, precision), 'nulls_percent': _nulls_percent,
+                              'sample_size': values.size,'excluded_sample': _excluded_size,
+                              'excluded_percent': _excluded_percent}}
         # params
         if isinstance(param_lower, (int, float)):
             rtn_dict.get('params')['lower'] = round(param_lower, freq_precision)
@@ -1333,6 +1336,8 @@ class DataDiscovery(object):
             _std = DataDiscovery.bootstrap_confidence_interval(values, func=np.std, precision=freq_precision,
                                                                replicates=replicates, p_percent=p_percent)
             rtn_dict.get('stats')['bci_std'] = _std
+            rtn_dict.get('stats')['skew'] = values.skew()
+            rtn_dict.get('stats')['kurtosis'] = values.kurtosis()
             _o_low, _o_high = DataDiscovery.interquartile_outliers(values)
             rtn_dict.get('stats')['outliers_iqr'] = (len(_o_low), len(_o_high))
             _o_low, _o_high = DataDiscovery.empirical_outliers(values)
@@ -1342,21 +1347,6 @@ class DataDiscovery(object):
             rtn_dict.get('stats')['std'] = np.round(np.std(values), freq_precision)
             rtn_dict.get('patterns')['freq_mean'] = np.round(_mean_weights, freq_precision)
             rtn_dict.get('patterns')['freq_std'] = np.round(_std_weights, freq_precision)
-        # normality
-        if values.size >= 10 and detail_stats:
-            if values.size < 5000:
-                _, _p_value = DataDiscovery.shapiro_wilk_normality(values, precision=freq_precision)
-                rtn_dict.get('stats')['p_value_sharpo'] = _p_value
-            _, _p_value = DataDiscovery.dagostinos_k2_normality(values, precision=freq_precision)
-            rtn_dict.get('stats')['p_value_k2'] = _p_value
-            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='norm')
-            rtn_dict.get('stats')['anderson_norm'] = [round(x - _stats, freq_precision) for x in _level]
-            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='expon')
-            rtn_dict.get('stats')['anderson_expon'] = [round(x - _stats, freq_precision) for x in _level]
-            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='logistic')
-            rtn_dict.get('stats')['anderson_logistic'] = [round(x - _stats, freq_precision) for x in _level]
-            _stats, _level, _ = DataDiscovery.anderson_darling_tests(values, dist='gumbel')
-            rtn_dict.get('stats')['anderson_gumbel'] = [round(x - _stats, freq_precision) for x in _level]
         # dominance
         if exclude_dominant:
             rtn_dict.get('patterns')['dominant_excluded'] = dominant
@@ -1424,6 +1414,12 @@ class DataDiscovery(object):
             rtn_dict.get('params')['upper'] = params_upper
         rtn_dict.get('stats')['lowest'] = Commons.value2date(rtn_dict.get('stats')['lowest'],
                                                              date_format=date_format, dt_tz=dt_tz)[0]
+        rtn_dict.get('stats')['25%'] = Commons.value2date(rtn_dict.get('stats')['25%'],
+                                                             date_format=date_format, dt_tz=dt_tz)[0]
+        rtn_dict.get('stats')['50%'] = Commons.value2date(rtn_dict.get('stats')['50%'],
+                                                             date_format=date_format, dt_tz=dt_tz)[0]
+        rtn_dict.get('stats')['75%'] = Commons.value2date(rtn_dict.get('stats')['75%'],
+                                                             date_format=date_format, dt_tz=dt_tz)[0]
         rtn_dict.get('stats')['highest'] = Commons.value2date(rtn_dict.get('stats')['highest'],
                                                               date_format=date_format, dt_tz=dt_tz)[0]
         rtn_dict.get('stats')['mean'] = Commons.value2date(rtn_dict.get('stats')['mean'],
@@ -1464,18 +1460,22 @@ class DataDiscovery(object):
         if all(isinstance(x, str) for x in columns_list):
             analysis_dict = {}
             for item in columns_list:
-                if df[item].dtype.name.startswith('float'):
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 50,
-                                           'exclude_dominant': True}
-                elif df[item].dtype.name.startswith('int'):
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 50,
-                                           'exclude_dominant': True, 'precision': 0}
-                elif df[item].dtype.name == 'category':
-                    analysis_dict[item] = {'dtype': 'category', 'top': 10}
-                elif df[item].dtype.name.startswith('date'):
+                if df[item].isnull().all():
+                    analysis_dict[item] = {}
+                elif df[item].notnull().sum() < df[item].size * 0.98:
+                    analysis_dict[item] = {}
+                elif df[item].dropna().value_counts().iloc[0] > df[item].dropna().size * 0.98:
+                    analysis_dict[item] = {}
+                elif df[item].dropna().isin([1, 0, '1', '0']).all() or df[item].dropna().dtype.kind in 'b':
+                    analysis_dict[item] = {'dtype': 'category'}
+                elif any(Commons.valid_date(x) for x in df[item].dropna()) or df[item].dropna().dtype.kind in 'nM':
                     analysis_dict[item] = {'dtype': 'date', 'granularity': 5}
-                elif df[item].dtype.name.startswith('bool'):
-                    analysis_dict[item] = {'dtype': 'bool'}
+                elif df[item].nunique() < 60:
+                    analysis_dict[item] = {'dtype': 'category', 'top': 10}
+                elif df[item].dropna().dtype.kind in 'ufc':
+                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':3}
+                elif df[item].dropna().dtype.kind in 'i':
+                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':0}
                 else:
                     analysis_dict[item] = {}
             columns_list = [analysis_dict]
@@ -1643,85 +1643,91 @@ class DataDiscovery(object):
         return df[df['name'].str.contains(find_name)]
 
     @staticmethod
-    def data_quality(df):
+    def data_quality(df, corr_threshold: float=None, nulls_threshold: float=None, dom_threshold: float=None,
+                     cat_threshold: int=None):
         """ Analyses a dataset, passed as a DataFrame and returns a quality summary
 
         :param df: The dataset, as a DataFrame.
+        :param cat_threshold: The threshold for the max number of unique categories. Default is 60
+        :param dom_threshold: The threshold limit of a dominant value. Default 0.98
+        :param nulls_threshold: The threshold limit of a nulls value. Default 0.9
+        :param corr_threshold: The threshold limit of what constitute correlated columns. Default 0.98
         :return: pd.DataFrame
         """
         df = df.copy()
+        cat_threshold = cat_threshold if isinstance(cat_threshold, int) else 60
+        dom_threshold = dom_threshold if isinstance(dom_threshold, float) and 0 <= dom_threshold <= 1 else 0.98
+        nulls_threshold = nulls_threshold if isinstance(nulls_threshold, float) and 0 <= nulls_threshold <= 1 else 0.9
+        corr_threshold = corr_threshold if isinstance(corr_threshold, float) and 0 <= corr_threshold <= 1 else 0.9
         # correlate
-        threshold = 0.98
         df_num = Commons.filter_columns(df, dtype=['number'], exclude=False)
+        for c in Commons.list_diff(df.columns.to_list(), df_num.columns.to_list(), symmetric=False):
+            # category
+            if df[c].nunique() < 60 and not df[c].dropna().dtype.kind in 'iufcb':
+                rank = df[c].unique().tolist()
+                values = np.arange(len(rank)).tolist()
+                mapper = dict(zip(rank, values))
+                df_num[c] = df[c].replace(mapper)
+            # dates
+            elif any(Commons.valid_date(x) for x in df[c].dropna()):
+                df_num[c] = Commons.date2value(df[c])
         col_corr = set()
         corr_matrix = df_num.dropna().corr()
         for i in range(len(corr_matrix.columns)):
             for j in range(i):
-                if abs(corr_matrix.iloc[i, j]) > threshold:  # we are interested in absolute coeff value
+                if abs(corr_matrix.iloc[i, j]) > corr_threshold:  # we are interested in absolute coeff value
                     col_corr.add(corr_matrix.columns[i])  # getting the name of column
-        _correlated = col_corr
-        # transition data
-        _null_headers = []
-        _date_headers = []
-        _bool_headers = []
-        _cat_headers = []
-        _num_headers = []
-        for c in Commons.filter_headers(df, dtype=object):
+        _correlated = len(col_corr)
+
+        # dictionary
+        _null_columns = 0
+        _dom_columns = 0
+        _date_columns = 0
+        _bool_columns = 0
+        _cat_columns = 0
+        _num_columns = 0
+        _obj_columns = 0
+        _key_columns = 0
+        for c in df.columns:
+            if df[c].dropna().nunique() == df[c].size:
+                _key_columns += 1
             try:
                 if df[c].isnull().all():
-                    _null_headers.append(c)
-                elif any(Commons.valid_date(x) for x in df[c].dropna()):
-                    _date_headers.append(c)
-                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
-                    _bool_headers.append(c)
-                elif df[c].nunique() < 100 and round(df[c].isnull().sum() / df.shape[0], 3) < 0.8:
-                    _cat_headers.append(c)
-                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
-                    _num_headers.append(c)
+                    _null_columns += 1
+                elif df[c].notnull().sum() < df[c].size * nulls_threshold:
+                    _null_columns += 1
+                elif df[c].dropna().value_counts().iloc[0] > df[c].dropna().size * dom_threshold:
+                    _dom_columns += 1
+                elif df[c].dropna().isin([1, 0,'1','0']).all() or df[c].dropna().dtype.kind in 'b':
+                    _bool_columns += 1
+                elif any(Commons.valid_date(x) for x in df[c].dropna()) or df[c].dropna().dtype.kind in 'nM':
+                    _date_columns += 1
+                elif df[c].nunique() < cat_threshold:
+                    _cat_columns += 1
+                elif df[c].dropna().dtype.kind in 'iufc':
+                    _num_columns += 1
+                else:
+                    _obj_columns += 1
             except TypeError:
-                pass
-            if len(_bool_headers) > 0:
-                if df[c].dtype.name != 'bool':
-                    df[c] = df[c].map({1: True, 0: False})
-                    df[c] = df[c].fillna(False)
-                    df[c] = df[c].astype('bool')
-            if len(_date_headers) > 0:
-                df[c] = pd.to_datetime(df[c], errors='coerce')
-            if len(_cat_headers) > 0:
-                if not all(df[c].astype(str).str.isnumeric()):
-                    df[c] = df[c].astype(str).str.strip()
-                df[c] = df[c].astype('category')
-            if len(_num_headers) > 0:
-                df[c] = pd.to_numeric(df[c], errors='raise')
+                _obj_columns += 1
         # dictionary
-        _dictionary = DataDiscovery.data_dictionary(df=df, stylise=False, inc_next_dom=False)
-        _total_fields = _dictionary.shape[0]
-        _null_total = _dictionary['%_Null'].sum()
-        _dom_fields = _dictionary['%_Dom'].sum()
-        _null_columns = _dictionary['%_Null'].where(_dictionary['%_Null'] > 0.98).dropna()
-        _dom_columns = _dictionary['%_Dom'].where(_dictionary['%_Dom'] > 0.98).dropna()
-        _usable_fields = set(_null_columns)
-        _usable_fields.update(_dom_columns)
-        _numeric_fields = len(Commons.filter_headers(df, dtype='number'))
-        _category_fields = len(Commons.filter_headers(df, dtype='category'))
-        _date_fields = len(Commons.filter_headers(df, dtype='datetime'))
-        _date_tz_fields = len(Commons.filter_headers(df, dtype='datetimetz'))
-        _bool_fields = len(Commons.filter_headers(df, dtype='bool'))
-        _other_fields = len(Commons.filter_headers(df, dtype=['category', 'datetime', 'datetimetz', 'bool', 'number'],
-                                                   exclude=True))
-        _null_avg = _null_total / df.shape[1]
-        _dom_avg = _dom_fields / df.shape[1]
+        _dup_columns = df.T.dropna().duplicated().T.sum()
+        _usable_columns = _date_columns + _bool_columns + _cat_columns + _num_columns
+        _null_avg = _null_columns / df.columns.size
+        _dom_avg = _dom_columns / df.columns.size
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg) / 2) * 100), 0))
-        _usable = int(round(100 - (len(_usable_fields) / df.columns.size) * 100, 2))
+        _usable = int(round(100 - (_usable_columns / df.columns.size) * 100, 2))
         report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%"},
                   'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
                                  'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
-                  'data_type': {'numeric': _numeric_fields, 'category': _category_fields,
-                                'datetime': _date_fields, 'datetime_tz': _date_tz_fields, 'bool': _bool_fields,
-                                'others': _other_fields},
-                  'usability': {'mostly_null': len(_null_columns),
-                                'predominance': len(_dom_columns),
-                                'correlated': len(_correlated),}}
+                  'data_type': {'numeric': _num_columns, 'category': _cat_columns,
+                                'datetime': _date_columns, 'bool': _bool_columns,
+                                'others': _obj_columns},
+                  'usability': {'mostly_null': _null_columns,
+                                'predominance': _dom_columns,
+                                'candidate_keys': _key_columns,
+                                'duplicates': _dup_columns,
+                                'correlated': _correlated}}
         return report
 
     @staticmethod

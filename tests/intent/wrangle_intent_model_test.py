@@ -11,6 +11,13 @@ from ds_discovery import SyntheticBuilder, Wrangle
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
 
+# Pandas setup
+pd.set_option('max_colwidth', 320)
+pd.set_option('display.max_rows', 100)
+pd.set_option('display.max_columns', 50)
+pd.set_option('expand_frame_repr', True)
+
+
 
 class WrangleIntentModelTest(unittest.TestCase):
 
@@ -198,22 +205,44 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual(['D', 'G'], result['A'].tolist())
 
     def test_model_profiling(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        size=1000
+        sb = SyntheticBuilder.from_memory()
+        size = 10000
+
         df = pd.DataFrame()
-        df['single_num'] = tools.get_number(1, 2, quantity=0.7, size=size)
-        df['nulls'] = tools.get_number(2.0, quantity=0.2, size=size)
-        df['cat'] = tools.get_category(list('ABCDE'), size=size)
-        df['number'] = tools.get_number(1, 100, size=size)
-        df['bool'] = tools.get_category([1,0], size=size)
-        df['date'] = tools.get_datetime(start='2022-12-01', until='2023-03-31', size=size)
-        df['date2'] = tools.get_datetime(start='12-02-20221', until='03-31-2023-', quantity=0.8, size=size)
-        print(df.head())
+        # types
+        df['cat'] = sb.tools.get_category(list('ABCDE'), size=size)
+        df['num'] = sb.tools.get_number(100.0, size=size)
+        df['int'] = sb.tools.get_number(100, size=size)
+        df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size)
+        df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size)
+        df['bool'] = sb.tools.get_category([1, 0], size=size)
+        df['date'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', size=size)
+        df['object'] = sb.tools.get_string_pattern('ccd', size=size)
+
+        # impute
+        df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
+        df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
+        df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
+        df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
+        df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
+
+        # compare
+        df['unique'] = sb.tools.get_uuid(size=size)
+        df['date_tz'] = sb.tools.get_datetime(pd.Timestamp('2021-09-01', tz='CET'), pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d', size=size)
+        df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
+        df['dup_num'] = sb.tools.correlate_values(df, header='num')
+        df['dup_date'] = sb.tools.correlate_dates(df, header='date')
+
+        # others
+        df['single_num'] = sb.tools.get_number(1, 2, size=size)
+        df['single_cat'] = sb.tools.get_category(['Male'], size=size)
+        df['nulls'] = sb.tools.get_number(20.0, quantity=0, size=size)
+        df['nulls_num'] = sb.tools.get_number(20.0, quantity=0.03, size=size)
+        df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
+        result = sb.tools.model_profiling(df, 'quality')
 
 
-
-
+        pprint(result)
 
 
     def test_raise(self):

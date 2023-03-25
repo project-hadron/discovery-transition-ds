@@ -262,8 +262,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
                           index_on_key: bool=None, seed: int=None):
-        """returns the difference, by distance, between two canonicals, joined on a common and unique key. The
-        ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
+        """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
+        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name
 

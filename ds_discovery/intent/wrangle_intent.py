@@ -413,8 +413,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_on_key: bool=None,
                          seed: int=None, save_intent: bool=None,column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
-        """ returns the difference, by distance, between two canonicals, joined on a common and unique key. The
-        ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
+        """ returns the difference, by Lenenshtein distance, between two canonicals, joined on a common and unique key.
+        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name
 
@@ -469,7 +469,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_difference(seed=seed, **params)
 
-    def model_profiling(self, canonical: Any, profile: str, headers: [str, list]=None, drop: bool=None,
+    def model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
                         seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
@@ -479,7 +479,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         profiling available 'canonical', 'schema' or 'quality'
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param profile: The profile name. Options are 'canonical', 'schema' or 'quality'
+        :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
         :param headers: (optional) a filter of headers from the 'other' dataset
         :param drop: (optional) to drop or not drop the headers if specified
         :param dtype: (optional) a filter on data type for the 'other' dataset. int, float, bool, object
@@ -1095,38 +1095,6 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
     #     # set the seed and call the method
     #     seed = self._seed(seed=seed)
     #     return self._model_analysis(seed=seed, **params)
-
-    def get_ones_zeros(self, size: int, ones: bool=None, seed: int=None, save_intent: bool=None,
-                       column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                       remove_duplicates: bool=None) -> list:
-        """ A noise bias column of ones unless ones is False, then returns zeros
-
-        :param size: size of the list to return
-        :param ones: (optional) by default set to True returning a list of ones, else returning a list of zeros
-        :param seed: (optional) placeholder for continuity
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: a DataFrame
-        """
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._get_ones_zeros(seed=seed, **params)
 
     def correlate_selection(self, canonical: Any, selection: list, action: [str, int, float, dict],
                             default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None,
