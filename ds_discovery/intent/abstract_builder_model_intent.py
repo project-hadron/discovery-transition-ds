@@ -7,6 +7,8 @@ from abc import abstractmethod
 from typing import Any
 import pandas.api.types as ptypes
 from aistac.components.aistac_commons import DataAnalytics
+from aistac.handlers.abstract_handlers import HandlerFactory
+
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
@@ -221,7 +223,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
     def _model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
                          dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                         re_ignore_case: bool=None, seed: int=None):
+                         re_ignore_case: bool=None, outcome: str=None, seed: int=None, **kwargs):
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
@@ -235,6 +237,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param exclude: (optional) to exclude or include the data types if specified
         :param regex: (optional) a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt'
         :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
+        :param outcome::(optional) a connector name where the outcome is sent
         :param seed:(optional) this is a placeholder, here for compatibility across methods
         :return: pd.DataFrame
         """
@@ -243,35 +246,47 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                                         regex=regex, re_ignore_case=re_ignore_case)
         _seed = self._seed() if seed is None else seed
         if profiling == 'canonical':
-            return DataDiscovery.data_dictionary(df=canonical, stylise=False, inc_next_dom=True)
-        if profiling == 'schema':
+            result =  DataDiscovery.data_dictionary(df=canonical, stylise=False, inc_next_dom=True)
+        elif profiling == 'schema':
             blob = DataDiscovery.analyse_association(df=canonical, columns_list=columns)
-            df = pd.DataFrame(columns=['root', 'section', 'element', 'value'])
+            report = pd.DataFrame(columns=['root', 'section', 'element', 'value'])
             root_list = DataAnalytics.get_tree_roots(analytics_blob=blob)
             for root_items in root_list:
                 data_analysis = DataAnalytics.from_root(analytics_blob=blob, root=root_items)
                 for section in data_analysis.section_names:
                     for element, value in data_analysis.get(section).items():
                         to_append = [root_items, section, element, value]
-                        a_series = pd.Series(to_append, index=df.columns)
-                        df = pd.concat([df, a_series.to_frame().transpose()], ignore_index=True)
-            return df
-        if profiling == 'quality':
-            return DataDiscovery.data_quality(df=canonical)
-        raise ValueError(f"The report name '{profiling}' is not recognised. Use 'canonical', 'schema' or 'quality'")
+                        a_series = pd.Series(to_append, index=report.columns)
+                        report = pd.concat([report, a_series.to_frame().transpose()], ignore_index=True)
+            result = report
+        elif profiling == 'quality':
+            result =  DataDiscovery.data_quality(df=canonical)
+        else:
+            raise ValueError(f"The report name '{profiling}' is not recognised. Use 'canonical', 'schema' or 'quality'")
+        if isinstance(outcome, str) and self._pm.has_connector_handler(outcome):
+            handler = self._pm.get_connector_handler(outcome)
+            handler.persist_canonical(result, **kwargs)
+            return canonical
+        return result
+
 
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
-                          index_on_key: bool=None, seed: int=None):
+                          index_on_key: bool=None, outcome: str=None, seed: int=None, **kwargs):
         """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
-        <<YOUR_ENVIRON>> is the environment variable name
+        <<YOUR_ENVIRON>> is the environment variable name.
+
+        If the ``outcome`` parameter is used, the output is used for the result output with the method returning the
+        original canonical. This allows a canonical pipeline to continue through the component while outputting the
+        Intent action.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
         :param on_key: The name of the key that uniquely joins the canonical to others
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
+        :param outcome::(optional) a connector name where the outcome is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -344,7 +359,11 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             diff = diff.set_index(on_key)
         # drop zeros
         if drop_no_diff:
-            return diff.loc[:, (diff != 0).any(axis=0)]
+            diff = diff.loc[:, (diff != 0).any(axis=0)]
+        if isinstance(outcome, str) and self._pm.has_connector_handler(outcome):
+            handler = self._pm.get_connector_handler(outcome)
+            handler.persist_canonical(diff, **kwargs)
+            return canonical
         return diff
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,

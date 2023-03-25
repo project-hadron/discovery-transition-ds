@@ -1238,6 +1238,13 @@ class DataDiscovery(object):
                     'stats': {'lowest': round(lower, precision), 'highest': round(upper, precision),
                               'nulls_percent': _nulls_percent, 'sample_size': 0, 'excluded_sample': _excluded_size,
                               'excluded_percent': _excluded_percent, 'mean': 0, 'std': 0}}
+        # skew, kurtosis
+        s_bins = [-np.inf, -1, -0.5, -0.1, 0.1, 0.5, 1, np.inf]
+        s_names = ['highly left', 'medium left', 'light left', 'normal', 'light right', 'medium right', 'highly right']
+        _skew_bin = list(pd.cut([values.skew()], s_bins, labels=s_names))[0]
+        k_bins = [-np.inf, 2.9, 3.1, np.inf]
+        k_names = ['platykurtic', 'mesokurtic', 'leptokurtic']
+        _kurt_bin = list(pd.cut([values.kurtosis()], k_bins, labels=k_names))[0]
         # granularity
         if isinstance(_intervals, (int, float)):
             # if granularity float then convert frequency to intervals
@@ -1336,8 +1343,11 @@ class DataDiscovery(object):
             _std = DataDiscovery.bootstrap_confidence_interval(values, func=np.std, precision=freq_precision,
                                                                replicates=replicates, p_percent=p_percent)
             rtn_dict.get('stats')['bci_std'] = _std
+
             rtn_dict.get('stats')['skew'] = values.skew()
+            rtn_dict.get('stats')['skew_bias'] = _skew_bin
             rtn_dict.get('stats')['kurtosis'] = values.kurtosis()
+            rtn_dict.get('stats')['kurtosis_tail'] = _kurt_bin
             _o_low, _o_high = DataDiscovery.interquartile_outliers(values)
             rtn_dict.get('stats')['outliers_iqr'] = (len(_o_low), len(_o_high))
             _o_low, _o_high = DataDiscovery.empirical_outliers(values)

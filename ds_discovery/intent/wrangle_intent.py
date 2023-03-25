@@ -410,19 +410,25 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_merge(seed=seed, **params)
 
-    def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_on_key: bool=None,
-                         seed: int=None, save_intent: bool=None,column_name: [int, str]=None, intent_order: int=None,
-                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+    def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
+                         index_on_key: bool=None, outcome: str=None, seed: int=None, save_intent: bool=None,
+                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns the difference, by Lenenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name
+
+        If the ``outcome`` parameter is used, the output is used for the result output with the method returning the
+        original canonical. This allows a canonical pipeline to continue through the component while outputting the
+        Intent action.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
         :param on_key: The name of the key that uniquely joins the canonical to others
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
+        :param outcome: (optional) a connector name where the outcome is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -471,12 +477,16 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                        outcome: str=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
         profiling available 'canonical', 'schema' or 'quality'
+
+        If the ``outcome`` parameter is used, the output is used for the result output with the method returning the
+        original canonical. This allows a canonical pipeline to continue through the component while outputting the
+        Intent action.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
@@ -486,6 +496,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param exclude: (optional) to exclude or include the data types if specified
         :param regex: (optional) a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt'
         :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
+        :param outcome: (optional) a connector name where the outcome is sent
         :param seed:(optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
