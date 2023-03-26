@@ -1726,7 +1726,7 @@ class DataDiscovery(object):
         _null_avg = _null_columns / df.columns.size
         _dom_avg = _dom_columns / df.columns.size
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg) / 2) * 100), 0))
-        _usable = int(round(100 - (_usable_columns / df.columns.size) * 100, 2))
+        _usable = int(round((_usable_columns / df.columns.size) * 100, 2))
         report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%"},
                   'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
                                  'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
