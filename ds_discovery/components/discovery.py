@@ -1743,7 +1743,9 @@ class DataDiscovery(object):
                         'duplicates': _dup_columns,
                         'correlated': _correlated}
         }
-        return report
+        # convert to multi-index DataFrame
+        df = pd.DataFrame.from_dict(report, orient="index").stack().to_frame()
+        return pd.DataFrame(df[0].values.tolist(), index=df.index, columns=['summary'])
 
     @staticmethod
     def data_dictionary(df, stylise: bool=None, inc_next_dom: bool=None, report_header: str=None,

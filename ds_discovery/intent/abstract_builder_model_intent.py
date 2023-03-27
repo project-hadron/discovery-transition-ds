@@ -264,15 +264,16 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result =  DataDiscovery.data_quality(df=canonical)
         else:
             raise ValueError(f"The report name '{profiling}' is not recognised. Use 'dictionary', 'schema' or 'quality'")
-        if isinstance(connector_name, str) and self._pm.has_connector_handler(connector_name):
-            handler = self._pm.get_connector_handler(connector_name)
-            handler.persist_canonical(result, **kwargs)
-            return canonical
+        if isinstance(connector_name, str):
+            if self._pm.has_connector(connector_name):
+                handler = self._pm.get_connector_handler(connector_name)
+                handler.persist_canonical(result, **kwargs)
+                return canonical
+            raise ValueError(f"The connector name {connector_name} has been given but no Connect Contract added")
         return result
 
-
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
-                          index_on_key: bool=None, outcome: str=None, seed: int=None, **kwargs):
+                          index_on_key: bool=None, connector_name: str=None, seed: int=None, **kwargs):
         """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
@@ -287,7 +288,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param on_key: The name of the key that uniquely joins the canonical to others
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
-        :param outcome::(optional) a connector name where the outcome is sent
+        :param connector_name::(optional) a connector name where the outcome is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -361,10 +362,12 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         # drop zeros
         if drop_no_diff:
             diff = diff.loc[:, (diff != 0).any(axis=0)]
-        if isinstance(outcome, str) and self._pm.has_connector_handler(outcome):
-            handler = self._pm.get_connector_handler(outcome)
-            handler.persist_canonical(diff, **kwargs)
-            return canonical
+        if isinstance(connector_name, str):
+            if self._pm.has_connector(connector_name):
+                handler = self._pm.get_connector_handler(connector_name)
+                handler.persist_canonical(diff, **kwargs)
+                return canonical
+            raise ValueError(f"The connector name {connector_name} has been given but no Connect Contract added")
         return diff
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
