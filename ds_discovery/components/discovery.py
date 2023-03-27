@@ -1667,7 +1667,7 @@ class DataDiscovery(object):
         df = df.copy()
         cat_threshold = cat_threshold if isinstance(cat_threshold, int) else 60
         dom_threshold = dom_threshold if isinstance(dom_threshold, float) and 0 <= dom_threshold <= 1 else 0.98
-        nulls_threshold = nulls_threshold if isinstance(nulls_threshold, float) and 0 <= nulls_threshold <= 1 else 0.9
+        nulls_threshold = nulls_threshold if isinstance(nulls_threshold, float) and 0 <= nulls_threshold <= 1 else 0.95
         corr_threshold = corr_threshold if isinstance(corr_threshold, float) and 0 <= corr_threshold <= 1 else 0.9
         # correlate
         df_num = Commons.filter_columns(df, dtype=['number'], exclude=False)
@@ -1727,17 +1727,22 @@ class DataDiscovery(object):
         _dom_avg = _dom_columns / df.columns.size
         _quality_avg = int(round(100 - (((_null_avg + _dom_avg) / 2) * 100), 0))
         _usable = int(round((_usable_columns / df.columns.size) * 100, 2))
-        report = {'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%"},
-                  'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
-                                 'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
-                  'data_type': {'numeric': _num_columns, 'category': _cat_columns,
-                                'datetime': _date_columns, 'bool': _bool_columns,
-                                'others': _obj_columns},
-                  'usability': {'mostly_null': _null_columns,
-                                'predominance': _dom_columns,
-                                'candidate_keys': _key_columns,
-                                'duplicates': _dup_columns,
-                                'correlated': _correlated}}
+        _dt_today = pd.to_datetime('today')
+        report = {
+            'timestamp': {'readable': _dt_today.strftime('%d %B %Y %I:%M %p'),
+                          'semantic': _dt_today.strftime('%Y-%m-%d %H:%M:%S')},
+            'score': {'quality_avg': f"{_quality_avg}%", 'usability_avg': f"{_usable}%"},
+            'data_shape': {'rows': df.shape[0], 'columns': df.shape[1],
+                         'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
+            'data_type': {'numeric': _num_columns, 'category': _cat_columns,
+                        'datetime': _date_columns, 'bool': _bool_columns,
+                        'others': _obj_columns},
+            'usability': {'mostly_null': _null_columns,
+                        'predominance': _dom_columns,
+                        'candidate_keys': _key_columns,
+                        'duplicates': _dup_columns,
+                        'correlated': _correlated}
+        }
         return report
 
     @staticmethod

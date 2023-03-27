@@ -216,21 +216,24 @@ class WrangleIntentModelTest(unittest.TestCase):
         df['bool'] = sb.tools.get_category([1, 0], size=size)
         df['date'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', size=size)
         df['object'] = sb.tools.get_string_pattern('ccd', size=size)
-        df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size)
-        df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size)
-        df['pois'] = sb.tools.get_distribution(distribution='poisson', size=size, lam=3)
+
+        # distributions
+        df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size) # normal
+        df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size) # bool
+        df['gumb'] = sb.tools.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size) # normal skew
+        df['pois'] = sb.tools.get_distribution(distribution='poisson', lam=3, size=size) # category
 
         # impute
-        # df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
-        # df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
-        # df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
-        # df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
-        # df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
+        df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
+        df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
+        df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
+        df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
+        df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
 
         # compare
         # df['unique'] = sb.tools.get_uuid(size=size)
         # df['date_tz'] = sb.tools.get_datetime(pd.Timestamp('2021-09-01', tz='CET'), pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d', size=size)
-        # df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
+        df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
         # df['dup_num'] = sb.tools.correlate_values(df, header='num')
         # df['dup_date'] = sb.tools.correlate_dates(df, header='date')
 
