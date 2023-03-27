@@ -223,7 +223,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
     def _model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
                          dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                         re_ignore_case: bool=None, outcome: str=None, seed: int=None, **kwargs):
+                         re_ignore_case: bool=None, connector_name: str=None, seed: int=None, **kwargs):
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
@@ -237,8 +237,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param exclude: (optional) to exclude or include the data types if specified
         :param regex: (optional) a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt'
         :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
-        :param outcome::(optional) a connector name where the outcome is sent
+        :param connector_name::(optional) a connector name where the outcome is sent
         :param seed:(optional) this is a placeholder, here for compatibility across methods
+        :param kwargs: if using connector_name, any kwargs to pass to the handler
         :return: pd.DataFrame
         """
         canonical = self._get_canonical(canonical)
@@ -263,8 +264,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result =  DataDiscovery.data_quality(df=canonical)
         else:
             raise ValueError(f"The report name '{profiling}' is not recognised. Use 'canonical', 'schema' or 'quality'")
-        if isinstance(outcome, str) and self._pm.has_connector_handler(outcome):
-            handler = self._pm.get_connector_handler(outcome)
+        if isinstance(connector_name, str) and self._pm.has_connector_handler(connector_name):
+            handler = self._pm.get_connector_handler(connector_name)
             handler.persist_canonical(result, **kwargs)
             return canonical
         return result

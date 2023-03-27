@@ -477,16 +477,16 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def model_profiling(self, canonical: Any, profiling: str, headers: [str, list]=None, drop: bool=None,
                         dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None,
-                        outcome: str=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+                        connector_name: str=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
         profiling available 'canonical', 'schema' or 'quality'
 
-        If the ``outcome`` parameter is used, the output is used for the result output with the method returning the
-        original canonical. This allows a canonical pipeline to continue through the component while outputting the
-        Intent action.
+        If the ``connector_name`` is used, it outputs the results to this connector contract and returns the original
+        canonical. This allows a canonical pipeline to continue through the component while outputting the data profile
+        to an alternative path.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
@@ -496,7 +496,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param exclude: (optional) to exclude or include the data types if specified
         :param regex: (optional) a regular expression to search the headers. example '^((?!_amt).)*$)' excludes '_amt'
         :param re_ignore_case: (optional) true if the regex should ignore case. Default is False
-        :param outcome: (optional) a connector name where the outcome is sent
+        :param connector_name: (optional) a connector name where the outcome is sent
         :param seed:(optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -510,6 +510,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
                     - False - leaves it untouched, disregarding the new intent
 
         :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :param kwargs: if using connector_name, any kwargs to pass to the handler
         :return: a pd.DataFrame
 
         The other is a pd.DataFrame, a pd.Series or list, a connector contract str reference or a set of
