@@ -227,10 +227,10 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
-        profiling available 'canonical', 'schema' or 'quality'
+        profiling available 'dictionary', 'schema' or 'quality'
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
+        :param profiling: The profiling name. Options are 'dictionary', 'schema' or 'quality'
         :param headers: (optional) a filter of headers from the 'other' dataset
         :param drop: (optional) to drop or not drop the headers if specified
         :param dtype: (optional) a filter on data type for the 'other' dataset. int, float, bool, object
@@ -246,7 +246,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         columns = Commons.filter_headers(canonical, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                         regex=regex, re_ignore_case=re_ignore_case)
         _seed = self._seed() if seed is None else seed
-        if profiling == 'canonical':
+        if profiling == 'dictionary':
             result =  DataDiscovery.data_dictionary(df=canonical, stylise=False, inc_next_dom=True)
         elif profiling == 'schema':
             blob = DataDiscovery.analyse_association(df=canonical, columns_list=columns)
@@ -263,7 +263,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         elif profiling == 'quality':
             result =  DataDiscovery.data_quality(df=canonical)
         else:
-            raise ValueError(f"The report name '{profiling}' is not recognised. Use 'canonical', 'schema' or 'quality'")
+            raise ValueError(f"The report name '{profiling}' is not recognised. Use 'dictionary', 'schema' or 'quality'")
         if isinstance(connector_name, str) and self._pm.has_connector_handler(connector_name):
             handler = self._pm.get_connector_handler(connector_name)
             handler.persist_canonical(result, **kwargs)

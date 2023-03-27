@@ -482,14 +482,14 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         """ Data profiling provides, analyzing, and creating useful summaries of data. The process yields a high-level
         overview which aids in the discovery of data quality issues, risks, and overall trends. It can be used to
         identify any errors, anomalies, or patterns that may exist within the data. There are three types of data
-        profiling available 'canonical', 'schema' or 'quality'
+        profiling available 'dictionary', 'schema' or 'quality'
 
         If the ``connector_name`` is used, it outputs the results to this connector contract and returns the original
         canonical. This allows a canonical pipeline to continue through the component while outputting the data profile
         to an alternative path.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param profiling: The profiling name. Options are 'canonical', 'schema' or 'quality'
+        :param profiling: The profiling name. Options are 'dictionary', 'schema' or 'quality'
         :param headers: (optional) a filter of headers from the 'other' dataset
         :param drop: (optional) to drop or not drop the headers if specified
         :param dtype: (optional) a filter on data type for the 'other' dataset. int, float, bool, object
