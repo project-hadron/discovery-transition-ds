@@ -270,6 +270,13 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 handler.persist_canonical(result, **kwargs)
                 return canonical
             raise ValueError(f"The connector name {connector_name} has been given but no Connect Contract added")
+        # set the index
+        if profiling == 'dictionary':
+           result = result.set_index([result.columns[0]])
+        elif profiling == 'schema':
+            result = result.set_index(['root', 'section', 'element'])
+        elif profiling == 'quality':
+            result = result.set_index(['sections', 'elements'])
         return result
 
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
