@@ -1824,12 +1824,16 @@ class DataDiscovery(object):
                 line.append('')
             file.append(line)
         df_dd = pd.DataFrame(file, columns=labels)
+        report_header = labels[0] if report_header == 'Attributes' else report_header
         if isinstance(report_header, str) and report_header in labels and isinstance(condition, str):
-            str_value = "df_dd['{}']{}".format(report_header, condition)
+            report_header = labels[0] if report_header == 'Attributes' else report_header
+            str_value = f"df_dd['{report_header}']{condition}"
             try:
                 df_dd = df_dd.where(eval(str_value)).dropna()
             except(SyntaxError, ValueError):
                 pass
+        df_dd['Count'] = df_dd['Count'].astype('int')
+        df_dd['Unique'] = df_dd['Unique'].astype('int')
         if not inc_next_dom:
             df_dd.drop('%_Nxt', axis='columns', inplace=True)
         if stylise:

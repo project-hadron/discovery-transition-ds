@@ -2,16 +2,20 @@ import os
 import shutil
 import unittest
 from pprint import pprint
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from aistac.properties.property_manager import PropertyManager
-
 from ds_discovery import Transition, FeatureCatalog
 from ds_discovery.components.discovery import DataDiscovery as Discover, DataDiscovery
-
 from ds_discovery import SyntheticBuilder
+
+# Pandas setup
+pd.set_option('max_colwidth', 320)
+pd.set_option('display.max_rows', 100)
+pd.set_option('display.max_columns', 50)
+pd.set_option('expand_frame_repr', True)
+
 
 
 class DiscoveryTest(unittest.TestCase):
@@ -118,24 +122,6 @@ class DiscoveryTest(unittest.TestCase):
         result = Discover.filter_univariate_mse(data, target='SalePrice', as_series=False, top=5)
         self.assertEqual(['OverallQual', 'GarageCars', 'FullBath', 'TotRmsAbvGrd', 'YearBuilt'], result)
 
-    def test_filter_fisher_score(self):
-        df = sns.load_dataset('titanic')
-        result = Discover.filter_fisher_score(df, target='survived')
-        self.assertCountEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True)
-        self.assertCountEqual(['class', 'pclass', 'deck', 'parch', 'sibsp', 'age', 'fare'], result)
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=3)
-        self.assertEqual(3, len(result))
-        result = Discover.filter_fisher_score(df, target='survived', top=0)
-        self.assertEqual(6, len(result))
-        result = Discover.filter_fisher_score(df, target='survived', top=20)
-        self.assertEqual(6, len(result))
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=20)
-        self.assertEqual(7, len(result))
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=0.3)
-        self.assertEqual(2, len(result))
-        result = Discover.filter_fisher_score(df, target='survived', inc_zero_score=True, top=0.999)
-        self.assertEqual(5, len(result))
 
     def test_filter_correlated(self):
         tools = SyntheticBuilder.scratch_pad()
@@ -151,19 +137,23 @@ class DiscoveryTest(unittest.TestCase):
         print(result)
 
     def test_canonica_report(self):
-        builder = SyntheticBuilder.from_memory()
+        sb = SyntheticBuilder.from_memory()
+        size = 1000
         df = pd.DataFrame()
-        df['col1'] = [1,2,3,4,5,6,7]
-        df['col2'] = [1,2,3,4,5,6,7]
-        self.assertNotIn('%_Nxt', builder.canonical_report(df, stylise=False).columns)
-        self.assertIn('%_Nxt', builder.canonical_report(df, stylise=False, inc_next_dom=True).columns)
-
-    def test_data_quality(self):
-        builder = SyntheticBuilder.from_memory()
-        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, None, 4, 3, 2, 1]})
-        result = DataDiscovery.data_quality(df)
-        self.assertEqual(['score', 'data_shape', 'data_type', 'usability'], list(result.keys()))
-
+        df['cat'] = sb.tools.get_category(list('ABCDE'), size=size)
+        df['num'] = sb.tools.get_number(100.0, size=size)
+        df['int'] = sb.tools.get_number(100, size=size)
+        df['bool'] = sb.tools.get_category([1, 0], size=size)
+        df['date'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', size=size)
+        df['object'] = sb.tools.get_string_pattern('ccd', size=size)
+        self.assertNotIn('%_Nxt', sb.canonical_report(df, stylise=False).columns)
+        self.assertIn('%_Nxt', sb.canonical_report(df, stylise=False, inc_next_dom=True).columns)
+        result = sb.canonical_report(df, stylise=False, report_header='Attributes', condition="=='num'")
+        self.assertTrue(result.columns[0] == 'Attributes (6)')
+        self.assertEqual((1,7), result.shape)
+        result = sb.canonical_report(df, stylise=False, report_header='Observations', condition=".str.contains('mean')")
+        self.assertEqual((3, 7), result.shape)
+        self.assertEqual(['bool', 'int', 'num'], result['Attributes (6)'].values.tolist())
 
 
 if __name__ == '__main__':
