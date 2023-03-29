@@ -246,7 +246,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         df['nulls'] = sb.tools.get_number(20.0, quantity=0, size=size)
         df['nulls_num'] = sb.tools.get_number(20.0, quantity=0.03, size=size)
         df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
-        result = sb.tools.model_profiling(df, profiling='quality')
+        result = sb.tools.model_profiling(df, profiling='schema', headers=['cat', 'num', 'date'])
         pprint(result)
 
 
