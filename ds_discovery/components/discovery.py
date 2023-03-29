@@ -1744,9 +1744,10 @@ class DataDiscovery(object):
                         'correlated': _correlated}
         }
         # convert to multi-index DataFrame
-        df = pd.DataFrame.from_dict(report, orient="index").stack().to_frame()
-        df = pd.DataFrame(df[0].values.tolist(), index=df.index, columns=['summary'])
-        return df.reset_index(names=['sections', 'elements'])
+        result = pd.DataFrame.from_dict(report, orient="index").stack().to_frame()
+        result = pd.DataFrame(result[0].values.tolist(), index=result.index, columns=['summary'])
+        result['summary'] = result['summary'].apply(str).str.replace('.0', '', regex=False)
+        return result.reset_index(names=['sections', 'elements'])
 
     @staticmethod
     def data_dictionary(df, stylise: bool=None, inc_next_dom: bool=None, report_header: str=None,

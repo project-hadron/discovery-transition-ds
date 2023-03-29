@@ -277,7 +277,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result = result.set_index(['root', 'section', 'element'])
         elif profiling == 'quality':
             result = result.set_index(['sections', 'elements'])
-        return result
+        return result.sort_index()
 
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
                           index_on_key: bool=None, connector_name: str=None, seed: int=None, **kwargs):

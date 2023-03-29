@@ -221,35 +221,34 @@ class WrangleIntentModelTest(unittest.TestCase):
         df['object'] = sb.tools.get_string_pattern('ccd', size=size)
 
         # distributions
-        # df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size) # normal
-        # df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size) # bool
-        # df['gumb'] = sb.tools.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size) # normal skew
-        # df['pois'] = sb.tools.get_distribution(distribution='poisson', lam=3, size=size) # category
+        df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size) # normal
+        df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size) # bool
+        df['gumb'] = sb.tools.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size) # normal skew
+        df['pois'] = sb.tools.get_distribution(distribution='poisson', lam=3, size=size) # category
 
         # impute
-        # df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
-        # df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
-        # df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
-        # df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
-        # df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
+        df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
+        df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
+        df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
+        df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
+        df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
 
         # compare
-        # df['unique'] = sb.tools.get_uuid(size=size)
-        # df['date_tz'] = sb.tools.get_datetime(pd.Timestamp('2021-09-01', tz='CET'), pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d', size=size)
-        # df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
-        # df['dup_num'] = sb.tools.correlate_values(df, header='num')
-        # df['dup_date'] = sb.tools.correlate_dates(df, header='date')
+        df['unique'] = sb.tools.get_uuid(size=size)
+        df['date_tz'] = sb.tools.get_datetime(pd.Timestamp('2021-09-01', tz='CET'), pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d', size=size)
+        df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
+        df['dup_num'] = sb.tools.correlate_values(df, header='num')
+        df['dup_date'] = sb.tools.correlate_dates(df, header='date')
 
         # others
-        # df['single_num'] = sb.tools.get_number(1, 2, size=size)
-        # df['single_cat'] = sb.tools.get_category(['Male'], size=size)
-        # df['nulls'] = sb.tools.get_number(20.0, quantity=0, size=size)
-        # df['nulls_num'] = sb.tools.get_number(20.0, quantity=0.03, size=size)
-        # df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
-        result = sb.tools.model_profiling(df, profiling='quality', connector_name='quality')
-        report = sb.load_canonical(connector_name='quality')
-        pprint(result.head())
-        pprint(report)
+        df['single_num'] = sb.tools.get_number(1, 2, size=size)
+        df['single_cat'] = sb.tools.get_category(['Male'], size=size)
+        df['nulls'] = sb.tools.get_number(20.0, quantity=0, size=size)
+        df['nulls_num'] = sb.tools.get_number(20.0, quantity=0.03, size=size)
+        df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
+        result = sb.tools.model_profiling(df, profiling='quality')
+        pprint(result)
+
 
 
     def test_raise(self):
