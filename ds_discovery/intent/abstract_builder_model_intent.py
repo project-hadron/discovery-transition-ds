@@ -272,12 +272,12 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             raise ValueError(f"The connector name {connector_name} has been given but no Connect Contract added")
         # set the index
         if profiling == 'dictionary':
-           result = result.set_index([result.columns[0]])
+           result = result.set_index([result.columns[0]]).sort_index()
         elif profiling == 'schema':
-            result = result.set_index(['root', 'section', 'element'])
+            result = result.set_index(['root', 'section', 'element']).sort_index(level=['root', 'section', 'element'])
         elif profiling == 'quality':
-            result = result.set_index(['sections', 'elements'])
-        return result.sort_index()
+            result = result.set_index(['sections', 'elements']).sort_index(level=['sections', 'elements'])
+        return result
 
     def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None,
                           index_on_key: bool=None, connector_name: str=None, seed: int=None, **kwargs):

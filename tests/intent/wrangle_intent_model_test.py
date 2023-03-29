@@ -220,7 +220,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         df['date'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', size=size)
         df['object'] = sb.tools.get_string_pattern('ccd', size=size)
 
-        # distributions
+        # # distributions
         df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size) # normal
         df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size) # bool
         df['gumb'] = sb.tools.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size) # normal skew
@@ -248,7 +248,6 @@ class WrangleIntentModelTest(unittest.TestCase):
         df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
         result = sb.tools.model_profiling(df, profiling='quality')
         pprint(result)
-
 
 
     def test_raise(self):
