@@ -224,13 +224,14 @@ class TransitionIntentModel(AbstractIntentModel):
             return
         return df
 
-    def auto_clean_header(self, df, case=None, rename_map: dict=None, replace_spaces: str=None, inplace: bool=None,
+    def auto_clean_header(self, df, case=None, rename_map: [dict, str]=None, replace_spaces: str=None, inplace: bool=None,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None):
-        """ clean the headers of a pandas DataFrame replacing space with underscore
+        """ clean the headers of a pandas DataFrame replacing space with underscore. If the rename_map is passed as a
+        name of a connector contract
 
         :param df: the pandas.DataFrame to drop duplicates from
-        :param rename_map: a from: to dictionary of headers to rename
+        :param rename_map: a dict of name value pairs or connector name for column mapping
         :param case: changes the headers to lower, upper, title, snake. if none of these then no change
         :param replace_spaces: character to replace spaces with. Default is '_' (underscore)
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
@@ -256,13 +257,20 @@ class TransitionIntentModel(AbstractIntentModel):
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = deepcopy(df)
+        # auto mapping
+        if isinstance(rename_map, str):
+            if self._pm.has_connector(rename_map):
+                handler = self._pm.get_connector_handler(rename_map)
+                mapper = handler.load_canonical()
+                rename_map = dict(zip(mapper.iloc[:, 0].values, mapper.iloc[:, 1].values))
+            else:
+                raise ValueError(f"The rename_map connector name {rename_map} can not be found as a connector contract")
         if isinstance(rename_map, dict):
             df.rename(mapper=rename_map, axis='columns', inplace=True)
         # removes any hidden characters
-        for c in df.columns:
-            df[c].column = str(c)
+        df.columns = df.columns.astype(str)
         # convert case
-        if case is not None and isinstance(case, str):
+        if isinstance(case, str):
             if case.lower() == 'lower':
                 df.rename(mapper=str.lower, axis='columns', inplace=True)
             elif case.lower() == 'upper':

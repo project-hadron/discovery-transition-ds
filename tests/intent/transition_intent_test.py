@@ -122,6 +122,30 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertEqual(control, result.columns.to_list())
         self.assertEqual((1000, 7), result.shape)
 
+    def test_auto_clean_header(self):
+        tr = Transition.from_memory()
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
+        # save map
+        mapper = {'A': 'X', 'B': 'Y', 'F': 'Z'}
+        # test
+        result = tr.tools.auto_clean_header(df, rename_map=mapper)
+        self.assertEqual(['X', 'Y', 'C'], result.columns.to_list())
+        result = tr.tools.auto_clean_header(df, rename_map=mapper, case='lower')
+        self.assertEqual(['x', 'y', 'c'], result.columns.to_list())
+
+    def test_auto_clean_header_connector(self):
+        tr = Transition.from_memory()
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
+        connector_name = 'other'
+        header_map = pd.DataFrame({'master': list('ABF'), 'other': list('XYZ')})
+        tr.add_connector_persist(connector_name, 'hadron_other.csv')
+        # save map
+        handler = tr.pm.get_connector_handler(connector_name)
+        handler.persist_canonical(header_map)
+        # test
+        result = tr.tools.auto_clean_header(df, rename_map='other')
+        self.assertEqual(['X', 'Y', 'C'], result.columns.to_list())
+
     def test_auto_drop_duplicates(self):
         tools = self.tools
         df = pd.DataFrame()
