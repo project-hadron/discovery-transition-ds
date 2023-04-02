@@ -183,11 +183,11 @@ class WrangleIntentModelTest(unittest.TestCase):
     def test_model_difference_index(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("BBCDCAA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
+        df = pd.DataFrame(data={"A": list("ABCDFEG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": list("ABCDFEG"), "B": list("BBCDCAA"), 'C': list("ACDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='A', index_on_key=True)
+        result = tools.model_difference(df, 'target', on_key='A', index_on_key=True, index_sort=True)
         self.assertEqual((4,3), result.shape)
         self.assertEqual(['B', 'C', 'D'], result.columns.to_list())
         self.assertEqual(['A', 'D', 'E', 'F'], result.index.tolist())
