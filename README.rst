@@ -230,7 +230,8 @@ See `CHANGELOG <https://github.com/project-hadron/discovery-transition-ds/blob/m
 License
 -------
 This project uses the following license:
-`BSD 3-Clause <https://opensource.org/license/bsd-3-clause/>`_.
+MIT License: `<https://opensource.org/license/mit/>`_.
+
 
 
 Authors
