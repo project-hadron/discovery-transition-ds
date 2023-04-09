@@ -52,9 +52,9 @@ meaningful properties of the original dataset.
     sample_size = 1000
     df = pd.DataFrame(index=range(sample_size))
     df['nulls'] = [np.nan] * sample_size
-    df['ones'] = builder.tools.get_ones_zeros(sample_size)
+    df['ones'] = builder.tools.get_number(1, 2, size=sample_size)
     df['more_ones'] = df['ones']
-    df['zeroes'] = builder.tools.get_ones_zeros(sample_size, ones=False)
+    df['zeroes'] = builder.tools.get_number(0, 1, size=sample_size)
     df['cats'] = builder.tools.get_category(selection=['A','B'], size=sample_size)
     df['nums'] = builder.tools.get_number(100, size=sample_size)
     df['more_nums'] = builder.tools.correlate_values(df, header='nums', jitter=0.3)

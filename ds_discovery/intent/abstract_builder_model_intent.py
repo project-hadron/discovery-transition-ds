@@ -279,7 +279,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result = result.set_index(['sections', 'elements'])
         return result
 
-    def _model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_sort: bool=True,
+    def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None, index_sort: bool=True,
                           index_on_key: bool=None, connector_name: str=None, seed: int=None, **kwargs):
         """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.

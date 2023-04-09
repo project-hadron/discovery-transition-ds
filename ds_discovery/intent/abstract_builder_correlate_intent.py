@@ -528,9 +528,12 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         normalised jitter (std from the value) along with a value offset. ``choice``, ``jitter`` and ``offset``
         can accept environment variable string names starting with ``${`` and ending with ``}``.
 
+        If the choice is an int, it represents the number of rows to choose. If the choice is a float it must be
+        between 1 and 0 and represent a percentage of rows to choose.
+
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
-        :param choice: (optional) The number of values to choose to apply the change to. Can be an environment variable.
+        :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
         :param precision: (optional) to what precision the return values should be
         :param offset: (optional) a fixed value or an environment variable where the name is wrapped with '${' and '}'
         :param transform: (optional) passing a str lambda function. e.g. 'lambda x: (x - 3) / 2''
@@ -567,9 +570,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(jitter, (str, int, float)):
             jitter = self._extract_value(jitter)
             size = s_values.size
-            mean = 0
-            std = s_values.std() if s_values.std() !=0 else 0.00001
-            result = stats.truncnorm((lower - mean) / std, (upper - mean) / std, loc=mean, scale=jitter)
+            std = s_values.std() if s_values.std() !=0 else 1
+            result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
             result = result.rvs(size, random_state=seed).round(precision)
             s_values = s_values.add(result)
         # set transformer
@@ -629,9 +631,9 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         elif isinstance(normalize, bool):
             s_values = pd.Series(Commons.list_normalize(s_values.to_list(), 0, 1))
         elif isinstance(scalar, tuple):
-            if normalize[0] >= normalize[1] or len(normalize) != 2:
+            if scalar[0] >= scalar[1] or len(scalar) != 2:
                 raise ValueError("The scalar tuple must be of size two with the first value lower than the second")
-            s_values = pd.Series(Commons.list_normalize(s_values.to_list(), normalize[0], normalize[1]))
+            s_values = pd.Series(Commons.list_normalize(s_values.to_list(), scalar[0], scalar[1]))
         elif isinstance(transform, str):
             if transform == 'log':
                 s_values = np.log(s_values)

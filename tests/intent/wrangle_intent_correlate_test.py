@@ -134,11 +134,12 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         os.environ['CORR_VAL_TEST'] = '1'
         df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
         result = tools.correlate_values(df, 'numbers', jitter='${CORR_VAL_TEST}', precision=0, seed=31)
-        self.assertEqual([0, 4, 4, 6], result)
+        self.assertEqual([0, 4, 4, 7], result)
         # loss
         df = pd.DataFrame(data=[2] * 10000, columns=['numbers'])
-        result = tools.correlate_values(df, 'numbers', jitter=1, precision=5, seed=31)
-        loss = abs(df['numbers'] - pd.Series(result))
+        result = tools.correlate_values(df, 'numbers', jitter=1, precision=2, seed=31)
+        result = pd.Series(result)
+        loss = abs(df['numbers'] - result)
         # loss is less than 4 stds
         std1 = [tools.s2d(column='default', condition='@<=1')]
         std2 = [tools.s2d(column='default', condition='@<=2'), tools.s2d(column='default', condition='@>1', logic='AND')]
@@ -161,10 +162,8 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_normalize(self):
         tools = self.tools
         df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
-        result = tools.correlate_numbers(df, header='numbers', normalize=(0, 1))
+        result = tools.correlate_numbers(df, header='numbers', normalize=True)
         self.assertEqual([0.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, 0.0], result)
-        result = tools.correlate_numbers(df, header='numbers', normalize=(-1, 1))
-        self.assertEqual([-1.0, 0, 0, 1.0, 1.0, 0, 0, -1.0], result)
 
     def test_correlate_standardise(self):
         tools = self.tools
@@ -175,8 +174,8 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_scalarize(self):
         tools = self.tools
         df = pd.DataFrame(data=[1,2,2,3,3,2,2,1], columns=['numbers'])
-        result = tools.correlate_numbers(df, header='numbers',scalarize=True, precision=1)
-        self.assertEqual([-1.3, 0.0, 0.0, 1.3, 1.3, 0.0, 0.0, -1.3], result)
+        result = tools.correlate_numbers(df, header='numbers', scalar=(-1, 1))
+        self.assertEqual([-1.0, 0, 0, 1.0, 1.0, 0, 0, -1.0], result)
 
     def test_correlate_categories(self):
         tools = self.tools
