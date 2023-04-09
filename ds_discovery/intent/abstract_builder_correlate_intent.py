@@ -566,7 +566,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             choice = choice if 0 <= choice < size else size
             gen = np.random.default_rng(seed=seed)
             choice_idx = gen.choice(s_values.index, size=choice, replace=False)
-            s_values = s_values.iloc[choice_idx]
+            s_values = s_values.iloc[choice_idx] if len(choice) > 0 else s_values
         if isinstance(jitter, (str, int, float)):
             jitter = self._extract_value(jitter)
             size = s_values.size
