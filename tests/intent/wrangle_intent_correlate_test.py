@@ -124,32 +124,40 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_values_jitter(self):
         tools = self.tools
         # jitter
-        df = pd.DataFrame(data=[2] * 10, columns=['numbers'])
-        result = tools.correlate_values(df, 'numbers', jitter=1, precision=1, seed=31)
-        self.assertLessEqual([1.4, 3.7, 2.7, 4.2, 1.2, 0.9, 3.3, 0.5, 0.6, 2.1], result)
+        df = pd.DataFrame(data=([2] * 5) + ([1] * 5), columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', jitter=1, precision=1, choice=3, seed=31)
+        self.assertEqual([2.0, 2.0, 2.0, 2.0, 2.4, 1.0, 1.0, 1.0, 1.9, 0.7], result)
         # jitter is zero
         result = tools.correlate_values(df, 'numbers', jitter=0, precision=1, seed=31)
-        self.assertEqual([2, 2, 2, 2, 2, 2, 2, 2, 2, 2], result)
+        self.assertEqual([2, 2, 2, 2, 2, 1, 1, 1, 1, 1], result)
+        # data has zero std
+        df = pd.DataFrame(data=[2] * 10, columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', precision=3, choice=5, jitter=1, seed=31)
+        self.assertEqual(20, pd.Series(result).sum())
         # str jitter
         os.environ['CORR_VAL_TEST'] = '1'
         df = pd.DataFrame(data=[1, 2, 3, 4], columns=['numbers'])
         result = tools.correlate_values(df, 'numbers', jitter='${CORR_VAL_TEST}', precision=0, seed=31)
         self.assertEqual([0, 4, 4, 7], result)
         # loss
-        df = pd.DataFrame(data=[2] * 10000, columns=['numbers'])
-        result = tools.correlate_values(df, 'numbers', jitter=1, precision=2, seed=31)
+        df = pd.DataFrame(data=[1, 1, 2, 3, 5, 8, 13,] * 100, columns=['numbers'])
+        result = tools.correlate_values(df, 'numbers', jitter=1, precision=1, seed=31)
         result = pd.Series(result)
+        std = round(result.std())
         loss = abs(df['numbers'] - result)
         # loss is less than 4 stds
-        std1 = [tools.s2d(column='default', condition='@<=1')]
-        std2 = [tools.s2d(column='default', condition='@<=2'), tools.s2d(column='default', condition='@>1', logic='AND')]
-        std3 = [tools.s2d(column='default', condition='@>2', logic='AND')]
+        std1 = [tools.s2d(column='default', condition=f'@<={std}')]
+        std2 = [tools.s2d(column='default', condition=f'@<={std * 2}'), tools.s2d(column='default', condition=f'@>{std}', logic='AND')]
+        std3 = [tools.s2d(column='default', condition=f'@>{std * 2}', logic='AND')]
         diff = tools.frame_selection(loss, selection=std1)
-        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.7)
+        # print(np.round(diff.shape[0]/loss.shape[0],5))
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.87)
         diff = tools.frame_selection(loss, selection=std2)
-        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.28)
+        # print(np.round(diff.shape[0]/loss.shape[0],5))
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0],2) < 0.14)
         diff = tools.frame_selection(loss, selection=std3)
-        self.assertTrue(np.round(diff.shape[0]/loss.shape[0], 2) < 0.05)
+        # print(np.round(diff.shape[0]/loss.shape[0],5))
+        self.assertTrue(np.round(diff.shape[0]/loss.shape[0], 2) < 0.01)
 
     def test_correlate_values_transform(self):
         tools = self.tools

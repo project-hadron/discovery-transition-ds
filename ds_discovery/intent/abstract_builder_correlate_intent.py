@@ -566,23 +566,25 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             choice = choice if 0 <= choice < size else size
             gen = np.random.default_rng(seed=seed)
             choice_idx = gen.choice(s_values.index, size=choice, replace=False)
-            s_values = s_values.iloc[choice_idx] if len(choice) > 0 else s_values
-        if isinstance(jitter, (str, int, float)):
+            choice_idx = [choice_idx] if isinstance(choice_idx, int) else choice_idx
+            s_values = s_values.iloc[choice_idx]
+        if isinstance(jitter, (str, int, float)) and s_values.size > 0:
             jitter = self._extract_value(jitter)
             size = s_values.size
-            std = s_values.std() if s_values.std() !=0 else 1
-            result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
-            result = result.rvs(size, random_state=seed).round(precision)
-            s_values = s_values.add(result)
+            std = canonical[header].std()
+            if isinstance(std, (int, float)) and std > 0:
+                result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
+                result = result.rvs(size, random_state=seed).round(precision)
+                s_values = s_values.add(result)
         # set transformer
-        if isinstance(transform, str):
+        if isinstance(transform, str) and s_values.size > 0:
             if transform.startswith('lambda'):
                 s_values = s_values.transform(eval(transform))
             else:
                 transform = transform.replace("@", 'x')
                 s_values = s_values.transform(lambda x: eval(transform))
         # set offset for all values
-        if isinstance(offset, (int, float)) and offset != 0:
+        if isinstance(offset, (int, float)) and offset != 0 and s_values.size > 0:
             s_values = s_values.add(offset)
         # get the return list
         rtn_list = canonical[header].copy()
