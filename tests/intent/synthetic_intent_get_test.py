@@ -202,6 +202,13 @@ class SyntheticIntentGetTest(unittest.TestCase):
         result = tools.get_dist_bernoulli(probability=0.5, seed=31, size=4)
         self.assertEqual([0, 1, 1, 1], result)
 
+    def test_get_dist_data_types(self):
+        tools = self.tools
+        result = tools.get_dist_dats_types(1000, seed=31)
+        self.assertEqual((1000, 6), result.shape)
+        result = tools.get_dist_dats_types(1000, extended=True, seed=31)
+        self.assertEqual((1000, 27), result.shape)
+
     def test_choice(self):
         os.environ["HADRON_CHOICE_SIZE"] = "4"
         tools = self.tools

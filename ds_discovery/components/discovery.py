@@ -1654,7 +1654,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def data_quality(df, corr_threshold: float=None, nulls_threshold: float=None, dom_threshold: float=None,
-                     cat_threshold: int=None):
+                     cat_threshold: int=None, capped: int=None):
         """ Analyses a dataset, passed as a DataFrame and returns a quality summary
 
         :param df: The dataset, as a DataFrame.
@@ -1662,9 +1662,16 @@ class DataDiscovery(object):
         :param dom_threshold: The threshold limit of a dominant value. Default 0.98
         :param nulls_threshold: The threshold limit of a nulls value. Default 0.9
         :param corr_threshold: The threshold limit of what constitute correlated columns. Default 0.98
+        :param capped: cap on the size of the dataframe or 0 to ignore. default 1_000_000
         :return: pd.DataFrame
         """
         df = df.copy()
+        # sort dimension cap
+        cap = capped if isinstance(capped, int) else 1_000_000
+        if df.size > cap > 0:
+            rows = int(round(cap / df.shape[1], 0))
+            df = df.sample(frac=1).iloc[:rows]
+        # defaults
         cat_threshold = cat_threshold if isinstance(cat_threshold, int) else 60
         dom_threshold = dom_threshold if isinstance(dom_threshold, float) and 0 <= dom_threshold <= 1 else 0.98
         nulls_threshold = nulls_threshold if isinstance(nulls_threshold, float) and 0 <= nulls_threshold <= 1 else 0.95
@@ -1751,7 +1758,7 @@ class DataDiscovery(object):
 
     @staticmethod
     def data_dictionary(df, stylise: bool=None, inc_next_dom: bool=None, report_header: str=None,
-                        condition: str=None):
+                        condition: str=None, capped: bool=None):
         """ returns a DataFrame of a data dictionary showing 'Attribute', 'Type', '% Nulls', 'Count',
         'Unique', 'Observations' where attribute is the column names in the df
         Note that the subject_matter, if used, should be in the form:
@@ -1764,10 +1771,15 @@ class DataDiscovery(object):
         :param report_header: (optional) filter on a header where the condition is true. Condition must exist
         :param condition: (optional) the condition to apply to the header. Header must exist. examples:
                 ' > 0.95', ".str.contains('shed')"
+        :param capped: cap on the size of the dataframe or 0 to ignore. default 1_000_000
         :return: a pandas.DataFrame
         """
         stylise = stylise if isinstance(stylise, bool) else True
         inc_next_dom = inc_next_dom if isinstance(inc_next_dom, bool) else False
+        cap = capped if isinstance(capped, int) else 1_000_000
+        if df.size > cap > 0:
+            rows = int(round(cap / df.shape[1], 0))
+            df = df.sample(frac=1).iloc[:rows]
         style = [{'selector': 'th', 'props': [('font-size', "120%"), ("text-align", "center")]},
                  {'selector': '.row_heading, .blank', 'props': [('display', 'none;')]}]
         pd.set_option('max_colwidth', 200)

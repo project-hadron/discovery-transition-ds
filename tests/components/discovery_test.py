@@ -136,7 +136,7 @@ class DiscoveryTest(unittest.TestCase):
         result = DataDiscovery.filter_correlated(df, target='target')
         print(result)
 
-    def test_canonica_report(self):
+    def test_canonical_report(self):
         sb = SyntheticBuilder.from_memory()
         size = 1000
         df = pd.DataFrame()
@@ -154,6 +154,13 @@ class DiscoveryTest(unittest.TestCase):
         result = sb.canonical_report(df, stylise=False, report_header='Observations', condition=".str.contains('mean')")
         self.assertEqual((3, 7), result.shape)
         self.assertEqual(['bool', 'int', 'num'], result['Attributes (6)'].values.tolist())
+
+    def test_data_dictionary(self):
+        sb = SyntheticBuilder.from_memory()
+        size = 1000
+        df = sb.tools.get_sample('type_data', size=size)
+        print(df.shape)
+
 
 
 if __name__ == '__main__':
