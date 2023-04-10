@@ -1,5 +1,5 @@
-Filling the Gap - Project Hadron
-================================
+Project Hadron
+==============
 
 Introduction
 ------------
