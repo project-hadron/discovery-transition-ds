@@ -390,7 +390,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_intervals(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_dist_dats_types(self, size: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
+    def get_dist_data_types(self, size: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
                             column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                             remove_duplicates: bool=None) -> pd.DataFrame:
         """ A dataset with example data types
