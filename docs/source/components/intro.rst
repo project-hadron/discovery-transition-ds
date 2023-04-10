@@ -10,14 +10,7 @@ production ready solutions that can be easily managed by product engineers.
 
 Project Hadron is a core set of abstractions that are the foundation of the three key elements that represent data
 science, those being: (1) feature engineering, (2) the construction of synthetic data with simulators, and generators
-(3) and statistics and machine learning algorithms for discovery and creating models. Project Hadron uniquely sees
-data as ‘all the same’ (lazyprogrammer (2020) https://lazyprogrammer.me/all-data-is-the-same/) , by which we mean
-its origin, shape and size stay independent throughout the disciplines so its content, form and structure can be
-removed as a factor in the design and implementation of the components built.
-
-Project Hadron has been designed to place data scientists in the familiar environment of machine learning and
-statistical tools, extracting their ideas and translating them automagicially into production ready solutions
-familiar to data engineers and Subject Matter Experts (SME’s).
+(3) and statistics and machine learning algorithms for discovery and creating models.
 
 Project Hadron provides a clear separation of concerns, whilst maintaining the original intentions of the data
 scientist, that can be passed to a production team. It offers trust between the data scientists teams and product
@@ -25,8 +18,12 @@ teams. It brings with it transparency and traceability, dealing with bias, fairn
 outcome provides the product engineers with adaptability, robustness, and reuse; fitting seamlessly into a
 microservices solution that can be language agnostic.
 
-Project Hadron is designed using Microservices. Microservices - also known as the microservice architecture - is an
-architectural pattern that structures an application as a collection of component services that are:
+Project Hadron is designed using Microservices. Microservices is an architectural style for building software
+applications as a collection of small, independently deployable services that work together to provide a
+specific functionality. Each microservice is designed to be modular, lightweight, and scalable, and can be
+developed, deployed, and maintained independently of the other services.
+
+Microservices offer many advantages and are:
 
 * Highly maintainable and testable
 * Loosely coupled
@@ -35,28 +32,17 @@ architectural pattern that structures an application as a collection of componen
 * Resilient
 * Technically independent
 
-Component services are built for business capabilities and each service performs a single function. Because they are
-independently run, each service can be updated, deployed, and scaled to meet demand for specific functions of an
-application. Project Hadron microservices enable the rapid, frequent and reliable delivery of large, complex
-applications. It also enables an organization to evolve its data science stack and experiment with innovative ideas.
+Microservices are typically organized around specific business capabilities and each service performs a single
+function. Because they are independently run, each service can be updated, deployed, and scaled to meet demand
+for specific functions of an application. Project Hadron microservices enable the rapid, frequent and reliable
+delivery of large, complex applications. It also enables an organization to evolve its data science stack and
+experiment with innovative ideas.
 
 .. image:: /images/hello_hadron/ml_component_activities.png
   :align: center
   :width: 700
 
 \
-
-At the heart of Project Hadron is a multi-tenant, NoSQL, singleton, in memory data store that has minimal code and
-functionality and has been custom built specifically for Hadron tasks in  mind. Abstracted from this is the component
-store which allows us to build a reusable set of methods that define each tenanted component that sits separately
-from the store itself. In addition, a dynamic key value class provides labeling so that each tenant is not tied to
-a fixed set of reference values unless by specificity. Each of the classes, the data store, the component property
-manager, and the key value pairs that make up the component are all independent, giving complete flexibility and
-minimum code footprint to the build process of new components.
-
-This is what gives us the Domain Contract for each tenant which sits at the heart of what makes the contracts
-reusable, translatable, transferable and brings the data scientist closer to the production engineer along with
-building a production ready component solution.
 
 Main features
 -------------
@@ -65,10 +51,48 @@ Main features
 * Feature Selection
 * Feature Engineering
 * Feature Cataloguing
-* Model Capture
+* Model Prediction
 * Custom Build
 * Augmented Knowledge
-* Synthetic Feature Build
+* Synthetic Data Modelling
+
+Data Reporting
+--------------
+* Data Lineage
+* Data Profiling
+* Data Traceability
+
+Data lineage refers to the data's journey from its origin through its various transformations,
+storage locations, and usage. It is a detailed record of the data's origin, how it has been
+transformed or processed, and where it has been stored or moved over time. Data lineage helps
+organizations understand the data's history, quality, and reliability, which are critical
+factors for compliance, auditing, and decision-making purposes. It provides insights into
+data sources, transformations, and dependencies that enable organizations to track data's
+flow and lineage, understand its impact on various business processes, and ensure its accuracy,
+consistency, and security.
+
+Data profiling is the process of analyzing and examining data from various sources to understand
+its structure, content, quality, and completeness. It involves collecting descriptive statistics
+and metadata to gain insights into data elements, such as data types, length, format, patterns,
+and relationships.
+
+Data profiling helps organizations identify potential issues with their data, such as missing or
+inconsistent values, duplicates, outliers, and data quality problems. By analyzing data profiles,
+organizations can gain a better understanding of their data, detect data quality issues, and take
+corrective actions to improve data accuracy, completeness, and consistency.
+
+Data profiling can be used in a variety of contexts, including data migration, data integration,
+data warehousing, and data governance. It is a crucial step in the data preparation process,
+which helps organizations ensure that their data is reliable, consistent, and of high quality.
+
+Data traceability is the ability to track and follow the flow of data from its source to its
+destination, including all the transformations and processing it undergoes. It is a critical
+aspect of data governance, compliance, and risk management, as it enables organizations to
+understand where their data comes from, how it has been processed, and where it has been used.
+
+All together they are a critical component of modern data management practices, especially
+in industries such as healthcare, finance, and government, where data privacy and security
+are essential.
 
 Component capabilities
 ----------------------
