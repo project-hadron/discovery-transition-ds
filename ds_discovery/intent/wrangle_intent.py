@@ -411,9 +411,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._model_merge(seed=seed, **params)
 
     def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, index_sort: bool=True,
-                         index_on_key: bool=None, connector_name: str=None, seed: int=None, save_intent: bool=None,
-                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                         remove_duplicates: bool=None) -> pd.DataFrame:
+                         index_on_key: bool=None, summary: bool=None, connector_name: str=None, seed: int=None,
+                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                         replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ returns the difference, by Lenenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
@@ -429,6 +429,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
         :param index_sort: if index_on_key, should the index be sorted
+        :param summary: change the report to a single row summary
         :param connector_name: (optional) a connector name where the outcome is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager

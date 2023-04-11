@@ -39,7 +39,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         """ a utility method to help build feature conditions by aligning method parameters with dictionary format.
 
         :param column: the column name to apply the condition to
-        :param condition: the condition string (special conditions are 'date.now' for current date
+        :param condition: the condition string (special conditions are 'date.now' for current date)
         :param expect: (optional) the data type to expect. If None then the data type is assumed from the dtype
         :param logic: (optional) the logic to provide, see below for options
         :param date_format: (optional) a format of the date if only a specific part of the date and time is required

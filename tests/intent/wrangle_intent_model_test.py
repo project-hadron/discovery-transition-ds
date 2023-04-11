@@ -5,8 +5,6 @@ import shutil
 import pandas as pd
 from pprint import pprint
 
-from ds_discovery.intent.wrangle_intent import WrangleIntentModel
-
 from ds_discovery import SyntheticBuilder, Wrangle
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from aistac.properties.property_manager import PropertyManager
@@ -129,16 +127,25 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_encode_count(df, headers=['B'])
         self.assertCountEqual([685, 137, 102, 74, 2], result['B'].value_counts().to_list())
 
-    def test_model_difference_keys(self):
+    def test_model_difference_summary(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame(data={"X":  list("ABCDEFG"), "Y":  list("ABCDEFG"), "B": [1, 2, 3, 4, 3, 3, 1], 'C': [0, 2, 0, 4, 3, 2, 1]})
         target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y":  list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 3, 4, 3, 2, 1]})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='X')
-        print(result)
-
+        result = tools.model_difference(df, 'target', on_key='X', summary=True)
+        self.assertEqual(result.shape, (3,2))
+        self.assertEqual(result.Attribute.to_list(), ['Y','B','C'])
+        self.assertEqual(result.Summary.to_list(), [0,1,2])
+        result = tools.model_difference(df, 'target', on_key='X', summary=True, drop_no_diff=True)
+        self.assertEqual(result.shape, (2,2))
+        self.assertEqual(result.Attribute.to_list(), ['B','C'])
+        self.assertEqual(result.Summary.to_list(), [1,2])
+        result = tools.model_difference(df, 'target', on_key='X', summary=True, index_on_key=True)
+        self.assertEqual(result.shape, (3,1))
+        self.assertEqual(result.index.tolist(), ['Y','B','C'])
+        self.assertEqual(result.Summary.to_list(), [0,1,2])
 
     def test_model_difference_num(self):
         builder = SyntheticBuilder.from_memory()
@@ -217,46 +224,11 @@ class WrangleIntentModelTest(unittest.TestCase):
 
     def test_model_profiling(self):
         sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
         sb.add_connector_persist('quality', 'hadron_quality.csv')
         sb.add_connector_persist('dictionary', 'hadron_dictionary.csv')
         sb.add_connector_persist('schema', 'hadron_schema.csv')
-        size = 10000
-
-        df = pd.DataFrame()
-        # types
-        df['cat'] = sb.tools.get_category(list('ABCDE'), size=size)
-        df['num'] = sb.tools.get_number(100.0, size=size)
-        df['int'] = sb.tools.get_number(100, size=size)
-        df['bool'] = sb.tools.get_category([1, 0], size=size)
-        df['date'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', size=size)
-        df['object'] = sb.tools.get_string_pattern('ccd', size=size)
-
-        # # distributions
-        df['norm'] = sb.tools.get_dist_normal(mean=0, std=1, size=size) # normal
-        df['bert'] = sb.tools.get_dist_bernoulli(probability=0.2, size=size) # bool
-        df['gumb'] = sb.tools.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size) # normal skew
-        df['pois'] = sb.tools.get_distribution(distribution='poisson', lam=3, size=size) # category
-
-        # impute
-        df['cat_null'] = sb.tools.get_category(list('MFU'), quantity=0.9, size=size)
-        df['num_null'] = sb.tools.get_number(0.0, 1.0, quantity=0.98, size=size)
-        df['bool_null'] = sb.tools.get_category(['1', '0'], quantity=0.95, size=size)
-        df['date_null'] = sb.tools.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d', quantity=0.99, size=size)
-        df['object_null'] = sb.tools.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size)
-
-        # compare
-        df['unique'] = sb.tools.get_uuid(size=size)
-        df['date_tz'] = sb.tools.get_datetime(pd.Timestamp('2021-09-01', tz='CET'), pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d', size=size)
-        df['corr_num'] = sb.tools.correlate_values(df, header='num', jitter=5)
-        df['dup_num'] = sb.tools.correlate_values(df, header='num')
-        df['dup_date'] = sb.tools.correlate_dates(df, header='date')
-
-        # others
-        df['single_num'] = sb.tools.get_number(1, 2, size=size)
-        df['single_cat'] = sb.tools.get_category(['Male'], size=size)
-        df['nulls'] = sb.tools.get_number(20.0, quantity=0, size=size)
-        df['nulls_num'] = sb.tools.get_number(20.0, quantity=0.03, size=size)
-        df['nulls_cat'] = sb.tools.get_category(list('MFU'), quantity=0.01, size=size)
+        df = tools.get_dist_data_types(2000)
         result = sb.tools.model_profiling(df, profiling='schema', headers=['cat', 'num', 'date'])
         pprint(result)
 

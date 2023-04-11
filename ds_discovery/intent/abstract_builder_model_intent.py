@@ -279,8 +279,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result = result.set_index(['sections', 'elements'])
         return result
 
-    def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None, index_sort: bool=True,
-                          index_on_key: bool=None, connector_name: str=None, seed: int=None, **kwargs):
+    def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
+                          index_sort: bool=True, index_on_key: bool=None, summary: bool=None, connector_name: str=None,
+                          seed: int=None, **kwargs):
         """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
@@ -296,6 +297,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
         :param index_sort: if index_on_key should the index be sorted
+        :param summary: change the report to a single row summary
         :param connector_name::(optional) a connector name where the outcome is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
 
@@ -326,6 +328,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
         index_on_key = index_on_key if isinstance(index_on_key, bool) else False
         index_sort = index_sort if isinstance(index_sort, bool) else False
+        summary = summary if isinstance(summary, bool) else False
         on_key = self._extract_value(on_key)
         canonical.sort_values(on_key, inplace=True)
         other.sort_values(on_key, inplace=True)
@@ -366,13 +369,18 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             diff = pd.concat([diff, line], axis=1)
         diff = diff.T.reset_index(drop=True)
         # set the index to the key
-        if index_on_key:
-            diff = diff.set_index(on_key)
         # drop zeros
         if drop_no_diff:
             diff = diff.loc[:, (diff != 0).any(axis=0)]
-        if index_sort:
-            diff = diff.sort_index()
+        if summary:
+            diff = diff.drop(on_key, axis=1).sum().reset_index()
+            diff.columns = ['Attribute', 'Summary']
+            if index_on_key:
+                diff = diff.set_index('Attribute')
+        elif index_on_key:
+            diff = diff.set_index(on_key)
+            if index_sort:
+                diff = diff.sort_index()
         if isinstance(connector_name, str):
             if self._pm.has_connector(connector_name):
                 handler = self._pm.get_connector_handler(connector_name)
