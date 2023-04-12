@@ -1,9 +1,20 @@
 Running in Docker
 =================
+Docker is a platform for developing, shipping, and running applications in containers. Containers are
+lightweight, portable, and self-contained environments that encapsulate all the necessary dependencies
+and configurations needed to run an application.
+
+Docker provides a way to package an application with its dependencies into a container, which can then
+be run on any machine with the Docker runtime installed. This allows developers to create consistent
+environments for their applications across different systems, which can simplify the process of deploying
+and scaling applications.
+
 Project Hadron is designed using Microservices. These components services are represented as a
-`Domain Contract Ensemble`, the metadata files of a Project Hadron component build. To run a Docker
-container we need to set the run parameters, primarily the location of the `Domain Contract Ensemble`,
-then build and run.
+`Domain Contract Ensemble`, the metadata files of a Project Hadron component build, and can be run as Docker
+Containers.
+
+To us Project Hadron to run a Docker container we need to set the run parameters, primarily the location
+of the `Domain Contract Ensemble`, then build and run.
 
 Setting up
 **********
@@ -73,7 +84,14 @@ of the domain contract ensemble and `<your_local_path>` for your local path)
 
 Docker Compose
 **************
-Alternatively you can run the Docker compose yaml file that can be found in the `executor` directory by running
+We can use the command line interface (CLI) to create and manage Docker containers. However, the CLI can be
+tedious when dealing with multiple containers and configurations.
+
+Docker Compose is a tool that allows you to define and run multi-container Docker applications. With Compose,
+you can use a YAML file to configure your application's services, networks, and volumes, and then use a single
+command to create and start all the containers that make up your application.
+
+We run the Docker compose yaml file that can be found in the `executor` directory by running
 the command:
 
 .. code:: console

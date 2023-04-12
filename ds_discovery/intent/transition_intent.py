@@ -175,11 +175,13 @@ class TransitionIntentModel(AbstractIntentModel):
             return
         return df.dropna(axis='index', how='all', inplace=False)
 
-    def auto_reinstate_nulls(self, df, nulls_list=None, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                        exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
+    def auto_reinstate_nulls(self, df, nulls_list=None, headers: [str, list]=None, drop: bool=None,
+                             dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
+                             re_ignore_case: bool=None, inplace: bool=None, save_intent: bool=None,
                              intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                              remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ automatically reinstates nulls that have been masked with alternate values such as space or question-mark.
+        By default, the nulls list is ['',' ','NaN','nan','None','null','Null','NULL']
 
         :param df: the pandas DataFrame to remove null rows from
         :param nulls_list: (optional) potential null values to replace with a null.

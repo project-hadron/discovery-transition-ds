@@ -280,15 +280,15 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         return result
 
     def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
-                          index_sort: bool=True, index_on_key: bool=None, summary: bool=None, connector_name: str=None,
-                          seed: int=None, **kwargs):
+                          ordered: bool=True, index_on_key: bool=None, summary_connector: bool=None,
+                          detail_connector: str=None, seed: int=None, **kwargs):
         """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name.
 
-        If the ``outcome`` parameter is used, the output is used for the result output with the method returning the
-        original canonical. This allows a canonical pipeline to continue through the component while outputting the
+        If the ``detail connector`` parameter is used, the difference report is output to that connector and the
+        original canonical returned. This allows a canonical pipeline to continue through the component while outputting the
         Intent action.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
@@ -296,9 +296,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param on_key: The name of the key that uniquely joins the canonical to others
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
-        :param index_sort: if index_on_key should the index be sorted
-        :param summary: change the report to a single row summary
-        :param connector_name::(optional) a connector name where the outcome is sent
+        :param ordered: (optional) order by key
+        :param summary_connector: (optional) a connector name where the summary report is sent
+        :param detail_connector::(optional) a connector name where the detail report is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -327,8 +327,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         _ = seed if isinstance(seed, int) else self._seed()
         drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
         index_on_key = index_on_key if isinstance(index_on_key, bool) else False
-        index_sort = index_sort if isinstance(index_sort, bool) else False
-        summary = summary if isinstance(summary, bool) else False
+        ordered = ordered if isinstance(ordered, bool) else False
+        summary_connector = self._extract_value(summary_connector)
+        detail_connector = self._extract_value(detail_connector)
         on_key = self._extract_value(on_key)
         canonical.sort_values(on_key, inplace=True)
         other.sort_values(on_key, inplace=True)
@@ -372,21 +373,26 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         # drop zeros
         if drop_no_diff:
             diff = diff.loc[:, (diff != 0).any(axis=0)]
-        if summary:
-            diff = diff.drop(on_key, axis=1).sum().reset_index()
-            diff.columns = ['Attribute', 'Summary']
-            if index_on_key:
-                diff = diff.set_index('Attribute')
-        elif index_on_key:
-            diff = diff.set_index(on_key)
-            if index_sort:
-                diff = diff.sort_index()
-        if isinstance(connector_name, str):
-            if self._pm.has_connector(connector_name):
-                handler = self._pm.get_connector_handler(connector_name)
+        if isinstance(summary_connector, str):
+            if self._pm.has_connector(summary_connector):
+                summary = diff.drop(on_key, axis=1).sum().reset_index()
+                summary.columns = ['Attribute', 'Summary']
+                if ordered:
+                    summary = summary.sort_values(['Attribute'])
+                handler = self._pm.get_connector_handler(summary_connector)
+                handler.persist_canonical(summary, **kwargs)
+            else:
+                raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
+        if ordered:
+            diff = diff.sort_values([on_key])
+        if isinstance(detail_connector, str):
+            if self._pm.has_connector(detail_connector):
+                handler = self._pm.get_connector_handler(detail_connector)
                 handler.persist_canonical(diff, **kwargs)
                 return canonical
-            raise ValueError(f"The connector name {connector_name} has been given but no Connect Contract added")
+            raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
+        if index_on_key:
+            diff = diff.set_index(on_key)
         return diff
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,
