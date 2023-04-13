@@ -390,12 +390,12 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_intervals(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_dist_data_types(self, size: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
-                            column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                            remove_duplicates: bool=None) -> pd.DataFrame:
+    def model_synthetic_data_types(self, canonical: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
+                                   column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                                   remove_duplicates: bool=None) -> pd.DataFrame:
         """ A dataset with example data types
 
-        :param size: the size (rows) of the sample dataset
+        :param canonical: the canonical size (rows) of the sample dataset
         :param extended: if the types should extend beyond the standard 6 types including nulls, predominance, etc.
         :param seed: a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
@@ -419,51 +419,51 @@ class SyntheticIntentModel(WrangleIntentModel):
         # remove intent params
         extended = extended if isinstance(extended, bool) else False
         seed = self._seed(seed=seed)
-        _df = self.frame_starter(canonical=size, seed=seed)
+        _df = self.frame_starter(canonical=canonical, seed=seed, save_intent=False)
 
         # types
         _df['cat'] = self.get_category(['SUSPENDED', 'ACTIVE', 'PENDING', 'INACTIVE'],
-                                            relative_freq=[1, 99, 10, 40], size=size, seed=seed)
-        _df['num'] = self.get_number(0.5, 5.0, relative_freq=[1, 1, 2, 3, 5, 8, 13, 21], size=size, seed=seed)
-        _df['int'] = self.get_number(-1000, 1000, size=size, seed=seed)
-        _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=size, seed=seed)
+                                       relative_freq=[1, 99, 10, 40], size=canonical, seed=seed, save_intent=False)
+        _df['num'] = self.get_number(0.5, 5.0, relative_freq=[1, 1, 2, 3, 5, 8, 13, 21], size=canonical, seed=seed, save_intent=False)
+        _df['int'] = self.get_number(-1000, 1000, size=canonical, seed=seed, save_intent=False)
+        _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=canonical, seed=seed, save_intent=False)
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
-                                             ordered=True, size=size, seed=seed)
-        _df['object'] = self.get_string_pattern('lldsddslldd', quantity=0.85, size=size, seed=seed)
+                                        ordered=True, size=canonical, seed=seed, save_intent=False)
+        _df['object'] = self.get_string_pattern('lldsddslldd', quantity=0.85, size=canonical, seed=seed, save_intent=False)
 
         if extended:
             # distributions
-            _df['normal'] = self.get_dist_normal(mean=0, std=1, size=size, seed=seed)  # normal
-            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.2, size=size, seed=seed)  # bool
-            _df['gumbel'] = self.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size, seed=seed)  # skew
-            _df['poisson'] = self.get_distribution(distribution='poisson', lam=3, size=size, seed=seed)  # category
-            _df['poly'] = self.correlate_polynomial(_df, header='num', coefficient=[6, 0, 1], seed=seed)  # curve
+            _df['normal'] = self.get_dist_normal(mean=0, std=1, size=canonical, seed=seed, save_intent=False)  # normal
+            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.2, size=canonical, seed=seed, save_intent=False)  # bool
+            _df['gumbel'] = self.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=canonical, seed=seed, save_intent=False)  # skew
+            _df['poisson'] = self.get_distribution(distribution='poisson', lam=3, size=canonical, seed=seed, save_intent=False)  # category
+            _df['poly'] = self.correlate_polynomial(_df, header='num', coefficient=[6, 0, 1], seed=seed, save_intent=False)  # curve
 
             # impute
-            _df['cat_null'] = self.get_category(list('MFU'), relative_freq=[9, 7, 1], quantity=0.9, size=size, seed=seed)
-            _df['num_null'] = self.get_number(0., 1., quantity=0.98, size=size, seed=seed)
-            _df['bool_null'] = self.get_category(['1', '0'], relative_freq=[1, 20], quantity=0.95, size=size, seed=seed)
+            _df['cat_null'] = self.get_category(list('MFU'), relative_freq=[9, 7, 1], quantity=0.9, size=canonical, seed=seed, save_intent=False)
+            _df['num_null'] = self.get_number(0., 1., quantity=0.98, size=canonical, seed=seed, save_intent=False)
+            _df['bool_null'] = self.get_category(['1', '0'], relative_freq=[1, 20], quantity=0.95, size=canonical, seed=seed, save_intent=False)
             _df['date_null'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
-                                                      quantity=0.99, size=size, seed=seed)
-            _df['object_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size, seed=seed)
+                                                 quantity=0.99, size=canonical, seed=seed, save_intent=False)
+            _df['object_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=canonical, seed=seed, save_intent=False)
 
             # #compare
-            _df['unique'] = self.get_number(from_value=size, to_value=size * 10, at_most=1,
-                                                 size=size, seed=seed)
+            _df['unique'] = self.get_number(from_value=canonical, to_value=canonical * 10, at_most=1,
+                                            size=canonical, seed=seed, save_intent=False)
             _df['date_tz'] = self.get_datetime(pd.Timestamp('2021-09-01', tz='CET'),
-                                                    pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d',
-                                                    size=size, seed=seed)
-            _df['correlate'] = self.correlate_values(_df, header='poly', jitter=0.1, seed=seed)
-            _df['outliers'] = self.correlate_values(_df, header='correlate', jitter=1, choice=5, seed=seed)
-            _df['dup_num'] = self.correlate_values(_df, header='num', seed=seed)
-            _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed)
+                                               pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d',
+                                               size=canonical, seed=seed, save_intent=False)
+            _df['correlate'] = self.correlate_values(_df, header='poly', jitter=0.1, seed=seed, save_intent=False)
+            _df['outliers'] = self.correlate_values(_df, header='correlate', jitter=1, choice=5, seed=seed, save_intent=False)
+            _df['dup_num'] = self.correlate_values(_df, header='num', seed=seed, save_intent=False)
+            _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed, save_intent=False)
 
             # # others
-            _df['single_num'] = self.get_number(1, 2, size=size, seed=seed)
-            _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed)
-            _df['nulls'] = self.get_number(20.0, quantity=0, size=size, seed=seed)
-            _df['nulls_num'] = self.get_number(20.0, quantity=1, size=size, seed=seed)
-            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=15, size=size, seed=seed)
+            _df['single_num'] = self.get_number(1, 2, size=canonical, seed=seed, save_intent=False)
+            _df['single_cat'] = self.get_category(['CURRENT'], size=canonical, seed=seed, save_intent=False)
+            _df['nulls'] = self.get_number(20.0, quantity=0, size=canonical, seed=seed, save_intent=False)
+            _df['nulls_num'] = self.get_number(20.0, quantity=1, size=canonical, seed=seed, save_intent=False)
+            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=15, size=canonical, seed=seed, save_intent=False)
         return _df
 
     def get_dist_normal(self, mean: float, std: float, precision: int=None, size: int=None, quantity: float=None,

@@ -311,8 +311,14 @@ class Controller(AbstractComponent):
         The dictionary keys are as follows:
             - task_name: The task name (intent level) this run detail is applied to
             - source: (optional) The task name of the source or '@<intent_name>' to reference a known event book
-            - persist: (optional) if true persist to an event book named after the intent. if False do nothing
+            - persist: (optional) if True, persists to disk rather than pass through memory
             - end_source (optional) if this task will be the last to use the source, remove it from memory on completion
+
+        for example:
+            run_book = [
+                controller.runbook2dict(task='task1_tr', persist=True),
+                controller.runbook2dict(task='task2_wr', source='@'),
+            ]
 
         mod_tasks are a dictionary of modifications to tasks in the runbook. The run_book will still define the run
         order and modification tasks not found in the run_book will be ignored. The dictionary is indexed on the task

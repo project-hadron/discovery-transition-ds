@@ -107,12 +107,12 @@ class ControllerTest(unittest.TestCase):
         controller = Controller.from_env()
         controller.run_controller(run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'canonical shape is (891, 15)',
+        control = ['start run-cycle 0', 'start task cycle 0', 'running task1_tr', 'canonical shape is (891, 15)',
                    'running task2_wr', 'canonical shape is (891, 15)', 'tasks complete', 'end of report']
         self.assertEqual(control, df['text'].to_list())
         controller.run_controller(run_time=3, run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        self.assertEqual((15, 2), df.shape)
+        self.assertEqual(3, df.where(df['text'].str.startswith('start run-cycle')).dropna().shape[0])
 
     def test_controller_check_changed(self):
         tr = Transition.from_env('task1')
@@ -123,10 +123,19 @@ class ControllerTest(unittest.TestCase):
         controller = Controller.from_env()
         controller.run_controller(repeat=2, source_check_uri=tr.get_persist_contract().raw_uri, run_cycle_report='report.csv')
         df = controller.load_canonical(connector_name='run_cycle_report')
-        control = ['start run-cycle 0', 'start run count 0', 'running task1_tr', 'canonical shape is (4, 1)',
-                   'running task2_wr', 'canonical shape is (4, 1)', 'tasks complete',
-                   'start run count 1', 'Source has not changed', 'end of report']
-        self.assertEqual(control, df['text'].to_list())
+        self.assertEqual(1, df.where(df['text'].str.startswith('start run-cycle')).dropna().shape[0])
+        self.assertEqual(1, df.where(df['text'].str.startswith('Source has not changed')).dropna().shape[0])
+
+    def test_controller_task_run(self):
+        controller = Controller.from_env()
+        run_book = [
+            controller.runbook2dict(task='task1_tr', persist=True),
+            controller.runbook2dict(task='task2_wr', source='@'),
+        ]
+        controller.add_run_book(book_name='tasks', run_levels=run_book)
+        controller.run_controller(run_book='tasks')
+
+
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

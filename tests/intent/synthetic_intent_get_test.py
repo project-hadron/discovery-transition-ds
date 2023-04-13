@@ -204,9 +204,9 @@ class SyntheticIntentGetTest(unittest.TestCase):
 
     def test_get_dist_data_types(self):
         tools = self.tools
-        result = tools.get_dist_data_types(1000, seed=31)
+        result = tools.model_synthetic_data_types(1000, seed=31)
         self.assertEqual((1000, 6), result.shape)
-        result = tools.get_dist_data_types(1000, extended=True, seed=31)
+        result = tools.model_synthetic_data_types(1000, extended=True, seed=31)
         self.assertEqual((1000, 27), result.shape)
 
     def test_choice(self):
