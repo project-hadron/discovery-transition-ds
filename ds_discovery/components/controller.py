@@ -5,7 +5,6 @@ import threading
 import time
 import numpy as np
 import pandas as pd
-from aistac import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 
 from ds_discovery import EventBookPortfolio
@@ -341,7 +340,6 @@ class Controller(AbstractComponent):
         mod_tasks = mod_tasks if isinstance(mod_tasks, (list, dict)) else []
         if isinstance(run_cycle_report, str):
             self.add_connector_persist(connector_name='run_cycle_report', uri_file=run_cycle_report)
-            df_report = pd.DataFrame(columns=['time', 'text'])
         if isinstance(mod_tasks, dict):
             mod_tasks = [mod_tasks]
         if not self.pm.has_intent():

@@ -178,28 +178,42 @@ class WrangleIntentModelTest(unittest.TestCase):
     def test_model_difference_num(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A":  list("ABCDEFG"), "B": [1, 2, 3, 4, 3, 3, 1], 'C': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 3, 4, 3, 2, 1]})
+        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": [1, 2, 5, 5, 3, 3, 1], 'C': [0,  2, 3, 3, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [11, 2, 3, 4, 3, 2, 1]})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
+        # normal
         result = tools.model_difference(df, 'target', on_key='A')
         self.assertEqual((2,3), result.shape)
-        self.assertEqual(['A', 'C'], result['A'].tolist())
+        self.assertEqual(['A', 'D'], result['A'].tolist())
         self.assertEqual([0,1], result['B'].tolist())
         self.assertEqual([1,1], result['C'].tolist())
+        # with levenshtein distance
+        result = tools.model_difference(df, 'target', on_key='A', distance=True)
+        self.assertEqual((2,3), result.shape)
+        self.assertEqual(['A', 'D'], result['A'].tolist())
+        self.assertEqual([0,1], result['B'].tolist())
+        self.assertEqual([2,1], result['C'].tolist())
 
     def test_model_difference_str(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCDCBA"), 'C': list("BCDECFP")})
+        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
         builder.add_connector_persist('target', uri_file='working/data/target.csv')
         builder.save_canonical('target', target)
+        # normal
         result = tools.model_difference(df, 'target', on_key='A')
-        self.assertEqual((2,3), result.shape)
-        self.assertEqual(['D', 'G'], result['A'].tolist())
-        self.assertEqual([1, 0], result['B'].tolist())
-        self.assertEqual([0,1], result['C'].tolist())
+        self.assertEqual((3,3), result.shape)
+        self.assertEqual(['B', 'C', 'E'], result['A'].tolist())
+        self.assertEqual([0, 1, 0], result['B'].tolist())
+        self.assertEqual([1,0,1], result['C'].tolist())
+        # with levenshtein distance
+        result = tools.model_difference(df, 'target', on_key='A', distance=True)
+        self.assertEqual((3,3), result.shape)
+        self.assertEqual(['B', 'C', 'E'], result['A'].tolist())
+        self.assertEqual([0, 1, 0], result['B'].tolist())
+        self.assertEqual([2,0,1], result['C'].tolist())
 
     def test_model_difference_order(self):
         builder = SyntheticBuilder.from_memory()

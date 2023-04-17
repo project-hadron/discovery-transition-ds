@@ -7,7 +7,6 @@ from abc import abstractmethod
 from typing import Any
 import pandas.api.types as ptypes
 from aistac.components.aistac_commons import DataAnalytics
-from aistac.handlers.abstract_handlers import HandlerFactory
 
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
@@ -280,16 +279,19 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         return result
 
     def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
-                          ordered: bool=True, index_on_key: bool=None, summary_connector: bool=None,
-                          detail_connector: str=None, seed: int=None, **kwargs):
-        """returns the difference, by Levenshtein distance, between two canonicals, joined on a common and unique key.
+                          ordered: bool=None, index_on_key: bool=None, distance: bool=None,
+                          summary_connector: bool=None, detail_connector: str=None, seed: int=None, **kwargs):
+        """returns the difference between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
         If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name.
 
+        By default only the difference is shown with 1 for true and 0 for false. By setting the `distance`
+        parameter to True, Levenshtein distance is used returning the distance between the values.
+
         If the ``detail connector`` parameter is used, the difference report is output to that connector and the
-        original canonical returned. This allows a canonical pipeline to continue through the component while outputting the
-        Intent action.
+        original canonical returned. This allows a canonical pipeline to continue through the component while
+        outputting the Intent action.
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
@@ -297,9 +299,11 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         :param drop_no_diff: (optional) drops columns with no difference
         :param index_on_key: (optional) set the index to be the key
         :param ordered: (optional) order by key
+        :param distance: (optional) use Levenshtein distance to indicate distance between fields
         :param summary_connector: (optional) a connector name where the summary report is sent
         :param detail_connector::(optional) a connector name where the detail report is sent
         :param seed: (optional) this is a placeholder, here for compatibility across methods
+        :param kwargs: additional parameters for the connector contracts
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
         parameter instructions on how to generate a pd.Dataframe. the description of each is:
@@ -328,6 +332,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
         index_on_key = index_on_key if isinstance(index_on_key, bool) else False
         ordered = ordered if isinstance(ordered, bool) else False
+        distance = distance if isinstance(distance, bool) else False
         summary_connector = self._extract_value(summary_connector)
         detail_connector = self._extract_value(detail_connector)
         on_key = self._extract_value(on_key)
@@ -345,15 +350,15 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
         def levenshtein_distance(str1, str2, ):
             counter = {"+": 0, "-": 0}
-            distance = 0
+            lev_dist = 0
             for edit_code, *_ in ndiff(str1, str2):
                 if edit_code == " ":
-                    distance += max(counter.values())
+                    lev_dist += max(counter.values())
                     counter = {"+": 0, "-": 0}
                 else:
                     counter[edit_code] += 1
-            distance += max(counter.values())
-            return distance
+            lev_dist += max(counter.values())
+            return lev_dist
 
         # get the distance between differences
         diff = pd.DataFrame()
@@ -364,7 +369,10 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                     if index == on_key:
                         line.at[index] = value
                     else:
-                        line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
+                        if distance:
+                            line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
+                        else:
+                            line.at[index] = 0 if str(value) == str(df.iloc[idx + 1].loc[index]) else 1
             except IndexError:
                 continue
             diff = pd.concat([diff, line], axis=1)
