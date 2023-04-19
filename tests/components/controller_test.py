@@ -136,38 +136,35 @@ class ControllerTest(unittest.TestCase):
         controller.add_run_book(book_name='tasks', run_levels=run_book)
         controller.run_controller(run_book='tasks')
 
-    def test_capability_use_case(self):
-        os.environ['TESTER_SOURCE_FILE'] = 'source/file.csv'
-
-        tr = Transition.from_env('tester', has_contract=False)
-        pm: TransitionPropertyManager = tr.pm
-        tr.set_source_uri('${TESTER_SOURCE_FILE}')
-        tr.set_persist()
-        cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
-        print(cc.raw_handler)
-
-        os.environ['TESTER_SOURCE_FILE'] = 'mysql://user:pass@localhost:3306/mydb/'
-        cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
-        print(cc.raw_handler)
-
-
-    def test_controller_use_case(self):
-        os.environ['HADRON_DEFAULT_PATH'] = 'persist'
-        os.environ['HADRON_DIFF_ON'] = 'target'
-        os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=origin"
-        os.environ['HADRON_DIFF_CLEANER_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=other"
-        os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
-        os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
-
-        controller = Controller.from_env(
-            uri_pm_repo='/Users/doatridge/code/jupyter/telecom/matching/difference/hadron/contracts')
-
-        controller.run_controller(run_cycle_report='hadron_controller_cycle_report.csv')
-        report = controller.load_canonical(connector_name='run_cycle_report')
-        print(report)
-
-
-
+    # def test_capability_use_case(self):
+    #     os.environ['TESTER_SOURCE_FILE'] = 'source/file.csv'
+    #
+    #     tr = Transition.from_env('tester', has_contract=False)
+    #     pm: TransitionPropertyManager = tr.pm
+    #     tr.set_source_uri('${TESTER_SOURCE_FILE}')
+    #     tr.set_persist()
+    #     cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
+    #     print(cc.raw_handler)
+    #
+    #     os.environ['TESTER_SOURCE_FILE'] = 'mysql://user:pass@localhost:3306/mydb/'
+    #     cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
+    #     print(cc.raw_handler)
+    #
+    #
+    # def test_controller_use_case(self):
+    #     os.environ['HADRON_DEFAULT_PATH'] = 'persist'
+    #     os.environ['HADRON_DIFF_ON'] = 'target'
+    #     os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=origin"
+    #     os.environ['HADRON_DIFF_CLEANER_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=other"
+    #     os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
+    #     os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
+    #
+    #     controller = Controller.from_env(
+    #         uri_pm_repo='/Users/doatridge/code/jupyter/telecom/matching/difference/hadron/contracts')
+    #
+    #     controller.run_controller(run_cycle_report='hadron_controller_cycle_report.csv')
+    #     report = controller.load_canonical(connector_name='run_cycle_report')
+    #     print(report)
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:
