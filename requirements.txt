@@ -1,6 +1,6 @@
 setuptools
 # Hadron foundation
-aistac-foundation >= 2.12
+aistac-foundation
 # Data Science packages
 pandas
 numpy
@@ -8,11 +8,15 @@ scikit-learn
 matplotlib
 seaborn
 scipy
+# structure packages
+requests
+pyarrow
+pyyaml
 # S3 packages
 boto3
 botocore
 fsspec
 s3fs
-#
-pyyaml
-requests
+# others
+
+

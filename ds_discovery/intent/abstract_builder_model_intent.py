@@ -362,21 +362,24 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
         # get the distance between differences
         diff = pd.DataFrame()
-        for idx in range(0, df.shape[0], 2):
-            line = pd.Series(data=0, index=df.iloc[idx].index, dtype='int')
-            try:
-                for index, value in df.iloc[idx].items():
-                    if index == on_key:
-                        line.at[index] = value
-                    else:
-                        if distance:
-                            line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
+        if len(idx) == 0:
+            diff = canonical[on_key].to_frame()
+        else:
+            for idx in range(0, df.shape[0], 2):
+                line = pd.Series(data=0, index=df.iloc[idx].index, dtype='int')
+                try:
+                    for index, value in df.iloc[idx].items():
+                        if index == on_key:
+                            line.at[index] = value
                         else:
-                            line.at[index] = 0 if str(value) == str(df.iloc[idx + 1].loc[index]) else 1
-            except IndexError:
-                continue
-            diff = pd.concat([diff, line], axis=1)
-        diff = diff.T.reset_index(drop=True)
+                            if distance:
+                                line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
+                            else:
+                                line.at[index] = 0 if str(value) == str(df.iloc[idx + 1].loc[index]) else 1
+                except IndexError:
+                    continue
+                diff = pd.concat([diff, line], axis=1)
+            diff = diff.T.reset_index(drop=True)
         # set the index to the key
         # drop zeros
         if drop_no_diff:

@@ -8,6 +8,7 @@ from pprint import pprint
 from ds_discovery import SyntheticBuilder, Transition, Wrangle
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import Controller
@@ -39,15 +40,15 @@ class ControllerTest(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
-        tr = Transition.from_env('task1', has_contract=False)
-        tr.set_source_uri("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        tr.set_persist()
-        wr = Wrangle.from_env('task2' , has_contract=False)
-        wr.set_source_uri(tr.get_persist_contract().raw_uri)
-        wr.set_persist()
-        controller = Controller.from_env(has_contract=False)
-        controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task1', intent_level='task1_tr')
-        controller.intent_model.wrangle(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_wr')
+        # tr = Transition.from_env('task1', has_contract=False)
+        # tr.set_source_uri("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        # tr.set_persist()
+        # wr = Wrangle.from_env('task2' , has_contract=False)
+        # wr.set_source_uri(tr.get_persist_contract().raw_uri)
+        # wr.set_persist()
+        # controller = Controller.from_env(has_contract=False)
+        # controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task1', intent_level='task1_tr')
+        # controller.intent_model.wrangle(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_wr')
 
     def tearDown(self):
         try:
@@ -134,6 +135,37 @@ class ControllerTest(unittest.TestCase):
         ]
         controller.add_run_book(book_name='tasks', run_levels=run_book)
         controller.run_controller(run_book='tasks')
+
+    def test_capability_use_case(self):
+        os.environ['TESTER_SOURCE_FILE'] = 'source/file.csv'
+
+        tr = Transition.from_env('tester', has_contract=False)
+        pm: TransitionPropertyManager = tr.pm
+        tr.set_source_uri('${TESTER_SOURCE_FILE}')
+        tr.set_persist()
+        cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
+        print(cc.raw_handler)
+
+        os.environ['TESTER_SOURCE_FILE'] = 'mysql://user:pass@localhost:3306/mydb/'
+        cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
+        print(cc.raw_handler)
+
+
+    def test_controller_use_case(self):
+        os.environ['HADRON_DEFAULT_PATH'] = 'persist'
+        os.environ['HADRON_DIFF_ON'] = 'target'
+        os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=origin"
+        os.environ['HADRON_DIFF_CLEANER_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=other"
+        os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
+        os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
+
+        controller = Controller.from_env(
+            uri_pm_repo='/Users/doatridge/code/jupyter/telecom/matching/difference/hadron/contracts')
+
+        controller.run_controller(run_cycle_report='hadron_controller_cycle_report.csv')
+        report = controller.load_canonical(connector_name='run_cycle_report')
+        print(report)
+
 
 
 
