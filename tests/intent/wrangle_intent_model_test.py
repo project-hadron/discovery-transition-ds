@@ -215,6 +215,32 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual([0, 1, 0], result['B'].tolist())
         self.assertEqual([2,0,1], result['C'].tolist())
 
+    def test_model_difference_equal(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # identical
+        result = tools.model_difference(df, 'target', on_key='X')
+        self.assertEqual(['X'], result.columns.to_list())
+        result = tools.model_difference(df, 'target', on_key=['X','Y'])
+        self.assertListEqual(['X','Y'], result.columns.to_list())
+
+    def test_model_difference_multi_key(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # identical
+        result = tools.model_difference(df, 'target', on_key=['X','Y'], index_on_key=True, ordered=True, drop_no_diff=True)
+        self.assertListEqual(['X','Y'], result.index.names)
+        self.assertListEqual(['B', 'C'], result.columns.to_list())
+
+
     def test_model_difference_order(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools

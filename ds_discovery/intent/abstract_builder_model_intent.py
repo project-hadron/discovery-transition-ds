@@ -335,7 +335,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         distance = distance if isinstance(distance, bool) else False
         summary_connector = self._extract_value(summary_connector)
         detail_connector = self._extract_value(detail_connector)
-        on_key = self._extract_value(on_key)
+        on_key = Commons.list_formatter(self._extract_value(on_key))
         canonical.sort_values(on_key, inplace=True)
         other.sort_values(on_key, inplace=True)
         # concat
@@ -363,13 +363,13 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         # get the distance between differences
         diff = pd.DataFrame()
         if len(idx) == 0:
-            diff = canonical[on_key].to_frame()
+            diff = Commons.filter_columns(canonical, headers=on_key)
         else:
             for idx in range(0, df.shape[0], 2):
                 line = pd.Series(data=0, index=df.iloc[idx].index, dtype='int')
                 try:
                     for index, value in df.iloc[idx].items():
-                        if index == on_key:
+                        if index in on_key:
                             line.at[index] = value
                         else:
                             if distance:
@@ -395,7 +395,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             else:
                 raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
         if ordered:
-            diff = diff.sort_values([on_key])
+            diff = diff.sort_values(on_key)
         if isinstance(detail_connector, str):
             if self._pm.has_connector(detail_connector):
                 handler = self._pm.get_connector_handler(detail_connector)
