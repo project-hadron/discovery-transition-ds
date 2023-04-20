@@ -410,9 +410,9 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_merge(seed=seed, **params)
 
-    def model_difference(self, canonical: Any, other: Any, on_key: str, drop_no_diff: bool=None, ordered: bool=None,
-                         index_on_key: bool=None, distance: bool=None, summary_connector: bool=None, seed: int=None,
-                         detail_connector: str=None,save_intent: bool=None, column_name: [int, str]=None,
+    def model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
+                         ordered: bool=None, index_on_key: bool=None, distance: bool=None, summary_connector: bool=None,
+                         seed: int=None, detail_connector: str=None,save_intent: bool=None, column_name: [int, str]=None,
                          intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ rreturns the difference between two canonicals, joined on a common and unique key.
         The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
