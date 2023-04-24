@@ -128,43 +128,22 @@ class ControllerTest(unittest.TestCase):
         self.assertEqual(1, df.where(df['text'].str.startswith('Source has not changed')).dropna().shape[0])
 
     def test_controller_task_run(self):
-        controller = Controller.from_env()
+        os.environ['HADRON_SYNTHETIC_DATA_SIZE'] = '2000'
+        sb = SyntheticBuilder.from_env('data_types', has_contract=False)
+        sb.set_persist()
+        df = sb.tools.model_synthetic_data_types(canonical=1_000, extended=True, column_name='data_types')
+        sb.run_component_pipeline(1_000)
+        # controller
+        controller = Controller.from_env(has_contract=False)
+        controller.intent_model.synthetic_builder(canonical=0, task_name='data_types', intent_level='synthetic_data_types')
         run_book = [
-            controller.runbook2dict(task='task1_tr', persist=True),
-            controller.runbook2dict(task='task2_wr', source='@'),
+            controller.runbook2dict(task='synthetic_data_types', source='${HADRON_SYNTHETIC_DATA_SIZE}'),
         ]
-        controller.add_run_book(book_name='tasks', run_levels=run_book)
-        controller.run_controller(run_book='tasks')
+        controller.add_run_book(run_levels=run_book)
+        controller.run_controller()
+        result = sb.load_persist_canonical()
+        self.assertEqual((2000, 27), result.shape)
 
-    # def test_capability_use_case(self):
-    #     os.environ['TESTER_SOURCE_FILE'] = 'source/file.csv'
-    #
-    #     tr = Transition.from_env('tester', has_contract=False)
-    #     pm: TransitionPropertyManager = tr.pm
-    #     tr.set_source_uri('${TESTER_SOURCE_FILE}')
-    #     tr.set_persist()
-    #     cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
-    #     print(cc.raw_handler)
-    #
-    #     os.environ['TESTER_SOURCE_FILE'] = 'mysql://user:pass@localhost:3306/mydb/'
-    #     cc = pm.get_connector_contract(tr.CONNECTOR_SOURCE)
-    #     print(cc.raw_handler)
-    #
-    #
-    # def test_controller_use_case(self):
-    #     os.environ['HADRON_DEFAULT_PATH'] = 'persist'
-    #     os.environ['HADRON_DIFF_ON'] = 'target'
-    #     os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=origin"
-    #     os.environ['HADRON_DIFF_CLEANER_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=other"
-    #     os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
-    #     os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
-    #
-    #     controller = Controller.from_env(
-    #         uri_pm_repo='/Users/doatridge/code/jupyter/telecom/matching/difference/hadron/contracts')
-    #
-    #     controller.run_controller(run_cycle_report='hadron_controller_cycle_report.csv')
-    #     report = controller.load_canonical(connector_name='run_cycle_report')
-    #     print(report)
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

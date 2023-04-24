@@ -5,6 +5,7 @@ import threading
 import time
 import numpy as np
 import pandas as pd
+from aistac import ConnectorContract
 from aistac.components.abstract_component import AbstractComponent
 
 from ds_discovery import EventBookPortfolio
@@ -410,7 +411,7 @@ class Controller(AbstractComponent):
                         continue
                 for intent in intent_levels:
                     task = intent.get('task')
-                    source = self._get_environ(intent.get('source', ''))
+                    source = ConnectorContract.parse_environ(intent.get('source', ''))
                     to_persist = intent.get('persist')
                     end_source = intent.get('end_source', False)
                     if isinstance(run_cycle_report, str):
