@@ -54,7 +54,8 @@ setup(
     python_requires='>=3.7',
     install_requires=[
         'aistac-foundation',
-        'pandas>',
+        'discovery-connectors'
+        'pandas',
         'numpy',
         'matplotlib',
         'seaborn',

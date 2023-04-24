@@ -1,6 +1,7 @@
 setuptools
 # Hadron foundation
 aistac-foundation
+discovery-connectors
 # Data Science packages
 pandas
 numpy
