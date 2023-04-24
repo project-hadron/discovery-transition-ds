@@ -31,10 +31,11 @@ class AbstractCommonIntentTest(unittest.TestCase):
     def test_freq_dist_size(self):
         tools: SyntheticIntentModel = SyntheticBuilder.from_memory().tools
         size = 125117 # prime
-        freq = [1.,3.,.4]
+        freq = [1,5,12]
         result = tools._freq_dist_size(relative_freq=freq, size=size)
         self.assertEqual(3, len(result))
         self.assertEqual(size, sum(result))
+        self.assertTrue(result[0] < result[1] < result[2])
         result = tools._freq_dist_size(relative_freq=freq, size=size, seed=31)
         other = tools._freq_dist_size(relative_freq=freq, size=size, seed=31)
         self.assertEqual(size, sum(result))

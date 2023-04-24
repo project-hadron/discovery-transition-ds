@@ -47,7 +47,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         if to_value <= from_value:
             raise ValueError("The number range must be a positive difference, where to_value <= from_value")
         at_most = 0 if not isinstance(at_most, int) else at_most
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         precision = 3 if not isinstance(precision, int) else precision
         if precision == 0:
@@ -185,7 +185,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
             rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
         if as_num:
             return Commons.date2value(rtn_list)
-        if isinstance(date_format, str):
+        if isinstance(date_format, str) and len(rtn_list) > 0:
             rtn_list = rtn_list.dt.strftime(date_format)
         return rtn_list.to_list()
     
@@ -254,7 +254,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         precision = precision if isinstance(precision, int) else 3
         generator = np.random.default_rng(seed=_seed)
@@ -304,7 +304,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         probability = self._extract_value(probability)
         rtn_list = list(stats.bernoulli.rvs(p=probability, size=size, random_state=_seed))
@@ -323,7 +323,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         precision = precision if isinstance(precision, int) else 3
         seed = self._seed() if seed is None else seed
         rtn_list = stats.truncnorm((lower - mean) / std, (upper - mean) / std, loc=mean, scale=std)
@@ -341,7 +341,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: (optional) a seed value for the random function: default to None
         :return: a random number
         """
-        size = 1 if size is None else size
+        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         precision = 3 if precision is None else precision
         is_stats = is_stats if isinstance(is_stats, bool) else False

@@ -390,6 +390,64 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_intervals(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
+    def model_synthetic_personal_identity(self, canonical: int=None, seed: int=None, save_intent: bool=None,
+                                          column_name: [int, str]=None, intent_order: int=None,
+                                          replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
+        """ A dataset with Personal Identifiable Information
+
+        :param canonical: the canonical size (rows) of the sample dataset
+        :param seed: a seed value for the random function: default to None
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: pandas DataSet
+        """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # remove intent params
+        seed = self._seed(seed=seed)
+        _df = self._get_canonical(canonical)
+        size = _df.shape[0]
+
+        # personal elements
+        mins = 1 if size < 700_000 else int(size / 700_000) + 1
+        _df['pid'] = self.get_datetime(start=-1, until={'minutes': mins}, at_most=1, ordered=True,
+                                       date_format="%m%d%H%M%S%f", size=size, save_intent=False)
+        _df = self.model_sample_map(canonical=_df, sample_map='us_persona', female_bias=0.4,
+                                    headers=['first_name', 'family_name', 'gender'], save_intent=False)
+        _df['birth_date'] = self.get_datetime(start=-36500, until=-6500,
+                                              relative_freq=[0.001, 0.05, 1, 3, 2, 5, 4, 2], size=size, save_intent=False)
+        _df['ethnicity'] = self.get_category(selection=['Not Hispanic or latino', 'Hispanic or latino'],
+                                             relative_freq=[8, 2], size=size, save_intent=False)
+        _df['race'] = self.get_category(
+            selection=['White', 'Black or African American', 'American Indian or Alaska Native',
+                       'Native Hawaiian or Other Pacific Islander', 'Asian', 'Others'],
+            relative_freq=[60, 16, 2, 1, 6, 3], size=size, save_intent=False)
+        _df = self.model_sample_map(canonical=_df, sample_map='us_zipcode',
+                                    headers=['city', 'county', 'state', 'state_abbr', 'zipcode'], save_intent=False)
+        _df['address'] = self.get_number(from_value=1, to_value=300000, precision=0,
+                                         relative_freq=[50, 10, 5, 3, 2, 1, 1, 1, 1, ], size=size, intent_order=0, save_intent=False)
+        _df['address'] = self.correlate_join(_df, header='address', sep=' ',
+                                             action=self.action2dict(method='get_sample',
+                                                                     sample_name='us_street_names',
+                                                                     shuffle=True), intent_order=1, save_intent=False)
+        _df['address'] = self.correlate_join(_df, header='address', sep=' ',
+                                             action=self.action2dict(method='get_sample',
+                                                                     sample_name='us_street_types',
+                                                                     shuffle=True), intent_order=2, save_intent=False)
+        return _df
+
     def model_synthetic_data_types(self, canonical: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
                                    column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
                                    remove_duplicates: bool=None) -> pd.DataFrame:
@@ -419,51 +477,60 @@ class SyntheticIntentModel(WrangleIntentModel):
         # remove intent params
         extended = extended if isinstance(extended, bool) else False
         seed = self._seed(seed=seed)
-        _df = self.frame_starter(canonical=canonical, seed=seed, save_intent=False)
+        _df = self._get_canonical(canonical)
 
+        size = _df.shape[0]
         # types
         _df['cat'] = self.get_category(['SUSPENDED', 'ACTIVE', 'PENDING', 'INACTIVE'],
-                                       relative_freq=[1, 99, 10, 40], size=canonical, seed=seed, save_intent=False)
-        _df['num'] = self.get_number(0.5, 5.0, relative_freq=[1, 1, 2, 3, 5, 8, 13, 21], size=canonical, seed=seed, save_intent=False)
-        _df['int'] = self.get_number(-1000, 1000, size=canonical, seed=seed, save_intent=False)
-        _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=canonical, seed=seed, save_intent=False)
+                                       relative_freq=[1, 99, 10, 40], size=size, seed=seed, save_intent=False)
+        _df['num'] = self.get_number(0.5, 5.0, relative_freq=[1, 1, 2, 3, 5, 8, 13, 21], size=size, seed=seed,
+                                     save_intent=False)
+        _df['int'] = self.get_number(-1000, 1000, size=size, seed=seed, save_intent=False)
+        _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=size, seed=seed, save_intent=False)
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
-                                        ordered=True, size=canonical, seed=seed, save_intent=False)
-        _df['object'] = self.get_string_pattern('lldsddslldd', quantity=0.85, size=canonical, seed=seed, save_intent=False)
+                                        ordered=True, size=size, seed=seed, save_intent=False)
+        _df['object'] = self.get_string_pattern('lldsddslldd', quantity=0.85, size=size, seed=seed, save_intent=False)
 
         if extended:
             # distributions
-            _df['normal'] = self.get_dist_normal(mean=0, std=1, size=canonical, seed=seed, save_intent=False)  # normal
-            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.2, size=canonical, seed=seed, save_intent=False)  # bool
-            _df['gumbel'] = self.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=canonical, seed=seed, save_intent=False)  # skew
-            _df['poisson'] = self.get_distribution(distribution='poisson', lam=3, size=canonical, seed=seed, save_intent=False)  # category
-            _df['poly'] = self.correlate_polynomial(_df, header='num', coefficient=[6, 0, 1], seed=seed, save_intent=False)  # curve
+            _df['normal'] = self.get_dist_normal(mean=0, std=1, size=size, seed=seed, save_intent=False)  # normal
+            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.2, size=size, seed=seed, save_intent=False)  # bool
+            _df['gumbel'] = self.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size, seed=seed,
+                                                  save_intent=False)  # skew
+            _df['poisson'] = self.get_distribution(distribution='poisson', lam=3, size=size, seed=seed,
+                                                   save_intent=False)  # category
+            _df['poly'] = self.correlate_polynomial(_df, header='num', coefficient=[6, 0, 1], seed=seed,
+                                                    save_intent=False)  # curve
 
             # impute
-            _df['cat_null'] = self.get_category(list('MFU'), relative_freq=[9, 7, 1], quantity=0.9, size=canonical, seed=seed, save_intent=False)
-            _df['num_null'] = self.get_number(0., 1., quantity=0.98, size=canonical, seed=seed, save_intent=False)
-            _df['bool_null'] = self.get_category(['1', '0'], relative_freq=[1, 20], quantity=0.95, size=canonical, seed=seed, save_intent=False)
+            _df['cat_null'] = self.get_category(list('MFU'), relative_freq=[9, 7, 1], quantity=0.9, size=size,
+                                                seed=seed, save_intent=False)
+            _df['num_null'] = self.get_number(0., 1., quantity=0.98, size=size, seed=seed, save_intent=False)
+            _df['bool_null'] = self.get_category(['1', '0'], relative_freq=[1, 20], quantity=0.95, size=size, seed=seed,
+                                                 save_intent=False)
             _df['date_null'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
-                                                 quantity=0.99, size=canonical, seed=seed, save_intent=False)
-            _df['object_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=canonical, seed=seed, save_intent=False)
+                                                 quantity=0.99, size=size, seed=seed, save_intent=False)
+            _df['object_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size, seed=seed,
+                                                         save_intent=False)
 
             # #compare
-            _df['unique'] = self.get_number(from_value=canonical, to_value=canonical * 10, at_most=1,
-                                            size=canonical, seed=seed, save_intent=False)
+            _df['unique'] = self.get_number(from_value=size, to_value=size * 10, at_most=1,
+                                            size=size, seed=seed, save_intent=False)
             _df['date_tz'] = self.get_datetime(pd.Timestamp('2021-09-01', tz='CET'),
                                                pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d',
-                                               size=canonical, seed=seed, save_intent=False)
+                                               size=size, seed=seed, save_intent=False)
             _df['correlate'] = self.correlate_values(_df, header='poly', jitter=0.1, seed=seed, save_intent=False)
-            _df['outliers'] = self.correlate_values(_df, header='correlate', jitter=1, choice=5, seed=seed, save_intent=False)
+            _df['outliers'] = self.correlate_values(_df, header='correlate', jitter=1, choice=5, seed=seed,
+                                                    save_intent=False)
             _df['dup_num'] = self.correlate_values(_df, header='num', seed=seed, save_intent=False)
             _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed, save_intent=False)
 
             # # others
-            _df['single_num'] = self.get_number(1, 2, size=canonical, seed=seed, save_intent=False)
-            _df['single_cat'] = self.get_category(['CURRENT'], size=canonical, seed=seed, save_intent=False)
-            _df['nulls'] = self.get_number(20.0, quantity=0, size=canonical, seed=seed, save_intent=False)
-            _df['nulls_num'] = self.get_number(20.0, quantity=1, size=canonical, seed=seed, save_intent=False)
-            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=15, size=canonical, seed=seed, save_intent=False)
+            _df['single_num'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)
+            _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed, save_intent=False)
+            _df['nulls'] = self.get_number(20.0, quantity=0, size=size, seed=seed, save_intent=False)
+            _df['nulls_num'] = self.get_number(20.0, quantity=1, size=size, seed=seed, save_intent=False)
+            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=15, size=size, seed=seed, save_intent=False)
         return _df
 
     def get_dist_normal(self, mean: float, std: float, precision: int=None, size: int=None, quantity: float=None,
@@ -960,167 +1027,6 @@ class SyntheticIntentModel(WrangleIntentModel):
                 choice = re.sub(tag, str(result), str(choice))
             rtn_list.append(choice)
         return self._set_quantity(rtn_list, quantity=quantity, seed=_seed)
-
-    def model_synthetic_classification(self, canonical: Any, n_features: int=None,  *, n_informative: int=None,
-                                       n_redundant: int=None, n_repeated: int=None, n_classes: int=None,
-                                       n_clusters_per_class: int=None, weights: list=None, seed: int=None,
-                                       save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                       replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
-        """ By default, a binary classifier dataset with a given number of features concatenated with an existing
-        canonical. Based upon the Scikit-learn datasets generators.
-
-        This initially creates clusters of points normally distributed (std=1) and assigns an equal number of clusters
-        to each class. It introduces interdependence between these features and adds various types of further noise to
-        the data.
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param n_features: (optional) The total number of features. Default 20
-        :param n_informative: (optional) The number of informative features. Default 2
-        :param n_redundant: (optional) The number of redundant features. Default 2
-        :param n_repeated: (optional)The number of duplicated features, Default 0
-        :param n_classes: (optional) The number of classes (or labels) of the classification problem. Default 2
-        :param n_clusters_per_class: (optional) The number of clusters per class. Default 2
-        :param weights: (optional) The proportions of samples assigned to each class. If None then classes are balanced.
-        :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: pd. DataFrame
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        canonical = self._get_canonical(canonical)
-        n_features = n_features if isinstance(n_features, int) else 20
-        n_informative = n_informative if isinstance(n_informative, int) else 2
-        n_redundant = n_redundant if isinstance(n_redundant, int) else 2
-        n_repeated = n_repeated if isinstance(n_repeated, int) else 0
-        n_classes = n_classes if isinstance(n_classes, int) else 2
-        n_clusters_per_class = n_clusters_per_class if isinstance(n_clusters_per_class, int) else 2
-        weights = np.asarray(weights) if isinstance(weights, list) and len(list) == n_classes else None
-        seed = seed if isinstance(seed, int) else self._seed()
-        sample, labels = make_classification(n_samples=canonical.shape[0], n_features=n_features,
-                                             n_informative=n_informative, n_redundant=n_redundant,
-                                             n_repeated=n_repeated, n_classes=n_classes, weights=weights,
-                                             n_clusters_per_class=n_clusters_per_class, random_state=seed, **kwargs)
-        labels = pd.DataFrame(labels, columns=['target']).astype(int)
-        gen = Commons.label_gen()
-        sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
-
-    def model_synthetic_regression(self, canonical: Any, n_features: int=None, *, n_informative: int=None,
-                                   n_targets: int=None, bias: float=None, effective_rank: int=None,
-                                   tail_strength: float=None, noise: float=None, seed: int=None,
-                                   save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                                   replace_intent: bool=None, remove_duplicates: bool=None, **kwargs):
-        """ A generated regression dataset with a given number of features concatenated with an existing canonical.
-        Based upon the Scikit-learn datasets generators,
-
-        Produces regression targets as an optionally-sparse random linear combination of random features, with noise.
-        Its informative features may be uncorrelated, or low rank with few features account for most of the variance.
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param n_features: (optional) The total number of features. Default 100
-        :param n_informative: (optional) The number of features used to build the linear model.
-        :param n_targets:The number of regression targets, i.e., the dimension of the y output associated with a sample.
-        :param bias: (optional) The bias term in the underlying linear model.
-        :param effective_rank: (optional) The approximate number of features required to explain most of the input data
-        :param tail_strength: (optional) The relative importance of the fat noisy tail, Should be between 0 and 1.
-        :param noise: (optional) The standard deviation of the gaussian noise applied to the output.
-        :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: pd. DataFrame
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        canonical = self._get_canonical(canonical)
-        n_features = n_features if isinstance(n_features, int) else 100
-        n_informative = n_informative if isinstance(n_informative, int) else 10
-        n_targets = n_targets if isinstance(n_targets, int) else 1
-        bias = bias if isinstance(bias, float) else 0.0
-        effective_rank = effective_rank if isinstance(effective_rank, int) else None
-        tail_strength = tail_strength if isinstance(tail_strength, float) else 0.5
-        noise = noise if isinstance(noise, float) else 0.0
-        seed = seed if isinstance(seed, int) else self._seed()
-        sample, labels = make_regression(n_samples=canonical.shape[0], n_features=n_features, bias=bias,
-                                         n_informative=n_informative, n_targets=n_targets, noise=noise,
-                                         effective_rank=effective_rank, tail_strength=tail_strength,
-                                         random_state=seed, **kwargs)
-        labels = pd.DataFrame(labels, columns=['target']).astype(int)
-        gen = Commons.label_gen()
-        sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
-
-    def model_synthetic_clusters(self, canonical: Any, n_features: int=None, *, clusters: list=None,
-                                 cluster_std: float=None, seed: int=None, save_intent: bool=None,
-                                 column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                 remove_duplicates: bool=None, **kwargs):
-        """ A generated isotropic Gaussian blobs dataset for clustering with a given number of features, concatenated
-        with an existing canonical. Based upon the Scikit-learn datasets generators.
-
-        The clusters parameter, by default, is None creating equal size clusters. Passing a list of sample sizes, with
-        total size equal to the canonical size, creates the list length number of clusters with each cluster the size
-        of the list value
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param n_features: (optional) The total number of features
-        :param clusters: (optional) A list of cluster sample sizes equal to the canonical sample size
-        :param cluster_std: (optional) The standard deviation of the clusters.
-        :param seed: (optional) a seed value for the random function: default to None
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-                    
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-                    
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: pd. DataFrame
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        canonical = self._get_canonical(canonical)
-        n_features = n_features if isinstance(n_features, int) else 100
-        clusters = clusters if isinstance(clusters, list) else None
-        n_samples = np.asarray(clusters) if isinstance(clusters, list) and sum(clusters) == canonical.shape[0] else canonical.shape[0]
-        cluster_std = cluster_std if isinstance(cluster_std, float) else 1.0
-        sample, labels = make_blobs(n_samples=n_samples, n_features=n_features, cluster_std=cluster_std, **kwargs)
-        labels = pd.DataFrame(labels, columns=['target']).astype(int)
-        gen = Commons.label_gen()
-        sample = pd.DataFrame(sample, columns=[next(gen) for x in range(n_features)]).astype(float)
-        return pd.concat([canonical, pd.DataFrame(labels), pd.DataFrame(sample)], axis=1)
 
     def model_noise(self, canonical: Any, num_columns: int, inc_targets: bool=None, seed: int=None,
                     save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,

@@ -108,7 +108,7 @@ class AbstractCommonComponent(AbstractComponent):
         :param file_type: (optional) a file_type for the persisted file, default is 'parquet'
         :param description: (optional) a description of the component instance to overwrite the default
         """
-        domain = domain.title() if isinstance(domain, str) else 'Unspecified'
+        domain = domain.title() if isinstance(domain, str) else 'Generic'
         file_type = file_type if isinstance(file_type, str) else 'parquet'
         project_name = project_name if isinstance(project_name, str) else 'hadron'
         file_name = self.pm.file_pattern(name='dataset', project=project_name.lower(), path=path, file_type=file_type,

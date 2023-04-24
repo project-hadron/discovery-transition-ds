@@ -73,8 +73,8 @@ class SyntheticPipelineTest(unittest.TestCase):
         tools = self.builder.intent_model
         df = pd.DataFrame()
         df['numbers'] = tools.get_number(1, 2, column_name='numbers', intent_order=0)
-        df['corr_num'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='numbers', intent_order=1)
-        df['corr_plus'] = tools.correlate_numbers(df, offset=1, header='numbers', column_name='corr_plus')
+        df['corr_num'] = tools.correlate_values(df, offset=1, header='numbers', column_name='numbers', intent_order=1)
+        df['corr_plus'] = tools.correlate_values(df, offset=1, header='numbers', column_name='corr_plus')
         result = tools.run_intent_pipeline(canonical=10)
         self.assertCountEqual(['numbers', 'corr_plus'], result.columns)
         self.assertEqual(1, result['numbers'].value_counts().size)
@@ -95,6 +95,30 @@ class SyntheticPipelineTest(unittest.TestCase):
         self.assertEqual(['values', 'numbers'], result.columns.to_list())
         result = tools.run_intent_pipeline(canonical=10)
         self.assertEqual(['values', 'numbers', 'addition'], result.columns.to_list())
+
+    def test_run_pipeline_data_types(self):
+        sb = SyntheticBuilder.from_env('data_types', has_contract=False)
+        sb.setup_bootstrap(domain='Synthetic', project_name='hadron_synthetic_data_types_')
+        sb.set_persist()
+        _ = sb.tools.model_synthetic_data_types(canonical=1_000, extended=True, column_name='data_types')
+        sb.run_component_pipeline(canonical=2_000)
+        result = sb.load_persist_canonical()
+        self.assertEqual((2000, 27),result.shape)
+        sb.run_component_pipeline(size=300)
+        result = sb.load_persist_canonical()
+        self.assertEqual((300, 27), result.shape)
+
+    def test_run_pipeline_pii(self):
+        sb = SyntheticBuilder.from_env('data_types', has_contract=False)
+        sb.setup_bootstrap(domain='Synthetic', project_name='hadron_synthetic_data_types_')
+        sb.set_persist()
+        _ = sb.tools.model_synthetic_personal_identity(canonical=1_000, column_name='pii')
+        sb.run_component_pipeline(canonical=2_000)
+        result = sb.load_persist_canonical()
+        self.assertEqual((2000, 13),result.shape)
+        sb.run_component_pipeline(size=300)
+        result = sb.load_persist_canonical()
+        self.assertEqual((300, 13), result.shape)
 
 
 if __name__ == '__main__':
