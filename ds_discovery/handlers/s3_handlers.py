@@ -165,6 +165,7 @@ class S3SourceHandler(AbstractSourceHandler):
                 encoding = read_params.pop('encoding', 'ASCII')
                 errors = read_params.pop('errors', 'strict')
                 return pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
+            s3_client.close()
         raise LookupError('The source format {} is not currently supported'.format(file_type))
 
 
@@ -255,6 +256,7 @@ class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):
                 s3_client.put_object(Bucket=bucket, Key=path[1:], Body=byte_obj.getvalue(), **s3_put_params)
         else:
             raise LookupError('The source format {} is not currently supported for write'.format(file_type))
+        s3_client.close()
         return True
 
     def remove_canonical(self) -> bool:
