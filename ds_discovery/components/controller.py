@@ -411,7 +411,9 @@ class Controller(AbstractComponent):
                         continue
                 for intent in intent_levels:
                     task = intent.get('task')
-                    source = ConnectorContract.parse_environ(intent.get('source', ''))
+                    source = intent.get('source', '')
+                    if isinstance(source, str) and source.startswith('${'):
+                        source = ConnectorContract.parse_environ(source)
                     to_persist = intent.get('persist')
                     end_source = intent.get('end_source', False)
                     if isinstance(run_cycle_report, str):
