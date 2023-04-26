@@ -163,7 +163,7 @@ class Commons(AistacCommons):
     @staticmethod
     def date2value(dates: Any, day_first: bool = True, year_first: bool = False) -> list:
         """ converts a date to a number represented by to number of microseconds to the epoch"""
-        values = pd.Series(pd.to_datetime(dates, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+        values = pd.Series(pd.to_datetime(dates, errors='coerce', dayfirst=day_first,
                                           yearfirst=year_first))
         v_native = values.dt.tz_convert(None) if values.dt.tz else values
         null_idx = values[values.isna()].index

@@ -1215,15 +1215,13 @@ class TransitionIntentModel(AbstractIntentModel):
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
-        infer_datetime_format = date_format is None
         if not inplace:
             df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
-            df[c] = pd.to_datetime(df[c], errors='coerce', infer_datetime_format=infer_datetime_format,
-                                   dayfirst=day_first, yearfirst=year_first, format=date_format)
+            df[c] = pd.to_datetime(df[c], errors='coerce', dayfirst=day_first, yearfirst=year_first, format=date_format)
             matrix = Commons.list_formatter(matrix)
             if 'yr' in matrix:
                 df[f"{c}_yr"] = df[c].dt.year
@@ -1352,14 +1350,13 @@ class TransitionIntentModel(AbstractIntentModel):
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        infer_datetime_format = date_format is None
         if not inplace:
             df = deepcopy(df)
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
             df[c] = df[c].fillna(np.nan)
-            df[c] = pd.to_datetime(mdates.num2date(df[c]), errors='coerce', infer_datetime_format=True)
+            df[c] = pd.to_datetime(mdates.num2date(df[c]), errors='coerce')
             if isinstance(date_format, str):
                 df[c] = df[c].dt.strftime(date_format)
         if not inplace:

@@ -163,13 +163,13 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         # until = until.to_pydatetime() if isinstance(until, pd.Timestamp) else until
         if isinstance(start, int):
             start = (pd.Timestamp.now() + pd.Timedelta(days=start))
-        start = pd.to_datetime(start, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+        start = pd.to_datetime(start, errors='coerce', dayfirst=day_first,
                                yearfirst=year_first)
         if isinstance(until, int):
             until = (pd.Timestamp.now() + pd.Timedelta(days=until))
         elif isinstance(until, dict):
             until = (start + pd.Timedelta(**until))
-        until = pd.to_datetime(until, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+        until = pd.to_datetime(until, errors='coerce', dayfirst=day_first,
                                yearfirst=year_first)
         if start == until:
             rtn_list = pd.Series([start] * size)

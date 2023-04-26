@@ -1384,14 +1384,14 @@ class DataDiscovery(object):
         :return: a dictionary of results
         """
 
-        values = pd.Series(pd.to_datetime(values, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+        values = pd.Series(pd.to_datetime(values, errors='coerce', dayfirst=day_first,
                                 yearfirst=year_first))
         dt_tz = values.dt.tz
         if lower:
-            lower = pd.to_datetime(lower, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+            lower = pd.to_datetime(lower, errors='coerce', dayfirst=day_first,
                                    yearfirst=year_first)
         if upper:
-            upper = pd.to_datetime(upper, errors='coerce', infer_datetime_format=True, dayfirst=day_first,
+            upper = pd.to_datetime(upper, errors='coerce', dayfirst=day_first,
                                    yearfirst=year_first)
         params_lower = lower if isinstance(lower, pd.Timestamp) else None
         params_upper = upper if isinstance(upper, pd.Timestamp) else None

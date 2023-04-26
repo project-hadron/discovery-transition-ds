@@ -703,8 +703,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         units_allowed = ['W', 'D', 'h', 'm', 's', 'milli', 'micro']
         jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 's'
         # convert values into datetime
-        s_values = pd.Series(pd.to_datetime(values, errors='coerce', infer_datetime_format=True,
-                                            dayfirst=day_first, yearfirst=year_first))
+        s_values = pd.Series(pd.to_datetime(values, errors='coerce', dayfirst=day_first, yearfirst=year_first))
         dt_tz = s_values.dt.tz
         if isinstance(jitter, int):
             size = s_values.size

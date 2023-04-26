@@ -152,21 +152,24 @@ class S3SourceHandler(AbstractSourceHandler):
         resource_body = s3_object['Body'].read()
         with self._lock:
             if file_type.lower() in ['parquet', 'pq', 'pqt']:
-                return pd.read_parquet(BytesIO(resource_body), **read_params)
-            if file_type.lower() in ['csv', 'tsv', 'txt']:
-                return pd.read_csv(StringIO(resource_body.decode(encoding)), **read_params)
-            if file_type.lower() in ['json']:
+                results = pd.read_parquet(BytesIO(resource_body), **read_params)
+            elif file_type.lower() in ['csv', 'tsv', 'txt']:
+                results = pd.read_csv(StringIO(resource_body.decode(encoding)), **read_params)
+            elif file_type.lower() in ['json']:
                 as_dataframe = read_params.pop('as_dataframe', False)
                 if as_dataframe:
-                    return pd.read_json(StringIO(resource_body.decode(encoding)), **read_params)
-                return json.load(StringIO(resource_body.decode(encoding)), **read_params)
-            if file_type.lower() in ['pkl ', 'pickle']:
+                    results = pd.read_json(StringIO(resource_body.decode(encoding)), **read_params)
+                else:
+                    results = json.load(StringIO(resource_body.decode(encoding)), **read_params)
+            elif file_type.lower() in ['pkl ', 'pickle']:
                 fix_imports = read_params.pop('fix_imports', True)
                 encoding = read_params.pop('encoding', 'ASCII')
                 errors = read_params.pop('errors', 'strict')
-                return pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
-            s3_client.close()
-        raise LookupError('The source format {} is not currently supported'.format(file_type))
+                results = pickle.loads(resource_body, fix_imports=fix_imports, encoding=encoding, errors=errors)
+            else:
+                raise LookupError('The source format {} is not currently supported'.format(file_type))
+        s3_client.close()
+        return results
 
 
 class S3PersistHandler(S3SourceHandler, AbstractPersistHandler):

@@ -233,11 +233,11 @@ class SyntheticIntentModel(WrangleIntentModel):
     #     quantity = self._quantity(quantity)
     #     size = 1 if size is None else size
     #     _seed = self._seed() if seed is None else seed
-    #     _dt_start = pd.to_datetime(start, errors='coerce', infer_datetime_format=True,
+    #     _dt_start = pd.to_datetime(start, errors='coerce',
     #                                dayfirst=day_first, yearfirst=year_first)
-    #     _dt_until = pd.to_datetime(until, errors='coerce', infer_datetime_format=True,
+    #     _dt_until = pd.to_datetime(until, errors='coerce',
     #                                dayfirst=day_first, yearfirst=year_first)
-    #     _dt_base = pd.to_datetime(default, errors='coerce', infer_datetime_format=True,
+    #     _dt_base = pd.to_datetime(default, errors='coerce',
     #                               dayfirst=day_first, yearfirst=year_first)
     #     if _dt_start is pd.NaT or _dt_until is pd.NaT:
     #         raise ValueError("The start or until parameters cannot be converted to a timestamp")
