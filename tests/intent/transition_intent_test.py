@@ -65,13 +65,6 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertEqual((40, 6), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
-    def test_to_date_from_mdates(self):
-        tools = self.tools
-        df = pd.DataFrame()
-        df['dates'] = tools.get_datetime("01/01/2018", "01/02/2018", day_first=False, as_num=True, size=5)
-        result = self.clean.to_date_from_mpldates(df, headers='dates', date_format="%Y-%m-%d")
-        self.assertEqual(['2018-01-01']*5, result['dates'].to_list())
-
     def test_auto_transition(self):
         tools = self.tools
         sample_size = 100
@@ -336,6 +329,16 @@ class TransitionIntentModelTest(unittest.TestCase):
         '''
         result = tools.model_custom(canonical=df, code_str=code_str, header='"gender"', value=['M', 'F'])
         print(result)
+
+    def test_auto_to_date(self):
+        df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=False)
+        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('O')], df.dtypes.values.tolist())
+        tr = Transition.from_memory()
+        df = tr.tools.auto_to_date(df)
+        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('datetime64[ns]'), np.dtype('O')], df.dtypes.values.tolist())
+        df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=True)
+        df = tr.tools.auto_to_date(df)
+        self.assertCountEqual(['date', 'date_tz', 'dup_date', 'date_null'], Commons.filter_headers(df, dtype='datetime64[ns]'))
 
     def test_to_date(self):
         tools = self.tools

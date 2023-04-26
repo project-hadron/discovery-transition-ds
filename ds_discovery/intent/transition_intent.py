@@ -352,6 +352,56 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
+    def auto_to_date(self, df: pd.DataFrame, timezone: str=None, day_first: bool=None, year_first: bool=None,
+                     date_format: str=None, inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+                     intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ looks through the dataset for valid date formats and converts them to a common datetime.
+
+        :param df: the Pandas.DataFrame to get the column headers from
+        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
+        :param timezone: set the timezone else data set to native
+        :param year_first: specifies if to parse with the year first
+                If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
+                If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
+        :param day_first: specifies if to parse with the day first
+                If True, parses dates with the day first, eg %d-%m-%Y.
+                If False default to the a preferred preference, normally %m-%d-%Y (but not strict)
+        :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param intent_level: (optional) the level name that groups intent by a reference name
+        :param intent_order: (optional) the order in which each intent should run.
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
+        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
+        """
+        # resolve intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
+        # Code block for intent
+        _date_headers = []
+        for c in Commons.filter_headers(df, dtype=object):
+            try:
+                if df[c].isnull().all():
+                    continue
+                if all(Commons.valid_date(x) for x in df[c].dropna()):
+                    _date_headers.append(c)
+            except TypeError:
+                pass
+        if len(_date_headers) > 0:
+            df = self.to_date_type(df, headers=_date_headers, inplace=False, timezone=timezone, day_first=day_first,
+                                   year_first=year_first, date_format=date_format, save_intent=False)
+        if not inplace:
+            return df
+        return
+
     def auto_to_category(self, df: pd.DataFrame, unique_max: int=None, null_max: float=None, fill_nulls: str=None,
                          nulls_list: list=None, inplace: bool=None, save_intent: bool=None,
                          intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
@@ -1307,58 +1357,6 @@ class TransitionIntentModel(AbstractIntentModel):
             else:
                 df[c] =df[c].dt.tz_localize(timezone)
 
-        if not inplace:
-            return df
-        return
-
-    def to_date_from_mpldates(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None,
-                              dtype: [str, list]=None, exclude: bool=None, regex: [str, list]=None,
-                              re_ignore_case: bool=None, date_format: str=None, inplace: bool=None,
-                              save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                              replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
-        """ converts columns that are matplotlib dates to datetime (see matplotlib.dates num2date(...))
-
-        :param df: the Pandas.DataFrame to get the column headers from
-        :param headers: a list of headers to drop or filter on type
-        :param drop: to drop or not drop the headers
-        :param dtype: the column types to include or exclude. Default None else int, float, bool, object, 'number'
-        :param exclude: to exclude or include the dtypes
-        :param regex: a regular expression to search the headers
-        :param re_ignore_case: true if the regex should ignore case. Default is False
-        :param inplace: if the passed pandas.DataFrame should be used or a deep copy
-        :param date_format: if the date can't be inferred uses date format eg format='%Y%m%d'
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param intent_level: (optional) the level name that groups intent by a reference name
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: if inplace, returns a formatted cleaner contract for this method, else a deep copy pandas.DataFrame.
-        """
-        # resolve intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # Code block for intent
-        inplace = inplace if isinstance(inplace, bool) else False
-        drop = drop if isinstance(drop, bool) else False
-        exclude = exclude if isinstance(exclude, bool) else False
-        re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
-        if not inplace:
-            df = deepcopy(df)
-        obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
-                                          re_ignore_case=re_ignore_case)
-        for c in obj_cols:
-            df[c] = df[c].fillna(np.nan)
-            df[c] = pd.to_datetime(mdates.num2date(df[c]), errors='coerce')
-            if isinstance(date_format, str):
-                df[c] = df[c].dt.strftime(date_format)
         if not inplace:
             return df
         return
