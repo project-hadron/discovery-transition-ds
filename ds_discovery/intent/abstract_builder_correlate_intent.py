@@ -318,18 +318,27 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             return s_values
         return s_values.to_list()
 
-    def _correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None,
-                           rtn_type: str=None):
-        """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
-        between (0,1) and is defined as
-                                        f(x) = 1/(1+exp(-x)
+    def _correlate_activation(self, canonical: Any, header: str, activation: str=None, precision: int=None, seed: int=None):
+        """Activation functions play a crucial role in the backpropagation algorithm, which is the primary
+        algorithm used for training neural networks. During backpropagation, the error of the output is
+        propagated backwards through the network, and the weights of the network are updated based on this
+        error. The activation function is used to introduce non-linearity into the output of a neural network
+        layer.
+
+        Logistic Sigmoid a.k.a logit, tmaps any input value to a value between 0 and 1, making it useful for
+        binary classification problems and is defined as f(x) = 1/(1+exp(-x))
+
+        Tangent Hyperbolic (tanh) function is a shifted and stretched version of the Sigmoid function but maps
+        the input values to a range between -1 and 1. and is defined as f(x) = (exp(x)-exp(-x))/(exp(x)+exp(-x))
+
+        Rectified Linear Unit (ReLU) function. is the most popular activation function, which replaces negative
+        values with zero and keeps the positive values unchanged. and is defined as f(x) = x * (x > 0)
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
+        :param activation: (optional) the name of the activation function. Options 'sigmoid', 'tanh' and 'relu'
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
         :return: an equal length list of correlated values
         """
         canonical = self._get_canonical(canonical, header=header)
@@ -338,42 +347,22 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         s_values = canonical[header].copy()
         if s_values.empty:
             return list()
-        precision = precision if isinstance(precision, int) else 3
         _seed = seed if isinstance(seed, int) else self._seed()
-        rtn_values = np.round(1 / (1 + np.exp(-s_values)), precision)
-        if isinstance(rtn_type, str):
-            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
-                rtn_values = rtn_values.astype(rtn_type)
-            return rtn_values
-        return rtn_values.to_list()
-
-    def _correlate_relu(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None):
-        """ Rectified Linear Unit (ReLU) is an activation function. it is a simple non-linear function that
-        introduces non-linearity into the output of a neuron and is defined as
-
-                                        f(x) = max(0,x)
-
-        :param canonical: a pd.DataFrame as the reference dataframe
-        :param header: the header in the DataFrame to correlate
-        :param precision: (optional) how many decimal places. default to 3
-        :param seed: (optional) the random seed. defaults to current datetime
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
-        :return: an equal length list of correlated values
-        """
-        canonical = self._get_canonical(canonical, header=header)
-        if not isinstance(header, str) or header not in canonical.columns:
-            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
-        s_values = canonical[header].copy()
-        if s_values.empty:
-            return list()
-        precision = precision if isinstance(precision, int) else 15
-        _seed = seed if isinstance(seed, int) else self._seed()
-        rtn_values = np.round(s_values * (s_values > 0), precision)
-        if isinstance(rtn_type, str):
-            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
-                rtn_values = rtn_values.astype(rtn_type)
-            return rtn_values
+        precision = precision if isinstance(precision, int) else 5
+        activation = activation.lower() if isinstance(activation, str) else 'relu'
+        null_idx = s_values[s_values.isna()].index
+        s_values = s_values.fillna(0)
+        if activation.startswith('sigmoid'):
+            rtn_values = np.round(1 / (1 + np.exp(-s_values)), precision)
+        elif activation.startswith('tanh'):
+            rtn_values = np.round((np.exp(s_values)-np.exp(-s_values))/(np.exp(s_values)+np.exp(-s_values)), precision)
+        elif activation.startswith('relu'):
+            rtn_values = np.round(s_values * (s_values > 0), precision)
+        else:
+            raise ValueError(f"The activation function '{activation}' is not supported. Current available options "
+                             f"are 'sigmoid', 'tanh' and 'relu'")
+        if null_idx.size > 0:
+            rtn_values.iloc[null_idx] = np.nan
         return rtn_values.to_list()
 
     def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None,

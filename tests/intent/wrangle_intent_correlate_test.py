@@ -254,17 +254,20 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
                                                     actions=actions, column_name='pcp_name')
         print(df.head())
 
-    def test_correlate_sigmoid(self):
+    def test_correlate_activation(self):
         tools = self.tools
-        df = pd.DataFrame(columns=['num'], data=[-2, 1, 0, -2, 2, 0])
-        result = tools.correlate_sigmoid(df, header='num')
-        self.assertEqual([0.119, 0.731, 0.5, 0.119, 0.881, 0.5], result)
+        df = pd.DataFrame(columns=['num'], data=[-2, -1, 0, 2, 3, 4])
+        result = tools._correlate_activation(df, header='num', activation='sigmoid', precision=3)
+        self.assertEqual([0.119, 0.269, 0.5, 0.881, 0.953, 0.982], result)
+        result = tools._correlate_activation(df, header='num', activation='tanh', precision=3)
+        self.assertEqual([-0.964, -0.762, 0.0, 0.964, 0.995, 0.999], result)
+        result = tools._correlate_activation(df, header='num', activation='ReLU')
+        self.assertEqual([0, 0, 0, 2, 3, 4], result)
+        with self.assertRaises(ValueError) as context:
+            result = tools._correlate_activation(df, header='num', activation='Softmax')
+        self.assertTrue("The activation function 'softmax' is not supported." in str(context.exception))
 
-    def test_correlate_relu(self):
-        tools = self.tools
-        df = pd.DataFrame(columns=['num'], data=[-2, 1, 0, -2, 2, 4])
-        result = tools.correlate_relu(df, header='num')
-        self.assertEqual([0,1,0,0,2,4], result)
+
 
     def test_correlate_date(self):
         tools = self.tools

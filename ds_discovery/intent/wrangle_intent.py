@@ -1473,14 +1473,27 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_join(seed=seed, **params)
 
-    def correlate_sigmoid(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None,
-                          save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                          replace_intent: bool=None, remove_duplicates: bool=None):
-        """ logistic sigmoid a.k.a logit, takes an array of real numbers and transforms them to a value
-        between (0,1) and is defined as f(x) = 1/(1+exp(-x)
+    def correlate_activation(self, canonical: Any, header: str, activation: str=None, precision: int=None,
+                             seed: int=None, rtn_type: str=None, save_intent: bool=None, column_name: [int, str]=None,
+                             intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ Activation functions play a crucial role in the backpropagation algorithm, which is the primary
+        algorithm used for training neural networks. During backpropagation, the error of the output is
+        propagated backwards through the network, and the weights of the network are updated based on this
+        error. The activation function is used to introduce non-linearity into the output of a neural network
+        layer.
 
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
+        Logistic Sigmoid a.k.a logit, tmaps any input value to a value between 0 and 1, making it useful for
+        binary classification problems and is defined as f(x) = 1/(1+exp(-x))
+
+        Tangent Hyperbolic (tanh) function is a shifted and stretched version of the Sigmoid function but maps
+        the input values to a range between -1 and 1. and is defined as f(x) = (exp(x)-exp(-x))/(exp(x)+exp(-x))
+
+        Rectified Linear Unit (ReLU) function. is the most popular activation function, which replaces negative
+        values with zero and keeps the positive values unchanged. and is defined as f(x) = x * (x > 0)
+
+        :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
+        :param activation: (optional) the name of the activation function. Options 'sigmoid', 'tanh' and 'relu'
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
         :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
@@ -1508,44 +1521,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         [params.pop(k) for k in self._INTENT_PARAMS]
         # set the seed and call the method
         seed = self._seed(seed=seed)
-        return self._correlate_sigmoid(seed=seed, **params)
-
-    def correlate_relu(self, canonical: Any, header: str, precision: int = None, seed: int = None, rtn_type: str = None,
-                       save_intent: bool = None, column_name: [int, str] = None, intent_order: int = None,
-                       replace_intent: bool = None, remove_duplicates: bool = None):
-        """ lRectified Linear Unit (ReLU) is an activation function. it is a simple non-linear function that
-        introduces non-linearity into the output of a neuron and is defined as f(x) = max(0,x)
-
-        :param canonical: a direct or generated pd.DataFrame. see context notes below
-        :param header: the header in the DataFrame to correlate
-        :param precision: (optional) how many decimal places. default to 3
-        :param seed: (optional) the random seed. defaults to current datetime
-        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
-                other than the int, float, category, string and object, passing 'as-is' will return as is
-        :param save_intent: (optional) if the intent contract should be saved to the property manager
-        :param column_name: (optional) the column name that groups intent to create a column
-        :param intent_order: (optional) the order in which each intent should run.
-                    - If None: default's to -1
-                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
-                    - if int: added to the level specified, overwriting any that already exist
-
-        :param replace_intent: (optional) if the intent method exists at the level, or default level
-                    - True - replaces the current intent method with the new
-                    - False - leaves it untouched, disregarding the new intent
-
-        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
-        :return: an equal length list of correlated values
-        """
-        # intent persist options
-        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
-                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
-                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
-        # remove intent params
-        params = locals()
-        [params.pop(k) for k in self._INTENT_PARAMS]
-        # set the seed and call the method
-        seed = self._seed(seed=seed)
-        return self._correlate_relu(seed=seed, **params)
+        return self._correlate_activation(seed=seed, **params)
 
     def correlate_polynomial(self, canonical: Any, header: str, coefficient: list, rtn_type: str=None, seed: int=None,
                              keep_zero: bool=None, save_intent: bool=None, column_name: [int, str]=None,
