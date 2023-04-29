@@ -254,11 +254,17 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
                                                     actions=actions, column_name='pcp_name')
         print(df.head())
 
-    def test_expit(self):
+    def test_correlate_sigmoid(self):
         tools = self.tools
         df = pd.DataFrame(columns=['num'], data=[-2, 1, 0, -2, 2, 0])
         result = tools.correlate_sigmoid(df, header='num')
         self.assertEqual([0.119, 0.731, 0.5, 0.119, 0.881, 0.5], result)
+
+    def test_correlate_relu(self):
+        tools = self.tools
+        df = pd.DataFrame(columns=['num'], data=[-2, 1, 0, -2, 2, 4])
+        result = tools.correlate_relu(df, header='num')
+        self.assertEqual([0,1,0,0,2,4], result)
 
     def test_correlate_date(self):
         tools = self.tools

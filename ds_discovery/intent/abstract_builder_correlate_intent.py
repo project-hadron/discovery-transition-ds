@@ -347,6 +347,35 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             return rtn_values
         return rtn_values.to_list()
 
+    def _correlate_relu(self, canonical: Any, header: str, precision: int=None, seed: int=None, rtn_type: str=None):
+        """ Rectified Linear Unit (ReLU) is an activation function. it is a simple non-linear function that
+        introduces non-linearity into the output of a neuron and is defined as
+
+                                        f(x) = max(0,x)
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param header: the header in the DataFrame to correlate
+        :param precision: (optional) how many decimal places. default to 3
+        :param seed: (optional) the random seed. defaults to current datetime
+        :param rtn_type: (optional) changes the default return of a 'list' to a pd.Series
+                other than the int, float, category, string and object, passing 'as-is' will return as is
+        :return: an equal length list of correlated values
+        """
+        canonical = self._get_canonical(canonical, header=header)
+        if not isinstance(header, str) or header not in canonical.columns:
+            raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
+        s_values = canonical[header].copy()
+        if s_values.empty:
+            return list()
+        precision = precision if isinstance(precision, int) else 15
+        _seed = seed if isinstance(seed, int) else self._seed()
+        rtn_values = np.round(s_values * (s_values > 0), precision)
+        if isinstance(rtn_type, str):
+            if rtn_type in ['category', 'object'] or rtn_type.startswith('int') or rtn_type.startswith('float'):
+                rtn_values = rtn_values.astype(rtn_type)
+            return rtn_values
+        return rtn_values.to_list()
+
     def _correlate_polynomial(self, canonical: Any, header: str, coefficient: list, seed: int=None,
                               rtn_type: str=None, keep_zero: bool=None) -> list:
         """ creates a polynomial using the reference header values and apply the coefficients where the
