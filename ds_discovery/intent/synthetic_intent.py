@@ -489,7 +489,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=size, seed=seed, save_intent=False)
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
                                         ordered=True, size=size, seed=seed, save_intent=False)
-        _df['object'] = self.get_string_pattern('lldsddslldd', quantity=0.85, size=size, seed=seed, save_intent=False)
+        _df['object'] = self.get_string_pattern('lldsddslldd', size=size, seed=seed, save_intent=False)
 
         if extended:
             # distributions
