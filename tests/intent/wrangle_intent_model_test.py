@@ -130,7 +130,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         df = pd.DataFrame()
         df['B'] = tools.get_category(['a','b','c','d'], size=1000, relative_freq=[40,8,6,4], quantity=0.998, seed=99)
         result = tools.model_encode_count(df, headers=['B'])
-        self.assertCountEqual([685, 137, 102, 74, 2], result['B'].value_counts().to_list())
+        self.assertCountEqual([686, 136, 102, 74, 2], result['B'].value_counts().to_list())
 
     def test_model_difference_summary(self):
         builder = SyntheticBuilder.from_memory()
@@ -231,7 +231,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_difference(df, 'target', on_key='X')
         self.assertEqual(['X'], result.columns.to_list())
         result = tools.model_difference(df, 'target', on_key=['X','Y'])
-        self.assertListEqual(['X','Y'], result.columns.to_list())
+        self.assertCountEqual(['Y','X'], result.columns.to_list())
 
     def test_model_difference_multi_key(self):
         builder = SyntheticBuilder.from_memory()

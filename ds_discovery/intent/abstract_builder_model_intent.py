@@ -327,7 +327,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
 
         """
         canonical = self._get_canonical(canonical)
-        other = self._get_canonical(other)
+        other = self._get_canonical(other, size=canonical.shape[0])
         _ = seed if isinstance(seed, int) else self._seed()
         drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
         index_on_key = index_on_key if isinstance(index_on_key, bool) else False
