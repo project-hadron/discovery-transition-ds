@@ -46,6 +46,11 @@ class WrangleIntentModelTest(unittest.TestCase):
             os.makedirs(os.environ['HADRON_DEFAULT_PATH'])
         except:
             pass
+        try:
+            shutil.copytree('../_test_data', os.path.join(os.environ['PWD'], 'working/source'))
+        except:
+            pass
+
         PropertyManager._remove_all()
 
     def tearDown(self):
@@ -288,6 +293,19 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_difference(df, 'target', on_key='A')
         self.assertEqual((2,3), result.shape)
         self.assertEqual(['D', 'G'], result['A'].tolist())
+
+    def test_model_difference_cleaned(self):
+        os.environ['HADRON_DIFF_ON'] = 'target'
+
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sb.set_source_uri('./working/source/hadron_transition_align_origin_cleaned.parquet')
+        sb.add_connector_uri('align_other', uri='./working/source/hadron_transition_align_other_cleaned.parquet')
+        # difference
+        df = sb.load_source_canonical()
+        result = sb.tools.model_difference(df, 'align_other', on_key='${HADRON_DIFF_ON}', drop_no_diff=True, ordered=True,  column_name='difference')
+        self.assertEqual((4,4), result.shape)
+        self.assertEqual(['target', 'C1', 'D1', 'E1'], result.columns.to_list())
 
     def test_model_profiling(self):
         sb = SyntheticBuilder.from_memory()
