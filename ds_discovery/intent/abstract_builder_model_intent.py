@@ -1,5 +1,4 @@
 import ast
-from difflib import ndiff
 
 import numpy as np
 import pandas as pd
@@ -7,6 +6,7 @@ from abc import abstractmethod
 from typing import Any
 import pandas.api.types as ptypes
 from aistac.components.aistac_commons import DataAnalytics
+from aistac.handlers.abstract_handlers import HandlerFactory
 
 from ds_discovery.components.commons import Commons
 from ds_discovery.components.discovery import DataDiscovery
@@ -246,7 +246,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                                         regex=regex, re_ignore_case=re_ignore_case)
         _seed = self._seed() if seed is None else seed
         if profiling == 'dictionary':
-            result =  DataDiscovery.data_dictionary(df=canonical, stylise=False, inc_next_dom=True)
+            pkg = HandlerFactory.get_module('ds_discovery')
+            cleaned = pkg.Transition.from_memory().tools.auto_transition(canonical)
+            result =  DataDiscovery.data_dictionary(df=cleaned, stylise=False, inc_next_dom=True)
         elif profiling == 'schema':
             blob = DataDiscovery.analyse_association(df=canonical, columns_list=columns)
             report = pd.DataFrame(columns=['root', 'section', 'element', 'value'])

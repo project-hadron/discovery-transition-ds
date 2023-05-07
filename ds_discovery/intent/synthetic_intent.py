@@ -489,7 +489,6 @@ class SyntheticIntentModel(WrangleIntentModel):
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
                                         ordered=True, size=size, seed=seed, save_intent=False)
         _df['str'] = self.get_sample('us_street_names', size=size, seed=seed, save_intent=False)
-        _df['object'] = self.get_string_pattern('cccccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
         if extended:
             # distributions
@@ -510,10 +509,10 @@ class SyntheticIntentModel(WrangleIntentModel):
                                                  save_intent=False)
             _df['date_null'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
                                                  quantity=0.99, size=size, seed=seed, save_intent=False)
-            _df['object_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size, seed=seed,
+            _df['str_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size, seed=seed,
                                                          save_intent=False)
 
-            # #compare
+            # compare
             _df['unique'] = self.get_number(from_value=size, to_value=size * 10, at_most=1,
                                             size=size, seed=seed, save_intent=False)
             _df['date_tz'] = self.get_datetime(pd.Timestamp('2021-09-01', tz='CET'),
@@ -525,7 +524,11 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['dup_num'] = self.correlate_values(_df, header='num', seed=seed, save_intent=False)
             _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed, save_intent=False)
 
-            # # others
+            # objects
+            _df['compound'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
+            _df['object'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
+
+            # others
             _df['single_num'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)
             _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed, save_intent=False)
             _df['nulls'] = self.get_number(20.0, quantity=0, size=size, seed=seed, save_intent=False)

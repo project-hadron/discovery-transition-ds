@@ -288,8 +288,8 @@ class WrangleIntentModelTest(unittest.TestCase):
         sb.add_connector_persist('quality', 'hadron_quality.csv')
         sb.add_connector_persist('dictionary', 'hadron_dictionary.csv')
         sb.add_connector_persist('schema', 'hadron_schema.csv')
-        df = tools.model_synthetic_data_types(2000)
-        result = sb.tools.model_profiling(df, profiling='quality')
+        df = tools.model_synthetic_data_types(2000, extended=True)
+        result = sb.tools.model_profiling(df, profiling='dictionary')
         pprint(result)
 
 
