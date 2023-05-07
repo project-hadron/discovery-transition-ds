@@ -325,18 +325,21 @@ class TransitionIntentModel(AbstractIntentModel):
         _bool_headers = []
         _cat_headers = []
         _num_headers = []
+        _str_headers = []
         for c in Commons.filter_headers(df, dtype=object):
             try:
                 if df[c].isnull().all():
                     _null_headers.append(c)
-                elif all(Commons.valid_date(x) for x in df[c].dropna()):
+                elif any(Commons.valid_date(x) for x in df[c].dropna()) or df[c].dropna().dtype.kind in 'nM':
                     _date_headers.append(c)
-                elif df[c].nunique() == 2 and any(x in [True, 1] for x in df[c].value_counts().index.to_list()):
+                elif df[c].dropna().isin([1, 0,'1','0']).all() or df[c].dropna().dtype.kind in 'b':
                     _bool_headers.append(c)
                 elif df[c].nunique() < unique_max and round(df[c].isnull().sum() / df.shape[0], 3) < null_max:
                     _cat_headers.append(c)
-                elif all(df[c].astype(str).replace('', None).dropna().str.isnumeric()):
+                elif df[c].dropna().dtype.kind in 'iufc':
                     _num_headers.append(c)
+                elif all(isinstance(v, str) for v in df[c].dropna()):
+                    _str_headers.append(c)
             except TypeError:
                 pass
         if len(_bool_headers) > 0:
@@ -348,6 +351,8 @@ class TransitionIntentModel(AbstractIntentModel):
             df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
         if len(_num_headers) > 0:
             df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
+        if len(_str_headers) > 0:
+            df = self.to_str_type(df, headers=_str_headers, use_string_type=True, inplace=False, save_intent=False)
         if not inplace:
             return df
         return
@@ -451,7 +456,7 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def auto_drop_columns(self, df, null_min: float=None, predominant_max: float=None, nulls_list: [bool, list]=None,
-                          drop_predominant: bool=None, drop_empty_row: bool=None, inplace: bool=None,
+                          drop_predominant: bool=None, drop_empty_row: bool=None, drop_unknown: bool=None, inplace: bool=None,
                           save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                           replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
         """ auto removes columns that are at least 0.998 percent np.NaN, a single value, std equal zero or have a
@@ -465,6 +470,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     if list then this is considered potential null values.
         :param drop_predominant: drop columns that have a predominant value of the given predominant max
         :param drop_empty_row: also drop any rows where all the values are empty
+        :param drop_unknown:  (optional) drop objects that are not string types such as binary
         :param inplace: if to change the passed pandas.DataFrame or return a copy (see return)
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -491,6 +497,7 @@ class TransitionIntentModel(AbstractIntentModel):
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         drop_predominant = drop_predominant if isinstance(drop_predominant, bool) else True
+        drop_unknown = drop_unknown if isinstance(drop_unknown, bool) else False
         if isinstance(nulls_list, bool) and nulls_list:
             nulls_list = ['NaN', 'nan', 'null', '', 'None', ' ']
         elif not isinstance(nulls_list, list):
@@ -510,6 +517,9 @@ class TransitionIntentModel(AbstractIntentModel):
                 col_drop.append(c)
             elif drop_predominant and isinstance(df_filter[c], (int, float)) and df_filter[c].dropna().std() == 0:
                 col_drop.append(c)
+            elif drop_unknown and not df[c].dropna().dtype.kind in 'iufcbnM':
+                if not all(isinstance(v, str) for v in df_filter[c].dropna()):
+                    col_drop.append(c)
         result = self.to_remove(df, headers=col_drop, inplace=inplace, save_intent=False)
         if isinstance(drop_empty_row, bool) and drop_empty_row:
             result = result.dropna(how='all')
@@ -1144,7 +1154,7 @@ class TransitionIntentModel(AbstractIntentModel):
                     use_string_type: bool=None, fill_nulls: str=None, nulls_list: list=None, inplace: bool=None,
                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                     replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
-        """ converts columns to object type
+        """ converts columns to str type
 
         :param df: the Pandas.DataFrame to get the column headers from
         :param headers: a list of headers to drop or filter on type

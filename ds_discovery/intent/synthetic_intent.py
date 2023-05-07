@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from typing import Any
-from sklearn.datasets import make_classification, make_regression, make_blobs
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
@@ -489,7 +488,8 @@ class SyntheticIntentModel(WrangleIntentModel):
         _df['bool'] = self.get_category([1, 0], relative_freq=[9, 1], size=size, seed=seed, save_intent=False)
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
                                         ordered=True, size=size, seed=seed, save_intent=False)
-        _df['object'] = self.get_string_pattern('lldsddslldd', size=size, seed=seed, save_intent=False)
+        _df['str'] = self.get_sample('us_street_names', size=size, seed=seed, save_intent=False)
+        _df['object'] = self.get_string_pattern('cccccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
         if extended:
             # distributions
@@ -724,7 +724,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_distribution(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_string_pattern(self, pattern: str, choices: dict=None, quantity: [float, int]=None,
+    def get_string_pattern(self, pattern: str, choices: dict=None, as_binary: bool=None, quantity: [float, int]=None,
                            size: int=None, choice_only: bool=None, seed: int=None,
                            save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                            replace_intent: bool=None, remove_duplicates: bool=None) -> list:
@@ -748,6 +748,7 @@ class SyntheticIntentModel(WrangleIntentModel):
 
         :param pattern: the pattern to create the string from
         :param choices: (optional) an optional dictionary of list of choices to replace the default.
+        :param as_binary: (optional) if the return string is prefixed with a b
         :param quantity: (optional) a number between 0 and 1 representing the percentage quantity of the data
         :param size: (optional) the size of the return list. if None returns a single value
         :param choice_only: (optional) if to only use the choices given or to take not found characters as is
@@ -772,6 +773,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
         choice_only = False if choice_only is None or not isinstance(choice_only, bool) else choice_only
+        as_binary = as_binary if isinstance(as_binary, bool) else False
         quantity = self._quantity(quantity)
         size = size if isinstance(size, int) and size > 0 else 1
         seed = self._seed(seed=seed)
@@ -804,6 +806,8 @@ class SyntheticIntentModel(WrangleIntentModel):
                 rtn_list = s_result
             else:
                 rtn_list += s_result
+        if as_binary:
+            rtn_list = rtn_list.str.encode(encoding='raw_unicode_escape')
         return self._set_quantity(rtn_list.to_list(), quantity=self._quantity(quantity), seed=seed)
 
     def get_selection(self, select_source: str, column_header: str, relative_freq: list=None, sample_size: int=None,

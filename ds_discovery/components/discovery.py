@@ -1703,6 +1703,8 @@ class DataDiscovery(object):
         _bool_columns = 0
         _cat_columns = 0
         _num_columns = 0
+        _num_columns = 0
+        _str_columns = 0
         _obj_columns = 0
         _key_columns = 0
         for c in df.columns:
@@ -1723,6 +1725,8 @@ class DataDiscovery(object):
                     _cat_columns += 1
                 elif df[c].dropna().dtype.kind in 'iufc':
                     _num_columns += 1
+                elif all(isinstance(v, str) for v in df[c].dropna()):
+                    _str_columns += 1
                 else:
                     _obj_columns += 1
             except TypeError:
@@ -1743,7 +1747,7 @@ class DataDiscovery(object):
                          'memory': Commons.bytes2human(df.memory_usage(deep=True).sum())},
             'data_type': {'numeric': _num_columns, 'category': _cat_columns,
                         'datetime': _date_columns, 'bool': _bool_columns,
-                        'others': _obj_columns},
+                        'string': _str_columns, 'others': _obj_columns},
             'usability': {'mostly_null': _null_columns,
                         'predominance': _dom_columns,
                         'candidate_keys': _key_columns,

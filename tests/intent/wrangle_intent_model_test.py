@@ -132,30 +132,135 @@ class WrangleIntentModelTest(unittest.TestCase):
         result = tools.model_encode_count(df, headers=['B'])
         self.assertCountEqual([686, 136, 102, 74, 2], result['B'].value_counts().to_list())
 
+    def test_model_difference_num(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": [1, 2, 5, 5, 3, 3, 1], 'C': [0,  2, 3, 3, 3, 2, 1], 'D': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [11, 2, 3, 4, 3, 2, 1], 'D': [0, 2, 0, 4, 3, 2, 1]})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # normal
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=False)
+        self.assertEqual((7,4), result.shape)
+        # drop zero rows
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=True)
+        self.assertEqual((2,3), result.shape)
+        self.assertEqual(['A', 'D'], result['A'].tolist())
+        self.assertEqual([0,1], result['B'].tolist())
+        self.assertEqual([1,1], result['C'].tolist())
+
+    def test_model_difference_str(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # tests
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=False)
+        self.assertEqual((7,3), result.shape)
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=True)
+        self.assertEqual((3,3), result.shape)
+        self.assertEqual(['B', 'C', 'E'], result['A'].tolist())
+        self.assertEqual([0,1,0], result['B'].tolist())
+        self.assertEqual([1,0,1], result['C'].tolist())
+
+    def test_model_difference_unmatched(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"X": list("ABCDEFGHK"),"Y": list("ABCABCABC"),  "B": ['B','C','A','A','F','E','G','X','Y'],'C': ['L','L','M','N','J','K','M','X','Y']})
+        target = pd.DataFrame(data={"X": list("ABCDEFGX"),"Y": list("ABCABCAB"),"B": ['B','C','D','A','F','E','G','P'],    'C': ['L','FX','M','N','P','K','M','P'],"D": list("XYZXYZXY")})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.add_connector_uri('unmatched', uri='working/data/unmatched.csv')
+        builder.save_canonical('target', target)
+        # test
+        self.assertEqual((9, 4), df.shape)
+        self.assertEqual((8, 5), target.shape)
+        result = tools.model_difference(df, 'target', on_key=['X','Y'], drop_zero_sum=True, unmatched_connector='unmatched')
+        self.assertEqual((3,4), result.shape)
+        unmatched = builder.load_canonical('unmatched')
+        self.assertEqual((3,4), result.shape)
+        self.assertEqual(['left_only', 'left_only', 'right_only', ], unmatched.found_in.to_list())
+        self.assertEqual(['H', 'K', 'X', ], unmatched.X.to_list())
+
+
+    def test_model_difference_equal(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # identical
+        result = tools.model_difference(df, 'target', on_key='X')
+        self.assertEqual((7,4), result.shape)
+        result = tools.model_difference(df, 'target', on_key='X', drop_zero_sum=True)
+        self.assertEqual((0,1), result.shape)
+        self.assertEqual(['X'], result.columns.to_list())
+        result = tools.model_difference(df, 'target', on_key=['X','Y'], drop_zero_sum=True)
+        self.assertEqual((0,2), result.shape)
+        self.assertCountEqual(['Y','X'], result.columns.to_list())
+
+    def test_model_difference_multi_key(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
+        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        # one key
+        result = tools.model_difference(df, 'target', on_key=['X'])
+        self.assertTrue(all((v is None) or isinstance(v, str) for v in result['X']))
+        self.assertFalse(all((v is None) or isinstance(v, str) for v in result['Y']))
+        # two keys
+        result = tools.model_difference(df, 'target', on_key=['X','Y'])
+        self.assertTrue(all((v is None) or isinstance(v, str) for v in result['X']))
+        self.assertTrue(all((v is None) or isinstance(v, str) for v in result['Y']))
+
+
+    def test_model_difference_order(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("BBCDCAA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
+        target.sample(frac = 1)
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=True)
+        self.assertEqual((4,3), result.shape)
+        self.assertEqual(['A', 'B', 'D'], result.columns.to_list())
+
+    def test_model_difference_drop(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("BBCDCAA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
+        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        builder.save_canonical('target', target)
+        result = tools.model_difference(df, 'target', on_key='A', drop_zero_sum=True)
+        self.assertEqual((4,3), result.shape)
+        self.assertEqual(['A', 'B', 'D'], result.columns.to_list())
+        self.assertEqual(df['C'].to_list(), target['C'].to_list())
+
     def test_model_difference_summary(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"X":  list("ABCDEFG"), "Y":  list("ABCDEFG"), "B": [1, 2, 3, 4, 3, 3, 1], 'C': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y":  list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 3, 4, 3, 2, 1]})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
+        df = pd.DataFrame(data={"X":  list("ABCDEFG"),    "Y": list("ABCDEFG"), "B": [1, 2, 3, 4, 3, 3, 1], 'C': [0, 2, 0, 4, 3, 2, 1]})
+        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [1, 2, 3, 4, 3, 2, 1]})
+        builder.add_connector_persist('target', uri_file='target.csv')
         builder.save_canonical('target', target)
         # summary connector
         builder.add_connector_persist('summary', uri_file='summary.csv')
         _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary')
         result = builder.load_canonical('summary')
         self.assertEqual(result.shape, (3,2))
-        self.assertEqual(result.Attribute.to_list(), ['Y','B','C'])
-        self.assertEqual(result.Summary.to_list(), [0,1,2])
-        _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary', drop_no_diff=True)
+        self.assertEqual(result.Attribute.to_list(), ['B','C','Y'])
+        self.assertEqual(result.Summary.to_list(), [1,2,0])
+        _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary', drop_zero_sum=True)
         result = builder.load_canonical('summary')
         self.assertEqual(result.shape, (2,2))
         self.assertEqual(result.Attribute.to_list(), ['B','C'])
         self.assertEqual(result.Summary.to_list(), [1,2])
-        _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary', ordered=True)
-        result = builder.load_canonical('summary')
-        self.assertEqual(result.shape, (3,2))
-        self.assertEqual(result.Attribute.tolist(), ['B','C','Y'])
-        self.assertEqual(result.Summary.to_list(), [1,2,0])
 
     def test_model_difference_detail(self):
         builder = SyntheticBuilder.from_memory()
@@ -168,144 +273,14 @@ class WrangleIntentModelTest(unittest.TestCase):
         builder.add_connector_persist('detail', uri_file='detail.csv')
         _ = tools.model_difference(df, 'target', on_key='X', detail_connector='detail')
         result = builder.load_canonical('detail')
-        self.assertEqual(result.shape, (2,4))
-        self.assertEqual(result.columns.to_list(), ['X','Y','B','C'])
-        _ = tools.model_difference(df, 'target', on_key='X', detail_connector='detail', drop_no_diff=True)
+        self.assertEqual(result.shape, (2,5))
+        self.assertEqual(result.columns.to_list(), ['X', 'B_x', 'B_y', 'C_x', 'C_y'])
+        self.assertEqual(result.loc[0].values.tolist(), ['A', '3', '5', 0, 3])
+        _ = tools.model_difference(df, 'target', on_key=['X','Y'], detail_connector='detail')
         result = builder.load_canonical('detail')
-        self.assertEqual(result.shape, (2,3))
-        self.assertEqual(result.columns.to_list(), ['X','B','C'])
-        _ = tools.model_difference(df, 'target', on_key='X', detail_connector='detail', ordered=True)
-        result = builder.load_canonical('detail')
-        self.assertEqual(result.shape, (2,4))
-        self.assertEqual(result.columns.to_list(), ['X','Y','B','C'])
-        self.assertEqual(['A', 'C'], result['X'].to_list())
-
-    def test_model_difference_num(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": [1, 2, 5, 5, 3, 3, 1], 'C': [0,  2, 3, 3, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": [1, 2, 5, 4, 3, 3, 1], 'C': [11, 2, 3, 4, 3, 2, 1]})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        # normal
-        result = tools.model_difference(df, 'target', on_key='A')
-        self.assertEqual((2,3), result.shape)
-        self.assertEqual(['A', 'D'], result['A'].tolist())
-        self.assertEqual([0,1], result['B'].tolist())
-        self.assertEqual([1,1], result['C'].tolist())
-        # with levenshtein distance
-        result = tools.model_difference(df, 'target', on_key='A', distance=True)
-        self.assertEqual((2,3), result.shape)
-        self.assertEqual(['A', 'D'], result['A'].tolist())
-        self.assertEqual([0,1], result['B'].tolist())
-        self.assertEqual([2,1], result['C'].tolist())
-
-    def test_model_difference_str(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data=    {"A": list("ABCDEFG"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        # normal
-        result = tools.model_difference(df, 'target', on_key='A')
-        self.assertEqual((3,3), result.shape)
-        self.assertEqual(['B', 'C', 'E'], result['A'].tolist())
-        self.assertEqual([0, 1, 0], result['B'].tolist())
-        self.assertEqual([1,0,1], result['C'].tolist())
-        # with levenshtein distance
-        result = tools.model_difference(df, 'target', on_key='A', distance=True)
-        self.assertEqual((3,3), result.shape)
-        self.assertEqual(['B', 'C', 'E'], result['A'].tolist())
-        self.assertEqual([0, 1, 0], result['B'].tolist())
-        self.assertEqual([2,0,1], result['C'].tolist())
-
-    def test_model_difference_equal(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
-        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        # identical
-        result = tools.model_difference(df, 'target', on_key='X')
-        self.assertEqual(['X'], result.columns.to_list())
-        result = tools.model_difference(df, 'target', on_key=['X','Y'])
-        self.assertCountEqual(['Y','X'], result.columns.to_list())
-
-    def test_model_difference_multi_key(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data=    {"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'A', 'A', 'F', 'E', 'G'], 'C': ['L', 'L',  'M', 'N', 'J', 'K', 'M']})
-        target = pd.DataFrame(data={"X": list("ABCDEFG"), "Y": list("RSTUVWX"), "B": ['B', 'C', 'D', 'A', 'F', 'E', 'G'], 'C': ['L', 'FX', 'M', 'N', 'P', 'K', 'M']})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        # identical
-        result = tools.model_difference(df, 'target', on_key=['X','Y'], index_on_key=True, ordered=True, drop_no_diff=True)
-        self.assertListEqual(['X','Y'], result.index.names)
-        self.assertListEqual(['B', 'C'], result.columns.to_list())
-
-
-    def test_model_difference_order(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("BBCDCAA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
-        target.sample(frac = 1)
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='A', drop_no_diff=True)
-        self.assertEqual((4,3), result.shape)
-        self.assertEqual(['A', 'B', 'D'], result.columns.to_list())
-
-    def test_model_difference_drop(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("BBCDCAA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='A', drop_no_diff=True)
-        self.assertEqual((4,3), result.shape)
-        self.assertEqual(['A', 'B', 'D'], result.columns.to_list())
-        self.assertEqual(df['C'].to_list(), target['C'].to_list())
-
-    def test_model_difference_index(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        df = pd.DataFrame(data={"A": list("ABCDFEG"), "B": list("ABCFCBA"), 'C': list("BCDECFB"), 'D': [0, 2, 0, 4, 3, 2, 1]})
-        target = pd.DataFrame(data={"A": list("ABCDFEG"), "B": list("BBCDCAA"), 'C': list("ACDECFB"), 'D': [0, 2, 0, 4, 1, 2, 1]})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='A', index_on_key=True)
-        self.assertEqual((4,3), result.shape)
-        self.assertEqual(['B', 'C', 'D'], result.columns.to_list())
-        self.assertEqual(['A', 'D', 'E', 'F'], result.index.tolist())
-
-    def test_model_difference_extra(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        # add an extra row to source
-        df = pd.DataFrame(data={"A": list("ABCDEFGH"), "B": list("ABCFCBAF"), 'C': list("BCDECFBB")})
-        target = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCDCBA"), 'C': list("BCDECFP")})
-        builder.add_connector_persist('target', uri_file='working/data/target.csv')
-        builder.save_canonical('target', target)
-        result = tools.model_difference(df, 'target', on_key='A')
-        self.assertEqual((2,3), result.shape)
-        self.assertEqual(['D', 'G'], result['A'].tolist())
-
-    def test_model_difference_cleaned(self):
-        os.environ['HADRON_DIFF_ON'] = 'target'
-
-        sb = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = sb.tools
-        sb.set_source_uri('./working/source/hadron_transition_align_origin_cleaned.parquet')
-        sb.add_connector_uri('align_other', uri='./working/source/hadron_transition_align_other_cleaned.parquet')
-        # difference
-        df = sb.load_source_canonical()
-        result = sb.tools.model_difference(df, 'align_other', on_key='${HADRON_DIFF_ON}', drop_no_diff=True, ordered=True,  column_name='difference')
-        self.assertEqual((4,4), result.shape)
-        self.assertEqual(['target', 'C1', 'D1', 'E1'], result.columns.to_list())
+        self.assertEqual(result.shape, (2,6))
+        self.assertEqual(result.columns.to_list(), ['X', 'Y', 'B_x', 'B_y', 'C_x', 'C_y'])
+        self.assertEqual(result.loc[0].values.tolist(), ['A', 'C', '3', '5', 0, 3])
 
     def test_model_profiling(self):
         sb = SyntheticBuilder.from_memory()
@@ -314,7 +289,7 @@ class WrangleIntentModelTest(unittest.TestCase):
         sb.add_connector_persist('dictionary', 'hadron_dictionary.csv')
         sb.add_connector_persist('schema', 'hadron_schema.csv')
         df = tools.model_synthetic_data_types(2000)
-        result = sb.tools.model_profiling(df, profiling='schema', headers=['cat', 'num', 'date'])
+        result = sb.tools.model_profiling(df, profiling='quality')
         pprint(result)
 
 

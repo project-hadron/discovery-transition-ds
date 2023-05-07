@@ -155,12 +155,6 @@ class DiscoveryTest(unittest.TestCase):
         self.assertEqual((3, 7), result.shape)
         self.assertEqual(['bool', 'int', 'num'], result['Attributes (6)'].values.tolist())
 
-    def test_data_dictionary(self):
-        sb = SyntheticBuilder.from_memory()
-        size = 1000
-        df = sb.tools.get_sample('type_data', size=size)
-        print(df.shape)
-
 
 
 if __name__ == '__main__':

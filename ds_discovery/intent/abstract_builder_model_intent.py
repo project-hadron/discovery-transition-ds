@@ -278,30 +278,33 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
             result = result.set_index(['sections', 'elements'])
         return result
 
-    def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
-                          ordered: bool=None, index_on_key: bool=None, distance: bool=None,
-                          summary_connector: bool=None, detail_connector: str=None, seed: int=None, **kwargs):
+    def _model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_zero_sum: bool=None,
+                          summary_connector: bool=None, flagged_connector: str=None, detail_connector: str=None,
+                          unmatched_connector: str=None, seed: int=None, **kwargs):
         """returns the difference between two canonicals, joined on a common and unique key.
-        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
-        If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
+        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment
+        variable. If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name.
 
-        By default only the difference is shown with 1 for true and 0 for false. By setting the `distance`
-        parameter to True, Levenshtein distance is used returning the distance between the values.
+        If the ``flagged connector`` parameter is used, a report flagging mismatched left data with right data
+        is produced for this connector where 1 indicate a difference and 0 they are the same. By default this method
+        returns this report but if this parameter is set the original canonical returned. This allows a canonical
+        pipeline to continue through the component while outputting the difference report.
 
-        If the ``detail connector`` parameter is used, the difference report is output to that connector and the
-        original canonical returned. This allows a canonical pipeline to continue through the component while
-        outputting the Intent action.
+        If the ``detail connector`` parameter is used, a detail report of the difference where the left and right
+        values that differ are shown.
+
+        If the ``unmatched connector`` parameter is used, the on_key's that don't match between left and right are
+        reported
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
         :param on_key: The name of the key that uniquely joins the canonical to others
-        :param drop_no_diff: (optional) drops columns with no difference
-        :param index_on_key: (optional) set the index to be the key
-        :param ordered: (optional) order by key
-        :param distance: (optional) use Levenshtein distance to indicate distance between fields
+        :param drop_zero_sum: (optional) drops rows and columns which has a total sum of zero differences
         :param summary_connector: (optional) a connector name where the summary report is sent
-        :param detail_connector::(optional) a connector name where the detail report is sent
+        :param flagged_connector: (optional) a connector name where the differences are flagged
+        :param detail_connector: (optional) a connector name where the differences are shown
+        :param unmatched_connector: (optional) a connector name where the unmatched keys are shown
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param kwargs: additional parameters for the connector contracts
 
@@ -329,81 +332,88 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         canonical = self._get_canonical(canonical)
         other = self._get_canonical(other, size=canonical.shape[0])
         _ = seed if isinstance(seed, int) else self._seed()
-        drop_no_diff = drop_no_diff if isinstance(drop_no_diff, bool) else False
-        index_on_key = index_on_key if isinstance(index_on_key, bool) else False
-        ordered = ordered if isinstance(ordered, bool) else False
-        distance = distance if isinstance(distance, bool) else False
+        drop_zero_sum = drop_zero_sum if isinstance(drop_zero_sum, bool) else False
+        flagged_connector = self._extract_value(flagged_connector)
         summary_connector = self._extract_value(summary_connector)
         detail_connector = self._extract_value(detail_connector)
+        unmatched_connector = self._extract_value(unmatched_connector)
         on_key = Commons.list_formatter(self._extract_value(on_key))
+        # remove not matching columns
+        left_diff = Commons.list_diff(canonical.columns.to_list(), other.columns.to_list(), symmetric=False)
+        right_diff = Commons.list_diff(other.columns.to_list(), canonical.columns.to_list(), symmetric=False)
+        canonical = canonical.drop(left_diff, axis=1)
+        other = other.drop(right_diff, axis=1)
+        # sort
         canonical.sort_values(on_key, inplace=True)
         other.sort_values(on_key, inplace=True)
-        # concat
-        df = pd.concat([canonical, other])
-        df = df.reset_index(drop=True)
-        # group by
-        grouped = df.groupby(list(df.columns))
-        # get index of unique records
-        idx = [x[0] for x in grouped.groups.values() if len(x) == 1]
-        df = df.reindex(idx)
-        # ensure union of the ket
 
-        def levenshtein_distance(str1, str2, ):
-            counter = {"+": 0, "-": 0}
-            lev_dist = 0
-            for edit_code, *_ in ndiff(str1, str2):
-                if edit_code == " ":
-                    lev_dist += max(counter.values())
-                    counter = {"+": 0, "-": 0}
-                else:
-                    counter[edit_code] += 1
-            lev_dist += max(counter.values())
-            return lev_dist
+        # unmatched report
+        if isinstance(unmatched_connector, str):
+            if self._pm.has_connector(unmatched_connector):
+                unmatched = pd.merge(canonical[on_key], other[on_key], on=on_key, how='outer', suffixes=('_x', '_y'),
+                                     indicator=True)
+                unmatched = unmatched[unmatched['_merge'] != 'both']
+                unmatched.columns = unmatched.columns.str.replace('_merge', 'found_in', regex=False)
+                unmatched = unmatched.sort_values(on_key).reset_index(drop=True)
+                handler = self._pm.get_connector_handler(unmatched_connector)
+                handler.persist_canonical(unmatched, **kwargs)
+            else:
+                raise ValueError(f"The connector name {unmatched_connector} has been given but no Connect Contract added")
 
-        # get the distance between differences
-        diff = pd.DataFrame()
-        if len(idx) == 0:
-            diff = Commons.filter_columns(canonical, headers=on_key)
-        else:
-            for idx in range(0, df.shape[0], 2):
-                line = pd.Series(data=0, index=df.iloc[idx].index, dtype='int')
-                try:
-                    for index, value in df.iloc[idx].items():
-                        if index in on_key:
-                            line.at[index] = value
-                        else:
-                            if distance:
-                                line.at[index] = levenshtein_distance(str(value), str(df.iloc[idx + 1].loc[index]))
-                            else:
-                                line.at[index] = 0 if str(value) == str(df.iloc[idx + 1].loc[index]) else 1
-                except IndexError:
-                    continue
-                diff = pd.concat([diff, line], axis=1)
-            diff = diff.T.reset_index(drop=True)
-        # set the index to the key
-        # drop zeros
-        if drop_no_diff:
-            diff = diff.loc[:, (diff != 0).any(axis=0)]
+        # remove non-matching rows
+        df = pd.merge(canonical, other, on=on_key, how='inner', suffixes=('_x', '_y'))
+        df_x = df.filter(regex='(_x$)', axis=1)
+        df_y = df.filter(regex='(_y$)', axis=1)
+        df_x.columns = df_x.columns.str.removesuffix('_x')
+        df_y.columns = df_y.columns.str.removesuffix('_y')
+        # flag the differences
+        diff = df_x.ne(df_y).astype(int)
+        if drop_zero_sum:
+            diff = diff.loc[(diff != 0).any(axis=1),(diff != 0).any(axis=0)]
+        # add back the keys
+        for n in range(len(on_key)):
+            diff.insert(n, on_key[n], df[on_key[n]].iloc[diff.index])
+
+        # detailed report
+        if isinstance(detail_connector, str):
+            if self._pm.has_connector(detail_connector):
+                diff_comp = df_x.astype(str).compare(df_y.astype(str)).fillna('-')
+                for n in range(len(on_key)):
+                    diff_comp.insert(n, on_key[n], df[on_key[n]].iloc[diff_comp.index])
+                diff_comp.columns = ['_'.join(col) for col in diff_comp.columns.values]
+                diff_comp.columns = diff_comp.columns.str.replace(r'_self$', '_x', regex=True)
+                diff_comp.columns = diff_comp.columns.str.replace(r'_other$', '_y', regex=True)
+                diff_comp.columns = diff_comp.columns.str.replace(r'_$', '', regex=True)
+                handler = self._pm.get_connector_handler(detail_connector)
+                handler.persist_canonical(diff_comp, **kwargs)
+            else:
+                raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
+
+        # summary report
         if isinstance(summary_connector, str):
             if self._pm.has_connector(summary_connector):
                 summary = diff.drop(on_key, axis=1).sum().reset_index()
                 summary.columns = ['Attribute', 'Summary']
-                if ordered:
-                    summary = summary.sort_values(['Attribute'])
+                summary = summary.sort_values(['Attribute'])
                 handler = self._pm.get_connector_handler(summary_connector)
                 handler.persist_canonical(summary, **kwargs)
             else:
-                raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
-        if ordered:
-            diff = diff.sort_values(on_key)
-        if isinstance(detail_connector, str):
-            if self._pm.has_connector(detail_connector):
-                handler = self._pm.get_connector_handler(detail_connector)
+                raise ValueError(f"The connector name {summary_connector} has been given but no Connect Contract added")
+
+        # flagged report
+        if isinstance(flagged_connector, str):
+            if self._pm.has_connector(flagged_connector):
+                diff = diff.sort_values(on_key)
+                diff = diff.reset_index(drop=True)
+                handler = self._pm.get_connector_handler(flagged_connector)
                 handler.persist_canonical(diff, **kwargs)
                 return canonical
-            raise ValueError(f"The connector name {detail_connector} has been given but no Connect Contract added")
-        if index_on_key:
-            diff = diff.set_index(on_key)
+            raise ValueError(f"The connector name {flagged_connector} has been given but no Connect Contract added")
+
+        if drop_zero_sum:
+            diff = diff.sort_values(on_key)
+            diff = diff.reset_index(drop=True)
+
         return diff
 
     def _model_concat(self, canonical: Any, other: Any, as_rows: bool=None, headers: [str, list]=None,

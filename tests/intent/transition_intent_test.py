@@ -9,6 +9,7 @@ from aistac.properties.property_manager import PropertyManager
 from ds_discovery import SyntheticBuilder
 
 from ds_discovery import Transition
+from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
 from ds_discovery.intent.transition_intent import TransitionIntentModel
 from ds_discovery.managers.transition_property_manager import TransitionPropertyManager
 from ds_discovery.components.commons import Commons
@@ -37,7 +38,7 @@ class TransitionIntentModelTest(unittest.TestCase):
 
     def test_runs(self):
         """Basic smoke test"""
-        TransitionIntentModel(property_manager=TransitionPropertyManager('test', username='TestUser'), default_save_intent=False)
+        TransitionIntentModel(property_manager=TransitionPropertyManager('test', creator='TestUser'), default_save_intent=False)
 
     def test_to_date_element(self):
         tools = self.tools
@@ -66,25 +67,17 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
     def test_auto_transition(self):
-        tools = self.tools
-        sample_size = 100
-        df = pd.DataFrame()
-        df['nulls'] = [None]*sample_size
-        df['nums'] = tools.get_number(1, 100, size=sample_size)
-        df['floats'] = tools.get_number(1, 100, quantity=0.9, size=sample_size)
-        df['num_str'] = tools.get_category(list(range(100)), quantity=0.9, size=sample_size)
-        df['bools'] = tools.get_category([True, False], quantity=0.9, size=sample_size)
-        df['bool_str'] = tools.get_category(['1', '0'], quantity=0.9, size=sample_size)
-        df['bool_num'] = tools.get_category([1, 0], quantity=0.9, size=sample_size)
-        df['cats'] = tools.get_category(list('ABC'), quantity=0.9, size=sample_size)
-        df = self.clean.auto_transition(df)
-        self.assertTrue(df['nums'].dtype.name.startswith('int'))
-        self.assertTrue(df['floats'].dtype.name.startswith('float'))
-        self.assertTrue(df['num_str'].dtype.name.startswith('float'))
-        self.assertTrue(df['bools'].dtype.name.startswith('bool'))
-        self.assertTrue(df['bool_str'].dtype.name.startswith('category'))
-        self.assertTrue(df['bool_num'].dtype.name.startswith('bool'))
-        self.assertTrue(df['cats'].dtype.name.startswith('category'))
+        sb = SyntheticBuilder.from_memory()
+        tr = Transition.from_memory()
+        df = sb.tools.model_synthetic_data_types(100)
+        df = tr.tools.auto_transition(df)
+        self.assertTrue(df['bool'].dtype.name.startswith('bool'))
+        self.assertTrue(df['cat'].dtype.name.startswith('cat'))
+        self.assertTrue(df['date'].dtype.name.startswith('datetime'))
+        self.assertTrue(df['int'].dtype.name.startswith('int'))
+        self.assertTrue(df['num'].dtype.name.startswith('float'))
+        self.assertTrue(df['object'].dtype.name.startswith('object'))
+        self.assertTrue(df['str'].dtype.name.startswith('string'))
 
     def test_auto_reinstate_nulls(self):
         tools = self.tools
@@ -184,6 +177,15 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = self.clean.auto_drop_columns(df, drop_predominant=False)
         self.assertEqual(8, len(result.columns))
         self.assertNotIn('null_num', result.columns.tolist())
+
+    def test_auto_remove_unknown(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        df = tools.model_synthetic_data_types(10, extended=True)
+        prev = df.columns.to_list()
+        result = self.clean.auto_drop_columns(df, null_min=0.999, drop_unknown=True, drop_predominant=False)
+        new = result.columns.to_list()
+        self.assertCountEqual(['object', 'nulls'], Commons.list_diff(new, prev))
 
     def test_clean_headers(self):
         tools = self.tools

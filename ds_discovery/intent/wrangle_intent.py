@@ -410,31 +410,35 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._model_merge(seed=seed, **params)
 
-    def model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_no_diff: bool=None,
-                         ordered: bool=None, index_on_key: bool=None, distance: bool=None, summary_connector: bool=None,
-                         seed: int=None, detail_connector: str=None,save_intent: bool=None, column_name: [int, str]=None,
-                         intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
-        """ rreturns the difference between two canonicals, joined on a common and unique key.
-        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment variable.
-        If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
+    def model_difference(self, canonical: Any, other: Any, on_key: [str, list], drop_zero_sum: bool=None,
+                         summary_connector: bool=None, flagged_connector: str=None, detail_connector: str=None,
+                         unmatched_connector: str=None, seed: int=None, save_intent: bool=None,
+                         column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                         remove_duplicates: bool=None):
+        """returns the difference between two canonicals, joined on a common and unique key.
+        The ``on_key`` parameter can be a direct reference to the canonical column header or to an environment
+        variable. If the environment variable is used ``on_key`` should be set to ``"${<<YOUR_ENVIRON>>}"`` where
         <<YOUR_ENVIRON>> is the environment variable name.
 
-        By default only the difference is shown with 1 for true and 0 for false. By setting the `distance`
-        parameter to True, Levenshtein distance is used returning the distance between the values.
+        If the ``flagged connector`` parameter is used, a report flagging mismatched left data with right data
+        is produced for this connector where 1 indicate a difference and 0 they are the same. By default this method
+        returns this report but if this parameter is set the original canonical returned. This allows a canonical
+        pipeline to continue through the component while outputting the difference report.
 
-        If the ``detail connector`` parameter is used, the difference report is output to that connector and the
-        original canonical returned. This allows a canonical pipeline to continue through the component while
-        outputting the Intent action.
+        If the ``detail connector`` parameter is used, a detail report of the difference where the left and right
+        values that differ are shown.
+
+        If the ``unmatched connector`` parameter is used, the on_key's that don't match between left and right are
+        reported
 
         :param canonical: a direct or generated pd.DataFrame. see context notes below
         :param other: a direct or generated pd.DataFrame. to concatenate
         :param on_key: The name of the key that uniquely joins the canonical to others
-        :param drop_no_diff: (optional) drops columns with no difference
-        :param index_on_key: (optional) set the index to be the key
-        :param ordered: (optional) order by key
-        :param distance: (optional) use Levenshtein distance to indicate distance between fields
+        :param drop_zero_sum: (optional) drops rows and columns which has a total sum of zero differences
         :param summary_connector: (optional) a connector name where the summary report is sent
-        :param detail_connector::(optional) a connector name where the detail report is sent
+        :param flagged_connector: (optional) a connector name where the differences are flagged
+        :param detail_connector: (optional) a connector name where the differences are shown
+        :param unmatched_connector: (optional) a connector name where the unmatched keys are shown
         :param seed: (optional) this is a placeholder, here for compatibility across methods
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
