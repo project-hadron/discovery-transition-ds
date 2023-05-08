@@ -348,6 +348,7 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         # sort
         canonical.sort_values(on_key, inplace=True)
         other.sort_values(on_key, inplace=True)
+        other = other.loc[:, canonical.columns.to_list()]
 
         # unmatched report
         if isinstance(unmatched_connector, str):
