@@ -387,7 +387,8 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 diff_comp.columns = diff_comp.columns.str.replace(r'_self$', '_x', regex=True)
                 diff_comp.columns = diff_comp.columns.str.replace(r'_other$', '_y', regex=True)
                 diff_comp.columns = diff_comp.columns.str.replace(r'_$', '', regex=True)
-                diff_comp.reset_index(drop=True)
+                diff_comp = diff_comp.sort_values(on_key)
+                diff_comp = diff_comp.reset_index(drop=True)
                 handler = self._pm.get_connector_handler(detail_connector)
                 handler.persist_canonical(diff_comp, **kwargs)
             else:
