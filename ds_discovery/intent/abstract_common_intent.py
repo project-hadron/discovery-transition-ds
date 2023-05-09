@@ -170,15 +170,15 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
                 if code_str is None:
                     raise ValueError(f"The action '@eval' requires a 'code_str' key.")
                 e_value = eval(code_str, globals(), action)
-                return pd.Series(data=([e_value] * select_idx.size), index=select_idx, dtype=type(e_value))
+                return pd.Series(data=([e_value] * select_idx.size), index=select_idx)
             elif str(method).startswith('@constant'):
                 constant = action.pop('value', None)
                 if constant is None:
                     raise ValueError(f"The action '@constant' requires a 'value' key.")
-                return pd.Series(data=([constant] * select_idx.size), index=select_idx, dtype=type(constant))
+                return pd.Series(data=([constant] * select_idx.size), index=select_idx)
             else:
                 raise ValueError(f"The 'method' key {method} is not a recognised intent method")
-        return pd.Series(data=([action] * select_idx.size), index=select_idx, dtype=type(action))
+        return pd.Series(data=([action] * select_idx.size), index=select_idx,)
 
     def _selection_index(self, canonical: pd.DataFrame, selection: list, select_idx: pd.Index=None):
         """ private method to iterate a list of selections and return the resulting index
