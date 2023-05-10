@@ -101,6 +101,22 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             print(action)
             result = tools.correlate_aggregate(df, headers=list('ABC'), agg=action)
             self.assertEqual(5, len(result))
+    def test_correlate_values_from_selection(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['creation'] = tools.get_number(10, 99, size=sample_size)
+        df['process'] = tools.correlate_values(df, header="creation", offset=1)
+        # repeate and overlay this time on 5%
+        df['latent_flag'] = tools.get_dist_bernoulli(probability=0.3, size=sample_size)
+        print(df)
+        # use select to overlay
+        selection = [tools.select2dict(column='latent_flag', condition='@==1')]
+        action = tools.action2dict(method='correlate_values', header="creation", offset=2)
+        default = tools.action2dict(method='@header', header='process')
+        df['process'] = tools.correlate_selection(df, selection=selection, action=action, default_action=default)
+        print(df.head())
 
     def test_correlate_values(self):
         tools = self.tools
@@ -267,9 +283,25 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
             result = tools._correlate_activation(df, header='num', activation='Softmax')
         self.assertTrue("The activation function 'softmax' is not supported." in str(context.exception))
 
+    def test_correlate_dates_from_selection(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sample_size = 100
+        df = pd.DataFrame()
+        df['creationDate'] = tools.get_datetime(start=-30, until=-14, relative_freq=[0.001, 0.1, 1, 3, 5, 3, 2, 2, 2], size=sample_size)
+        df['processDate'] = tools.correlate_dates(df, header="creationDate", offset={'days': 1}, jitter=3)
+        # repeate and overlay this time on 5%
+        df['latent_flag'] = tools.get_dist_bernoulli(probability=0.3, size=sample_size)
+
+        # use select to overlay
+        selection = [tools.select2dict(column='latent_flag', condition='@==1')]
+        action = tools.action2dict(method='correlate_dates', header="creationDate", offset={'minutes': 20}, jitter=3)
+        default = tools.action2dict(method='@header', header='processDate')
+        df['processDate'] = tools.correlate_selection(df, selection=selection, action=action, default_action=default)
+        print(df.head())
 
 
-    def test_correlate_date(self):
+    def test_correlate_dates(self):
         tools = self.tools
         df = pd.DataFrame(columns=['dates'], data=['2019/01/30', '2019/02/12', '2019/03/07', '2019/03/07'])
         result = tools.correlate_dates(df, 'dates', date_format='%Y/%m/%d')

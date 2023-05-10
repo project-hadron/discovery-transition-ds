@@ -160,24 +160,10 @@ class ControllerTest(unittest.TestCase):
 
 
     def test_controller_use_case(self):
-        # os.environ['HADRON_DEFAULT_PATH'] = 'persist'
-        # os.environ['HADRON_DIFF_ON'] = 'target'
-        # os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=origin"
-        # os.environ['HADRON_DIFF_CLEANER_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=other"
-        # os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
-        # os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = "mysql://user:pass@localhost:3306/mydb?table=mapping"
+        os.environ['HADRON_SYNTHETIC_DATA_SIZE'] = '1000'
+        os.environ['HADRON_SYNTHETIC_OUTCOME_URI'] = 'work/data/output.pq'
 
-        # Connector contract paths (optional)
-        os.environ['HADRON_DEFAULT_PATH'] = 's3://project-hadron-cs-repo/domain/telecom/difference/data/'
-        # specific component envs
-        os.environ['HADRON_DIFF_CLEANER_ORIGIN'] = 's3://project-hadron-cs-repo/domain/telecom/difference/source/origin_sample.csv'
-        os.environ['HADRON_DIFF_CLEANER_OTHER'] = 's3://project-hadron-cs-repo/domain/telecom/difference/source/other_sample.csv'
-        os.environ['HADRON_DIFF_HEADER_MAP_ORIGIN'] = 's3://project-hadron-cs-repo/domain/telecom/difference/source/mapping.csv'
-        os.environ['HADRON_DIFF_HEADER_MAP_OTHER'] = 's3://project-hadron-cs-repo/domain/telecom/difference/source/mapping.csv'
-        os.environ['HADRON_DIFF_ON'] = 'target'
-
-        controller = Controller.from_env(
-            uri_pm_repo='/Users/doatridge/code/jupyter/telecom/matching/difference/hadron/contracts')
+        controller = Controller.from_env(uri_pm_repo='https://raw.githubusercontent.com/project-hadron/hadron-asset-bank/master/contracts/commons/synthetic_data_types')
 
         controller.run_controller(run_cycle_report='hadron_controller_cycle_report.csv')
         report = controller.load_canonical(connector_name='run_cycle_report')

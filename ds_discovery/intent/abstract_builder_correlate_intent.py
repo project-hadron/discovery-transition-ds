@@ -604,13 +604,20 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         # set offset for all values
         if isinstance(offset, (int, float)) and offset != 0 and s_values.size > 0:
             s_values = s_values.add(offset)
-        # get the return list
-        rtn_list = canonical[header].copy()
         # set the changed values
-        rtn_list.iloc[s_values.index] = s_values
+        rtn_list = canonical[header].copy()
+        if canonical[header].size == s_values.size:
+            rtn_list = s_values
+        else:
+            rtn_list.iloc[s_values.index] = s_values
         if isinstance(keep_zero, bool) and keep_zero:
-            rtn_list.iloc[zero_idx] = 0
-        if null_idx.size > 0:
+            if canonical[header].size == zero_idx.size:
+                rtn_list = 0 * zero_idx.size
+            else:
+                rtn_list.iloc[zero_idx] = 0
+        if canonical[header].size == null_idx.size:
+            rtn_list = np.nan * null_idx.size
+        else:
             rtn_list.iloc[null_idx] = np.nan
         rtn_list = rtn_list.round(precision)
         if precision == 0 and not rtn_list.isnull().any():
@@ -731,7 +738,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
             results = pd.Series(pd.to_timedelta(results, unit='micro'))
-            s_values = s_values + results
         null_idx = s_values[s_values.isna()].index
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
@@ -748,8 +754,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
                     s_values = s_values.dt.tz_convert(dt_tz)
                 else:
                     s_values = s_values.dt.tz_localize(dt_tz)
-            if null_idx.size > 0:
-                s_values.iloc[null_idx].apply(lambda x: np.nan)
         return s_values.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
