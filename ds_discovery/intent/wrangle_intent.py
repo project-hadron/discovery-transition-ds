@@ -1928,9 +1928,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_discrete_intervals(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                        jitter_units: str=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
-                        year_first: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                        jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None, now_delta: str=None,
+                        date_format: str=None, day_first: bool=None, year_first: bool=None, seed: int=None,
+                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlates dates to the parameters given.
 
         When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
@@ -1941,6 +1942,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'
+        :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
+        :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
         :param day_first: (optional) if the dates given are day first firmat. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False

@@ -300,6 +300,15 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         df['processDate'] = tools.correlate_selection(df, selection=selection, action=action, default_action=default)
         print(df.head())
 
+    def test_correlate_dates_jitter(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['creationDate'] = tools.get_datetime(start=-30, until=-14, ordered=True, ignore_time=True, size=sample_size)
+        df['processDate'] = tools.correlate_dates(df, header="creationDate", ignore_time=True, offset={'days': 10}, jitter=1, jitter_units='D')
+        print(df['processDate'] - df['creationDate'])
+
 
     def test_correlate_dates(self):
         tools = self.tools

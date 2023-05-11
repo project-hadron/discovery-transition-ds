@@ -122,8 +122,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         return rtn_list
     
     def _get_datetime(self, start: Any, until: Any, relative_freq: list=None, at_most: int=None, ordered: str=None,
-                      date_format: str=None, as_num: bool=None, ignore_time: bool=None, size: int=None,
-                      seed: int=None, day_first: bool=None, year_first: bool=None) -> list:
+                      date_format: str=None, as_num: bool=None, ignore_time: bool=None, ignore_seconds: bool=None,
+                      size: int=None, seed: int=None, day_first: bool=None, year_first: bool=None) -> list:
         """ returns a random date between two date and/or times. weighted patterns can be applied to the overall date
         range.
         if a signed 'int' type is passed to the start and/or until dates, the inferred date will be the current date
@@ -139,6 +139,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param at_most: the most times a selection should be chosen
         :param ordered: order the data ascending 'asc' or descending 'dec', values accepted 'asc' or 'des'
         :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
+        :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
         :param date_format: the string format of the date to be returned. if not set then pd.Timestamp returned
         :param as_num: returns a list of Matplotlib date values as a float. Default is False
         :param size: the size of the sample to return. Default to 1
@@ -156,6 +157,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
             raise ValueError("The start or until parameters cannot be of NoneType")
         # Code block for intent
         as_num = as_num if isinstance(as_num, bool) else False
+        ignore_seconds = ignore_seconds if isinstance(ignore_seconds, bool) else False
         ignore_time = ignore_time if isinstance(ignore_time, bool) else False
         size = 1 if size is None else size
         _seed = self._seed() if seed is None else seed
@@ -183,6 +185,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
             rtn_list = pd.Series(Commons.value2date(rtn_list, dt_tz=dt_tz))
         if ignore_time:
             rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
+        if ignore_seconds:
+            rtn_list = rtn_list.apply(lambda t: t.replace(second=0, microsecond=0, nanoosecond=0))
         if as_num:
             return Commons.date2value(rtn_list)
         if isinstance(date_format, str) and len(rtn_list) > 0:

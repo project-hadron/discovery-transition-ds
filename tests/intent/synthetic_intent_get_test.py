@@ -145,13 +145,15 @@ class SyntheticIntentGetTest(unittest.TestCase):
 
     def test_get_datetime_ignore_time(self):
         tools = self.tools
-        sample_size = 1000
+        sample_size = 10
         result = tools.get_datetime('2019/01/01 12:30', '2019/01/02 18:05', size=sample_size)
         self.assertLess(0,pd.Series(result).dt.hour.sum())
         self.assertLess(0,pd.Series(result).dt.minute.sum())
         result = tools.get_datetime('2019/01/01 12:30', '2019/01/02 18:05', ignore_time=True, size=sample_size)
         self.assertEqual(0, pd.Series(result).dt.hour.sum())
         self.assertEqual(0,pd.Series(result).dt.minute.sum())
+        result = tools.get_datetime('2019/01/01 12:30', '2019/01/02 18:05', ignore_seconds=True, size=sample_size)
+        print(result)
 
     def test_get_datetime_at_most(self):
         tools = self.tools

@@ -117,8 +117,8 @@ class SyntheticIntentModel(WrangleIntentModel):
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
     def get_datetime(self, start: Any, until: Any, relative_freq: list=None, at_most: int=None, ordered: str=None,
-                     date_format: str=None, as_num: bool=None, ignore_time: bool=None, size: int=None,
-                     quantity: float=None, seed: int=None, day_first: bool=None, year_first: bool=None,
+                     date_format: str=None, as_num: bool=None, ignore_time: bool=None, ignore_seconds: bool=None,
+                     size: int=None, quantity: float=None, seed: int=None, day_first: bool=None, year_first: bool=None,
                      save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a random date between two date and/or times. weighted patterns can be applied to the overall date
@@ -134,6 +134,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param at_most: the most times a selection should be chosen
         :param ordered: order the data ascending 'asc' or descending 'dec', values accepted 'asc' or 'des'
         :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
+        :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
         :param date_format: the string format of the date to be returned. if not set then pd.Timestamp returned
         :param as_num: returns a list of Matplotlib date values as a float. Default is False
         :param size: the size of the sample to return. Default to 1

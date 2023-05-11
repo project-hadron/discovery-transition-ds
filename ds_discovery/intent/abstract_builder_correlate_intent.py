@@ -684,8 +684,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         return s_values.to_list()
 
     def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                         jitter_units: str=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
-                         year_first: bool=None, seed: int=None):
+                         jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None, now_delta: str=None,
+                         date_format: str=None, day_first: bool=None, year_first: bool=None, seed: int=None):
         """ correlates dates to the parameters given.
 
         When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
@@ -696,6 +696,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
+        :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
+        :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
         :param day_first: (optional) if the dates given are day first format. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
@@ -721,6 +723,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             return control
 
         seed = self._seed() if seed is None else seed
+        ignore_seconds = ignore_seconds if isinstance(ignore_seconds, bool) else False
+        ignore_time = ignore_time if isinstance(ignore_time, bool) else False
         offset = _clean(offset) if isinstance(offset, (dict, int)) else None
         if isinstance(now_delta, str) and now_delta not in ['Y', 'M', 'W', 'D', 'h', 'm', 's']:
             raise ValueError(f"the now_delta offset unit '{now_delta}' is not recognised "
@@ -737,7 +741,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             jitter = int(jitter.to_timedelta64().astype(int) / 10 ** 3)
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
-            s_values = pd.Series(pd.to_timedelta(results, unit='micro'))
+            results = pd.Series(pd.to_timedelta(results, unit='micro'))
+            s_values = s_values.add(results)
         null_idx = s_values[s_values.isna()].index
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
@@ -754,6 +759,10 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
                     s_values = s_values.dt.tz_convert(dt_tz)
                 else:
                     s_values = s_values.dt.tz_localize(dt_tz)
+        if ignore_time:
+            s_values = pd.Series(pd.DatetimeIndex(s_values).normalize())
+        elif ignore_seconds:
+            s_values = s_values.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
         return s_values.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
