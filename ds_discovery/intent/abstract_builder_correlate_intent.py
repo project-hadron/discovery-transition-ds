@@ -737,7 +737,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             jitter = int(jitter.to_timedelta64().astype(int) / 10 ** 3)
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
-            results = pd.Series(pd.to_timedelta(results, unit='micro'))
+            s_values = pd.Series(pd.to_timedelta(results, unit='micro'))
         null_idx = s_values[s_values.isna()].index
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
