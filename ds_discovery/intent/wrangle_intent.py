@@ -1740,10 +1740,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_numbers(seed=seed, **params)
 
-    def correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, precision: int=None,
-                         jitter: [int, float, str]=None, offset: [int, float, str]=None, transform: Any=None,
-                         lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None, seed: int=None,
-                         save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+    def correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
+                         precision: int=None, jitter: [int, float, str]=None, offset: [int, float, str]=None,
+                         transform: Any=None, lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None,
+                         seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
         normalised jitter (std from the value) along with a value offset. ``choice``, ``jitter`` and ``offset``
@@ -1752,6 +1752,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param choice: (optional) The number of values to choose to apply the change to. Can be an environment variable.
+        :param choice_header: (optional) those not chosen are given the values of the given header
         :param precision: (optional) to what precision the return values should be
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
         :param transform: (optional) passing a lambda function to transform the value. e.g. ``lambda x: (x - 3) / 2``
@@ -1927,19 +1928,24 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_discrete_intervals(seed=seed, **params)
 
-    def correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, offset: [int, dict]=None,
-                        jitter: int=None, jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None,
-                        now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
-                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None):
-        """ correlates dates to the parameters given.
+    def correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
+                        offset: [int, dict]=None, jitter: int=None, jitter_units: str=None, ignore_time: bool=None,
+                        ignore_seconds: bool=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
+                        year_first: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
+                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+        """ correlate a list of continuous dates adjusting those dates, or a subset of those dates, with a
+        normalised jitter along with a value offset. ``choice``, ``jitter`` and ``offset`` can accept environment
+        variable string names starting with ``${`` and ending with ``}``.
 
-        When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
-        a singular name {'hour': 3} to replace the current with 3 hours.
+        When using offset and a dict is passed, the dict should take the form {'days': 1}, where the unit is plural,
+        to add 1 day or a singular name {'hour': 3}, where the unit is singular, to replace the current with 3 hours.
+        Offsets can be 'years', 'months', 'weeks', 'days', 'hours', 'minutes' or 'seconds'. If an int is passed
+        days are assumed.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
+        :param choice_header: (optional) those not chosen are given the values of the given header
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'

@@ -539,7 +539,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             raise ValueError(f"The method '{method}' is not recognised. Please use one of 'mean', 'median' or 'mode'")
         return s_values.to_list()
 
-    def _correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, precision: int=None,
+    def _correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None, precision: int=None,
                           jitter: [int, float, str]=None, offset: [int, float, str]=None, transform: str=None,
                           lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None, seed: int=None):
         """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
@@ -552,6 +552,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
+        :param choice_header: (optional) those not chosen are given the values of the given header
         :param precision: (optional) to what precision the return values should be
         :param offset: (optional) a fixed value or an environment variable where the name is wrapped with '${' and '}'
         :param transform: (optional) passing a str lambda function. e.g. 'lambda x: (x - 3) / 2''
@@ -567,6 +568,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         s_values = canonical[header].copy()
+        choice_header = choice_header if isinstance(choice_header, str) and choice_header in canonical.columns else header
+        s_others = canonical[choice_header].copy()
         seed = self._seed() if seed is None else seed
         offset = self._extract_value(offset)
         keep_zero = keep_zero if isinstance(keep_zero, bool) else False
@@ -605,24 +608,23 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(offset, (int, float)) and offset != 0 and s_values.size > 0:
             s_values = s_values.add(offset)
         # set the changed values
-        rtn_list = canonical[header].copy()
         if canonical[header].size == s_values.size:
-            rtn_list = s_values
+            s_others = s_values
         else:
-            rtn_list.iloc[s_values.index] = s_values
+            s_others.iloc[s_values.index] = s_values
         if isinstance(keep_zero, bool) and keep_zero:
             if canonical[header].size == zero_idx.size:
-                rtn_list = 0 * zero_idx.size
+                s_others = 0 * zero_idx.size
             else:
-                rtn_list.iloc[zero_idx] = 0
+                s_others.iloc[zero_idx] = 0
         if canonical[header].size == null_idx.size:
-            rtn_list = np.nan * null_idx.size
+            s_others = np.nan * null_idx.size
         else:
-            rtn_list.iloc[null_idx] = np.nan
-        rtn_list = rtn_list.round(precision)
-        if precision == 0 and not rtn_list.isnull().any():
-            rtn_list = rtn_list.astype(int)
-        return rtn_list.to_list()
+            s_others.iloc[null_idx] = np.nan
+        s_others = s_others.round(precision)
+        if precision == 0 and not s_others.isnull().any():
+            s_others = s_others.astype(int)
+        return s_others.to_list()
 
     def _correlate_numbers(self, canonical: Any, header: str, standardize: bool=None, normalize: bool=None,
                            scalar: tuple=None, transform: str=None, precision: int=None, seed: int=None):
@@ -683,18 +685,23 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             s_values.iloc[null_idx] = np.nan
         return s_values.to_list()
 
-    def _correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, offset: [int, dict]=None,
+    def _correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None, offset: [int, dict]=None,
                          jitter: int=None, jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None,
                          now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
                          seed: int=None):
-        """ correlates dates to the parameters given.
+        """ correlate a list of continuous dates adjusting those dates, or a subset of those dates, with a
+        normalised jitter along with a value offset. ``choice``, ``jitter`` and ``offset`` can accept environment
+        variable string names starting with ``${`` and ending with ``}``.
 
-        When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
-        a singular name {'hour': 3} to replace the current with 3 hours.
+        When using offset and a dict is passed, the dict should take the form {'days': 1}, where the unit is plural,
+        to add 1 day or a singular name {'hour': 3}, where the unit is singular, to replace the current with 3 hours.
+        Offsets can be 'years', 'months', 'weeks', 'days', 'hours', 'minutes' or 'seconds'. If an int is passed
+        days are assumed.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
         :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
+        :param choice_header: (optional) those not chosen are given the values of the given header
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
@@ -711,6 +718,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         values = canonical[header].copy()
+        choice_header = choice_header if isinstance(choice_header, str) and choice_header in canonical.columns else header
+        s_others = canonical[choice_header].copy()
 
         def _clean(control):
             _unit_type = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds',
@@ -759,29 +768,28 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
         # set the changed values
-        rtn_list = canonical[header].copy()
         if canonical[header].size == s_values.size:
-            rtn_list = s_values
+            s_others = s_values
         else:
-            rtn_list.iloc[s_values.index] = s_values
+            s_others.iloc[s_values.index] = s_values
         if now_delta:
-            rtn_list = rtn_list.dt.tz_convert(None) if rtn_list.dt.tz else rtn_list
-            rtn_list = (rtn_list - pd.Timestamp.now()).abs()
-            rtn_list = (rtn_list / np.timedelta64(1, now_delta))
-            rtn_list = rtn_list.round(0) if null_idx.size > 0 else rtn_list.astype(int)
+            s_others = s_others.dt.tz_convert(None) if s_others.dt.tz else s_others
+            s_others = (s_others - pd.Timestamp.now()).abs()
+            s_others = (s_others / np.timedelta64(1, now_delta))
+            s_others = s_others.round(0) if null_idx.size > 0 else s_others.astype(int)
         else:
             if isinstance(date_format, str):
-                rtn_list = rtn_list.dt.strftime(date_format)
+                s_others = s_others.dt.strftime(date_format)
             else:
-                if rtn_list.dt.tz:
-                    rtn_list = rtn_list.dt.tz_convert(dt_tz)
+                if s_others.dt.tz:
+                    s_others = s_others.dt.tz_convert(dt_tz)
                 else:
-                    rtn_list = rtn_list.dt.tz_localize(dt_tz)
+                    s_others = s_others.dt.tz_localize(dt_tz)
         if ignore_time:
-            rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
+            s_others = pd.Series(pd.DatetimeIndex(s_others).normalize())
         elif ignore_seconds:
-            rtn_list = rtn_list.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
-        return rtn_list.to_list()
+            s_others = s_others.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
+        return s_others.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
                               default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):
