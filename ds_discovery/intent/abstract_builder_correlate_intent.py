@@ -719,7 +719,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         values = canonical[header].copy()
         choice_header = choice_header if isinstance(choice_header, str) and choice_header in canonical.columns else header
-        s_others = canonical[choice_header].copy()
+        others = canonical[choice_header].copy()
 
         def _clean(control):
             _unit_type = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds',
@@ -744,6 +744,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 's'
         # convert values into datetime
         s_values = pd.Series(pd.to_datetime(values, errors='coerce', dayfirst=day_first, yearfirst=year_first))
+        s_others = pd.Series(pd.to_datetime(others, errors='coerce', dayfirst=day_first, yearfirst=year_first))
         dt_tz = s_values.dt.tz
         # choose the items to jitter
         if isinstance(choice, (str, int, float)):
