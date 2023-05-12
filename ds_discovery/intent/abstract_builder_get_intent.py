@@ -186,7 +186,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         if ignore_time:
             rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
         if ignore_seconds:
-            rtn_list = rtn_list.apply(lambda t: t.replace(second=0, microsecond=0, nanoosecond=0))
+            rtn_list = rtn_list.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
         if as_num:
             return Commons.date2value(rtn_list)
         if isinstance(date_format, str) and len(rtn_list) > 0:
