@@ -4,7 +4,6 @@ import inspect
 from builtins import staticmethod
 from copy import deepcopy
 
-import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler

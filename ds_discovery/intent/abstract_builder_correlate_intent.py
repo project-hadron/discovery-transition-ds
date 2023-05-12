@@ -683,9 +683,10 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             s_values.iloc[null_idx] = np.nan
         return s_values.to_list()
 
-    def _correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                         jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None, now_delta: str=None,
-                         date_format: str=None, day_first: bool=None, year_first: bool=None, seed: int=None):
+    def _correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, offset: [int, dict]=None,
+                         jitter: int=None, jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None,
+                         now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
+                         seed: int=None):
         """ correlates dates to the parameters given.
 
         When using offset and a dict is passed, the dict should take the form {'days': 1} to add 1 day or
@@ -693,6 +694,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
+        :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
@@ -734,6 +736,16 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         # convert values into datetime
         s_values = pd.Series(pd.to_datetime(values, errors='coerce', dayfirst=day_first, yearfirst=year_first))
         dt_tz = s_values.dt.tz
+        # choose the items to jitter
+        if isinstance(choice, (str, int, float)):
+            size = s_values.size
+            choice = self._extract_value(choice)
+            choice = int(choice * size) if isinstance(choice, float) and 0 <= choice <= 1 else int(choice)
+            choice = choice if 0 <= choice < size else size
+            gen = np.random.default_rng(seed=seed)
+            choice_idx = gen.choice(s_values.index, size=choice, replace=False)
+            choice_idx = [choice_idx] if isinstance(choice_idx, int) else choice_idx
+            s_values = s_values.iloc[choice_idx]
         if isinstance(jitter, int):
             size = s_values.size
             # set jitters to time deltas
@@ -741,29 +753,35 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             jitter = int(jitter.to_timedelta64().astype(int) / 10 ** 3)
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
-            results = pd.Series(pd.to_timedelta(results, unit='micro'))
+            results = pd.Series(pd.to_timedelta(results, unit='micro'), index=s_values.index)
             s_values = s_values.add(results)
         null_idx = s_values[s_values.isna()].index
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
+        # set the changed values
+        rtn_list = canonical[header].copy()
+        if canonical[header].size == s_values.size:
+            rtn_list = s_values
+        else:
+            rtn_list.iloc[s_values.index] = s_values
         if now_delta:
-            s_values = s_values.dt.tz_convert(None) if s_values.dt.tz else s_values
-            s_values = (s_values - pd.Timestamp.now()).abs()
-            s_values = (s_values / np.timedelta64(1, now_delta))
-            s_values = s_values.round(0) if null_idx.size > 0 else s_values.astype(int)
+            rtn_list = rtn_list.dt.tz_convert(None) if rtn_list.dt.tz else rtn_list
+            rtn_list = (rtn_list - pd.Timestamp.now()).abs()
+            rtn_list = (rtn_list / np.timedelta64(1, now_delta))
+            rtn_list = rtn_list.round(0) if null_idx.size > 0 else rtn_list.astype(int)
         else:
             if isinstance(date_format, str):
-                s_values = s_values.dt.strftime(date_format)
+                rtn_list = rtn_list.dt.strftime(date_format)
             else:
-                if s_values.dt.tz:
-                    s_values = s_values.dt.tz_convert(dt_tz)
+                if rtn_list.dt.tz:
+                    rtn_list = rtn_list.dt.tz_convert(dt_tz)
                 else:
-                    s_values = s_values.dt.tz_localize(dt_tz)
+                    rtn_list = rtn_list.dt.tz_localize(dt_tz)
         if ignore_time:
-            s_values = pd.Series(pd.DatetimeIndex(s_values).normalize())
+            rtn_list = pd.Series(pd.DatetimeIndex(rtn_list).normalize())
         elif ignore_seconds:
-            s_values = s_values.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
-        return s_values.to_list()
+            rtn_list = rtn_list.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
+        return rtn_list.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
                               default_action: [str, int, float, dict]=None, seed: int=None, rtn_type: str=None):

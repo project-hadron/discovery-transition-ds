@@ -1927,10 +1927,10 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         seed = self._seed(seed=seed)
         return self._correlate_discrete_intervals(seed=seed, **params)
 
-    def correlate_dates(self, canonical: Any, header: str, offset: [int, dict]=None, jitter: int=None,
-                        jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None, now_delta: str=None,
-                        date_format: str=None, day_first: bool=None, year_first: bool=None, seed: int=None,
-                        save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+    def correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, offset: [int, dict]=None,
+                        jitter: int=None, jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None,
+                        now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
+                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                         replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlates dates to the parameters given.
 
@@ -1939,6 +1939,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
+        :param choice: (optional) The number of values or percentage between 0 and 1 to choose.
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'

@@ -286,19 +286,20 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
     def test_correlate_dates_from_selection(self):
         sb = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = sb.tools
-        sample_size = 100
+        sample_size = 10
         df = pd.DataFrame()
-        df['creationDate'] = tools.get_datetime(start=-30, until=-14, relative_freq=[0.001, 0.1, 1, 3, 5, 3, 2, 2, 2], size=sample_size)
-        df['processDate'] = tools.correlate_dates(df, header="creationDate", offset={'days': 1}, jitter=3)
+        df['creationDate'] = tools.get_datetime(start=-30, until=-14, relative_freq=[0.001, 0.1, 1, 3, 5, 3, 2, 2, 2], size=sample_size, ignore_time=True)
+        df['processDate'] = tools.correlate_dates(df, header="creationDate", offset={'days': 1}, jitter=3, ignore_time=True)
         # repeate and overlay this time on 5%
-        df['latent_flag'] = tools.get_dist_bernoulli(probability=0.3, size=sample_size)
+        df['latent_flag'] = tools.get_dist_choice(3, size=sample_size)
 
         # use select to overlay
         selection = [tools.select2dict(column='latent_flag', condition='@==1')]
-        action = tools.action2dict(method='correlate_dates', header="creationDate", offset={'minutes': 20}, jitter=3)
+        action = tools.action2dict(method='correlate_dates', header="creationDate", offset={'minutes': 20}, jitter=3, ignore_time=True)
         default = tools.action2dict(method='@header', header='processDate')
         df['processDate'] = tools.correlate_selection(df, selection=selection, action=action, default_action=default)
-        print(df.head())
+        print((df['processDate'] - df['creationDate']).sum().days)
+
 
     def test_correlate_dates_jitter(self):
         sb = SyntheticBuilder.from_memory()
@@ -306,9 +307,19 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         sample_size = 10
         df = pd.DataFrame()
         df['creationDate'] = tools.get_datetime(start=-30, until=-14, ordered=True, ignore_time=True, size=sample_size)
-        df['processDate'] = tools.correlate_dates(df, header="creationDate", ignore_time=True, offset={'days': 10}, jitter=1, jitter_units='D')
-        print(df['processDate'] - df['creationDate'])
+        df['processDate'] = tools.correlate_dates(df, header="creationDate", ignore_time=True, offset={'days': 10},
+                                                  jitter=1, jitter_units='D')
+        print((df['processDate'] - df['creationDate']))
 
+    def test_correlate_dates_choice(self):
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sample_size = 10
+        df = pd.DataFrame()
+        df['creationDate'] = tools.get_datetime(start=-30, until=-14, ordered=True, ignore_time=True, size=sample_size)
+        df['processDate'] = tools.correlate_dates(df, header="creationDate", ignore_time=True, offset={'days': 10},
+                                                 choice=4, jitter=1, jitter_units='D')
+        print(df['processDate'] - df['creationDate'])
 
     def test_correlate_dates(self):
         tools = self.tools
