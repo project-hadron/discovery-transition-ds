@@ -789,7 +789,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if ignore_time:
             s_others = pd.Series(pd.DatetimeIndex(s_others).normalize())
         elif ignore_seconds:
-            s_others = s_others.apply(lambda t: t.replace(second=0, microsecond=0, nanosecond=0))
+            s_others = s_others.dt.round('s')
         return s_others.to_list()
 
     def _correlate_categories(self, canonical: Any, header: str, correlations: list, actions: dict,
