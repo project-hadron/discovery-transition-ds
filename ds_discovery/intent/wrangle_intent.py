@@ -1929,10 +1929,11 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         return self._correlate_discrete_intervals(seed=seed, **params)
 
     def correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
-                        offset: [int, dict]=None, jitter: int=None, jitter_units: str=None, ignore_time: bool=None,
-                        ignore_seconds: bool=None, now_delta: str=None, date_format: str=None, day_first: bool=None,
-                        year_first: bool=None, seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
-                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+                        offset: [int, dict, str]=None, jitter: [int, str]=None, jitter_units: str=None,
+                        ignore_time: bool=None, ignore_seconds: bool=None, min_date: str=None, max_date: str=None,
+                        now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
+                        seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                        replace_intent: bool=None, remove_duplicates: bool=None):
         """ correlate a list of continuous dates adjusting those dates, or a subset of those dates, with a
         normalised jitter along with a value offset. ``choice``, ``jitter`` and ``offset`` can accept environment
         variable string names starting with ``${`` and ending with ``}``.
@@ -1951,6 +1952,8 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param jitter_units: (optional) the units of the jitter, Options: 'W', 'D', 'h', 'm', 's'. default 'D'
         :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
         :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
+        :param min_date: (optional)a minimum date not to go below
+        :param max_date: (optional)a max date not to go above
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
         :param day_first: (optional) if the dates given are day first firmat. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False

@@ -346,6 +346,22 @@ class WrangleIntentCorrelateTest(unittest.TestCase):
         result = tools.correlate_dates(df, 'dates')
         self.assertEqual('NaT', str(result[1]))
 
+    def test_correlate_date_min_max(self):
+        tools = self.tools
+        # control
+        df = pd.DataFrame(columns=['dates'], data=tools._get_datetime("2018/01/01", '2018/01/02', size=1000, seed=31))
+        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D', date_format='%Y/%m/%d', seed=31)
+        self.assertEqual("2017/12/14", pd.Series(result).min())
+        self.assertEqual("2018/01/18", pd.Series(result).max())
+        # min
+        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D', min_date="2018/01/01", date_format='%Y/%m/%d', seed=31)
+        self.assertEqual("2018/01/01", pd.Series(result).min())
+        self.assertEqual("2018/01/18", pd.Series(result).max())
+        # max
+        result = tools.correlate_dates(df, 'dates', jitter=5, jitter_units='D', max_date="2018/01/01", date_format='%Y/%m/%d', seed=31)
+        self.assertEqual("2017/12/14", pd.Series(result).min())
+        self.assertEqual("2018/01/01", pd.Series(result).max())
+
     def test_correlate_date_as_delta(self):
         tools = self.tools
         # control

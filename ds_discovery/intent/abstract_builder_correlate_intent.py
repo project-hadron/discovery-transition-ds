@@ -539,9 +539,10 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             raise ValueError(f"The method '{method}' is not recognised. Please use one of 'mean', 'median' or 'mode'")
         return s_values.to_list()
 
-    def _correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None, precision: int=None,
+    def _correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
                           jitter: [int, float, str]=None, offset: [int, float, str]=None, transform: str=None,
-                          lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None, seed: int=None):
+                          lower: [int, float]=None, upper: [int, float]=None, precision: int=None, keep_zero: bool=None,
+                          seed: int=None):
         """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
         normalised jitter (std from the value) along with a value offset. ``choice``, ``jitter`` and ``offset``
         can accept environment variable string names starting with ``${`` and ending with ``}``.
@@ -685,8 +686,9 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             s_values.iloc[null_idx] = np.nan
         return s_values.to_list()
 
-    def _correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None, offset: [int, dict]=None,
-                         jitter: int=None, jitter_units: str=None, ignore_time: bool=None, ignore_seconds: bool=None,
+    def _correlate_dates(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
+                         offset: [int, dict, str]=None, jitter: [int, str]=None, jitter_units: str=None,
+                         ignore_time: bool=None, ignore_seconds: bool=None, min_date: str=None, max_date: str=None,
                          now_delta: str=None, date_format: str=None, day_first: bool=None, year_first: bool=None,
                          seed: int=None):
         """ correlate a list of continuous dates adjusting those dates, or a subset of those dates, with a
@@ -704,9 +706,11 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         :param choice_header: (optional) those not chosen are given the values of the given header
         :param offset: (optional) Temporal parameter that add to or replace the offset value. if int then assume 'days'
         :param jitter: (optional) the random jitter or deviation in days
-        :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 's'
+        :param jitter_units: (optional) the units of the jitter, Options: W, D, h, m, s, milli, micro. default 'D'
         :param ignore_time: ignore time elements and only select from Year, Month, Day elements. Default is False
         :param ignore_seconds: ignore second elements and only select from Year to minute elements. Default is False
+        :param min_date: (optional)a minimum date not to go below
+        :param max_date: (optional)a max date not to go above
         :param now_delta: (optional) returns a delta from now as an int list, Options: 'Y', 'M', 'W', 'D', 'h', 'm', 's'
         :param day_first: (optional) if the dates given are day first format. Default to True
         :param year_first: (optional) if the dates given are year first. Default to False
@@ -740,8 +744,16 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(now_delta, str) and now_delta not in ['Y', 'M', 'W', 'D', 'h', 'm', 's']:
             raise ValueError(f"the now_delta offset unit '{now_delta}' is not recognised "
                              f"use of of ['Y', 'M', 'W', 'D', 'h', 'm', 's']")
-        units_allowed = ['W', 'D', 'h', 'm', 's', 'milli', 'micro']
-        jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 's'
+        # set minimum date
+        _min_date = pd.to_datetime(min_date, errors='coerce')
+        if _min_date is None or _min_date is pd.NaT:
+            _min_date = pd.to_datetime(pd.Timestamp.min)
+        # set max date
+        _max_date = pd.to_datetime(max_date, errors='coerce')
+        if _max_date is None or _max_date is pd.NaT:
+            _max_date = pd.to_datetime(pd.Timestamp.max)
+        if _min_date >= _max_date:
+            raise ValueError(f"the min_date {min_date} must be less than max_date {max_date}")
         # convert values into datetime
         s_values = pd.Series(pd.to_datetime(values, errors='coerce', dayfirst=day_first, yearfirst=year_first))
         s_others = pd.Series(pd.to_datetime(others, errors='coerce', dayfirst=day_first, yearfirst=year_first))
@@ -756,8 +768,12 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             choice_idx = gen.choice(s_values.index, size=choice, replace=False)
             choice_idx = [choice_idx] if isinstance(choice_idx, int) else choice_idx
             s_values = s_values.iloc[choice_idx]
-        if isinstance(jitter, int):
+        if isinstance(jitter, (str, int)):
             size = s_values.size
+            jitter = self._extract_value(jitter)
+            jitter_units = self._extract_value(jitter_units)
+            units_allowed = ['W', 'D', 'h', 'm', 's', 'milli', 'micro']
+            jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 'D'
             # set jitters to time deltas
             jitter = pd.Timedelta(value=jitter, unit=jitter_units) if isinstance(jitter, int) else pd.Timedelta(value=0)
             jitter = int(jitter.to_timedelta64().astype(int) / 10 ** 3)
@@ -768,6 +784,19 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         null_idx = s_values[s_values.isna()].index
         if isinstance(offset, dict) and offset:
             s_values = s_values.add(pd.DateOffset(**offset))
+        # sort max and min
+        if _min_date > pd.to_datetime(pd.Timestamp.min):
+            if _min_date > s_values.min():
+                min_idx = s_values.dropna().where(s_values < _min_date).dropna().index
+                s_values.iloc[min_idx] = _min_date
+            else:
+                raise ValueError(f"The min value {min_date} is greater than the max result value {s_values.max()}")
+        if _max_date < pd.to_datetime(pd.Timestamp.max):
+            if _max_date < s_values.max():
+                max_idx = s_values.dropna().where(s_values > _max_date).dropna().index
+                s_values.iloc[max_idx] = _max_date
+            else:
+                raise ValueError(f"The max value {max_date} is less than the min result value {s_values.min()}")
         # set the changed values
         if canonical[header].size == s_values.size:
             s_others = s_values
