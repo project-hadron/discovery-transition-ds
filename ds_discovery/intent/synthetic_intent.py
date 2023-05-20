@@ -1,3 +1,4 @@
+import ast
 import inspect
 import re
 import string
@@ -494,7 +495,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         if extended:
             # distributions
             _df['normal'] = self.get_dist_normal(mean=0, std=1, size=size, seed=seed, save_intent=False)  # normal
-            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.2, size=size, seed=seed, save_intent=False)  # bool
+            _df['bernoulli'] = self.get_dist_bernoulli(probability=0.4, size=size, seed=seed, save_intent=False)  # bool
             _df['gumbel'] = self.get_distribution(distribution='gumbel', loc=0, scale=0.1, size=size, seed=seed,
                                                   save_intent=False)  # skew
             _df['poisson'] = self.get_distribution(distribution='poisson', lam=3, size=size, seed=seed,
@@ -529,10 +530,12 @@ class SyntheticIntentModel(WrangleIntentModel):
             my_list = []
             my_dict = []
             for idx in range(_df.shape[0]):
-                my_list.append(f"[{_df['num'].iloc[idx]}, {_df['normal'].iloc[idx]}]")
+                my_list.append(f"[{_df['bernoulli'].iloc[idx]}, {_df['normal'].iloc[idx]}, {_df['num'].iloc[idx]}]")
                 my_dict.append("{" + f"{_df['unique'].iloc[idx]}: {_df['str'].iloc[idx]}" + "}")
-            _df['str_list'] = my_list
-            _df['str_dict'] = my_dict
+            _df['list'] = [ast.literal_eval(x)
+                           if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_list]
+            _df['dict'] = [ast.literal_eval(x)
+                           if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_dict]
             _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
             _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
