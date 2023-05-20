@@ -534,8 +534,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                 my_dict.append("{" + f"{_df['unique'].iloc[idx]}: {_df['str'].iloc[idx]}" + "}")
             _df['list'] = [ast.literal_eval(x)
                            if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_list]
-            _df['dict'] = [ast.literal_eval(x)
-                           if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_dict]
+            _df['str_dict'] = my_dict
             _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
             _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
