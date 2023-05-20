@@ -526,8 +526,15 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed, save_intent=False)
 
             # objects
-            _df['compound'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
-            _df['object'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
+            my_list = []
+            my_dict = []
+            for idx in range(_df.shape[0]):
+                my_list.append(f"[{_df['num'].iloc[idx]}, {_df['normal'].iloc[idx]}]")
+                my_dict.append("{" + f"{_df['unique'].iloc[idx]}: {_df['str'].iloc[idx]}" + "}")
+            _df['str_list'] = my_list
+            _df['str_dict'] = my_dict
+            _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
+            _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
             # others
             _df['single_num'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)

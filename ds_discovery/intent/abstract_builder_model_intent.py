@@ -527,9 +527,9 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         """ Takes a target dataset and samples from that target to the size of the canonical
 
         :param canonical: a pd.DataFrame as the reference dataframe
-        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param other: a direct or generated pd.DataFrame.
         :param headers: the headers to be selected from the other DataFrame
-        :param replace: assuming other is bigger than canonical, selects without replacement when True
+        :param replace:  (optional) assuming other is bigger than canonical, selects without replacement when True
         :param relative_freq: (optional) a weighting pattern that does not have to add to 1
         :param seed: (optional) a seed value for the random function: default to None
         :return: a pd.DataFrame
@@ -549,13 +549,34 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                              replace=replace)
         return pd.concat([canonical, other], axis=1)
 
-    # def _model_sample_data(self, canonical: Any, other: Any, seed: int=None) -> pd.DataFrame:
+    # def _model_analysis(self, canonical: Any, other: Any, jitter: int=None, jitter_units: str=None,
+    #                     unique_max: int=None, seed: int=None) -> pd.DataFrame:
     #     """"""
     #     canonical = self._get_canonical(canonical)
     #     other = self._get_canonical(other)
-    #     seed = self._seed() if seed is None else seed
+    #     jitter = jitter if isinstance(jitter, int) else 1
+    #     units_allowed = ['W', 'D', 'h', 'm', 's', 'milli', 'micro']
+    #     jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 'D'
+    #     unique_max = unique_max if isinstance(unique_max, int) else 50
+    #     seed = seed if isinstance(seed, int) else self._seed()
     #     rng = np.random.default_rng()
-    #     for header in other.columns:
+    #     for c in other.columns:
+    #         try:
+    #             if other[c].isnull().all():
+    #                 pass
+    #             elif any(Commons.valid_date(x) for x in other[c].dropna()) or other[c].dropna().dtype.kind in 'nM':
+    #                 pass
+    #             elif other[c].dropna().isin([1, 0,'1','0']).all() or other[c].dropna().dtype.kind in 'b':
+    #                 pass
+    #             elif other[c].nunique() < unique_max and round(other[c].isnull().sum() / other.shape[0], 3) < 0.98:
+    #                 pass
+    #             elif other[c].dropna().dtype.kind in 'iufc':
+    #                 pass
+    #             elif all(isinstance(v, str) for v in other[c].dropna()):
+    #                 pass
+    #         except TypeError:
+    #             pass
+    #
     #         if other['header'].dtype.name == 'category' or (other['header'].dtype.name == 'object' and
     #                                                         other['header'].nunique() < 99):
     #             vc = other['header'].value_counts()
@@ -895,65 +916,3 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         dtype = dtype if dtype else np.uint8
         return pd.get_dummies(canonical, columns=headers, prefix=prefix, prefix_sep=prefix_sep,
                               dummy_na=dummy_na, drop_first=drop_first, dtype=dtype)
-
-    # def _model_encode_woe(self, canonical: Any, headers: [str, list], target: str=None, prefix=None, seed: int=None):
-    #     """ encodes categorical data types, Weight of Evidence (WoE) was developed primarily for the credit and
-    #     financial industries to help build more predictive models to evaluate the risk of loan default. That is, to
-    #     predict how likely the money lent to a person or institution is to be lost. Thus, Weight of Evidence is a
-    #     measure of the "strength” of a grouping technique to separate good and bad risk (default).
-    #
-    #     - WoE will be 0 if the P(Goods) / P(Bads) = 1, that is, if the outcome is random for that group.
-    #     - If P(Bads) > P(Goods) the odds ratio will be < 1 and,
-    #     - WoE will be < 0 if, P(Goods) > P(Bads).
-    #     WoE is well suited for Logistic Regression, because the Logit transformation is simply the log of the odds,
-    #     i.e., ln(P(Goods)/P(Bads)). Therefore, by using WoE-coded predictors in logistic regression, the predictors are
-    #     all prepared and coded to the same scale, and the parameters in the linear logistic regression equation can be
-    #     directly compared.
-    #
-    #     The WoE transformation has three advantages:
-    #     - It creates a monotonic relationship between the target and the independent variables.
-    #     - It orders the categories on a "logistic" scale which is natural for logistic regression
-    #     - The transformed variables can then be compared because they are on the same scale. Therefore, it is possible
-    #       to determine which one is more predictive.
-    #
-    #     The WoE also has a limitation:
-    #     - Prone to cause over-fitting
-    #
-    #     :param canonical: a pd.DataFrame as the reference dataframe
-    #     :param headers: the header(s) to apply multi-hot
-    #     :param target: The woe target
-    #     :param prefix: a str value to put before the column name
-    #     :param seed: seed: (optional) a seed value for the random function: default to None
-    #     :return: a pd.Dataframe
-    #     """
-    #     # intend code block on the canonical
-    #     canonical = self._get_canonical(canonical)
-    #     headers = Commons.list_formatter(headers)
-    #     seed = self._seed() if seed is None else seed
-    #     for header in headers:
-    #         # total survivors
-    #         total_survived = canonical[target].sum()
-    #         # percentage of passenges who survived, from total survivors per category of cabin
-    #         survived = canonical.groupby([header])[target].sum() / total_survived
-    #         # total passengers who did not survive
-    #         total_non_survived = len(canonical) - canonical[target].sum()
-    #         # let's create a flag for passenges who did not survive
-    #         canonical['non_target'] = np.where(canonical[target] == 1, 0, 1)
-    #         # now let's calculate the % of passengers who did not survive per category of cabin
-    #         non_survived = canonical.groupby([header])['non_target'].sum() / total_non_survived
-    #         # let's concatenate the series in a dataframe
-    #         prob_df = pd.concat([survived, non_survived], axis=1)
-    #         # let's calculate the Weight of Evidence
-    #         prob_df.replace(to_replace=0, value=1, inplace=True)
-    #         prob_df['woe'] = np.log(prob_df[target] / prob_df['non_target'])
-    #         print(prob_df)
-    #         # and now let's capture the woe in a dictionary
-    #         ordered_labels = prob_df['woe'].to_dict()
-    #         # now, we replace the labels with the woe
-    #         canonical[header] = canonical[header].map(ordered_labels)
-    #
-    #         canonical = canonical.drop('non_target', axis=1)
-    #
-    #         if isinstance(prefix, str):
-    #             canonical[header].rename(f"{prefix}{header}")
-    #     return canonical

@@ -62,6 +62,8 @@ class PandasSourceHandler(AbstractSourceHandler):
             address = _cc.address
             file_type = load_params.pop('file_type', _ext if len(_ext) > 0 else 'csv')
         if file_type.lower() in ['parquet', 'pq']:
+            if 'engine' not in load_params:
+                load_params.update({'engine': 'auto'})
             rtn_data = pd.read_parquet(address, **load_params)
         elif file_type.lower() in ['zip', 'csv', 'tsv', 'txt']:
             if 'skiprows' in load_params and load_params.get('skiprows').startswith("lambda"):
