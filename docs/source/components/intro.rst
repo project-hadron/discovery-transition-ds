@@ -4,19 +4,17 @@ Project Hadron
 Introduction
 ------------
 
-Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically between
-machine learning business outcomes and the final product.  It translates the work of data scientists into meaningful,
-production ready solutions that can be easily managed by product engineers.
+Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically
+between machine learning business outcomes or use case and a product pipeline. It translates the work of data
+scientists into meaningful, production ready solutions that can be easily integrated into a DevOps, CI/CD
+pipeline.
 
-Project Hadron is a core set of abstractions that are the foundation of the three key elements that represent data
-science, those being: (1) feature engineering, (2) the construction of synthetic data with simulators, and generators
-(3) and statistics and machine learning algorithms for discovery and creating models.
-
-Project Hadron provides a clear separation of concerns, whilst maintaining the original intentions of the data
-scientist, that can be passed to a production team. It offers trust between the data scientists teams and product
-teams. It brings with it transparency and traceability, dealing with bias, fairness, and knowledge. The resulting
-outcome provides the product engineers with adaptability, robustness, and reuse; fitting seamlessly into a
-microservices solution that can be language agnostic.
+Project Hadron provides a clear separation of concerns, whilst maintaining the original intentions of the
+data scientist, that can be passed to a production team. It offers trust in the form of expected delivery
+and no code integration between the data scientists teams and product teams. It brings with it transparency
+and traceability, dealing with bias, fairness, and knowledge and presents data profiling and data legacy.
+The resulting outcome provides DevOps with adaptability, robustness, and reuse, fitting seamlessly into a
+microservices architecture.
 
 Project Hadron is designed using Microservices. Microservices is an architectural style for building software
 applications as a collection of small, independently deployable services that work together to provide a

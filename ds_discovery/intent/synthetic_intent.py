@@ -141,12 +141,12 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param size: the size of the sample to return. Default to 1
         :param seed: a seed value for the random function: default to None
         :param year_first: specifies if to parse with the year first
-                    - If True parses dates with the year first, eg 10/11/12 is parsed as 2010-11-12.
+                    - If True parses dates with the year first, e.g. 10/11/12 is parsed as 2010-11-12.
                     - If both dayfirst and yearfirst are True, yearfirst is preceded (same as dateutil).
 
         :param day_first: specifies if to parse with the day first
                     - If True, parses dates with the day first, eg %d-%m-%Y.
-                    - If False default to the a prefered preference, normally %m-%d-%Y (but not strict)
+                    - If False default to a preferred preference, normally %m-%d-%Y (but not strict)
 
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -507,10 +507,11 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['cat_null'] = self.get_category(list('MFU'), relative_freq=[9, 7, 1], quantity=0.9, size=size,
                                                 seed=seed, save_intent=False)
             _df['num_null'] = self.get_number(0., 1., quantity=0.98, size=size, seed=seed, save_intent=False)
+            _df['int_null'] = self.get_number(100, 9999, size=size, quantity=0.96, seed=seed, save_intent=False)
             _df['bool_null'] = self.get_category(['1', '0'], relative_freq=[1, 20], quantity=0.95, size=size, seed=seed,
                                                  save_intent=False)
             _df['date_null'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
-                                                 quantity=0.99, size=size, seed=seed, save_intent=False)
+                                                 quantity=0.92, size=size, seed=seed, save_intent=False)
             _df['str_null'] = self.get_string_pattern('(ddd)sddd-ddd', quantity=0.85, size=size, seed=seed,
                                                          save_intent=False)
 
@@ -539,11 +540,12 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
             # others
-            _df['single_num'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)
+            _df['single_int'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)
             _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed, save_intent=False)
-            _df['nulls'] = self.get_number(20.0, quantity=0, size=size, seed=seed, save_intent=False)
-            _df['nulls_num'] = self.get_number(20.0, quantity=1, size=size, seed=seed, save_intent=False)
-            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=15, size=size, seed=seed, save_intent=False)
+            _df['nulls'] = [None] * size
+            _df['nulls_num'] = self.get_number(20.0, quantity=0.01, size=size, seed=seed, save_intent=False)
+            _df['null_int'] = self.get_number(100, 9999, size=size, quantity=0.01, seed=seed, save_intent=False)
+            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=0.01, size=size, seed=seed, save_intent=False)
         return _df
 
     def get_dist_normal(self, mean: float, std: float, precision: int=None, size: int=None, quantity: float=None,
