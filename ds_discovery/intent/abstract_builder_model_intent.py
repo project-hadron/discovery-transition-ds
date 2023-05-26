@@ -343,28 +343,32 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
         # remove not matching columns
         left_diff = Commons.list_diff(canonical.columns.to_list(), other.columns.to_list(), symmetric=False)
         right_diff = Commons.list_diff(other.columns.to_list(), canonical.columns.to_list(), symmetric=False)
-        canonical = canonical.drop(left_diff, axis=1)
-        other = other.drop(right_diff, axis=1)
+        _canonical = canonical.copy().drop(left_diff, axis=1)
+        _other = other.copy().drop(right_diff, axis=1)
         # sort
-        canonical.sort_values(on_key, inplace=True)
-        other.sort_values(on_key, inplace=True)
-        other = other.loc[:, canonical.columns.to_list()]
+        _canonical.sort_values(on_key, inplace=True)
+        _other.sort_values(on_key, inplace=True)
+        _other = _other.loc[:, _canonical.columns.to_list()]
 
         # unmatched report
         if isinstance(unmatched_connector, str):
             if self._pm.has_connector(unmatched_connector):
-                unmatched = pd.merge(canonical[on_key], other[on_key], on=on_key, how='outer', suffixes=('_x', '_y'),
-                                     indicator=True)
-                unmatched = unmatched[unmatched['_merge'] != 'both']
-                unmatched.columns = unmatched.columns.str.replace('_merge', 'found_in', regex=False)
-                unmatched = unmatched.sort_values(on_key).reset_index(drop=True)
+                left_merge = pd.merge(canonical, other, on=on_key, how='left', suffixes=('', '_y'), indicator=True)
+                left_merge = left_merge[left_merge['_merge'] == 'left_only']
+                left_merge = left_merge[left_merge.columns[~left_merge.columns.str.endswith('_y')]]
+                right_merge = pd.merge(canonical, other, on=on_key, how='right', suffixes=('_y', ''), indicator=True)
+                right_merge = right_merge[right_merge['_merge'] == 'right_only']
+                right_merge = right_merge[right_merge.columns[~right_merge.columns.str.endswith('_y')]]
+                unmatched = pd.concat([left_merge, right_merge], axis=0, ignore_index=True)
+                unmatched = unmatched.set_index(on_key, drop=True).reset_index()
+                unmatched.insert(0, 'found_in', unmatched.pop('_merge'))
                 handler = self._pm.get_connector_handler(unmatched_connector)
                 handler.persist_canonical(unmatched, **kwargs)
             else:
                 raise ValueError(f"The connector name {unmatched_connector} has been given but no Connect Contract added")
 
         # remove non-matching rows
-        df = pd.merge(canonical, other, on=on_key, how='inner', suffixes=('_x', '_y'))
+        df = pd.merge(_canonical, _other, on=on_key, how='inner', suffixes=('_x', '_y'))
         df_x = df.filter(regex='(_x$)', axis=1)
         df_y = df.filter(regex='(_y$)', axis=1)
         df_x.columns = df_x.columns.str.removesuffix('_x')
@@ -400,6 +404,10 @@ class AbstractBuilderModelIntent(AbstractCommonsIntentModel):
                 summary = diff.drop(on_key, axis=1).sum().reset_index()
                 summary.columns = ['Attribute', 'Summary']
                 summary = summary.sort_values(['Attribute'])
+                indicator = pd.merge(canonical[on_key], other[on_key], on=on_key, how='outer', indicator=True)
+                count = indicator['_merge'].value_counts().to_frame().reset_index().replace('both', 'matching')
+                count.columns = ['Attribute', 'Summary']
+                summary = pd.concat([count, summary], axis=0)
                 handler = self._pm.get_connector_handler(summary_connector)
                 handler.persist_canonical(summary, **kwargs)
             else:

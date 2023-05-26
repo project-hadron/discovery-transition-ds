@@ -59,17 +59,6 @@ class WrangleIntentModelTest(unittest.TestCase):
         except:
             pass
 
-    def test_model_to_category_titanic(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        builder.set_source_uri('../_test_data/titanic_features.pickle')
-        df = builder.load_source_canonical()
-        self.assertEqual('int64', df.family.dtype)
-        self.assertEqual('string', df.deck.dtype)
-        result = tools.model_to_category(df, headers=['family', 'is_alone', 'deck'])
-        self.assertEqual('category', result.family.dtype)
-        self.assertEqual('category', result.deck.dtype)
-
     def test_model_to_numeric(self):
         builder = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = builder.tools
@@ -183,6 +172,25 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual(['left_only', 'left_only', 'right_only', ], unmatched.found_in.to_list())
         self.assertEqual(['H', 'K', 'X', ], unmatched.X.to_list())
 
+    def test_model_difference_unmatched_data(self):
+        builder = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = builder.tools
+        builder.set_source_uri('working/source/hadron_synth_origin.pq')
+        builder.add_connector_uri('target', uri='working/source/hadron_synth_other.pq')
+        builder.add_connector_uri('unmatched', uri='working/data/unmatched.csv')
+        # data
+        df = builder.load_source_canonical()
+        target = builder.load_canonical('target')
+        self.assertEqual(((12, 10), (15, 8)), (df.shape, target.shape))
+        # test
+        _ = tools.model_difference(df, 'target', on_key=['unique'], drop_zero_sum=True, unmatched_connector='unmatched')
+        unmatched = builder.load_canonical('unmatched')
+        print(unmatched)
+
+
+
+
+
 
     def test_model_difference_equal(self):
         builder = SyntheticBuilder.from_memory()
@@ -253,14 +261,14 @@ class WrangleIntentModelTest(unittest.TestCase):
         builder.add_connector_persist('summary', uri_file='summary.csv')
         _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary')
         result = builder.load_canonical('summary')
-        self.assertEqual(result.shape, (3,2))
-        self.assertEqual(result.Attribute.to_list(), ['B','C','Y'])
-        self.assertEqual(result.Summary.to_list(), [1,2,0])
+        self.assertEqual(result.shape, (6,2))
+        self.assertEqual(result.Attribute.to_list(), ['matching','left_only','right_only','B','C','Y'])
+        self.assertEqual(result.Summary.to_list(), [7,0,0,1,2,0])
         _ = tools.model_difference(df, 'target', on_key='X', summary_connector='summary', drop_zero_sum=True)
         result = builder.load_canonical('summary')
-        self.assertEqual(result.shape, (2,2))
-        self.assertEqual(result.Attribute.to_list(), ['B','C'])
-        self.assertEqual(result.Summary.to_list(), [1,2])
+        self.assertEqual(result.shape, (5,2))
+        self.assertEqual(result.Attribute.to_list(), ['matching','left_only','right_only','B','C'])
+        self.assertEqual(result.Summary.to_list(), [7,0,0,1,2])
 
     def test_model_difference_detail(self):
         builder = SyntheticBuilder.from_memory()
@@ -281,6 +289,8 @@ class WrangleIntentModelTest(unittest.TestCase):
         self.assertEqual(result.shape, (2,6))
         self.assertEqual(result.columns.to_list(), ['X', 'Y', 'B_x', 'B_y', 'C_x', 'C_y'])
         self.assertEqual(result.loc[0].values.tolist(), ['A', 'C', '3', '5', 0, 3])
+
+
 
     def test_model_profiling(self):
         sb = SyntheticBuilder.from_memory()

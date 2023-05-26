@@ -3,6 +3,11 @@ Project Hadron
 
 Introduction
 ------------
+Project Hadron addresses feature engineering, data preprocessing, synthetic data, model predict, and
+other rapidly growing artificial intelligence (AI) and machine learning (ML) use cases. It directly
+focuses on data science capabilities and the execution of those capabilities as component microservice.
+It is built using object-oriented design (OOD) and object-oriented programming (OOP) to provide an
+extendable framework for quick build component solutions.
 
 Project Hadron has been built to bridge the gap between data scientists and data engineers. More specifically
 between machine learning business outcomes or use case and a product pipeline. It translates the work of data
