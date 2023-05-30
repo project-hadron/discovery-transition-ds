@@ -434,10 +434,8 @@ class SyntheticIntentModelTest(unittest.TestCase):
         builder.add_connector_uri(connector_name="titanic", uri=uri)
         tools: SyntheticIntentModel = builder.tools
         sample = builder.load_canonical("titanic")
-        df = tools.model_analysis(
-            canonical=tools.canonical2dict(method="@empty", size=100), other="titanic"
-        )
-        self.assertEqual((100, 15), df.shape)
+        df = tools.model_analysis(1000, other="titanic")
+        self.assertEqual((1000, 15), df.shape)
         self.assertCountEqual(sample.columns.to_list(), df.columns.to_list())
 
     def test_raise(self):

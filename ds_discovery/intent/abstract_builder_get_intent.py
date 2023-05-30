@@ -47,7 +47,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         if to_value <= from_value:
             raise ValueError("The number range must be a positive difference, where to_value <= from_value")
         at_most = 0 if not isinstance(at_most, int) else at_most
-        size = size if isinstance(size, int) else 1
+#        size = size if isinstance(size, int) else 1
         _seed = self._seed() if seed is None else seed
         precision = 3 if not isinstance(precision, int) else precision
         if precision == 0:

@@ -1098,7 +1098,8 @@ class SyntheticIntentModel(WrangleIntentModel):
 
     def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
                        detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
-                       seed: int=None) -> pd.DataFrame:
+                       seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                       replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ builds a set of columns based on an other (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
         value will be taken as the reference to the sub category and not the random value. This allows already
@@ -1113,6 +1114,18 @@ class SyntheticIntentModel(WrangleIntentModel):
         :param strict_typing: (optional) stops objects and string types being seen as categories
         :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
         :param seed: seed: (optional) a seed value for the random function: default to None
+        :param save_intent: (optional) if the intent contract should be saved to the property manager
+        :param column_name: (optional) the column name that groups intent to create a column
+        :param intent_order: (optional) the order in which each intent should run.
+                    - If None: default's to -1
+                    - if -1: added to a level above any current instance of the intent section, level 0 if not found
+                    - if int: added to the level specified, overwriting any that already exist
+
+        :param replace_intent: (optional) if the intent method exists at the level, or default level
+                    - True - replaces the current intent method with the new
+                    - False - leaves it untouched, disregarding the new intent
+
+        :param remove_duplicates: (optional) removes any duplicate intent in any level that is identical
         :return: a DataFrame
 
         The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
@@ -1136,6 +1149,10 @@ class SyntheticIntentModel(WrangleIntentModel):
                     :run_book (optional) if specific intent should be run only
 
         """
+        # intent persist options
+        self._set_intend_signature(self._intent_builder(method=inspect.currentframe().f_code.co_name, params=locals()),
+                                   column_name=column_name, intent_order=intent_order, replace_intent=replace_intent,
+                                   remove_duplicates=remove_duplicates, save_intent=save_intent)
 
         def get_level(analysis: dict, sample_size: int, _seed: int=None):
             _seed = self._seed(seed=_seed, increment=True)
