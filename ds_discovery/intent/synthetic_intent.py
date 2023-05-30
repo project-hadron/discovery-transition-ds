@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from typing import Any
+
+from aistac.components.aistac_commons import DataAnalytics
+
+from build.lib.ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
@@ -1046,6 +1050,162 @@ class SyntheticIntentModel(WrangleIntentModel):
                 choice = re.sub(tag, str(result), str(choice))
             rtn_list.append(choice)
         return self._set_quantity(rtn_list, quantity=quantity, seed=_seed)
+
+    # def _model_analysis(self, canonical: Any, other: Any, jitter: int=None, jitter_units: str=None,
+    #                     unique_max: int=None, seed: int=None) -> pd.DataFrame:
+    #     """"""
+    #     canonical = self._get_canonical(canonical)
+    #     other = self._get_canonical(other)
+    #     jitter = jitter if isinstance(jitter, int) else 1
+    #     units_allowed = ['W', 'D', 'h', 'm', 's', 'milli', 'micro']
+    #     jitter_units = jitter_units if isinstance(jitter_units, str) and jitter_units in units_allowed else 'D'
+    #     unique_max = unique_max if isinstance(unique_max, int) else 50
+    #     seed = seed if isinstance(seed, int) else self._seed()
+    #     rng = np.random.default_rng()
+    #     for c in other.columns:
+    #         try:
+    #             if other[c].isnull().all():
+    #                 pass
+    #             elif any(Commons.valid_date(x) for x in other[c].dropna()) or other[c].dropna().dtype.kind in 'nM':
+    #                 result = self.correlate_dates(other, header=c, jitter=jitter, jitter_units=jitter_units)
+    #                 result *=
+    #             elif other[c].nunique() < unique_max and round(other[c].isnull().sum() / other.shape[0], 3) < 0.98:
+    #                 result =
+    #             elif other[c].dropna().dtype.kind in 'iufc':
+    #                 pass
+    #             elif all(isinstance(v, str) for v in other[c].dropna()):
+    #                 pass
+    #         except TypeError:
+    #             pass
+    #
+    #         if other['header'].dtype.name == 'category' or (other['header'].dtype.name == 'object' and
+    #                                                         other['header'].nunique() < 99):
+    #             vc = other['header'].value_counts()
+    #             result = self._get_category(selection=vc.index.to_list(),
+    #                                         relative_freq=vc.to_list(),
+    #                                         seed=seed, size=canonical.shape[0])
+    #         if str(other['header'].dtype).startswith('float') or str(other['header'].dtype).startswith('int'):
+    #             sample = rng.choice(other['header'].dropna(), 30, replace=False)
+    #             precision = max([Commons.precision_scale(x)[1] for x in sample])
+    #             choice = rng.choice(other['header'], canonical.shape[0]-int(canonical.shape[0] * 0.1))
+    #             jitter_results =
+    #
+    #
+    #             corr_result = self._correlate_values((other, header='header', precision=precision, jitter=0.5)
+    #             diff_size = canonical.shape[0] - len(corr_result)
+    #             noise = rng.normal()
+    #             pd.concat([corr_result, result], axis=0)
+
+    def _model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
+                        detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
+                        seed: int=None) -> pd.DataFrame:
+        """ builds a set of columns based on an other (see analyse_association)
+        if a reference DataFrame is passed then as the analysis is run if the column already exists the row
+        value will be taken as the reference to the sub category and not the random value. This allows already
+        constructed association to be used as reference for a sub category.
+
+        :param canonical: a pd.DataFrame as the reference dataframe
+        :param other: a direct or generated pd.DataFrame. see context notes below
+        :param columns_list: (optional) a list structure of columns to select for association
+        :param exclude_associate: (optional) a list of dot separated tree of items to exclude from iteration
+                (e.g. ['age.gender.salary']
+        :param detail_numeric: (optional) as a default, if numeric columns should have detail stats, slowing analysis
+        :param strict_typing: (optional) stops objects and string types being seen as categories
+        :param category_limit: (optional) a global cap on categories captured. zero value returns no limits
+        :param seed: seed: (optional) a seed value for the random function: default to None
+        :return: a DataFrame
+
+        The other is a pd.DataFrame, a pd.Series, int or list, a connector contract str reference or a set of
+        parameter instructions on how to generate a pd.Dataframe. the description of each is:
+
+        - pd.Dataframe -> a deep copy of the pd.DataFrame
+        - pd.Series or list -> creates a pd.DataFrame of one column with the 'header' name or 'default' if not given
+        - str -> instantiates a connector handler with the connector_name and loads the DataFrame from the connection
+        - int -> generates an empty pd.Dataframe with an index size of the int passed.
+        - dict -> use canonical2dict(...) to help construct a dict with a 'method' to build a pd.DataFrame
+            methods:
+                - model_*(...) -> one of the SyntheticBuilder model methods and parameters
+                - @empty -> generates an empty pd.DataFrame where size and headers can be passed
+                    :size sets the index size of the dataframe
+                    :headers any initial headers for the dataframe
+                - @generate -> generate a synthetic file from a remote Domain Contract
+                    :task_name the name of the SyntheticBuilder task to run
+                    :repo_uri the location of the Domain Product
+                    :size (optional) a size to generate
+                    :seed (optional) if a seed should be applied
+                    :run_book (optional) if specific intent should be run only
+
+        """
+
+        def get_level(analysis: dict, sample_size: int, _seed: int=None):
+            _seed = self._seed(seed=_seed, increment=True)
+            for name, values in analysis.items():
+                if row_dict.get(name) is None:
+                    row_dict[name] = list()
+                _analysis = DataAnalytics(analysis=values.get('insight', {}))
+                result_type = object
+                if str(_analysis.intent.dtype).startswith('cat'):
+                    result_type = 'category'
+                    result = self._get_category(selection=_analysis.intent.categories,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                seed=_seed, size=sample_size)
+                elif str(_analysis.intent.dtype).startswith('num'):
+                    result_type = 'int' if _analysis.params.precision == 0 else 'float'
+                    result = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
+                                                 relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                 precision=_analysis.params.get('precision', None),
+                                                 seed=_seed, size=sample_size)
+                elif str(_analysis.intent.dtype).startswith('date'):
+                    result_type = 'object' if _analysis.params.is_element('data_format') else 'date'
+                    result = self._get_datetime(start=_analysis.stats.lowest,
+                                                until=_analysis.stats.highest,
+                                                relative_freq=_analysis.patterns.get('relative_freq', None),
+                                                date_format=_analysis.params.get('data_format', None),
+                                                day_first=_analysis.params.get('day_first', None),
+                                                year_first=_analysis.params.get('year_first', None),
+                                                seed=_seed, size=sample_size)
+                else:
+                    result = []
+                # if the analysis was done with excluding dominance then se if they should be added back
+                if _analysis.patterns.is_element('dominant_excluded'):
+                    _dom_percent = _analysis.patterns.dominant_percent/100
+                    _dom_values = _analysis.patterns.dominant_excluded
+                    if len(_dom_values) > 0:
+                        s_values = pd.Series(result, dtype=result_type)
+                        non_zero = s_values[~s_values.isin(_dom_values)].index
+                        choice_size = int((s_values.size * _dom_percent) - (s_values.size - len(non_zero)))
+                        if choice_size > 0:
+                            generator = np.random.default_rng(_seed)
+                            _dom_choice = generator.choice(_dom_values, size=choice_size)
+                            s_values.iloc[generator.choice(non_zero, size=choice_size, replace=False)] = _dom_choice
+                            result = s_values.to_list()
+                # now add the result to the row_dict
+                row_dict[name] += result
+                if sum(_analysis.patterns.relative_freq) == 0:
+                    unit = 0
+                else:
+                    unit = sample_size / sum(_analysis.patterns.relative_freq)
+                if values.get('sub_category'):
+                    leaves = values.get('branch', {}).get('leaves', {})
+                    for idx in range(len(leaves)):
+                        section_size = int(round(_analysis.patterns.relative_freq[idx] * unit, 0)) + 1
+                        next_item = values.get('sub_category').get(leaves[idx])
+                        get_level(next_item, section_size, _seed)
+            return
+
+        canonical = self._get_canonical(canonical)
+        other = self._get_canonical(other)
+        columns_list = columns_list if isinstance(columns_list, list) else other.columns.to_list()
+        blob = DataDiscovery.analyse_association(other, columns_list=columns_list, exclude_associate=exclude_associate,
+                                                 detail_numeric=detail_numeric, strict_typing=strict_typing,
+                                                 category_limit=category_limit)
+        row_dict = dict()
+        seed = self._seed() if seed is None else seed
+        size = canonical.shape[0]
+        get_level(blob, sample_size=size, _seed=seed)
+        for key in row_dict.keys():
+            row_dict[key] = row_dict[key][:size]
+        return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
     def model_noise(self, canonical: Any, num_columns: int, inc_targets: bool=None, seed: int=None,
                     save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
