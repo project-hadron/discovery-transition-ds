@@ -10,7 +10,7 @@ from typing import Any
 
 from aistac.components.aistac_commons import DataAnalytics
 
-from build.lib.ds_discovery.components.discovery import DataDiscovery
+from ds_discovery.components.discovery import DataDiscovery
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.wrangle_intent import WrangleIntentModel
 from ds_discovery.managers.synthetic_property_manager import SyntheticPropertyManager
