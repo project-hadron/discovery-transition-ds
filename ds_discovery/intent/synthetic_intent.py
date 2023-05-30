@@ -1096,9 +1096,9 @@ class SyntheticIntentModel(WrangleIntentModel):
     #             noise = rng.normal()
     #             pd.concat([corr_result, result], axis=0)
 
-    def _model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
-                        detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
-                        seed: int=None) -> pd.DataFrame:
+    def model_analysis(self, canonical: Any, other: Any, columns_list: list=None, exclude_associate: list=None,
+                       detail_numeric: bool=None, strict_typing: bool=None, category_limit: int=None,
+                       seed: int=None) -> pd.DataFrame:
         """ builds a set of columns based on an other (see analyse_association)
         if a reference DataFrame is passed then as the analysis is run if the column already exists the row
         value will be taken as the reference to the sub category and not the random value. This allows already
