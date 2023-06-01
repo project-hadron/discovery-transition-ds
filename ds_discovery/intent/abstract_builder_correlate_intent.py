@@ -593,11 +593,13 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if isinstance(jitter, (str, int, float)) and s_values.size > 0:
             jitter = self._extract_value(jitter)
             size = s_values.size
-            std = canonical[header].std()
-            if isinstance(std, (int, float)) and std > 0:
-                result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
-                result = result.rvs(size, random_state=seed).round(precision)
-                s_values = s_values.add(result)
+            gen = np.random.default_rng(seed)
+            results = gen.normal(loc=0, scale=jitter, size=size)
+            s_values = s_values.add(results)
+            # if isinstance(std, (int, float)) and std > 0:
+            #     result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
+            #     result = result.rvs(size, random_state=seed).round(precision)
+            #     s_values = s_values.add(result)
         # set transformer
         if isinstance(transform, str) and s_values.size > 0:
             if transform.startswith('lambda'):
