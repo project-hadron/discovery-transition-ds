@@ -533,13 +533,24 @@ class SyntheticIntentModel(WrangleIntentModel):
 
             # objects
             my_list = []
-            my_dict = []
+            my_nested = []
             for idx in range(_df.shape[0]):
                 my_list.append(f"[{_df['bernoulli'].iloc[idx]}, {_df['normal'].iloc[idx]}, {_df['num'].iloc[idx]}]")
-                my_dict.append("{" + f"{_df['unique'].iloc[idx]}: {_df['str'].iloc[idx]}" + "}")
+                my_nested.append([{'docid': { _df['unique'].iloc[idx]},
+                                 'doc_name': _df['str'].iloc[idx],
+                                 'doc_date': {"$date": _df['date'].iloc[idx], 'last': _df['date_null'].iloc[idx]},
+                                 "metrics": [{
+                                         "id": _df['gumbel'].iloc[idx], "metricType": "Ratio",
+                                         "domain": [
+                                             "Product"
+                                         ],
+                                         "base": {
+                                             "value": _df['normal'].iloc[idx],
+                                             "unit": "Count"}},
+                                 ]}])
             _df['list'] = [ast.literal_eval(x)
                            if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_list]
-            _df['str_dict'] = my_dict
+            _df['record'] = my_nested
             _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
             _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
