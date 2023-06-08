@@ -1,5 +1,4 @@
 import inspect
-from copy import deepcopy
 from typing import Any
 import numpy as np
 import pandas as pd
@@ -146,7 +145,7 @@ class ModelsIntentModel(AbstractIntentModel):
 
     def _get_canonical(self, data: [pd.DataFrame, pd.Series, list, str, dict], header: str=None) -> Any:
         if isinstance(data, pd.DataFrame):
-            return deepcopy(data)
+            return data.copy()
         if isinstance(data, dict):
             method = data.pop('method', None)
             if method is None:
@@ -167,7 +166,7 @@ class ModelsIntentModel(AbstractIntentModel):
                 raise ValueError(f"The data 'method' key {method} is not a recognised intent method")
         elif isinstance(data, (list, pd.Series)):
             header = header if isinstance(header, str) else 'default'
-            return pd.DataFrame(data=deepcopy(data), columns=[header])
+            return pd.DataFrame(data=data.copy(), columns=[header])
         elif isinstance(data, str):
             if data == '@empty':
                 return pd.DataFrame()

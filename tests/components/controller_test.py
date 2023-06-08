@@ -40,15 +40,15 @@ class ControllerTest(unittest.TestCase):
         except:
             pass
         PropertyManager._remove_all()
-        # tr = Transition.from_env('task1', has_contract=False)
-        # tr.set_source_uri("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
-        # tr.set_persist()
-        # wr = Wrangle.from_env('task2' , has_contract=False)
-        # wr.set_source_uri(tr.get_persist_contract().raw_uri)
-        # wr.set_persist()
-        # controller = Controller.from_env(has_contract=False)
-        # controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task1', intent_level='task1_tr')
-        # controller.intent_model.wrangle(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_wr')
+        tr = Transition.from_env('task1', has_contract=False)
+        tr.set_source_uri("https://raw.githubusercontent.com/mwaskom/seaborn-data/master/titanic.csv")
+        tr.set_persist()
+        wr = Wrangle.from_env('task2' , has_contract=False)
+        wr.set_source_uri(tr.get_persist_contract().raw_uri)
+        wr.set_persist()
+        controller = Controller.from_env(has_contract=False)
+        controller.intent_model.transition(canonical=pd.DataFrame(), task_name='task1', intent_level='task1_tr')
+        controller.intent_model.wrangle(canonical=pd.DataFrame(), task_name='task2', intent_level='task2_wr')
 
     def tearDown(self):
         try:

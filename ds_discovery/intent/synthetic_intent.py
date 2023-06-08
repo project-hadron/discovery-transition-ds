@@ -5,7 +5,6 @@ import string
 from uuid import uuid1, uuid3, uuid4, uuid5, UUID
 import numpy as np
 import pandas as pd
-from copy import deepcopy
 from typing import Any
 
 from aistac.components.aistac_commons import DataAnalytics
@@ -84,16 +83,16 @@ class SyntheticIntentModel(WrangleIntentModel):
         rtn_list = self._get_number(seed=seed, **params)
         return self._set_quantity(rtn_list, quantity=self._quantity(quantity), seed=seed)
 
-    def get_category(self, selection: list, relative_freq: list=None, quantity: float=None, size: int=None,
+    def get_category(self, selection: list, size: int, relative_freq: list=None, quantity: float=None,
                      seed: int=None, save_intent: bool=None, column_name: [int, str]=None,
                      intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ returns a category from a list. Of particular not is the at_least parameter that allows you to
         control the number of times a selection can be chosen.
 
         :param selection: a list of items to select from
+        :param size: size of the return
         :param relative_freq: a weighting pattern that does not have to add to 1
         :param quantity: a number between 0 and 1 representing the percentage quantity of the data
-        :param size: an optional size of the return. default to 1
         :param seed: a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -1231,7 +1230,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         seed = self._seed() if seed is None else seed
         size = canonical.shape[0]
         get_level(blob, sample_size=size, _seed=seed)
-        for key in row_dict.keys():
+        for key in tuple(row_dict.keys()):
             row_dict[key] = row_dict[key][:size]
         return pd.concat([canonical, pd.DataFrame.from_dict(data=row_dict)], axis=1)
 
@@ -1370,7 +1369,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         if isinstance(headers, (list, str)):
             df_rtn = Commons.filter_columns(df_rtn, headers=headers, copy=False)
         if isinstance(selection, list):
-            selection = deepcopy(selection)
+            selection = selection.copy()
             # run the select logic
             select_idx = None
             select_idx = self._selection_index(canonical=df_rtn, selection=selection)

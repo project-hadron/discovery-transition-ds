@@ -1,5 +1,4 @@
 import re
-from copy import deepcopy
 from typing import Any
 
 import pandas as pd
@@ -141,7 +140,7 @@ class Commons(AistacCommons):
         """
         copy = copy if isinstance(copy, bool) else True
         if copy:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude,
                                           regex=regex, re_ignore_case=re_ignore_case)
         return df.loc[:, obj_cols]

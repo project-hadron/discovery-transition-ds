@@ -38,6 +38,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         """
         from_value = self._extract_value(from_value)
         to_value = self._extract_value(to_value)
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         if not isinstance(from_value, (int, float)) and not isinstance(to_value, (int, float)):
             raise ValueError(f"either a 'from_value' or a 'from_value' and 'to_value' must be provided")
         if not isinstance(from_value, (float, int)):
@@ -97,14 +99,14 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
             generator.shuffle(rtn_list)
         return rtn_list
 
-    def _get_category(self, selection: list, relative_freq: list=None, size: int=None,
+    def _get_category(self, selection: list, size: int, relative_freq: list=None,
                       seed: int=None) -> list:
         """ returns a category from a list. Of particular not is the at_least parameter that allows you to
         control the number of times a selection can be chosen.
     
         :param selection: a list of items to select from
+        :param size: size of the return
         :param relative_freq: a weighting pattern that does not have to add to 1
-        :param size: an optional size of the return. default to 1
         :param seed: a seed value for the random function: default to None
         :return: an item or list of items chosen from the list
         """
@@ -153,6 +155,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :return: a date or size of dates in the format given.
          """
         # pre check
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         if start is None or until is None:
             raise ValueError("The start or until parameters cannot be of NoneType")
         # Code block for intent
@@ -206,7 +210,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :return: a random number
         """
         # Code block for intent
-        size = 1 if size is None else size
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         precision = precision if isinstance(precision, (float, int)) else 3
         _seed = self._seed() if seed is None else seed
         if not all(isinstance(value, tuple) for value in intervals):
@@ -258,7 +263,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = size if isinstance(size, int) else 1
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         _seed = self._seed() if seed is None else seed
         precision = precision if isinstance(precision, int) else 3
         generator = np.random.default_rng(seed=_seed)
@@ -279,7 +285,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         If number is an int then that number of 1's are chosen. If number is a float between 0 and 1 it is taken as
         a fraction of the total variable count
         """
-        size = size if isinstance(size, int) else 1
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         _seed = self._seed() if seed is None else seed
         number = self._extract_value(number)
         number = int(number * size) if isinstance(number, float) and 0 <= number <= 1 else int(number)
@@ -308,7 +315,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = size if isinstance(size, int) else 1
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         _seed = self._seed() if seed is None else seed
         probability = self._extract_value(probability)
         rtn_list = list(stats.bernoulli.rvs(p=probability, size=size, random_state=_seed))
@@ -327,7 +335,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: a seed value for the random function: default to None
         :return: a random number
         """
-        size = size if isinstance(size, int) else 1
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         precision = precision if isinstance(precision, int) else 3
         seed = self._seed() if seed is None else seed
         rtn_list = stats.truncnorm((lower - mean) / std, (upper - mean) / std, loc=mean, scale=std)
@@ -345,7 +354,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         :param seed: (optional) a seed value for the random function: default to None
         :return: a random number
         """
-        size = size if isinstance(size, int) else 1
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         _seed = self._seed() if seed is None else seed
         precision = 3 if precision is None else precision
         is_stats = is_stats if isinstance(is_stats, bool) else False
@@ -390,6 +400,8 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
                     :seed (optional) if a seed should be applied
                     :run_book (optional) if specific intent should be run only
         """
+        if not isinstance(size, int):
+            raise ValueError("size not set. Size must be an int greater than zero")
         canonical = self._get_canonical(select_source)
         _seed = self._seed() if seed is None else seed
         if isinstance(canonical, dict):

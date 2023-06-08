@@ -108,7 +108,7 @@ class FeatureCatalog(AbstractCommonComponent):
         uri_file = self.pm.file_pattern(name=feature_name, versioned=versioned, stamped=stamped,
                                         file_type=file_type)
         self.add_connector_from_template(connector_name=feature_name, uri_file=uri_file,
-                                         template_name=self.TEMPLATE_PERSIST, save=save)
+                                         template_name=self.pm.TEMPLATE_PERSIST, save=save)
         if isinstance(description, str):
             self.pm.set_intent_description(level=feature_name, text=description)
         return

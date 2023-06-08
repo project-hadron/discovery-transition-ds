@@ -19,7 +19,7 @@ def domain_executor(params: dict):
     # extract any extra kwargs
     hadron_kwargs = payload.get('hadron_kwargs', {})
     # export and pop any environment variable from the kwargs
-    for key in hadron_kwargs.copy().keys():
+    for key in tuple(hadron_kwargs.keys()):
         if str(key).isupper():
             os.environ[key] = hadron_kwargs.pop(key)
     # pop the run_controller attributes from the kwargs

@@ -1,6 +1,5 @@
 import time
 from abc import abstractmethod
-from copy import deepcopy
 from typing import Any
 import numpy as np
 import pandas as pd
@@ -287,7 +286,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         deep_copy = deep_copy if isinstance(deep_copy, bool) else True
         if isinstance(data, pd.DataFrame):
             if deep_copy:
-                return deepcopy(data)
+                return data.copy()
             return data
         if isinstance(data, dict):
             data = data.copy()
@@ -334,7 +333,7 @@ class AbstractCommonsIntentModel(AbstractIntentModel):
         elif isinstance(data, (list, pd.Series)):
             header = header if isinstance(header, str) else 'default'
             if deep_copy:
-                data = deepcopy(data)
+                data = data.copy()
             return pd.DataFrame(data=data, columns=[header])
         elif isinstance(data, str):
             if not self._pm.has_connector(connector_name=data):

@@ -1,15 +1,11 @@
-import unittest
 import os
 import shutil
-from pprint import pprint
+import unittest
 
 import pandas as pd
-import numpy as np
-from ds_discovery import SyntheticBuilder
-from ds_discovery.components.commons import Commons
 from aistac.properties.property_manager import PropertyManager
 
-from ds_discovery.intent.synthetic_intent import SyntheticIntentModel
+from ds_discovery import SyntheticBuilder
 
 
 class SyntheticPipelineTest(unittest.TestCase):
@@ -86,11 +82,11 @@ class SyntheticPipelineTest(unittest.TestCase):
         builder = SyntheticBuilder.from_env('sample', has_contract=False)
         tools = builder.tools
         df = pd.DataFrame()
-        df['values'] = tools.get_category(selection=['A', 'B'], column_name='values')
+        df['values'] = tools.get_category(selection=['A', 'B'], size=10, column_name='values')
         builder.add_run_book_level(run_level='values')
-        df['numbers'] = tools.get_number(1, 2, column_name='numbers')
+        df['numbers'] = tools.get_number(1, 2, size=10, column_name='numbers')
         builder.add_run_book_level(run_level='numbers')
-        df['addition'] = tools.get_number(1, 2, column_name='addition')
+        df['addition'] = tools.get_number(1, 2, size=10, column_name='addition')
         result = tools.run_intent_pipeline(canonical=10, run_book=self.builder.pm.PRIMARY_RUN_BOOK)
         self.assertEqual(['values', 'numbers'], result.columns.to_list())
         result = tools.run_intent_pipeline(canonical=10)

@@ -4,7 +4,6 @@ import os
 import random
 import time
 from builtins import staticmethod
-from copy import deepcopy
 from pathlib import Path
 from typing import Any, Tuple
 
@@ -1796,7 +1795,7 @@ class DataDiscovery(object):
                     str(df[c].dtype),
                     round(df[c].replace('', np.nan).isnull().sum() / df_len, 3)]
             # Predominant Difference
-            col = deepcopy(df[c])
+            col = df[c].copy()
             if len(col.dropna()) > 0:
                 result = (col.apply(str).value_counts() /
                           np.float64(len(col.apply(str).dropna()))).sort_values(ascending=False).values

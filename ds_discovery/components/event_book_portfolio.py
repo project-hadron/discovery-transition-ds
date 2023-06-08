@@ -132,7 +132,7 @@ class EventBookPortfolio(AbstractCommonComponent):
         :param save: override of the default save action set at initialisation.
         :param kwargs: additional kwargs
         """
-        template = self.pm.get_connector_contract(self.TEMPLATE_PERSIST)
+        template = self.pm.get_connector_contract(self.pm.TEMPLATE_PERSIST)
         uri_path = uri_path if isinstance(uri_path, str) else template.raw_uri
         module_name = module_name if isinstance(module_name, str) else template.raw_module_name
         handler = handler if isinstance(handler, str) else template.raw_handler

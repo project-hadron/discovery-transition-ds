@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from abc import abstractmethod
-from copy import deepcopy
 from typing import Any
 from ds_discovery.components.commons import Commons
 from ds_discovery.intent.abstract_common_intent import AbstractCommonsIntentModel
@@ -79,7 +78,7 @@ class AbstractBuilderFrameIntent(AbstractCommonsIntentModel):
         # not used but in place form method consistency
         seed = self._seed() if seed is None else seed
         if isinstance(selection, list):
-            selection = deepcopy(selection)
+            selection = selection.copy()
             # run the select logic
             select_idx = self._selection_index(canonical=canonical, selection=selection)
             canonical = canonical.iloc[select_idx].reset_index(drop=True)

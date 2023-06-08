@@ -2,7 +2,6 @@ import ast
 import datetime
 import inspect
 from builtins import staticmethod
-from copy import deepcopy
 
 import numpy as np
 import pandas as pd
@@ -165,7 +164,7 @@ class TransitionIntentModel(AbstractIntentModel):
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['', ' ', 'nan']
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         for c in df.columns:
             for item in nulls_list:
                 df[c] = df[c].replace(item, np.nan)
@@ -216,7 +215,7 @@ class TransitionIntentModel(AbstractIntentModel):
         nulls_list = nulls_list if isinstance(nulls_list, list) else ['',' ','NaN','nan','None','null','Null','NULL']
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -257,7 +256,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         # auto mapping
         if isinstance(rename_map, str):
             if self._pm.has_connector(rename_map):
@@ -318,7 +317,7 @@ class TransitionIntentModel(AbstractIntentModel):
         null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         _null_headers = []
         _date_headers = []
         _bool_headers = []
@@ -440,7 +439,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         unique_max = 100 if not isinstance(unique_max, int) else unique_max
         null_max = 0.8 if not isinstance(null_max, (int, float)) else null_max
         df_len = len(df)
@@ -492,7 +491,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         null_min = 0.998 if not isinstance(null_min, (int, float)) else null_min
         predominant_max = 0.998 if not isinstance(predominant_max, (int, float)) else predominant_max
         drop_predominant = drop_predominant if isinstance(drop_predominant, bool) else True
@@ -501,7 +500,7 @@ class TransitionIntentModel(AbstractIntentModel):
             nulls_list = ['NaN', 'nan', 'null', '', 'None', ' ']
         elif not isinstance(nulls_list, list):
             nulls_list = None
-        df_filter = deepcopy(df)
+        df_filter = df.copy()
         df_len = len(df_filter)
         col_drop = []
         for c in df_filter.columns:
@@ -557,7 +556,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         threshold = threshold if isinstance(threshold, float) and 0 < threshold < 1 else 0.998
         df_filter = Commons.filter_columns(df, dtype=[float, int], exclude=False)
         col_corr = set()
@@ -601,7 +600,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         df_filter = Commons.filter_columns(df, dtype=['number'], exclude=False)
         duplicated_feat = []
         for i in range(0, len(df_filter.columns)):
@@ -653,7 +652,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         df.drop(obj_cols, axis=1, inplace=True)
@@ -700,7 +699,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
 
@@ -741,7 +740,7 @@ class TransitionIntentModel(AbstractIntentModel):
         # Code block for intent
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         shuffle = shuffle if isinstance(shuffle, bool) else False
         if isinstance(sample_size, float):
             if not 0 < sample_size < 1:
@@ -806,7 +805,7 @@ class TransitionIntentModel(AbstractIntentModel):
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         bool_map = bool_map if isinstance(bool_map, dict) else {1: True, '1': True, 'True': True, 'T': True}
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         if not bool_map:  # map is empty so nothing to map
             return df
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
@@ -865,7 +864,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else '[]'
 
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -928,7 +927,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -952,7 +951,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         if errors is None or str(errors) not in ['ignore', 'raise', 'coerce']:
             errors = 'coerce'
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
@@ -1197,7 +1196,7 @@ class TransitionIntentModel(AbstractIntentModel):
         fill_nulls = fill_nulls if isinstance(fill_nulls, str) else np.nan
 
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1275,7 +1274,7 @@ class TransitionIntentModel(AbstractIntentModel):
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1354,7 +1353,7 @@ class TransitionIntentModel(AbstractIntentModel):
         day_first = day_first if isinstance(day_first, bool) else False
         year_first = year_first if isinstance(year_first, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
                                           re_ignore_case=re_ignore_case)
         for c in obj_cols:
@@ -1420,7 +1419,7 @@ class TransitionIntentModel(AbstractIntentModel):
         exclude = exclude if isinstance(exclude, bool) else False
         re_ignore_case = re_ignore_case if isinstance(re_ignore_case, bool) else False
         if not inplace:
-            df = deepcopy(df)
+            df = df.copy()
         if dtype is None:
             dtype = ['float64']
         obj_cols = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,

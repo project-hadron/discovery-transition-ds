@@ -86,7 +86,7 @@ class ModelsBuilder(AbstractCommonComponent):
         """
         connector_name = model_name if isinstance(model_name, str) else self.pm.CONNECTOR_ML_TRAINED
         uri_file =  self.pm.file_pattern(name=connector_name, file_type='pickle', versioned=True)
-        template = self.pm.get_connector_contract(connector_name=self.TEMPLATE_PERSIST)
+        template = self.pm.get_connector_contract(connector_name=self.pm.TEMPLATE_PERSIST)
         # uri = ConnectorContract.parse_environ(os.path.join(template.raw_uri, uri_file))
         uri = os.path.join(template.raw_uri, uri_file)
         cc = ConnectorContract(uri=uri, module_name=template.raw_module_name, handler=template.raw_handler,

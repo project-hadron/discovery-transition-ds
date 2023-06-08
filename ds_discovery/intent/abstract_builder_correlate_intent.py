@@ -2,7 +2,6 @@ import ast
 import numpy as np
 import pandas as pd
 from abc import abstractmethod
-from copy import deepcopy
 from typing import Any
 import pandas.api.types as ptypes
 from scipy import stats
@@ -86,9 +85,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if not isinstance(action, (str, int, float, dict)) or (isinstance(action, dict) and len(action) == 0):
             raise TypeError("The 'action' parameter is not of an accepted format or is empty")
         _seed = seed if isinstance(seed, int) else self._seed()
-        # prep the values to be a DataFrame if it isn't already
-        action = deepcopy(action)
-        selection = deepcopy(selection)
         # run the logic
         select_idx = self._selection_index(canonical=canonical, selection=selection)
         if not isinstance(default_action, (str, int, float, dict)):
@@ -305,7 +301,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         s_values = canonical[header].copy()
         if s_values.empty:
             return list()
-        action = deepcopy(action)
         null_idx = s_values[s_values.isna()].index
         s_values.to_string()
         result = self._apply_action(canonical, action=action, seed=_seed)
@@ -540,7 +535,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         return s_values.to_list()
 
     def _correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
-                          jitter: [int, float, str]=None, offset: [int, float, str]=None, transform: str=None,
+                          jitter: [int, float, str]=None, offset: [int, float, str]=None, code_str: str=None,
                           lower: [int, float]=None, upper: [int, float]=None, precision: int=None, keep_zero: bool=None,
                           seed: int=None):
         """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
@@ -556,7 +551,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         :param choice_header: (optional) those not chosen are given the values of the given header
         :param precision: (optional) to what precision the return values should be
         :param offset: (optional) a fixed value or an environment variable where the name is wrapped with '${' and '}'
-        :param transform: (optional) passing a str lambda function. e.g. 'lambda x: (x - 3) / 2''
+        :param code_str: (optional) passing a str lambda function. e.g. 'lambda x: (x - 3) / 2''
         :param jitter: (optional) a perturbation of the value where the jitter is a random normally distributed std
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
@@ -596,17 +591,13 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
             s_values = s_values.add(results)
-            # if isinstance(std, (int, float)) and std > 0:
-            #     result = stats.truncnorm(lower/std, upper/std, loc=0, scale=std*jitter)
-            #     result = result.rvs(size, random_state=seed).round(precision)
-            #     s_values = s_values.add(result)
         # set transformer
-        if isinstance(transform, str) and s_values.size > 0:
-            if transform.startswith('lambda'):
-                s_values = s_values.transform(eval(transform))
+        if isinstance(code_str, str) and s_values.size > 0:
+            if code_str.startswith('lambda'):
+                s_values = s_values.transform(eval(code_str))
             else:
-                transform = transform.replace("@", 'x')
-                s_values = s_values.transform(lambda x: eval(transform))
+                code_str = code_str.replace("@", 'x')
+                s_values = s_values.transform(lambda x: eval(code_str))
         # set offset for all values
         if isinstance(offset, (int, float)) and offset != 0 and s_values.size > 0:
             s_values = s_values.add(offset)
@@ -615,6 +606,9 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             s_others = s_values
         else:
             s_others.iloc[s_values.index] = s_values
+        # max and min caps
+        s_others = [upper if x > upper else x for x in s_others]
+        s_others = [lower if x < lower else x for x in s_others]
         if isinstance(keep_zero, bool) and keep_zero:
             if canonical[header].size == zero_idx.size:
                 s_others = 0 * zero_idx.size
@@ -888,8 +882,6 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         if not isinstance(header, str) or header not in canonical.columns:
             raise ValueError(f"The header '{header}' can't be found in the canonical DataFrame")
         _seed = seed if isinstance(seed, int) else self._seed()
-        actions = deepcopy(actions)
-        correlations = deepcopy(correlations)
         corr_list = []
         for corr in correlations:
             corr_list.append(Commons.list_formatter(corr))
