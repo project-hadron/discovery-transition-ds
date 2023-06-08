@@ -607,8 +607,8 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
         else:
             s_others.iloc[s_values.index] = s_values
         # max and min caps
-        s_others = [upper if x > upper else x for x in s_others]
-        s_others = [lower if x < lower else x for x in s_others]
+        s_others = pd.Series([upper if x > upper else x for x in s_others])
+        s_others = pd.Series([lower if x < lower else x for x in s_others])
         if isinstance(keep_zero, bool) and keep_zero:
             if canonical[header].size == zero_idx.size:
                 s_others = 0 * zero_idx.size
