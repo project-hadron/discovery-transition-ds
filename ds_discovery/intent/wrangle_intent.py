@@ -1742,12 +1742,15 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
 
     def correlate_values(self, canonical: Any, header: str, choice: [int, float, str]=None, choice_header: str=None,
                          precision: int=None, jitter: [int, float, str]=None, offset: [int, float, str]=None,
-                         transform: Any=None, lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None,
+                         code_str: Any=None, lower: [int, float]=None, upper: [int, float]=None, keep_zero: bool=None,
                          seed: int=None, save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
                          replace_intent: bool=None, remove_duplicates: bool=None) -> list:
         """ correlate a list of continuous values adjusting those values, or a subset of those values, with a
         normalised jitter (std from the value) along with a value offset. ``choice``, ``jitter`` and ``offset``
         can accept environment variable string names starting with ``${`` and ending with ``}``.
+
+        If the choice is an int, it represents the number of rows to choose. If the choice is a float it must be
+        between 1 and 0 and represent a percentage of rows to choose.
 
         :param canonical: a pd.DataFrame as the reference dataframe
         :param header: the header in the DataFrame to correlate
@@ -1755,7 +1758,7 @@ class WrangleIntentModel(AbstractBuilderIntentModel):
         :param choice_header: (optional) those not chosen are given the values of the given header
         :param precision: (optional) to what precision the return values should be
         :param offset: (optional) a fixed value to offset or if str an operation to perform using @ as the header value.
-        :param transform: (optional) passing a lambda function to transform the value. e.g. ``lambda x: (x - 3) / 2``
+        :param code_str: (optional) passing a str lambda function. e.g. 'lambda x: (x - 3) / 2''
         :param jitter: (optional) a perturbation of the value where the jitter is a random normally distributed std
         :param precision: (optional) how many decimal places. default to 3
         :param seed: (optional) the random seed. defaults to current datetime
