@@ -90,7 +90,7 @@ class TransitionIntentModel(AbstractIntentModel):
         of the data to project it to a lower dimensional space.
 
         :param df: a pd.DataFrame as the reference dataframe
-        :param headers: (optional) a list off headers so select (default) or drop from the dataset
+        :param headers: (optional) a list of headers to select (default) or drop from the dataset
         :param drop: (optional) if True then srop the headers. False by default
         :param n_components: (optional) Number of components to keep.
         :param seed: (optional) placeholder
@@ -224,9 +224,9 @@ class TransitionIntentModel(AbstractIntentModel):
             return
         return df
 
-    def auto_clean_header(self, df, case=None, rename_map: [dict, str]=None, replace_spaces: str=None, inplace: bool=None,
-                          save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                          replace_intent: bool=None, remove_duplicates: bool=None):
+    def auto_clean_header(self, df, case=None, rename_map: [dict, str, list]=None, replace_spaces: str=None,
+                          inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+                          intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ clean the headers of a pandas DataFrame replacing space with underscore. If the rename_map is passed as a
         name of a connector contract
 
@@ -355,12 +355,14 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def auto_to_date(self, df: pd.DataFrame, timezone: str=None, day_first: bool=None, year_first: bool=None,
-                     date_format: str=None, inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
-                     intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
+    def auto_to_date(self, df: pd.DataFrame, iso_format: bool=None, timezone: str=None, day_first: bool=None,
+                     year_first: bool=None, date_format: str=None, inplace: bool=None, save_intent: bool=None,
+                     intent_level: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
+                     remove_duplicates: bool=None):
         """ looks through the dataset for valid date formats and converts them to a common datetime.
 
         :param df: the Pandas.DataFrame to get the column headers from
+        :param iso_format: rather than return a Timestamp, return an ISO formatted string
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param timezone: set the timezone else data set to native
         :param year_first: specifies if to parse with the year first
@@ -399,8 +401,9 @@ class TransitionIntentModel(AbstractIntentModel):
             except TypeError:
                 pass
         if len(_date_headers) > 0:
-            df = self.to_date_type(df, headers=_date_headers, inplace=False, timezone=timezone, day_first=day_first,
-                                   year_first=year_first, date_format=date_format, save_intent=False)
+            df = self.to_date_type(df, headers=_date_headers, iso_format=iso_format, inplace=False, timezone=timezone,
+                                   day_first=day_first, year_first=year_first, date_format=date_format,
+                                   save_intent=False)
         if not inplace:
             return df
         return
@@ -1304,9 +1307,9 @@ class TransitionIntentModel(AbstractIntentModel):
         return
 
     def to_date_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,
-                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, timezone: str=None,
-                     day_first: bool=None, year_first: bool=None, date_format: str=None, inplace: bool=None,
-                     save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
+                     exclude: bool=None, regex: [str, list]=None, re_ignore_case: bool=None, iso_format: bool=None,
+                     timezone: str=None, day_first: bool=None, year_first: bool=None, date_format: str=None,
+                     inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
                      replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame]:
         """ converts columns to date types
 
@@ -1317,6 +1320,7 @@ class TransitionIntentModel(AbstractIntentModel):
         :param exclude: to exclude or include the dtypes
         :param regex: a regular expression to search the headers
         :param re_ignore_case: true if the regex should ignore case. Default is False
+        :param iso_format: rather than return a Timestamp, return an ISO formatted string
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param timezone: set the timezone else data set to native
         :param year_first: specifies if to parse with the year first
@@ -1345,6 +1349,7 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
+        iso_format = iso_format if isinstance(iso_format, bool) else False
         inplace = inplace if isinstance(inplace, bool) else False
         drop = drop if isinstance(drop, bool) else False
         exclude = exclude if isinstance(exclude, bool) else False
@@ -1364,7 +1369,8 @@ class TransitionIntentModel(AbstractIntentModel):
                 df[c] = df[c].dt.tz_convert(timezone)
             else:
                 df[c] =df[c].dt.tz_localize(timezone)
-
+            if iso_format:
+                df[c] = [x.isoformat() for x in df[c]]
         if not inplace:
             return df
         return

@@ -591,7 +591,7 @@ class AbstractBuilderCorrelateIntent(AbstractCommonsIntentModel):
             gen = np.random.default_rng(seed)
             results = gen.normal(loc=0, scale=jitter, size=size)
             s_values = s_values.add(results)
-        # set transformer
+        # set code_str
         if isinstance(code_str, str) and s_values.size > 0:
             if code_str.startswith('lambda'):
                 s_values = s_values.transform(eval(code_str))

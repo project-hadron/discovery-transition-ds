@@ -162,10 +162,10 @@ class SyntheticIntentCorrelateSelectionTest(unittest.TestCase):
         df['letters'] = ['A', 'B', 'A', 'B', 'B', 'C']
         df['value'] = [1, 4, 2, 1, 6, 1]
         selection = [tools.select2dict(column='value', condition="@ > 1")]
-        action = tools.action2dict(method='correlate_numbers', header='value', offset="@*0.8")
+        action = tools.action2dict(method='correlate_values', header='value', offset=3)
         default_action = tools.action2dict(method="@header", header='value')
         result = tools.correlate_selection(df, selection=selection, action=action, default_action=default_action)
-        self.assertEqual([1.0, 3.2, 1.6, 1.0, 4.8, 1.0], result)
+        self.assertEqual([1, 7, 5, 1, 9, 1], result)
 
     def test_raise(self):
         with self.assertRaises(KeyError) as context:

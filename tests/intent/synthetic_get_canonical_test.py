@@ -77,8 +77,8 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         builder = SyntheticBuilder.from_env('generator', has_contract=False)
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
-        df['gender'] = tools.get_category(selection=['M', 'F'], column_name='gender')
-        df['age'] = tools.get_number(from_value=18, to_value=90, column_name='age')
+        df['gender'] = tools.get_category(selection=['M', 'F'], column_name='gender', size=10)
+        df['age'] = tools.get_number(from_value=18, to_value=90, column_name='age', size=10)
         target = {'method': '@generate', 'task_name': 'generator'}
         result = tools._get_canonical(data=target)
         self.assertCountEqual(['age', 'gender'], result.columns.to_list())
@@ -128,7 +128,7 @@ class SyntheticGetCanonicalTest(unittest.TestCase):
         self.assertEqual((891, 1), result.shape)
         # get selection
         sample_size = builder.load_canonical('titanic').shape[0]
-        action = tools.canonical2dict(method='get_selection', canonical='titanic', column_header='survived')
+        action = tools.canonical2dict(method='get_selection', select_source='titanic', column_header='survived')
         result = tools._get_canonical(data=action, header='default', size=sample_size)
         self.assertEqual((891, 1), result.shape)
 

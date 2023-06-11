@@ -41,66 +41,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         except:
             pass
 
-    def test_complex_sample_modelling(self):
-        tools = SyntheticBuilder.from_memory().tools
-        state_code = [
-            "CA",
-            "NY",
-            "LA",
-            "NJ",
-            "VA",
-            "CO",
-            "NV",
-            "GA",
-            "IN",
-            "OH",
-            "KY",
-            "ME",
-            "MO",
-            "WI",
-        ]
-        df = pd.DataFrame(index=range(100))
-        df = tools.model_sample_map(
-            canonical=df,
-            sample_map="us_zipcode",
-            state_filter=state_code,
-            column_name="zipcodes",
-        )
-        sample_data = tools.action2dict(
-            method="model_sample_map",
-            canonical=tools.action2dict(method="@empty"),
-            sample_map="us_healthcare_practitioner",
-            headers=["city", "pcp_tax_id"],
-            shuffle=False,
-        )
-        merge_data = tools.action2dict(
-            method="model_group",
-            canonical=sample_data,
-            headers="pcp_tax_id",
-            group_by="city",
-            aggregator="list",
-        )
-        df = tools.model_merge(
-            df,
-            merge_data,
-            how="left",
-            left_on="city",
-            right_on="city",
-            column_name="pcp_tax_id",
-        )
-        self.assertCountEqual(
-            [
-                "city",
-                "state_abbr",
-                "state",
-                "county_fips",
-                "county",
-                "zipcode",
-                "pcp_tax_id",
-            ],
-            df.columns.to_list(),
-        )
-
     def test_model_columns_headers(self):
         builder = SyntheticBuilder.from_env(
             "test", default_save=False, default_save_intent=False, has_contract=False
@@ -118,35 +58,6 @@ class SyntheticIntentModelTest(unittest.TestCase):
         )
         self.assertCountEqual(["survived", "sex", "fare"], list(result.columns))
         self.assertEqual(300, result.shape[0])
-
-    def test_model_classifier(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        result = tools.model_synthetic_classification(1000)
-        self.assertEqual((1000, 21), result.shape)
-        result = tools.model_synthetic_classification(1000, n_features=10)
-        self.assertEqual((1000, 11), result.shape)
-        result = tools.model_synthetic_classification(1000, n_features=10, n_classes=3, n_informative=3)
-        self.assertEqual((1000, 11), result.shape)
-
-    def test_model_regression(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        result = tools.model_synthetic_regression(1000)
-        self.assertEqual((1000, 101), result.shape)
-        result = tools.model_synthetic_regression(1000, n_features=40)
-        self.assertEqual((1000, 41), result.shape)
-
-    def test_model_cluster(self):
-        builder = SyntheticBuilder.from_memory()
-        tools: SyntheticIntentModel = builder.tools
-        result = tools.model_synthetic_clusters(1000)
-        self.assertEqual((1000, 101), result.shape)
-        result = tools.model_synthetic_clusters(1000, n_features=40)
-        self.assertEqual((1000, 41), result.shape)
-        result = tools.model_synthetic_clusters(1000, n_features=40, clusters=[800, 150, 50])
-        self.assertEqual((1000, 41), result.shape)
-        self.assertEqual([800, 150, 50], result.target.value_counts().to_list())
 
     def test_model_modifier(self):
         builder = SyntheticBuilder.from_memory()

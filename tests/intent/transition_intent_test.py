@@ -4,6 +4,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+from sklearn import datasets
 from aistac.properties.property_manager import PropertyManager
 
 from ds_discovery import SyntheticBuilder
@@ -84,29 +85,29 @@ class TransitionIntentModelTest(unittest.TestCase):
         sample_size = 10
         df = pd.DataFrame()
         df['nums'] = tools.get_number(4, size=sample_size, seed=31)
-        df['bool_num'] = tools.get_category([1, 0, '?'], size=sample_size, seed=31)
-        df['cats'] = tools.get_category(list('ABC?'), size=sample_size, seed=31)
+        df['bool_num'] = tools.get_category([1, 0, ' '], size=sample_size, seed=31)
+        df['cats'] = tools.get_category(list('ABC '), size=sample_size, seed=31)
         result = self.clean.auto_reinstate_nulls(df)
-        self.assertEqual(['C', '?', 'B', 'A', 'A', 'C', 'C', 'A', 'A', '?'], df['cats'].to_list())
+        self.assertEqual(['C', ' ', 'B', 'A', 'A', 'C', 'C', 'A', 'A', ' '], df['cats'].to_list())
         self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
-        self.assertEqual(['?', '?', 1, 1, 1, '?', 0, 1, 1, '?'], df['bool_num'].to_list())
+        self.assertEqual([' ', ' ', 1, 1, 1, ' ', 0, 1, 1, ' '], df['bool_num'].to_list())
         self.assertEqual([1, 1, 1,  0, 1, 1], result['bool_num'].dropna().to_list())
         result = self.clean.auto_reinstate_nulls(df,  headers='cats')
         self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
-        self.assertEqual(['?', '?', 1, 1, 1, '?', 0, 1, 1, '?'], result['bool_num'].dropna().to_list())
+        self.assertEqual([' ', ' ', 1, 1, 1, ' ', 0, 1, 1, ' '], result['bool_num'].dropna().to_list())
         result = self.clean.auto_reinstate_nulls(df, nulls_list=[0], headers='nums')
         self.assertEqual([1, 0, 2, 2, 1, 2, 1, 2, 0, 3], df['nums'].to_list())
         self.assertEqual([1, 2, 2, 1, 2, 1, 2, 3], result['nums'].dropna().to_list())
 
     def test_auto_projection(self):
         tr = Transition.from_memory()
-        builder = SyntheticBuilder.from_memory()
-        df = builder.tools.model_synthetic_classification(1000, n_features=10)
-        df['cat'] = builder.tools.get_category(selection=['A', 'B'], size=1000)
-        result = tr.tools.auto_projection(df, n_components=5, headers=['target'], drop=True)
-        control = ['target', 'cat', 'pca_A', 'pca_B', 'pca_C', 'pca_D', 'pca_E']
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        df = tools.model_synthetic_data_types(1000, True).iloc[:,:11]
+        result = tr.tools.auto_projection(df, n_components=2)
+        control = ['cat', 'date', 'str', 'pca_A', 'pca_B']
         self.assertEqual(control, result.columns.to_list())
-        self.assertEqual((1000, 7), result.shape)
+        self.assertEqual((1000, 5), result.shape)
 
     def test_auto_clean_header(self):
         tr = Transition.from_memory()
@@ -338,9 +339,13 @@ class TransitionIntentModelTest(unittest.TestCase):
         tr = Transition.from_memory()
         df = tr.tools.auto_to_date(df)
         self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('datetime64[ns]'), np.dtype('O')], df.dtypes.values.tolist())
+        df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=False, seed=31)
+        df = tr.tools.auto_to_date(df, iso_format=True)
+        self.assertEqual(['2023-02-27T00:00:00'], df['date'].iloc[:1].values.tolist())
         df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=True)
         df = tr.tools.auto_to_date(df)
         self.assertCountEqual(['date', 'date_tz', 'dup_date', 'date_null'], Commons.filter_headers(df, dtype='datetime64[ns]'))
+
 
     def test_to_date(self):
         tools = self.tools
