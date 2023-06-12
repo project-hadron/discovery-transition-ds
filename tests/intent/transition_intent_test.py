@@ -120,18 +120,39 @@ class TransitionIntentModelTest(unittest.TestCase):
         result = tr.tools.auto_clean_header(df, rename_map=mapper, case='lower')
         self.assertEqual(['x', 'y', 'c'], result.columns.to_list())
 
+    def test_auto_clean_header_list(self):
+        tr = Transition.from_memory()
+        df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
+        # save map
+        mapper = list('XYZA')
+        result = tr.tools.auto_clean_header(df, rename_map=mapper)
+        self.assertEqual(list('ABC'), result.columns)
+        mapper = list('XYZ')
+        result = tr.tools.auto_clean_header(df, rename_map=mapper)
+        self.assertEqual(list('XYZ'), result.columns)
+
+
     def test_auto_clean_header_connector(self):
         tr = Transition.from_memory()
         df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
         connector_name = 'other'
-        header_map = pd.DataFrame({'master': list('ABF'), 'other': list('XYZ')})
         tr.add_connector_persist(connector_name, 'hadron_other.csv')
-        # save map
+        # dict
+        header_map = pd.DataFrame({'master': list('ABF'), 'other': list('XYZ')})
         handler = tr.pm.get_connector_handler(connector_name)
         handler.persist_canonical(header_map)
-        # test
         result = tr.tools.auto_clean_header(df, rename_map='other')
         self.assertEqual(['X', 'Y', 'C'], result.columns.to_list())
+        # list
+        header_map = pd.DataFrame({'other': list('XYZ')})
+        handler = tr.pm.get_connector_handler(connector_name)
+        handler.persist_canonical(header_map)
+        result = tr.tools.auto_clean_header(df, rename_map='other')
+        self.assertEqual(['X', 'Y', 'Z'], result.columns.to_list())
+        # no file
+        result = tr.tools.auto_clean_header(df, rename_map='empty')
+        self.assertEqual(['A', 'B', 'C'], result.columns.to_list())
+
 
     def test_auto_drop_duplicates(self):
         tools = self.tools

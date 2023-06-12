@@ -231,7 +231,7 @@ class TransitionIntentModel(AbstractIntentModel):
         name of a connector contract
 
         :param df: the pandas.DataFrame to drop duplicates from
-        :param rename_map: a dict of name value pairs or connector name for column mapping
+        :param rename_map: a dict of name value pairs or a correct length list of column names
         :param case: changes the headers to lower, upper, title, snake. if none of these then no change
         :param replace_spaces: character to replace spaces with. Default is '_' (underscore)
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
@@ -257,18 +257,23 @@ class TransitionIntentModel(AbstractIntentModel):
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = df.copy()
+        # removes any hidden characters
+        df.columns = df.columns.astype(str)
         # auto mapping
         if isinstance(rename_map, str):
             if self._pm.has_connector(rename_map):
                 handler = self._pm.get_connector_handler(rename_map)
                 mapper = handler.load_canonical()
-                rename_map = dict(zip(mapper.iloc[:, 0].values, mapper.iloc[:, 1].values))
+                if mapper.shape[1] == 1:
+                    rename_map = mapper.iloc[:, 0].values.tolist()
+                else:
+                    rename_map = dict(zip(mapper.iloc[:, 0].values, mapper.iloc[:, 1].values))
             else:
-                raise ValueError(f"The rename_map connector name {rename_map} can not be found as a connector contract")
+                mapper = None
         if isinstance(rename_map, dict):
             df.rename(mapper=rename_map, axis='columns', inplace=True)
-        # removes any hidden characters
-        df.columns = df.columns.astype(str)
+        elif isinstance(rename_map, list) and len(rename_map) == df.shape[1]:
+            df.columns = rename_map
         # convert case
         if isinstance(case, str):
             if case.lower() == 'lower':
