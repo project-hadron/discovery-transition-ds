@@ -493,7 +493,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                      save_intent=False)
         _df['int'] = self.get_number(-1000, 1000, size=size, seed=seed, save_intent=False)
         _df['bool'] = self.get_category([1, 0], relative_freq=[6, 4], size=size, seed=seed, save_intent=False)
-        _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%dT%H:%M:%S',
+        _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%dT%H:%M:%SZ',
                                         ordered=True, size=size, seed=seed, save_intent=False)
         _df['str'] = self.get_sample('us_street_names', size=size, seed=seed, save_intent=False)
         _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
