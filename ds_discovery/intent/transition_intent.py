@@ -289,14 +289,15 @@ class TransitionIntentModel(AbstractIntentModel):
             return df
         return
 
-    def auto_transition(self, df, unique_max: int=None, null_max: float=None, inplace: bool=None,
-                        save_intent: bool=None, intent_level: [int, str]=None, intent_order: int=None,
-                        replace_intent: bool=None, remove_duplicates: bool=None) -> [dict, pd.DataFrame, None]:
+    def auto_transition(self, df, unique_max: int=None, null_max: float=None, inc_category: bool=None,
+                        inplace: bool=None, save_intent: bool=None, intent_level: [int, str]=None,
+                        intent_order: int=None, replace_intent: bool=None, remove_duplicates: bool=None):
         """ automatically tries to convert a passes DataFrame to appropriate types
 
         :param df: the pandas DataFrame to remove null rows from
         :param unique_max: the max number of unique values in the column. default to 20
         :param null_max: maximum number of null in the column between 0 and 1. default to 0.7 (70% nulls allowed)
+        :param inc_category: create categorical data types
         :param inplace: if the passed pandas.DataFrame should be used or a deep copy
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param intent_level: (optional) the level name that groups intent by a reference name
@@ -320,6 +321,7 @@ class TransitionIntentModel(AbstractIntentModel):
         if not isinstance(unique_max, int):
             unique_max = np.log2(df.shape[0]) ** 2 if df.shape[0] > 50000 else np.sqrt(df.shape[0])
         null_max = 0.9 if not isinstance(null_max, (int, float)) else null_max
+        inc_category = inc_category if isinstance(inc_category, bool) else False
         inplace = inplace if isinstance(inplace, bool) else False
         if not inplace:
             df = df.copy()
@@ -350,7 +352,7 @@ class TransitionIntentModel(AbstractIntentModel):
             df = self.to_bool_type(df, headers=_bool_headers, inplace=False, bool_map=bool_map, save_intent=False)
         if len(_date_headers) > 0:
             df = self.to_date_type(df, headers=_date_headers, inplace=False, save_intent=False)
-        if len(_cat_headers) > 0:
+        if len(_cat_headers) > 0 and inc_category:
             df = self.to_category_type(df, headers=_cat_headers, inplace=False, save_intent=False)
         if len(_num_headers) > 0:
             df = self.to_numeric_type(df, headers=_num_headers, inplace=False, save_intent=False)
