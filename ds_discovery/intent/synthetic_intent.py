@@ -538,8 +538,8 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed, save_intent=False)
             _df['nulls'] = [None] * size
             _df['nulls_num'] = self.get_number(20.0, quantity=0.01, size=size, seed=seed, save_intent=False)
-            _df['null_int'] = self.get_number(100, 9999, size=size, quantity=0.01, seed=seed, save_intent=False)
-            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=0.01, size=size, seed=seed, save_intent=False)
+            _df['null_int'] = self.get_number(100, 9999, size=size, quantity=0.02, seed=seed, save_intent=False)
+            _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=0.005, size=size, seed=seed, save_intent=False)
 
             if nested:
                 # nested
