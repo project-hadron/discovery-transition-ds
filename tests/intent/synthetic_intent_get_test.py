@@ -210,7 +210,6 @@ class SyntheticIntentGetTest(unittest.TestCase):
         result = tools.model_synthetic_data_types(1000, seed=31)
         self.assertTrue(all((v is None) or isinstance(v, str) for v in result['str']))
         self.assertEqual((1000, 7), result.shape)
-        print(result.head(2))
         result = tools.model_synthetic_data_types(1000, extended=True, seed=31)
         self.assertFalse(all((v is None) or isinstance(v, str) for v in result['binary']))
         self.assertEqual((1000, 30), result.shape)
