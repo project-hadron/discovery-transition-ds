@@ -452,13 +452,14 @@ class SyntheticIntentModel(WrangleIntentModel):
                                                                      shuffle=True), intent_order=2, save_intent=False)
         return _df
 
-    def model_synthetic_data_types(self, canonical: int=None, extended: bool=False, seed: int=None, save_intent: bool=None,
-                                   column_name: [int, str]=None, intent_order: int=None, replace_intent: bool=None,
-                                   remove_duplicates: bool=None) -> pd.DataFrame:
+    def model_synthetic_data_types(self, canonical: int=None, extended: bool=False, nested: bool=False, seed: int=None,
+                                   save_intent: bool=None, column_name: [int, str]=None, intent_order: int=None,
+                                   replace_intent: bool=None, remove_duplicates: bool=None) -> pd.DataFrame:
         """ A dataset with example data types
 
         :param canonical: the canonical size (rows) of the sample dataset
         :param extended: if the types should extend beyond the standard 6 types including nulls, predominance, etc.
+        :param nested: if extended and nested are True types such as list, tuple, record and nested are included
         :param seed: a seed value for the random function: default to None
         :param save_intent: (optional) if the intent contract should be saved to the property manager
         :param column_name: (optional) the column name that groups intent to create a column
@@ -480,6 +481,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # remove intent params
         extended = extended if isinstance(extended, bool) else False
+        nested = nested if isinstance(nested, bool) else False
         seed = self._seed(seed=seed)
         _df = self._get_canonical(canonical)
 
@@ -494,6 +496,7 @@ class SyntheticIntentModel(WrangleIntentModel):
         _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%d',
                                         ordered=True, size=size, seed=seed, save_intent=False)
         _df['str'] = self.get_sample('us_street_names', size=size, seed=seed, save_intent=False)
+        _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
 
         if extended:
             # distributions
@@ -530,29 +533,6 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['dup_num'] = self.correlate_values(_df, header='num', seed=seed, save_intent=False)
             _df['dup_date'] = self.correlate_dates(_df, header='date', seed=seed, save_intent=False)
 
-            # objects
-            my_list = []
-            my_nested = []
-            for idx in range(_df.shape[0]):
-                my_list.append(f"[{_df['bernoulli'].iloc[idx]}, {_df['normal'].iloc[idx]}, {_df['num'].iloc[idx]}]")
-                my_nested.append([{'docid': { _df['unique'].iloc[idx]},
-                                 'doc_name': _df['str'].iloc[idx],
-                                 'doc_date': {"$date": _df['date'].iloc[idx], 'last': _df['date_null'].iloc[idx]},
-                                 "metrics": [{
-                                         "id": _df['gumbel'].iloc[idx], "metricType": "Ratio",
-                                         "domain": [
-                                             "Product"
-                                         ],
-                                         "base": {
-                                             "value": _df['normal'].iloc[idx],
-                                             "unit": "Count"}},
-                                 ]}])
-            _df['list'] = [ast.literal_eval(x)
-                           if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_list]
-            _df['record'] = my_nested
-            _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
-            _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
-
             # others
             _df['single_int'] = self.get_number(1, 2, size=size, seed=seed, save_intent=False)
             _df['single_cat'] = self.get_category(['CURRENT'], size=size, seed=seed, save_intent=False)
@@ -560,6 +540,36 @@ class SyntheticIntentModel(WrangleIntentModel):
             _df['nulls_num'] = self.get_number(20.0, quantity=0.01, size=size, seed=seed, save_intent=False)
             _df['null_int'] = self.get_number(100, 9999, size=size, quantity=0.01, seed=seed, save_intent=False)
             _df['nulls_cat'] = self.get_category(list('XYZ'), quantity=0.01, size=size, seed=seed, save_intent=False)
+
+            if nested:
+                # nested
+                my_list = []
+                my_record = []
+                my_nested = []
+                for idx in range(_df.shape[0]):
+                    my_list.append(f"[{_df['bernoulli'].iloc[idx]}, {_df['normal'].iloc[idx]}, {_df['num'].iloc[idx]}]")
+                    my_record.append([{'pid': _df['unique'].iloc[idx],
+                                       "date": _df['date'].iloc[idx],
+                                       'name': _df['cat'].iloc[idx],
+                                       'value': _df['num_null'].iloc[idx]
+                                      }])
+                    my_nested.append([{'docid': { _df['unique'].iloc[idx]},
+                                     'doc_name': _df['str'].iloc[idx],
+                                     'doc_date': {"date": _df['date'].iloc[idx], 'last': _df['date_null'].iloc[idx]},
+                                     "metrics": [{
+                                             "id": _df['gumbel'].iloc[idx], "metricType": "Ratio",
+                                             "domain": [
+                                                 "Product"
+                                             ],
+                                             "base": {
+                                                 "value": _df['normal'].iloc[idx],
+                                                 "unit": "Count"}},
+                                     ]}])
+                _df['list'] = [ast.literal_eval(x)
+                               if isinstance(x, str) and x.startswith('[') and x.endswith(']') else x for x in my_list]
+                _df['record'] = my_record
+                _df['nested'] = my_nested
+                _df['tuple'] = tuple(zip(_df['num'], _df['int'], _df['num_null']))
         return _df
 
     def get_dist_normal(self, mean: float, std: float, precision: int=None, size: int=None, quantity: float=None,
