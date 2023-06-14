@@ -493,7 +493,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                      save_intent=False)
         _df['int'] = self.get_number(-1000, 1000, size=size, seed=seed, save_intent=False)
         _df['bool'] = self.get_category([1, 0], relative_freq=[6, 4], size=size, seed=seed, save_intent=False)
-        _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%dT%H:%M:%SZ',
+        _df['date'] = self.get_datetime(start='2022-12-01', until='2023-03-31', date_format='%Y-%m-%dT%H:%M:%S',
                                         ordered=True, size=size, seed=seed, save_intent=False)
         _df['str'] = self.get_sample('us_street_names', size=size, seed=seed, save_intent=False)
         _df['binary'] = self.get_string_pattern('cccccccc', as_binary=True, size=size, seed=seed, save_intent=False)
@@ -524,8 +524,8 @@ class SyntheticIntentModel(WrangleIntentModel):
             # compare
             _df['unique'] = self.get_number(from_value=size, to_value=size * 10, at_most=1,
                                             size=size, seed=seed, save_intent=False)
-            _df['date_tz'] = self.get_datetime(pd.Timestamp('2021-09-01', tz='CET'),
-                                               pd.Timestamp('2022-01-01', tz='CET'), date_format='%Y-%m-%d',
+            _df['date_tz'] = self.get_datetime(pd.Timestamp('2021-09-01'),
+                                               pd.Timestamp('2022-01-01'), date_format='%Y-%m-%dT%H:%M:%SZ',
                                                size=size, seed=seed, save_intent=False)
             _df['correlate'] = self.correlate_values(_df, header='poly', jitter=0.1, seed=seed, save_intent=False)
             _df['outliers'] = self.correlate_values(_df, header='correlate', jitter=1, choice=5, seed=seed,
