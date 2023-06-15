@@ -46,14 +46,16 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
             pass
 
     def test_model_analysis_smoke(self):
-        builder = SyntheticBuilder.from_env('tester', has_contract=False)
-        tools: SyntheticIntentModel = builder.tools
+        sb = SyntheticBuilder.from_memory()
+        tools: SyntheticIntentModel = sb.tools
+        sb.add_connector_uri('sample', 'working/data/tester.parquet')
         df = pd.DataFrame()
         df['cat'] = tools.get_category(selection=list('ABC'), size=100, column_name='cat')
         df['int'] = tools.get_number(from_value=3, size=100, precision=0, column_name='int')
-        df['values'] = tools.get_number(from_value=20, size=100, column_name='values')
-        builder.run_component_pipeline()
-        result = tools.model_analysis(10, other='primary_persist', column_name='analysis')
+        df['values'] = tools.get_number(from_value=20.0, size=100, column_name='values')
+        sb.persist_canonical('sample', df)
+        # test
+        result = tools.model_analysis(10, other='sample')
         self.assertEqual('int64', result['int'].dtype)
         self.assertEqual('float64', result['values'].dtype)
         self.assertEqual('object', result['cat'].dtype)
@@ -63,7 +65,7 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         tools: SyntheticIntentModel = builder.tools
         df = pd.DataFrame()
         df['cat'] = tools.get_category(selection=list('MF'), relative_freq=[6,3], seed=31, size=100, column_name='cat')
-        df['values'] = tools.get_dist_poisson(interval=3, size=100, seed=101, column_name='values')
+        df['values'] = tools.get_distribution(distribution='poisson', lam=3.0, size=100, seed=101, column_name='values')
         builder.run_component_pipeline()
         result = tools.model_analysis(1000, other='primary_persist', seed=31, column_name='analysis')
         _, p_value = builder.discover.shapiro_wilk_normality(result['values'])
@@ -91,7 +93,7 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         df['values'] = tools.get_number(from_value=20, size=100, column_name='values')
         builder.run_component_pipeline()
         # discover
-        associate = [{'cat': {'dtype': 'category'}, 'values': {'dtype': 'category','granularity': 5, 'precision': 3}}]
+        associate = [{'cat': {'dtype': 'category'}, 'values': {'dtype': 'number','granularity': 5, 'precision': 3}}]
         # build
         sample_size=173
         result = tools.model_analysis(pd.DataFrame(index=range(sample_size)), other='primary_persist',

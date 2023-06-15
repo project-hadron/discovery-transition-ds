@@ -38,7 +38,7 @@ class AbstractBuilderGetIntent(AbstractCommonsIntentModel):
         """
         from_value = self._extract_value(from_value)
         to_value = self._extract_value(to_value)
-        if not isinstance(size, int):
+        if not size or size == 0:
             raise ValueError("size not set. Size must be an int greater than zero")
         if not isinstance(from_value, (int, float)) and not isinstance(to_value, (int, float)):
             raise ValueError(f"either a 'from_value' or a 'from_value' and 'to_value' must be provided")

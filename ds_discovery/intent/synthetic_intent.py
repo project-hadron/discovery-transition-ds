@@ -1181,7 +1181,9 @@ class SyntheticIntentModel(WrangleIntentModel):
                     row_dict[name] = list()
                 _analysis = DataAnalytics(analysis=values.get('insight', {}))
                 result_type = object
-                if str(_analysis.intent.dtype).startswith('cat'):
+                if sample_size == 0:
+                    result = []
+                elif str(_analysis.intent.dtype).startswith('cat'):
                     result_type = 'category'
                     result = self._get_category(selection=_analysis.intent.categories,
                                                 relative_freq=_analysis.patterns.get('relative_freq', None),
