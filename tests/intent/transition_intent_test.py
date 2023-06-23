@@ -45,25 +45,25 @@ class TransitionIntentModelTest(unittest.TestCase):
         tools = self.tools
         df = pd.DataFrame()
         df['dates'] = tools.get_datetime("01/01/2018", "01/02/2018", day_first=False, size=5)
-        result = self.clean.to_date_element(df, matrix=['yr', 'dec'])
+        result = self.clean.to_date_element(df.copy(), matrix=['yr', 'dec'])
         self.assertCountEqual(['dates', 'dates_yr', 'dates_dec'], result.columns.to_list())
-        result = self.clean.to_date_element(df, matrix=[])
+        result = self.clean.to_date_element(df.copy(), matrix=[])
         self.assertCountEqual(['dates'], result.columns.to_list())
 
     def test_to_sample(self):
         tools = self.tools
         df = tools.model_sample_map(200, sample_map='us_zipcode')
-        result = self.clean.to_sample(df, sample_size=100)
+        result = self.clean.to_sample(df.copy(), sample_size=100)
         self.assertEqual((100, 6), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
-        result = self.clean.to_sample(df, sample_size=100, shuffle=True)
+        result = self.clean.to_sample(df.copy(), sample_size=100, shuffle=True)
         self.assertEqual((100, 6), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
-        result = self.clean.to_sample(df, sample_size=0.2)
+        result = self.clean.to_sample(df.copy(), sample_size=0.2)
         self.assertEqual((40, 6), result.shape)
         self.assertCountEqual(df.iloc[0], result.iloc[0])
-        result = self.clean.to_sample(df, sample_size=0.2, shuffle=True)
+        result = self.clean.to_sample(df.copy(), sample_size=0.2, shuffle=True)
         self.assertEqual((40, 6), result.shape)
         self.assertNotEqual(df.iloc[0].to_list(), result.iloc[0].to_list())
 
@@ -71,13 +71,13 @@ class TransitionIntentModelTest(unittest.TestCase):
         sb = SyntheticBuilder.from_memory()
         tr = Transition.from_memory()
         df = sb.tools.model_synthetic_data_types(100)
-        df = tr.tools.auto_transition(df)
+        df = tr.tools.auto_transition(df.copy(), inc_category=True)
         self.assertTrue(df['bool'].dtype.name.startswith('bool'))
         self.assertTrue(df['cat'].dtype.name.startswith('cat'))
         self.assertTrue(df['date'].dtype.name.startswith('datetime'))
         self.assertTrue(df['int'].dtype.name.startswith('int'))
         self.assertTrue(df['num'].dtype.name.startswith('float'))
-        self.assertTrue(df['object'].dtype.name.startswith('object'))
+        self.assertTrue(df['binary'].dtype.name.startswith('object'))
         self.assertTrue(df['str'].dtype.name.startswith('string'))
 
     def test_auto_reinstate_nulls(self):
@@ -87,15 +87,15 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['nums'] = tools.get_number(4, size=sample_size, seed=31)
         df['bool_num'] = tools.get_category([1, 0, ' '], size=sample_size, seed=31)
         df['cats'] = tools.get_category(list('ABC '), size=sample_size, seed=31)
-        result = self.clean.auto_reinstate_nulls(df)
+        result = self.clean.auto_reinstate_nulls(df.copy())
         self.assertEqual(['C', ' ', 'B', 'A', 'A', 'C', 'C', 'A', 'A', ' '], df['cats'].to_list())
         self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
         self.assertEqual([' ', ' ', 1, 1, 1, ' ', 0, 1, 1, ' '], df['bool_num'].to_list())
         self.assertEqual([1, 1, 1,  0, 1, 1], result['bool_num'].dropna().to_list())
-        result = self.clean.auto_reinstate_nulls(df,  headers='cats')
+        result = self.clean.auto_reinstate_nulls(df.copy(),  headers='cats')
         self.assertEqual(['C', 'B', 'A', 'A', 'C', 'C', 'A', 'A'], result['cats'].dropna().to_list())
         self.assertEqual([' ', ' ', 1, 1, 1, ' ', 0, 1, 1, ' '], result['bool_num'].dropna().to_list())
-        result = self.clean.auto_reinstate_nulls(df, nulls_list=[0], headers='nums')
+        result = self.clean.auto_reinstate_nulls(df.copy(), nulls_list=[0], headers='nums')
         self.assertEqual([1, 0, 2, 2, 1, 2, 1, 2, 0, 3], df['nums'].to_list())
         self.assertEqual([1, 2, 2, 1, 2, 1, 2, 3], result['nums'].dropna().to_list())
 
@@ -104,10 +104,10 @@ class TransitionIntentModelTest(unittest.TestCase):
         sb = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = sb.tools
         df = tools.model_synthetic_data_types(1000, True).iloc[:,:11]
-        result = tr.tools.auto_projection(df, n_components=2)
-        control = ['cat', 'date', 'str', 'pca_A', 'pca_B']
+        result = tr.tools.auto_projection(df.copy(), n_components=2)
+        control = ['cat', 'date', 'str', 'binary', 'pca_A', 'pca_B']
         self.assertEqual(control, result.columns.to_list())
-        self.assertEqual((1000, 5), result.shape)
+        self.assertEqual((1000, 6), result.shape)
 
     def test_auto_clean_header(self):
         tr = Transition.from_memory()
@@ -115,9 +115,9 @@ class TransitionIntentModelTest(unittest.TestCase):
         # save map
         mapper = {'A': 'X', 'B': 'Y', 'F': 'Z'}
         # test
-        result = tr.tools.auto_clean_header(df, rename_map=mapper)
+        result = tr.tools.auto_clean_header(df.copy(), rename_map=mapper)
         self.assertEqual(['X', 'Y', 'C'], result.columns.to_list())
-        result = tr.tools.auto_clean_header(df, rename_map=mapper, case='lower')
+        result = tr.tools.auto_clean_header(df.copy(), rename_map=mapper, case='lower')
         self.assertEqual(['x', 'y', 'c'], result.columns.to_list())
 
     def test_auto_clean_header_list(self):
@@ -125,11 +125,11 @@ class TransitionIntentModelTest(unittest.TestCase):
         df = pd.DataFrame(data={"A": list("ABCDEFG"), "B": list("ABCFCBA"), 'C': list("BCDECFB")})
         # save map
         mapper = list('XYZA')
-        result = tr.tools.auto_clean_header(df, rename_map=mapper)
-        self.assertEqual(list('ABC'), result.columns)
+        result = tr.tools.auto_clean_header(df.copy(), rename_map=mapper)
+        self.assertEqual(list('ABC'), result.columns.to_list())
         mapper = list('XYZ')
-        result = tr.tools.auto_clean_header(df, rename_map=mapper)
-        self.assertEqual(list('XYZ'), result.columns)
+        result = tr.tools.auto_clean_header(df.copy(), rename_map=mapper)
+        self.assertEqual(list('XYZ'), result.columns.to_list())
 
 
     def test_auto_clean_header_connector(self):
@@ -141,16 +141,16 @@ class TransitionIntentModelTest(unittest.TestCase):
         header_map = pd.DataFrame({'master': list('ABF'), 'other': list('XYZ')})
         handler = tr.pm.get_connector_handler(connector_name)
         handler.persist_canonical(header_map)
-        result = tr.tools.auto_clean_header(df, rename_map='other')
+        result = tr.tools.auto_clean_header(df.copy(), rename_map='other')
         self.assertEqual(['X', 'Y', 'C'], result.columns.to_list())
         # list
         header_map = pd.DataFrame({'other': list('XYZ')})
         handler = tr.pm.get_connector_handler(connector_name)
         handler.persist_canonical(header_map)
-        result = tr.tools.auto_clean_header(df, rename_map='other')
+        result = tr.tools.auto_clean_header(df.copy(), rename_map='other')
         self.assertEqual(['X', 'Y', 'Z'], result.columns.to_list())
         # no file
-        result = tr.tools.auto_clean_header(df, rename_map='empty')
+        result = tr.tools.auto_clean_header(df.copy(), rename_map='empty')
         self.assertEqual(['A', 'B', 'C'], result.columns.to_list())
 
 
@@ -165,7 +165,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['dup2'] = df['normal']
         df['dup3'] = df['single_num']
         self.assertEqual((100, 7), df.shape)
-        result = self.clean.auto_drop_duplicates(df)
+        result = self.clean.auto_drop_duplicates(df.copy())
         self.assertEqual((100, 4), result.shape)
 
     def test_auto_remove(self):
@@ -179,7 +179,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['none_num'] = tools.get_number(1, 2, quantity=0.7, size=100)
         df.loc[1:4, 'none_num'] = 'None'
         df.loc[7:9, 'none_num'] = ''
-        self.clean.auto_drop_columns(df, nulls_list=True, inplace=True)
+        df = self.clean.auto_drop_columns(df.copy(), nulls_list=True)
         self.assertEqual(['two_num', 'normal'], df.columns.tolist())
 
     def test_auto_remove_predom(self):
@@ -194,20 +194,20 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['two_cat'] = tools.get_category(['A', 'B'], quantity=0.9, size=100)
         df['weight_cat'] = tools.get_category(['A', 'B'], relative_freq=[95, 1], size=100)
         df['normal_cat'] = tools.get_category(list('ABCDE'), size=100)
-        result = self.clean.auto_drop_columns(df, predominant_max=0.8)
+        result = self.clean.auto_drop_columns(df.copy(), predominant_max=0.8)
         self.assertEqual(['two_num', 'normal_num', 'two_cat', 'normal_cat'], result.columns.tolist())
-        result = self.clean.auto_drop_columns(df, drop_predominant=False)
+        result = self.clean.auto_drop_columns(df.copy(), drop_predominant=False)
         self.assertEqual(8, len(result.columns))
         self.assertNotIn('null_num', result.columns.tolist())
 
     def test_auto_remove_unknown(self):
         sb = SyntheticBuilder.from_memory()
         tools: SyntheticIntentModel = sb.tools
-        df = tools.model_synthetic_data_types(10, extended=True)
+        df = tools.model_synthetic_data_types(1000, extended=True)
         prev = df.columns.to_list()
-        result = self.clean.auto_drop_columns(df, null_min=0.999, drop_unknown=True, drop_predominant=False)
+        result = self.clean.auto_drop_columns(df.copy(), null_min=0.999, drop_unknown=True, drop_predominant=False)
         new = result.columns.to_list()
-        self.assertCountEqual(['object', 'nulls'], Commons.list_diff(new, prev))
+        self.assertCountEqual(['binary', 'nulls'], Commons.list_diff(new, prev))
 
     def test_clean_headers(self):
         tools = self.tools
@@ -217,7 +217,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertTrue(control, result)
         rename = {'city': 'town'}
         control = {'clean_header': {'case': 'title', 'rename': {'city': 'town'}}}
-        result = self.clean.auto_clean_header(df, rename_map=rename, case='title', inplace=True)
+        result = self.clean.auto_clean_header(df.copy(), rename_map=rename, case='title')
         self.assertTrue(control, result)
         control = ['town', 'state', 'Zipcode']
         self.assertTrue(control, df.columns)
@@ -226,11 +226,11 @@ class TransitionIntentModelTest(unittest.TestCase):
         tools = self.tools
         clean = self.clean
         df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
-        result = clean.to_remove(df, headers=['city'])
+        result = clean.to_remove(df.copy(), headers=['city'])
         self.assertNotIn('city', result.columns.values)
 
         df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
-        clean.to_remove(df, headers=['city', 'state'], inplace=True)
+        df = clean.to_remove(df.copy(), headers=['city', 'state'])
         self.assertNotIn('city', df.columns.values)
         self.assertNotIn('state', df.columns.values)
 
@@ -239,11 +239,11 @@ class TransitionIntentModelTest(unittest.TestCase):
         clean = self.clean
         df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode'))
         control = ['city']
-        result = clean.to_select(df, headers=['city'])
+        result = clean.to_select(df.copy(), headers=['city'])
         self.assertEqual(['city'], result.columns.values)
 
         df = pd.DataFrame(tools.model_sample_map(0, sample_map='us_zipcode').iloc[:10])
-        clean.to_select(df, headers=['city', 'state'], inplace=True)
+        df = clean.to_select(df.copy(), headers=['city', 'state'])
         self.assertIn('city', df.columns.values)
         self.assertIn('state', df.columns.values)
         self.assertEqual((10,2), df.shape)
@@ -258,16 +258,16 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['date'] = tools.get_datetime('01/01/2010', '01/01/2018', date_format='%Y-%m-%d', size=10)
         df['category'] = tools.get_category(list('vwxyz'), size=10)
         # no intent set
-        result = clean.run_intent_pipeline(df)
+        result = clean.run_intent_pipeline(df.copy())
         self.assertTrue(result.equals(df))
         # set intent
         self.assertEqual((10,5), df.shape)
-        control = self.clean.to_remove(df, headers=['date'], inplace=False, save_intent=True)
+        control = self.clean.to_remove(df.copy(), headers=['date'], save_intent=True)
         self.assertEqual((10,4), control.shape)
-        control = self.clean.to_category_type(control, headers=['category'], inplace=False, save_intent=True)
+        control = self.clean.to_category_type(control, headers=['category'], save_intent=True)
         self.assertEqual('category', control['category'].dtype)
         # run pipeline
-        result = clean.run_intent_pipeline(df)
+        result = clean.run_intent_pipeline(df.copy())
         self.assertTrue(result.equals(control))
 
     def test_to_bool_type(self):
@@ -275,7 +275,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         df = pd.DataFrame()
         df['bool'] = [False, True, False, True, None]
         df['two_num'] = [1,1,0,0,1]
-        result = tr.tools.to_bool_type(df)
+        result = tr.tools.to_bool_type(df.copy())
         self.assertEqual([False, True, False, True, False], result['bool'].to_list())
         self.assertEqual([True, True, False, False, True], result['two_num'].to_list())
 
@@ -289,7 +289,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         df.loc[[2, 4], col] = np.nan
         control = df.copy()
         mode = df[df[col].notna()]
-        result = clean.to_float_type(df, headers='X', errors='coerce', fillna='mode')
+        result = clean.to_float_type(df.copy(), headers='X', errors='coerce', fillna='mode')
         self.assertEqual(control.iloc[0,0], result.iloc[0,0])
         self.assertEqual(control.iloc[3,0], result.iloc[3,0])
 
@@ -302,7 +302,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         df.loc[[2, 4], col] = np.nan
         df.loc[1, col] = 'text'
         control = df.copy()
-        result = clean.to_float_type(df, headers='X', errors='coerce', fillna=-1)
+        result = clean.to_float_type(df.copy(), headers='X', errors='coerce', fillna=-1)
         self.assertEqual(-1, result.iloc[1,0])
         self.assertEqual(-1, result.iloc[2,0])
         self.assertEqual(control.iloc[0,0], result.iloc[0,0])
@@ -312,7 +312,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         clean = self.clean
         df = pd.DataFrame()
         df['X'] = ["['A', 'B']", "[1, 2, 3]", "['Fred', 'Jim']", "", " ", 'bob', 23, np.nan]
-        df['X'] = clean.to_list_type(df, headers='X')
+        df['X'] = clean.to_list_type(df.copy(), headers='X')
         self.assertEqual(['A', 'B'], df['X'][0])
         self.assertEqual([1, 2, 3], df['X'][1])
         self.assertEqual([], df['X'][3])
@@ -321,7 +321,7 @@ class TransitionIntentModelTest(unittest.TestCase):
         self.assertEqual([23], df['X'][6])
         self.assertEqual([], df['X'][7])
         # test it is idempotent
-        df['X'] = clean.to_list_type(df, headers='X')
+        df['X'] = clean.to_list_type(df.copy(), headers='X')
         self.assertEqual(['A', 'B'], df['X'][0])
         self.assertEqual([1, 2, 3], df['X'][1])
 
@@ -329,10 +329,10 @@ class TransitionIntentModelTest(unittest.TestCase):
         clean = self.clean
         df = pd.DataFrame()
         df['X'] = [1,2,3,4]
-        df = clean.to_str_type(df, headers='X')
+        df = clean.to_str_type(df.copy(), headers='X')
         self.assertCountEqual(['1','2','3','4'], df['X'])
         df['Y'] = ['ABC', 'ABCD', '', 'A']
-        df = clean.to_str_type(df, headers='Y', fixed_len_pad='0')
+        df = clean.to_str_type(df.copy(), headers='Y', fixed_len_pad='0')
         self.assertCountEqual(['0ABC', 'ABCD', np.nan, '000A'], df['Y'])
 
     def test_make_list(self):
@@ -356,15 +356,15 @@ class TransitionIntentModelTest(unittest.TestCase):
 
     def test_auto_to_date(self):
         df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=False)
-        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('O')], df.dtypes.values.tolist())
+        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('O'), np.dtype('O'), np.dtype('O')], df.dtypes.values.tolist())
         tr = Transition.from_memory()
-        df = tr.tools.auto_to_date(df)
-        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('datetime64[ns]'), np.dtype('O')], df.dtypes.values.tolist())
+        df = tr.tools.auto_to_date(df.copy())
+        self.assertEqual([np.dtype('O'), np.dtype('float64'), np.dtype('int64'), np.dtype('int64'), np.dtype('datetime64[ns]'), np.dtype('O'), np.dtype('O')], df.dtypes.values.tolist())
         df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=False, seed=31)
-        df = tr.tools.auto_to_date(df, iso_format=True)
-        self.assertEqual(['2023-02-27T00:00:00'], df['date'].iloc[:1].values.tolist())
+        df = tr.tools.auto_to_date(df.copy(), iso_format=True)
+        self.assertEqual(['2023-02-27T02:21:01'], df['date'].iloc[:1].values.tolist())
         df = SyntheticBuilder.from_memory().tools.model_synthetic_data_types(100, extended=True)
-        df = tr.tools.auto_to_date(df)
+        df = tr.tools.auto_to_date(df.copy())
         self.assertCountEqual(['date', 'date_tz', 'dup_date', 'date_null'], Commons.filter_headers(df, dtype='datetime64[ns]'))
 
 
@@ -372,12 +372,12 @@ class TransitionIntentModelTest(unittest.TestCase):
         tools = self.tools
         cleaner = self.clean
         df = pd.DataFrame()
-        df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y', seed=101)
-        df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%d-%m-%Y %H:%M:%S', seed=102)
-        df['number'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', date_format='%Y%m%d.0', seed=101)
-        result = cleaner.to_date_type(df, headers=['date', 'datetime'])
-        self.assertEqual(df['date'].iloc[0], result['date'].iloc[0].strftime(format='%m-%d-%Y'))
-        self.assertEqual(df['datetime'].iloc[0], result['datetime'].iloc[0].strftime(format='%m-%d-%Y %H:%M:%S'))
+        df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', day_first=True, size=1, date_format='%d-%m-%Y', seed=101)
+        df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', day_first=True, size=1, date_format='%d-%m-%Y %H:%M:%S', seed=102)
+        df['number'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', day_first=True, size=1, date_format='%Y%m%d', seed=101)
+        result = cleaner.to_date_type(df.copy(), day_first=True, headers=['date', 'datetime'])
+        self.assertEqual(df['date'].iloc[0], result['date'].iloc[0].strftime(format='%d-%m-%Y'))
+        self.assertEqual(df['datetime'].iloc[0], result['datetime'].iloc[0].strftime(format='%d-%m-%Y %H:%M:%S'))
 
     def test_to_date_tz(self):
         tools = self.tools
@@ -385,22 +385,14 @@ class TransitionIntentModelTest(unittest.TestCase):
         df = pd.DataFrame()
         df['date'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', size=5, seed=101)
         df['datetime'] = tools.get_datetime(start='10/01/2000', until='01/01/2018', size=5, seed=102)
-        result = cleaner.to_date_type(df, headers=['date', 'datetime'])
+        result = cleaner.to_date_type(df.copy(), headers=['date', 'datetime'])
         self.assertIsNone(result['date'].dt.tz)
-        result = cleaner.to_date_type(df, headers=['date'], timezone='UTC')
+        result = cleaner.to_date_type(df.copy(), headers=['date'], timezone='UTC')
         self.assertIsNotNone(result['date'].dt.tz)
-        result = cleaner.to_date_type(df, headers=['numtime'])
+        result = cleaner.to_date_type(df.copy(), headers=['numtime'])
         self.assertIsNone(result['date'].dt.tz)
 
 
-
-    def test_currency(self):
-        cleaner = self.clean
-        df = pd.DataFrame()
-        df['currency'] = ['$3,320.12', '£1,001.34', '€34', 23.4, '5 220.12']
-        df['control'] = [3320.12, 1001.34, 34, 23.4, 5220.12]
-        df = cleaner.to_float_type(df, headers='currency')
-        self.assertEqual(list(df.control), list(df.currency))
 
     def test_get_cols(self):
         tools = self.tools
@@ -411,21 +403,21 @@ class TransitionIntentModelTest(unittest.TestCase):
         df['object'] = tools.get_category(list('abcdef'), size=10)
         df['date'] = tools.get_datetime('01/01/2010', '01/01/2018', size=10)
         df['category'] = tools.get_category(list('vwxyz'), size=10)
-        df = cleaner.to_category_type(df, headers='category')
-        df = cleaner.to_date_type(df, headers='date')
+        df = cleaner.to_category_type(df.copy(), headers='category')
+        df = cleaner.to_date_type(df.copy(), headers='date')
         control = ['float', 'object', 'date', 'category', 'int']
-        result = Commons.filter_headers(df)
+        result = Commons.filter_headers(df.copy())
         self.assertTrue(set(result).intersection(control))
         control = ['object']
-        result = Commons.filter_headers(df, dtype=[object])
+        result = Commons.filter_headers(df.copy(), dtype=[object])
         self.assertEqual(control, result)
-        result = Commons.filter_headers(df, dtype=['object'])
+        result = Commons.filter_headers(df.copy(), dtype=['object'])
         self.assertEqual(control, result)
         control = ['float', 'int']
-        result = Commons.filter_headers(df, dtype=['number'])
+        result = Commons.filter_headers(df.copy(), dtype=['number'])
         self.assertTrue(set(result).intersection(control))
         control = ['date']
-        result = Commons.filter_headers(df, dtype=['datetime'])
+        result = Commons.filter_headers(df.copy(), dtype=['datetime'])
         self.assertEqual(control, result)
 
         # self.assertTrue(set(cleaner.filter_headers(self.df, dtype=['object'])).intersection(df['object']))

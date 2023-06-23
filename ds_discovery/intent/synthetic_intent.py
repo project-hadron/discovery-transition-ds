@@ -1190,9 +1190,10 @@ class SyntheticIntentModel(WrangleIntentModel):
                                                 seed=_seed, size=sample_size)
                 elif str(_analysis.intent.dtype).startswith('num'):
                     result_type = 'int' if _analysis.params.precision == 0 else 'float'
+                    precision = 0 if result_type == 'int' else analysis.params.get('precision', None)
                     result = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
                                                  relative_freq=_analysis.patterns.get('relative_freq', None),
-                                                 precision=_analysis.params.get('precision', None),
+                                                 precision=precision,
                                                  seed=_seed, size=sample_size)
                 elif str(_analysis.intent.dtype).startswith('date'):
                     result_type = 'object' if _analysis.params.is_element('data_format') else 'date'
@@ -1205,6 +1206,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                                 seed=_seed, size=sample_size)
                 else:
                     result = []
+
                 # if the analysis was done with excluding dominance then se if they should be added back
                 if _analysis.patterns.is_element('dominant_excluded'):
                     _dom_percent = _analysis.patterns.dominant_percent/100
