@@ -1063,16 +1063,20 @@ class TransitionIntentModel(AbstractIntentModel):
                                    intent_level=intent_level, intent_order=intent_order, replace_intent=replace_intent,
                                    remove_duplicates=remove_duplicates, save_intent=save_intent)
         # Code block for intent
-        
+        precision = precision if isinstance(precision, int) else 5
         if fillna is None or not fillna:
             fillna = np.nan
-        for c in headers:
-            if df[c].str.is_numeric():
-                df[c] = df[c].astype('float')
 
-        df = self._to_numeric(df, numeric_type='float', fillna=fillna, errors=errors, headers=headers, drop=drop,
-                              dtype=dtype, exclude=exclude, regex=regex, re_ignore_case=re_ignore_case,
-                              precision=precision)
+        columns = Commons.filter_headers(df, headers=headers, drop=drop, dtype=dtype, exclude=exclude, regex=regex,
+                                         re_ignore_case=re_ignore_case)
+        for c in columns:
+            if df[c].astype(str).str.isnumeric().all():
+                df[c] = pd.to_numeric(df[c], errors='coerce')
+            if str(df[c].dtype.name).startswith('int'):
+                df[c] = df[c].astype(float)
+            if str(df[c].dtype.name).startswith('float'):
+                df[c] = df[c].round(precision)
+                df[c] = df[c].replace(np.nan, fillna)
         return df
 
     def to_str_type(self, df: pd.DataFrame, headers: [str, list]=None, drop: bool=None, dtype: [str, list]=None,

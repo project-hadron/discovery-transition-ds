@@ -1190,7 +1190,7 @@ class SyntheticIntentModel(WrangleIntentModel):
                                                 seed=_seed, size=sample_size)
                 elif str(_analysis.intent.dtype).startswith('num'):
                     result_type = 'int' if _analysis.params.precision == 0 else 'float'
-                    precision = 0 if result_type == 'int' else analysis.params.get('precision', None)
+                    precision = 0 if result_type == 'int' else _analysis.params.get('precision', None)
                     result = self._get_intervals(intervals=[tuple(x) for x in _analysis.intent.intervals],
                                                  relative_freq=_analysis.patterns.get('relative_freq', None),
                                                  precision=precision,
