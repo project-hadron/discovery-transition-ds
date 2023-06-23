@@ -1176,7 +1176,7 @@ class DataDiscovery(object):
         :param replicates: confidence interval the number of replicates to run. default 1,000
         :return: a dictionary of results
         """
-        values = pd.Series(values, dtype=np.number)
+        values = pd.Series(values)
         _original_size = values.size
         precision = 3 if not isinstance(precision, int) else precision
         freq_precision = freq_precision if isinstance(freq_precision, int) else 2

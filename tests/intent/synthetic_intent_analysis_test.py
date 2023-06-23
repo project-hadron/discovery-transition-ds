@@ -118,3 +118,13 @@ class SyntheticIntentAnalysisTest(unittest.TestCase):
         low, high = discover.bootstrap_confidence_interval(pd.Series(pregnancies), func=np.mean)
         pregnancies = Commons.list_standardize(Commons.list_formatter(df.pregnancies))
         self.assertTrue(low <= np.mean(pregnancies) <= high)
+
+    # def test_model_analysis_int(self):
+    #     sb = SyntheticBuilder.from_memory()
+    #     tools: SyntheticIntentModel = sb.tools
+    #     sb.add_connector_uri('sub', '../_test_data/CustomerSubject_sub.csv')
+    #     df = sb.load_canonical('sub')
+    #     print(df.head())
+    #     result = tools.model_analysis(5, 'sub')
+    #     print(result)
+
