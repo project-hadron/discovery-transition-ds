@@ -1469,23 +1469,27 @@ class DataDiscovery(object):
         if all(isinstance(x, str) for x in columns_list):
             analysis_dict = {}
             for item in columns_list:
-                if df[item].isnull().all():
-                    analysis_dict[item] = {}
-                elif df[item].notnull().sum() < df[item].size * 0.98:
-                    analysis_dict[item] = {}
-                elif df[item].dropna().value_counts().iloc[0] > df[item].dropna().size * 0.98:
-                    analysis_dict[item] = {}
-                elif df[item].dropna().isin([1, 0, '1', '0']).all() or df[item].dropna().dtype.kind in 'b':
-                    analysis_dict[item] = {'dtype': 'category'}
-                elif any(Commons.valid_date(x) for x in df[item].dropna()) or df[item].dropna().dtype.kind in 'nM':
-                    analysis_dict[item] = {'dtype': 'date', 'granularity': 5}
-                elif df[item].nunique() < 60:
-                    analysis_dict[item] = {'dtype': 'category', 'top': 10}
-                elif df[item].dropna().dtype.kind in 'ufc':
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':3}
-                elif df[item].dropna().dtype.kind in 'i':
-                    analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':0}
-                else:
+                try:
+                    if df[item].isnull().all():
+                        analysis_dict[item] = {}
+                    elif df[item].notnull().sum() < df[item].size * 0.98:
+                        analysis_dict[item] = {}
+                    elif df[item].dropna().value_counts().iloc[0] > df[item].dropna().size * 0.98:
+                        analysis_dict[item] = {}
+                    elif df[item].dropna().isin([1, 0, '1', '0']).all() or df[item].dropna().dtype.kind in 'b':
+                        analysis_dict[item] = {'dtype': 'category'}
+                    elif any(Commons.valid_date(x) for x in df[item].dropna()) or df[item].dropna().dtype.kind in 'nM':
+                        analysis_dict[item] = {'dtype': 'date', 'granularity': 5}
+                    elif df[item].nunique() < 60:
+                        analysis_dict[item] = {'dtype': 'category', 'top': 10}
+                    elif df[item].dropna().dtype.kind in 'ufc':
+                        analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':3}
+                    elif df[item].dropna().dtype.kind in 'i':
+                        analysis_dict[item] = {'dtype': 'number', 'granularity': 5, 'exclude_dominant': True, 'precision':0}
+                    else:
+                        analysis_dict[item] = {}
+                except TypeError:
+                    # treat types we don't know like nulls
                     analysis_dict[item] = {}
             columns_list = [analysis_dict]
 

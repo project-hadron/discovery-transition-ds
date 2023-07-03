@@ -1308,7 +1308,7 @@ class SyntheticIntentModel(WrangleIntentModel):
             _seed = self._seed(seed=_seed, increment=True)
             a = generator.choice(range(1, 6))
             b = generator.choice(range(1, 6))
-            df_rtn[next(gen)] = self.get_distribution(distribution='beta', a=a, b=b, precision=3, size=size, seed=_seed,
+            df_rtn[next(gen)] = self.get_distribution(distribution='beta', a=a, b=b, precision=6, size=size, seed=_seed,
                                                       save_intent=False)
         if inc_targets:
             result = df_rtn.mean(axis=1)
